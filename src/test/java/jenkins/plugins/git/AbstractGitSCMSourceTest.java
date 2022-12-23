@@ -44,6 +44,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -61,8 +62,12 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestJGitAPIImpl;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Stopwatch;
+import org.junit.rules.TestName;
+import org.junit.runner.OrderWith;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.MockedStatic;
@@ -76,6 +81,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.atLeastOnce;
@@ -90,6 +96,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link AbstractGitSCMSource}
  */
+@OrderWith(RandomOrder.class)
 public class AbstractGitSCMSourceTest {
 
     static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
@@ -102,11 +109,28 @@ public class AbstractGitSCMSourceTest {
     @Rule
     public GitSampleRepoRule sampleRepo2 = new GitSampleRepoRule();
 
+    @ClassRule
+    public static Stopwatch stopwatch = new Stopwatch();
+    @Rule
+    public TestName testName = new TestName();
+
+    private static final int MAX_SECONDS_FOR_THESE_TESTS = 210;
+
+    private boolean isTimeAvailable() {
+        String env = System.getenv("CI");
+        if (env == null || !Boolean.parseBoolean(env)) {
+            // Run all tests when not in CI environment
+            return true;
+        }
+        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+    }
+
     // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
     @Issue("JENKINS-37482")
     @Test
     @Deprecated // Tests deprecated GitSCMSource constructor
     public void retrieveHeads() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -126,6 +150,7 @@ public class AbstractGitSCMSourceTest {
 
     @Test
     public void retrieveHeadsRequiresBranchDiscovery() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -148,6 +173,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-46207")
     @Test
     public void retrieveHeadsSupportsTagDiscovery_ignoreTagsWithoutTagDiscoveryTrait() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -176,6 +202,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-46207")
     @Test
     public void retrieveHeadsSupportsTagDiscovery_findTagsWithTagDiscoveryTrait() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -239,6 +266,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-46207")
     @Test
     public void retrieveHeadsSupportsTagDiscovery_onlyTagsWithoutBranchDiscoveryTrait() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -263,6 +291,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-45953")
     @Test
     public void retrieveRevisions() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -288,6 +317,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-64803")
     @Test
     public void retrieveTags_folderScopedCredentials() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -343,6 +373,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-47824")
     @Test
     public void retrieveByName() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         String masterHash = sampleRepo.head();
         sampleRepo.git("checkout", "-b", "dev");
@@ -438,12 +469,14 @@ public class AbstractGitSCMSourceTest {
     @Test
     @Deprecated
     public void retrievePrimaryHead_NotDuplicated() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         retrievePrimaryHead(false);
     }
 
     @Test
     @Deprecated
     public void retrievePrimaryHead_Duplicated() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         retrievePrimaryHead(true);
     }
 
@@ -519,6 +552,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-31155")
     @Test
     public void retrieveRevision() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -554,6 +588,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void retrieveRevision_nonHead() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -580,6 +615,7 @@ public class AbstractGitSCMSourceTest {
     @Test
     // @Ignore("At least file:// protocol doesn't allow fetching unannounced commits")
     public void retrieveRevision_nonAdvertised() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -608,6 +644,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void retrieveRevision_customRef() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -638,6 +675,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void retrieveRevision_customRef_descendant() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -673,6 +711,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void retrieveRevision_customRef_abbrev_sha1() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -703,6 +742,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void retrieveRevision_pr_refspec() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -730,6 +770,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void retrieveRevision_pr_local_refspec() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -771,6 +812,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void fetchOtherRef() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -806,6 +848,7 @@ public class AbstractGitSCMSourceTest {
     @Issue("JENKINS-48061")
     @Test
     public void fetchOtherRevisions() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=v1");
@@ -842,6 +885,7 @@ public class AbstractGitSCMSourceTest {
     @Test
     @Deprecated // Check GitSCMSource deprecated constructor
     public void pruneRemovesDeletedBranches() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
 
         /* Write a file to the master branch */
@@ -882,6 +926,7 @@ public class AbstractGitSCMSourceTest {
     @Test
     @Deprecated // Tests deprecated getExtensions() and setExtensions()
     public void testSpecificRevisionBuildChooser() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
 
         /* Write a file to the master branch */
@@ -942,6 +987,7 @@ public class AbstractGitSCMSourceTest {
     @Test
     @Deprecated // Tests deprecated GitSCMSource constructor
     public void testCustomRemoteName() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
 
         GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "upstream", null, "*", "", true);
@@ -957,6 +1003,7 @@ public class AbstractGitSCMSourceTest {
     @Test
     @Deprecated // Tests deprecated GitSCMSource constructor
     public void testCustomRefSpecs() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
 
         GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/*          +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
@@ -973,6 +1020,7 @@ public class AbstractGitSCMSourceTest {
 
     @Test
     public void refLockEncounteredIfPruneTraitNotPresentOnNotFoundRetrieval() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Collections.singletonList(new BranchDiscoveryTrait())));
@@ -985,6 +1033,7 @@ public class AbstractGitSCMSourceTest {
 
     @Test
     public void refLockEncounteredIfPruneTraitNotPresentOnTagRetrieval() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Collections.singletonList(new TagDiscoveryTrait())));
@@ -1002,6 +1051,7 @@ public class AbstractGitSCMSourceTest {
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
@@ -1020,6 +1070,7 @@ public class AbstractGitSCMSourceTest {
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
@@ -1058,6 +1109,7 @@ public class AbstractGitSCMSourceTest {
 
     @Test @Issue("JENKINS-50394")
     public void when_commits_added_during_discovery_we_do_not_crash() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");

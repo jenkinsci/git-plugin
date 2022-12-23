@@ -19,31 +19,40 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
+import org.eclipse.jgit.transport.URIish;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jgit.transport.URIish;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import org.kohsuke.stapler.HttpResponses;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
+import org.junit.rules.Stopwatch;
+import org.junit.rules.TestName;
+import org.junit.runner.OrderWith;
 import org.junit.runner.RunWith;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
+import jenkins.plugins.git.RandomOrder;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+@OrderWith(RandomOrder.class)
 @RunWith(Theories.class)
 public class GitStatusTest extends AbstractGitProject {
 
@@ -114,38 +123,55 @@ public class GitStatusTest extends AbstractGitProject {
         });
     }
 
+    @ClassRule
+    public static Stopwatch stopwatch = new Stopwatch();
+    @Rule
+    public TestName testName = new TestName();
+
+    private static final int MAX_SECONDS_FOR_THESE_TESTS = 300;
+
+    private boolean isTimeAvailable() {
+        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+    }
+
     @WithoutJenkins
     @Test
     public void testGetDisplayName() {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         assertEquals("Git", this.gitStatus.getDisplayName());
     }
 
     @WithoutJenkins
     @Test
     public void testGetIconFileName() {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         assertNull(this.gitStatus.getIconFileName());
     }
 
     @WithoutJenkins
     @Test
     public void testGetUrlName() {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         assertEquals("git", this.gitStatus.getUrlName());
     }
 
     @WithoutJenkins
     @Test
     public void testAllowNotifyCommitParametersDisabled() {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         assertFalse("SECURITY-275: ignore arbitrary notifyCommit parameters", GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
     }
 
     @WithoutJenkins
     @Test
     public void testSafeParametersEmpty() {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         assertEquals("SECURITY-275: Safe notifyCommit parameters", "", GitStatus.SAFE_PARAMETERS);
     }
 
     @Test
     public void testDoNotifyCommitWithNoBranches() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -162,6 +188,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithNoMatchingUrl() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -178,6 +205,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithOneBranch() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -194,6 +222,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithTwoBranches() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger aFeatureTrigger = setupProjectWithTrigger("a", "feature/def", false);
@@ -215,6 +244,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithNoMatchingBranches() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -231,6 +261,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithSlashesInBranchNames() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
 
@@ -245,6 +276,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithParametrizedBranch() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "$BRANCH_TO_BUILD", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
@@ -259,6 +291,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithIgnoredRepository() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", true);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "", notifyCommitApiToken);
@@ -269,6 +302,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithNoScmTrigger() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         setupProject("a", "master", null);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "", notifyCommitApiToken);
         // no expectation here, however we shouldn't have a build triggered, and no exception
@@ -278,11 +312,13 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameterAllowed() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(true, null);
     }
 
     @Test
     public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, null);
     }
 
@@ -293,6 +329,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithTwoBranchesAndAdditionalUnsafeParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, "does,not,include,param");
     }
 
@@ -365,6 +402,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitBranchWithRegex() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger trigger = setupProjectWithTrigger("remote", ":[^/]*/awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
@@ -373,6 +411,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitBranchWithWildcard() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger trigger = setupProjectWithTrigger("remote", "origin/feature/*", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
@@ -413,6 +452,7 @@ public class GitStatusTest extends AbstractGitProject {
     @WithoutJenkins
     @Test
     public void testLooselyMatches() throws URISyntaxException {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String[] equivalentRepoURLs = new String[]{
             "https://example.com/jenkinsci/git-plugin",
             "https://example.com/jenkinsci/git-plugin/",
@@ -484,6 +524,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommit() throws Exception { /* No parameters */
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         setupNotifyProject();
         this.gitStatus.doNotifyCommit(requestWithNoParameter, repoURL, branch, sha1, notifyCommitApiToken);
         assertEquals("URL: " + repoURL
@@ -493,21 +534,25 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithExtraParameterAllowed() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithExtraParameterAllowed(true, null);
     }
 
     @Test
     public void testDoNotifyCommitWithExtraParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithExtraParameterAllowed(false, null);
     }
 
     @Test
     public void testDoNotifyCommitWithExtraSafeParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithExtraParameterAllowed(false, "something,extra,is,here");
     }
 
     @Test
     public void testDoNotifyCommitWithExtraUnsafeParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithExtraParameterAllowed(false, "something,is,not,here");
     }
 
@@ -538,6 +583,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithNullValueExtraParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         setupNotifyProject();
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(null));
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1, notifyCommitApiToken);
@@ -548,27 +594,32 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithDefaultParameterAllowed() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithDefaultParameter(true, null);
     }
 
     @Test
     public void testDoNotifyCommitWithDefaultParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithDefaultParameter(false, null);
     }
 
     @Test
     public void testDoNotifyCommitWithDefaultSafeParameter() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithDefaultParameter(false, "A,B,C,extra");
     }
 
     @Test
     public void testDoNotifyCommitWithDefaultUnsafeParameterC() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         doNotifyCommitWithDefaultParameter(false, "A,B,extra");
     }
 
     @Test
     public void testDoNotifyCommitWithDefaultUnsafeParameterExtra() throws Exception {
-        doNotifyCommitWithDefaultParameter(false, "A,B,C");
+         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+       doNotifyCommitWithDefaultParameter(false, "A,B,C");
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
@@ -642,6 +693,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("JENKINS-46929")
     public void testDoNotifyCommitTriggeredHeadersLimited() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger[] projectTriggers = new SCMTrigger[50];
         for (int i = 0; i < projectTriggers.length; i++) {
             projectTriggers[i] = setupProjectWithTrigger("a", "master", false);
@@ -667,6 +719,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-2499")
     public void testDoNotifyCommitWithWrongSha1Content() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         setupProjectWithTrigger("a", "master", false);
 
         String content = "<img src=onerror=alert(1)>";
@@ -682,6 +735,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithValidSha1AndValidApiToken() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         // when sha1 is provided build is scheduled right away instead of repo polling, so we do not check for trigger
         FreeStyleProject project = setupNotifyProject();
 
@@ -697,6 +751,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         setupProjectWithTrigger("a", "master", false);
         StaplerResponse res = mock(StaplerResponse.class);
 
@@ -709,6 +764,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithUnauthenticatedPollingAllowed() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         SCMTrigger trigger = setupProjectWithTrigger("a", "master", false);
 
@@ -720,6 +776,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "random";
         setupProjectWithTrigger("a", "master", false);
         StaplerResponse res = mock(StaplerResponse.class);
@@ -733,6 +790,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithSha1AndAllowModePoll() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         setupProjectWithTrigger("a", "master", false);
         StaplerResponse res = mock(StaplerResponse.class);
@@ -746,6 +804,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithSha1AndAllowModePollWithInvalidToken() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         setupProjectWithTrigger("a", "master", false);
         StaplerResponse res = mock(StaplerResponse.class);
@@ -759,6 +818,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithAllowModeSha1() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled";
         // when sha1 is provided build is scheduled right away instead of repo polling, so we do not check for trigger
         FreeStyleProject project = setupNotifyProject();
