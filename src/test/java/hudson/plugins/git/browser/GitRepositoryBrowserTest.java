@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSetUtil;
-import hudson.plugins.git.GitTool;
 
 import org.eclipse.jgit.lib.ObjectId;
 
