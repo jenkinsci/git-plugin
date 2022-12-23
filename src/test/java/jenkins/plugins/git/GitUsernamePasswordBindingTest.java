@@ -30,7 +30,10 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Stopwatch;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
+import org.junit.runner.OrderWith;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.BuildWatcher;
@@ -45,9 +48,12 @@ import java.util.List;
 import java.util.Collection;
 import java.util.Random;
 
+import static org.junit.Assume.assumeTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
+@OrderWith(RandomOrder.class)
 @RunWith(Parameterized.class)
 public class GitUsernamePasswordBindingTest {
 
@@ -67,6 +73,22 @@ public class GitUsernamePasswordBindingTest {
 
     @Rule
     public GitSampleRepoRule g = new GitSampleRepoRule();
+
+    @ClassRule
+    public static Stopwatch stopwatch = new Stopwatch();
+    @Rule
+    public TestName testName = new TestName();
+
+    private static final int MAX_SECONDS_FOR_THESE_TESTS = 200;
+
+    private boolean isTimeAvailable() {
+        String env = System.getenv("CI");
+        if (env == null || !Boolean.parseBoolean(env)) {
+            // Run all tests when not in CI environment
+            return true;
+        }
+        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+    }
 
     private final String username;
 
@@ -147,6 +169,7 @@ public class GitUsernamePasswordBindingTest {
 
     @Test
     public void test_EnvironmentVariables_FreeStyleProject() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject prj = r.createFreeStyleProject();
         prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
                 singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID))));
@@ -195,6 +218,7 @@ public class GitUsernamePasswordBindingTest {
 
     @Test
     public void test_EnvironmentVariables_PipelineJob() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         WorkflowJob project = r.createProject(WorkflowJob.class);
 
         // JENKINS-66214 - allow either gitUsernamePassword or GitUsernamePassword as keyword
@@ -243,11 +267,13 @@ public class GitUsernamePasswordBindingTest {
 
     @Test
     public void test_isCurrentNodeOSUnix(){
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         assertThat(gitCredBind.isCurrentNodeOSUnix(r.createLocalLauncher()), not(equalTo(isWindows())));
     }
 
     @Test
     public void test_getCliGitTool_using_FreeStyleProject() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject prj = r.createFreeStyleProject();
         prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
                 singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID))));
@@ -272,6 +298,7 @@ public class GitUsernamePasswordBindingTest {
 
     @Test
     public void test_getGitClientInstance() throws IOException, InterruptedException {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         if (isCliGitTool()) {
             assertThat(gitCredBind.getGitClientInstance(gitToolInstance.getGitExe(), rootFilePath,
                     new EnvVars(), TaskListener.NULL), instanceOf(CliGitAPIImpl.class));
@@ -283,6 +310,7 @@ public class GitUsernamePasswordBindingTest {
 
     @Test
     public void test_GenerateGitScript_write() throws IOException, InterruptedException {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitUsernamePasswordBinding.GenerateGitScript tempGenScript = new GitUsernamePasswordBinding.GenerateGitScript(this.username, this.password, credentials.getId(), !isWindows());
         assertThat(tempGenScript.type(), is(StandardUsernamePasswordCredentials.class));
         FilePath tempScriptFile = tempGenScript.write(credentials, rootFilePath);

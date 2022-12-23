@@ -20,8 +20,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Stopwatch;
+import org.junit.rules.TestName;
+import org.junit.runner.OrderWith;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
@@ -34,15 +38,18 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.io.FileMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * The test aims to functionally validate "estimation of size" and "git implementation recommendation" from a
  * cached directory and from plugin extensions.
  */
+@OrderWith(RandomOrder.class)
 public class GitToolChooserTest {
 
     @Rule
@@ -75,6 +82,22 @@ public class GitToolChooserTest {
         GitToolChooser.clearRepositorySizeCache();
     }
 
+    @ClassRule
+    public static Stopwatch stopwatch = new Stopwatch();
+    @Rule
+    public TestName testName = new TestName();
+
+    private static final int MAX_SECONDS_FOR_THESE_TESTS = 150;
+
+    private boolean isTimeAvailable() {
+        String env = System.getenv("CI");
+        if (env == null || !Boolean.parseBoolean(env)) {
+            // Run all tests when not in CI environment
+            return true;
+        }
+        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+    }
+
     /*
     This test checks the GitToolChooser in a scenario where repo size>5M, user's choice is `jgit`.
     In the event of having no node-specific installations, GitToolChooser will choose to return the default installation.
@@ -82,6 +105,7 @@ public class GitToolChooserTest {
     @Issue("JENKINS-63519")
     @Test
     public void testResolveGitTool() throws IOException, InterruptedException {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -108,6 +132,7 @@ public class GitToolChooserTest {
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -138,6 +163,7 @@ public class GitToolChooserTest {
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -177,6 +203,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithNoGitCache() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         GitSCMSource instance = new GitSCMSource("https://github.com/rishabhBudhouliya/git-plugin.git");
 
@@ -207,6 +234,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithGitCache() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
@@ -260,6 +288,7 @@ public class GitToolChooserTest {
     @Test
     @Issue("JENKINS-63539")
     public void testRemoteAlternatives() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitTool tool = new JGitTool(Collections.emptyList());
 
         GitToolChooser nullRemoteSizeEstimator = new GitToolChooser("git://example.com/git/git.git", null, null, tool, null, TaskListener.NULL, true);
@@ -302,6 +331,7 @@ public class GitToolChooserTest {
     /* Test conversion of any remote alternative of git repo URLs to a standard URL */
     @Test
     public void testConvertToCanonicalURL() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitTool tool = new JGitTool(Collections.emptyList());
 
         String[] remoteAlternatives = {
@@ -335,6 +365,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithAPIForGit() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -357,6 +388,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithAPIForJGit() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -380,6 +412,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithBitbucketAPIs() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -401,6 +434,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithException() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -422,6 +456,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithNoCredentials() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
 
         buildAProject(sampleRepo, true);
@@ -441,6 +476,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithCustomGitTool() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -459,6 +495,7 @@ public class GitToolChooserTest {
 
     @Test
     public void testGitToolChooserWithBothGitAndJGit() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -477,6 +514,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithAllTools() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -497,6 +535,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithJGitApache() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -515,6 +554,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithJGitApacheAndGit() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -533,6 +573,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithDefaultTool() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -550,6 +591,7 @@ public class GitToolChooserTest {
 
     @Test
     public void testGitToolChooserWithOnlyJGit() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -572,6 +614,7 @@ public class GitToolChooserTest {
 
     @Test
     public void testGitToolChooserWithCustomGitTool_2() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -594,6 +637,7 @@ public class GitToolChooserTest {
 
     @Test
     public void testGitToolChooserWithAllTools_2() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -619,6 +663,7 @@ public class GitToolChooserTest {
     @Test
     @Issue("JENKINS-63541")
     public void getCacheDirCreatesNoDirectory() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         // Generate a unique repository name and compute expected cache directory
         String remoteName = "https://github.com/jenkinsci/git-plugin-" + java.util.UUID.randomUUID() + ".git";
         String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
@@ -642,6 +687,7 @@ public class GitToolChooserTest {
     @Test
     @Issue("JENKINS-63572")
     public void testSizeEstimationWithNoRemoteConfig() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
 
         failAProject(sampleRepo);

@@ -30,16 +30,25 @@ import java.util.Random;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.RandomOrder;
 import jenkins.security.MasterToSlaveCallable;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Stopwatch;
+import org.junit.rules.TestName;
+import org.junit.runner.OrderWith;
 import org.jvnet.hudson.test.Issue;
 
 /**
@@ -47,6 +56,7 @@ import org.jvnet.hudson.test.Issue;
  *
  * @author Mark Waite
  */
+@OrderWith(RandomOrder.class)
 public class GitSCMSlowTest extends AbstractGitTestCase {
 
     private final Random random = new Random();
@@ -57,6 +67,22 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
+    }
+
+    @ClassRule
+    public static Stopwatch stopwatch = new Stopwatch();
+    @Rule
+    public TestName testName = new TestName();
+
+    private static final int MAX_SECONDS_FOR_THESE_TESTS = 180;
+
+    private boolean isTimeAvailable() {
+        String env = System.getenv("CI");
+        if (env == null || !Boolean.parseBoolean(env)) {
+            // Run all tests when not in CI environment
+            return true;
+        }
+        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
     }
 
     private void addChangelogToBranchExtension(GitSCM scm) {
@@ -80,6 +106,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         if (isWindows() || random.nextBoolean()) {
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/jenkins";
         GitRepositoryBrowser browser = new GithubWeb(url);
@@ -110,6 +137,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         if (isWindows() || random.nextBoolean()) {
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/git-plugin.git";
         GitRepositoryBrowser browser = new GithubWeb(url);
@@ -152,6 +180,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         if (isWindows() || random.nextBoolean()) {
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject p = createFreeStyleProject();
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/jenkins");
         p.setScm(scm);
@@ -161,6 +190,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testBuildChooserContext() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         final FreeStyleProject p = createFreeStyleProject();
         final FreeStyleBuild b = rule.buildAndAssertSuccess(p);
 
@@ -210,6 +240,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testMergeFailedWithAgent() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -247,6 +278,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testMergeWithAgent() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -287,7 +319,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testMergeWithMatrixBuild() throws Exception {
-
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         //Create a matrix project and a couple of axes
         MatrixProject project = rule.jenkins.createProject(MatrixProject.class, "xyz");
         project.setAxes(new AxisList(new Axis("VAR", "a", "b")));
@@ -333,6 +365,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("toto")));
 
         // run build first to create workspace
@@ -354,6 +387,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
@@ -375,6 +409,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -394,6 +429,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
     @Issue("HUDSON-7411")
     @Test
     public void testNodeEnvVarsAvailable() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupSimpleProject("master");
         DumbSlave agent = rule.createSlave();
         setVariables(agent, new EnvironmentVariablesNodeProperty.Entry("TESTKEY", "agent value"));
@@ -407,6 +443,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testBasicWithAgent() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 

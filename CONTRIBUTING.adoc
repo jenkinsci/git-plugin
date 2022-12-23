@@ -41,6 +41,13 @@ If the default branch has been set to another value than master, it should be te
 This is done by adding **#** before `defaultBranch = main` in the `init` section 
 of the `.gitconfig` file (located in your home directory).
 
+There are enough automated tests in the plugin that it can require more than 60 minutes to complete testing on slower hardware.
+The `buildPlugin()` Pipeline shared library limits plugin jobs to 60 minutes and fails them if they take more than 60 minutes.
+The longest running automated tests have been adapted to have an upper bound on their runtime.
+Once the runtime set in those long running tests has been reached, new tests in that test class are skipped with the message that the max time was exceeded.
+Those tests have also been adapted to execute the individuals tests in those classes in random order.
+By executing the tests in random order, it increases the chances that at least one of the parallel branches of `buildPlugin()` will execute each test in the long running test classes.
+
 [[pull-request-review]]
 == Reviewing Pull Requests
 
