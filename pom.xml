@@ -118,8 +118,8 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <scope>test</scope>
       <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -176,8 +176,8 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>conditional-buildstep</artifactId>
       <version>1.4.2</version>
-      <optional>true</optional>
       <scope>test</scope>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
