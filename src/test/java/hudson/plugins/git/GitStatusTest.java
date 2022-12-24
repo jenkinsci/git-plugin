@@ -134,12 +134,6 @@ public class GitStatusTest extends AbstractGitProject {
 
     @WithoutJenkins
     @Test
-    public void testToString() {
-        assertEquals("URL: ", this.gitStatus.toString());
-    }
-
-    @WithoutJenkins
-    @Test
     public void testAllowNotifyCommitParametersDisabled() {
         assertFalse("SECURITY-275: ignore arbitrary notifyCommit parameters", GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
     }
