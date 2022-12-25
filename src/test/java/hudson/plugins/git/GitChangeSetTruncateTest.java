@@ -108,12 +108,9 @@ public class GitChangeSetTruncateTest {
 
     @Parameterized.Parameters(name = "{0} \"{1}\" --->>> \"{2}\"")
     public static Collection gitObjects() {
-        /* If CLI git is older than 1.8.3, don't test CLI git message truncation */
-        /* CLI git 1.7.1 (CentOS 6) does not support the message truncation command line flags */
         String[] bothGitImplementations = {"git", "jgit"};
-        String[] jgitImplementation = {"jgit"};
         List<Object[]> arguments = new ArrayList<>();
-        for (String implementation : versionCheckRepo.gitVersionAtLeast(1, 8, 3) ? bothGitImplementations : jgitImplementation) {
+        for (String implementation : bothGitImplementations) {
             for (TestData sample : TEST_DATA) {
                 Object[] item = {implementation, sample.testDataCommitSummary, sample.testDataTruncatedSummary};
                 arguments.add(item);

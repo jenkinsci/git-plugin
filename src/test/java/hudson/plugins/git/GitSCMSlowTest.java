@@ -361,10 +361,6 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckout() throws Exception {
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* Older git versions have unexpected behaviors with sparse checkout */
-            return;
-        }
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("toto")));
 
@@ -383,10 +379,6 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckoutBis() throws Exception {
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* Older git versions have unexpected behaviors with sparse checkout */
-            return;
-        }
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
 
@@ -405,10 +397,6 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckoutOverAgent() throws Exception {
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* Older git versions have unexpected behaviors with sparse checkout */
-            return;
-        }
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
