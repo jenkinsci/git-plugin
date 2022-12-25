@@ -2371,7 +2371,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testSparseCheckoutAfterNormalCheckout() throws Exception {
-        assumeTrue("Git plugin does not support CLI git older than 1.8", sampleRepo.gitVersionAtLeast(1, 8));
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -2398,7 +2397,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testNormalCheckoutAfterSparseCheckout() throws Exception {
-        assumeTrue("Git plugin does not support CLI git older than 1.8", sampleRepo.gitVersionAtLeast(1, 8));
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
 
@@ -2603,14 +2601,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         // Initial commit and build
         commit("toto/commitFile1", johnDoe, "Commit number 1");
         String brokenPath = "\\broken/path\\of/doom";
-        if (!sampleRepo.gitVersionAtLeast(1, 8)) {
-            /* Git 1.7.10.4 fails the first build unless the git-upload-pack
-             * program is available in its PATH.
-             * Later versions of git don't have that problem.
-             */
-            final String systemPath = System.getenv("PATH");
-            brokenPath = systemPath + File.pathSeparator + brokenPath;
-        }
         final StringParameterValue real_param = new StringParameterValue("MY_BRANCH", "master");
         final StringParameterValue fake_param = new StringParameterValue("PATH", brokenPath);
 
