@@ -2656,38 +2656,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("Wrong SCM Name", expectedScmName, buildData.getScmName());
     }
 
-    /*
-     * Tests that builds have the correctly specified branches, associated with
-     * the commit id, passed with "notifyCommit" URL.
-     */
-    @Ignore("Intermittent failures on stable-3.10 branch, not on stable-3.9 or master")
-    @Issue("JENKINS-24133")
-    // Flaky test distracting from primary focus
-    @Test
-    public void testSha1NotificationBranches() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        final String branchName = "master";
-        final FreeStyleProject project = setupProject(branchName, false);
-        project.addTrigger(new SCMTrigger(""));
-        final GitSCM git = (GitSCM) project.getScm();
-        setupJGit(git);
-
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        assertTrue("scm polling should detect commit 1",
-                project.poll(listener).hasChanges());
-        build(project, Result.SUCCESS, commitFile1);
-        final ObjectId commit1 = testRepo.git.revListAll().get(0);
-        notifyAndCheckBranch(project, commit1, branchName, 1, git);
-
-        commit("commitFile2", johnDoe, "Commit number 2");
-        assertTrue("scm polling should detect commit 2", project.poll(listener).hasChanges());
-        final ObjectId commit2 = testRepo.git.revListAll().get(0);
-        notifyAndCheckBranch(project, commit2, branchName, 2, git);
-
-        notifyAndCheckBranch(project, commit1, branchName, 1, git);
-    }
-
     /* A null pointer exception was detected because the plugin failed to
      * write a branch name to the build data, so there was a SHA1 recorded 
      * in the build data, but no branch name.
