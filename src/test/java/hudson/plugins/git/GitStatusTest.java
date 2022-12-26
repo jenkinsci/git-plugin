@@ -131,6 +131,11 @@ public class GitStatusTest extends AbstractGitProject {
     private static final int MAX_SECONDS_FOR_THESE_TESTS = 300;
 
     private boolean isTimeAvailable() {
+        String env = System.getenv("CI");
+        if (env == null || !Boolean.parseBoolean(env)) {
+            // Run all tests when not in CI environment
+            return true;
+        }
         return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
     }
 
