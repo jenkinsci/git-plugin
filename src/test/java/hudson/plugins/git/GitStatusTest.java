@@ -383,6 +383,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Theory
     public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "feature/awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
@@ -391,6 +392,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Theory
     public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null, notifyCommitApiToken);
 
@@ -399,6 +401,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Theory
     public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null, notifyCommitApiToken);
 
