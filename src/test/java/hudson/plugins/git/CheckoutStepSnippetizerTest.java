@@ -25,9 +25,10 @@ package hudson.plugins.git;
 
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
-import java.util.Arrays;
+import hudson.plugins.git.extensions.impl.CheckoutOption;
+import hudson.plugins.git.extensions.impl.GitLFSPull;
+import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
@@ -55,15 +56,15 @@ public class CheckoutStepSnippetizerTest {
     private final String remoteName = "";
     private final String remoteRefspec = "";
     private final String credentialsId = "";
-    private final UserRemoteConfig remoteConfig = new UserRemoteConfig(url, remoteName, remoteRefspec, credentialsId);
-    private final List<UserRemoteConfig> remoteConfigList = new ArrayList(Collections.unmodifiableList(Arrays.asList(remoteConfig)));
+    private final UserRemoteConfig userRemoteConfig = new UserRemoteConfig(url, remoteName, remoteRefspec, credentialsId);
+    private final List<UserRemoteConfig> userRemoteConfigList = new ArrayList(List.of(userRemoteConfig));
     private final String branchName = "";
     private final BranchSpec branchSpec = new BranchSpec(branchName);
-    private final List<BranchSpec> branchSpecList = new ArrayList(Collections.unmodifiableList(Arrays.asList(branchSpec)));
+    private final List<BranchSpec> branchSpecList = new ArrayList(List.of(branchSpec));
     private final String gitTool = null;
     private final GitRepositoryBrowser browser = null;
     private final List<GitSCMExtension> extensionList = new ArrayList();
-    private final GitSCM databoundGit = new GitSCM(remoteConfigList, branchSpecList, browser, gitTool, extensionList);
+    private final GitSCM databoundGit = new GitSCM(userRemoteConfigList, branchSpecList, browser, gitTool, extensionList);
     private final GitSCM convenienceGit = new GitSCM(url);
     private final GenericSCMStep checkoutStep = new GenericSCMStep((random.nextBoolean() || true) ? databoundGit : convenienceGit);
 
@@ -71,79 +72,221 @@ public class CheckoutStepSnippetizerTest {
     private final String junkBranches = "branches: [[name: '**']], ";
     private final String junkExtensions = "extensions: [], ";
 
+    /* Tested values common to many tests */
+    private final String remoteConfig = "userRemoteConfigs: [[url: '" + url + "']]";
+
     @Test
     public void checkoutSimplest() throws Exception {
-        tester.assertRoundTrip(checkoutStep, "checkout([$class: 'GitSCM', "
+        tester.assertRoundTrip(checkoutStep, "checkout scmGit("
                 + junkBranches
                 + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]])");
-        tester.assertParseStep(checkoutStep, "checkout([$class: 'GitSCM', "
+                + "userRemoteConfigs: [[url: '" + url + "']])");
+        tester.assertParseStep(checkoutStep, "checkout scmGit("
                 + "branches: [[name: '**']], "
                 // Parses correctly with or without junkExtensions
-                // + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]])");
+                + (random.nextBoolean() ? junkExtensions : "")
+                + remoteConfig + ")");
     }
 
     @Test
     public void checkoutNoPoll() throws Exception {
         checkoutStep.setPoll(false);
-        tester.assertRoundTrip(checkoutStep, "checkout poll: false, scm: [$class: 'GitSCM', "
+        tester.assertRoundTrip(checkoutStep, "checkout poll: false, scm: scmGit("
                 + junkBranches
                 + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]]");
-        tester.assertParseStep(checkoutStep, "checkout poll: false, scm: [$class: 'GitSCM', "
+                + remoteConfig + ")");
+        tester.assertParseStep(checkoutStep, "checkout poll: false, scm: scmGit("
                 + "branches: [[name: '**']], "
                 // Parses correctly with or without junkExtensions
-                // + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]]");
+                + (random.nextBoolean() ? junkExtensions : "")
+                + remoteConfig + ")");
     }
 
     @Test
     public void checkoutNoChangelog() throws Exception {
         checkoutStep.setChangelog(false);
-        tester.assertRoundTrip(checkoutStep, "checkout changelog: false, scm: [$class: 'GitSCM', "
+        tester.assertRoundTrip(checkoutStep, "checkout changelog: false, scm: scmGit("
                 + junkBranches
                 + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]]");
-        tester.assertParseStep(checkoutStep, "checkout changelog: false, scm: [$class: 'GitSCM', "
+                + remoteConfig + ")");
+        tester.assertParseStep(checkoutStep, "checkout changelog: false, scm: scmGit("
                 + "branches: [[name: '**']], "
                 // Parses correctly with or without junkExtensions
-                // + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]]");
+                + (random.nextBoolean() ? junkExtensions : "")
+                + remoteConfig + ")");
     }
 
     @Test
     public void checkoutCredentials() throws Exception {
         String myCredential = "my-credential";
         UserRemoteConfig config = new UserRemoteConfig(url, remoteName, remoteRefspec, myCredential);
-        List<UserRemoteConfig> configList = new ArrayList(Collections.unmodifiableList(Arrays.asList(config)));
+        List<UserRemoteConfig> configList = new ArrayList(List.of(config));
         GitSCM gitSCM = new GitSCM(configList, branchSpecList, browser, gitTool, extensionList);
         GenericSCMStep step = new GenericSCMStep(gitSCM);
-        tester.assertRoundTrip(step, "checkout([$class: 'GitSCM', "
+        tester.assertRoundTrip(step, "checkout scmGit("
                 + junkBranches
                 + junkExtensions
-                + "userRemoteConfigs: [[credentialsId: '" + myCredential + "', url: '" + url + "']]])");
-        tester.assertParseStep(step, "checkout([$class: 'GitSCM', "
+                + "userRemoteConfigs: [[credentialsId: '" + myCredential + "', url: '" + url + "']])");
+        tester.assertParseStep(step, "checkout scmGit("
                 + "branches: [[name: '**']], "
                 // Parses correctly with or without junkExtensions
-                // + junkExtensions
-                + "userRemoteConfigs: [[credentialsId: '" + myCredential + "', url: '" + url + "']]])");
+                + (random.nextBoolean() ? junkExtensions : "")
+                + "userRemoteConfigs: [[credentialsId: '" + myCredential + "', url: '" + url + "']])");
     }
 
     @Test
     public void checkoutBranch() throws Exception {
         String branch = "4.10.x";
-        List<BranchSpec> branchList = new ArrayList(Collections.unmodifiableList(Arrays.asList(new BranchSpec(branch))));
-        GitSCM gitSCM = new GitSCM(remoteConfigList, branchList, browser, gitTool, extensionList);
+        List<BranchSpec> branchList = new ArrayList(List.of(new BranchSpec(branch)));
+        GitSCM gitSCM = new GitSCM(userRemoteConfigList, branchList, browser, gitTool, extensionList);
         GenericSCMStep step = new GenericSCMStep(gitSCM);
-        tester.assertRoundTrip(step, "checkout([$class: 'GitSCM', "
+        tester.assertRoundTrip(step, "checkout scmGit("
                 + "branches: [[name: '" + branch + "']], "
                 + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]])");
-        tester.assertParseStep(step, "checkout([$class: 'GitSCM', "
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
                 + "branches: [[name: '" + branch + "']], "
                 // Parses correctly with or without junkExtensions
-                // + junkExtensions
-                + "userRemoteConfigs: [[url: '" + url + "']]])");
+                + (random.nextBoolean() ? junkExtensions : "")
+                + remoteConfig + ")");
+    }
+
+    @Test
+    public void checkoutSubmoduleSimplest() throws Exception {
+        GitSCM gitSCM = new GitSCM(url);
+        List<GitSCMExtension> extensions = gitSCM.getExtensions();
+        extensions.add(new SubmoduleOption());
+        GenericSCMStep step = new GenericSCMStep(gitSCM);
+        String testedExtensions = "extensions: [submodule()], ";
+        tester.assertRoundTrip(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+    }
+
+    @Test
+    public void checkoutSubmoduleOldConstructorMinimalArgs() throws Exception {
+        GitSCM gitSCM = new GitSCM(url);
+        List<GitSCMExtension> extensions = gitSCM.getExtensions();
+        boolean disableSubmodules = false;
+        boolean recursiveSubmodules = false;
+        boolean trackingSubmodules = false;
+        String reference = null;
+        Integer timeout = null;
+        boolean parentCredentials = false;
+        extensions.add(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules, reference, timeout, parentCredentials));
+        GenericSCMStep step = new GenericSCMStep(gitSCM);
+        String testedExtensions = "extensions: [submodule()], ";
+        tester.assertRoundTrip(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+    }
+
+    @Test
+    public void checkoutSubmoduleOldConstructorReferenceRepo() throws Exception {
+        GitSCM gitSCM = new GitSCM(url);
+        List<GitSCMExtension> extensions = gitSCM.getExtensions();
+        boolean disableSubmodules = false;
+        boolean recursiveSubmodules = false;
+        boolean trackingSubmodules = false;
+        String reference = "/var/cache/git-plugin.git"; // Only change from default values
+        Integer timeout = null;
+        boolean parentCredentials = false;
+        extensions.add(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules, reference, timeout, parentCredentials));
+        GenericSCMStep step = new GenericSCMStep(gitSCM);
+        String testedExtensions = "extensions: [submodule(reference: '" + reference + "')], ";
+        tester.assertRoundTrip(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+    }
+
+    @Test
+    public void checkoutSubmoduleOldConstructorDisableSubmodules() throws Exception {
+        GitSCM gitSCM = new GitSCM(url);
+        List<GitSCMExtension> extensions = gitSCM.getExtensions();
+        boolean disableSubmodules = true; // Only change from default values
+        boolean recursiveSubmodules = false;
+        boolean trackingSubmodules = false;
+        String reference = null;
+        Integer timeout = null;
+        boolean parentCredentials = false;
+        extensions.add(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules, reference, timeout, parentCredentials));
+        GenericSCMStep step = new GenericSCMStep(gitSCM);
+        String testedExtensions = "extensions: [submodule(disableSubmodules: true)], ";
+        tester.assertRoundTrip(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+    }
+
+    @Test
+    public void checkoutTimeoutCheckoutDefault() throws Exception {
+        GitSCM gitSCM = new GitSCM(url);
+        List<GitSCMExtension> extensions = gitSCM.getExtensions();
+        Integer timeout = null;
+        extensions.add(new CheckoutOption(timeout));
+        GenericSCMStep step = new GenericSCMStep(gitSCM);
+        String testedExtensions = "extensions: [checkoutOption()], ";
+        tester.assertRoundTrip(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+    }
+
+    @Test
+    public void checkoutTimeoutCheckoutNonDefault() throws Exception {
+        GitSCM gitSCM = new GitSCM(url);
+        List<GitSCMExtension> extensions = gitSCM.getExtensions();
+        Integer timeout = 347;
+        extensions.add(new CheckoutOption(timeout));
+        GenericSCMStep step = new GenericSCMStep(gitSCM);
+        String testedExtensions = "extensions: [checkoutOption(" + timeout + ")], ";
+        tester.assertRoundTrip(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+    }
+
+    @Test
+    public void checkoutLargeFileSupport() throws Exception {
+        GitSCM gitSCM = new GitSCM(url);
+        List<GitSCMExtension> extensions = gitSCM.getExtensions();
+        extensions.add(new GitLFSPull());
+        GenericSCMStep step = new GenericSCMStep(gitSCM);
+        String testedExtensions = "extensions: [lfs()], ";
+        tester.assertRoundTrip(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
+        tester.assertParseStep(step, "checkout scmGit("
+                + junkBranches
+                + testedExtensions
+                + remoteConfig + ")");
     }
 }

@@ -2,7 +2,7 @@
 <!--
   Displays the Git change log digest for the build top page 
   when a build history link (or number) is followed
-  e.g http://<hudson server>/job/<project>/<build number>/
+  e.g https://<jenkins_url>/job/<project>/<build number>/
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <j:set var="browser" value="${it.browser}"/>

@@ -243,6 +243,22 @@ public class SubmoduleOptionTest {
     }
 
     @Test
+    public void testToStringDataBoundConstructor() {
+        submoduleOption = new SubmoduleOption();
+        assertThat(submoduleOption.toString(), is("SubmoduleOption{"
+                + "disableSubmodules=false"
+                + ", recursiveSubmodules=false"
+                + ", trackingSubmodules=false"
+                + ", reference='null'"
+                + ", parentCredentials=false"
+                + ", timeout=null"
+                + ", shallow=false"
+                + ", depth=null"
+                + ", threads=null"
+                + '}'));
+    }
+
+    @Test
     @Issue("JENKINS-64382")
     public void testDetermineSupportForJGit() {
         /* JGit was incorrectly used when submodule option was added with no items checked. */

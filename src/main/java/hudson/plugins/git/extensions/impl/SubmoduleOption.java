@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -52,6 +53,11 @@ public class SubmoduleOption extends GitSCMExtension {
     private Integer threads;
 
     @DataBoundConstructor
+    public SubmoduleOption() {
+        this(false, false, false, null, null, false);
+    }
+
+    @Whitelisted
     public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference, Integer timeout, boolean parentCredentials) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
@@ -66,9 +72,19 @@ public class SubmoduleOption extends GitSCMExtension {
         return disableSubmodules;
     }
 
+    @DataBoundSetter
+    public void setDisableSubmodules(boolean value) {
+        disableSubmodules = value;
+    }
+
     @Whitelisted
     public boolean isRecursiveSubmodules() {
         return recursiveSubmodules;
+    }
+
+    @DataBoundSetter
+    public void setRecursiveSubmodules(boolean value) {
+        recursiveSubmodules = value;
     }
 
     @Whitelisted
@@ -76,9 +92,19 @@ public class SubmoduleOption extends GitSCMExtension {
         return trackingSubmodules;
     }
 
+    @DataBoundSetter
+    public void setTrackingSubmodules(boolean value) {
+        trackingSubmodules = value;
+    }
+
     @Whitelisted
     public boolean isParentCredentials() {
         return parentCredentials;
+    }
+
+    @DataBoundSetter
+    public void setParentCredentials(boolean value) {
+        parentCredentials = value;
     }
 
     @Whitelisted
@@ -86,9 +112,19 @@ public class SubmoduleOption extends GitSCMExtension {
         return reference;
     }
 
+    @DataBoundSetter
+    public void setReference(String value) {
+        reference = value;
+    }
+
     @Whitelisted
     public Integer getTimeout() {
         return timeout;
+    }
+
+    @DataBoundSetter
+    public void setTimeout(Integer value) {
+        timeout = value;
     }
 
     @DataBoundSetter
@@ -235,6 +271,7 @@ public class SubmoduleOption extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("submodule")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}

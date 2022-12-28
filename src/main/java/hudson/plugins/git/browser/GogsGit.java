@@ -8,6 +8,7 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -90,6 +91,7 @@ public class GogsGit extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("gogs")
     public static class GogsGitDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

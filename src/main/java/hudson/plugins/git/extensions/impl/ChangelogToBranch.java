@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
@@ -30,6 +31,7 @@ public class ChangelogToBranch extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("changelogToBranch")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         @Override

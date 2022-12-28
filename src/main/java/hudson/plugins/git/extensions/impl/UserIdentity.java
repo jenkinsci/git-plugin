@@ -110,6 +110,7 @@ public class UserIdentity extends GitSCMExtension {
     }
 
     @Extension
+    // No @Symbol because Pipeline users should configure this in other ways
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}
