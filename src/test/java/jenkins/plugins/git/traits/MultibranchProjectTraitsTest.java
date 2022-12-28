@@ -104,7 +104,7 @@ public class MultibranchProjectTraitsTest {
                 // "    browser: gitoriousWeb('https://gerrit.googlesource.com/gitiles/'),\n",
                 "    browser: gogs('https://try.gogs.io/MarkEWaite/git-plugin'),\n", // Should this be gogsGit?
                 "    browser: kiln('https://kiln.example.com/MarkEWaite/git-plugin'),\n",
-                "    browser: microsoftTFS('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'),\n",
+                "    browser: teamFoundation('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'),\n",
                 "    browser: phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/'),\n",
                 "    browser: redmine('https://www.redmine.org/projects/redmine/repository'),\n",
                 "    browser: rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce'),\n",

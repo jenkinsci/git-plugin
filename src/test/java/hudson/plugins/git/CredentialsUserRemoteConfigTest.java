@@ -237,7 +237,7 @@ public class CredentialsUserRemoteConfigTest {
             "gitiles('https://gerrit.googlesource.com/gitiles/')",
             "gogs('https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?
             "kiln('https://kiln.example.com/MarkEWaite/git-plugin')",
-            "microsoftTFS('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
+            "teamFoundation('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
             "phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/')",
             "redmine('https://www.redmine.org/projects/redmine/repository')",
             "rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce')",
