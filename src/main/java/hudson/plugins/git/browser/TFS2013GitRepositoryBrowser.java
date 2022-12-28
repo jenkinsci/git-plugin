@@ -83,7 +83,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("microsoftTFS")
+    @Symbol("teamFoundation")
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
         private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
