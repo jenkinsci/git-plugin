@@ -22,6 +22,7 @@ public class DisableRemotePoll extends GitSCMExtension {
     }
 
     @Extension
+    // No @Symbol annotation, because force polling using workspace should not be used in Pipeline
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {

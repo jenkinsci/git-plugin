@@ -146,6 +146,7 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     @Extension
+    // No @Symbol annotation because path exclusion is done using a trait in Pipeline
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {

@@ -10,6 +10,7 @@ import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
@@ -66,6 +67,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 	}
 
 	@Extension
+	@Symbol("fisheye")
 	public static class FisheyeGitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
 		@NonNull

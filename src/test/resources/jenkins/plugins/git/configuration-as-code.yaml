@@ -13,7 +13,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 extensions:
                   - "cleanCheckout"
-                  - "gitLFSPull"
+                  - lfs
                   - checkoutOption:
                       timeout: 60
                   - userIdentity:
