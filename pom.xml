@@ -77,7 +77,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.361.x</artifactId>
-        <version>1757.vf3c66da_b_7492</version>
+        <version>1763.v092b_8980a_f5e</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -92,7 +92,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>4.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
