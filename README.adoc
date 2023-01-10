@@ -158,14 +158,14 @@ checkout scmGit(
 
 ==== Checkout and prune stale remote branches
 
-Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and with prune tags extension enabled.
-This removes remote tracking branches from the local workspace if they no longer exist on the remote.
+Checkout from the workspace cleanup plugin source repository using https without credentials and with prune tags and prune branches extension enabled.
+This removes remote tracking branches and tags from the local workspace if they no longer exist on the remote.
 
 [source,groovy]
 ----
 checkout scmGit(
-    branches: [[name: '*/master']],
-    extensions: [[pruneTags(true)]],
+    branches: [[name: 'master']],
+    extensions: [pruneStaleBranch(), pruneTags(true)],
     userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
