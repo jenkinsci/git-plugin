@@ -81,7 +81,7 @@ public class CheckoutStepSnippetizerTest {
                 + junkBranches
                 + junkExtensions
                 + "userRemoteConfigs: [[url: '" + url + "']])");
-        tester.assertParseStep(checkoutStep, "checkout scmGit("
+        tester.assertParseStep(checkoutStep, "checkout git("
                 + "branches: [[name: '**']], "
                 // Parses correctly with or without junkExtensions
                 + (random.nextBoolean() ? junkExtensions : "")

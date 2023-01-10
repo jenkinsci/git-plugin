@@ -1640,7 +1640,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Extension
-    @Symbol({"scmGit", "gitSCM"}) // Cannot use "git" because there is already a `git` pipeline step
+    @Symbol({"scmGit", "gitSCM", "git"}) // Cannot use "git" because there is already a `git` pipeline step
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
         private String gitExe;
