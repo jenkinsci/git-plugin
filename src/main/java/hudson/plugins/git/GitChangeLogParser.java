@@ -14,8 +14,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -70,7 +72,7 @@ public class GitChangeLogParser extends ChangeLogParser {
     }
     
     public List<GitChangeSet> parse(@NonNull InputStream changelog) throws IOException {
-        try (InputStreamReader isr = new InputStreamReader(changelog, StandardCharsets.UTF_8); LineIterator it = new LineIterator(isr)) {
+        try (Reader r = new InputStreamReader(changelog, StandardCharsets.UTF_8); LineIterator it = new LineIterator(r)) {
             return parse(it);
         }
     }
@@ -84,6 +86,8 @@ public class GitChangeLogParser extends ChangeLogParser {
         // Parse the log file into GitChangeSet items - each one is a commit
         try (Stream<String> lineStream = Files.lines(changelogFile.toPath(), StandardCharsets.UTF_8)) {
             return new GitChangeSetList(build, browser, parse(lineStream.iterator()));
+        } catch (InvalidPathException e) {
+            throw new IOException(e);
         }
     }
 
