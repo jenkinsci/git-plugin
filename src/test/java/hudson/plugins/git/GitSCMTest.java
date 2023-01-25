@@ -36,7 +36,6 @@ import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -2961,9 +2960,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String notificationPath = rule.getURL().toExternalForm()
                 + "git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
         final URL notifyUrl = new URL(notificationPath);
-        String notifyContent = null;
+        String notifyContent;
         try (final InputStream is = notifyUrl.openStream()) {
-            notifyContent = IOUtils.toString(is, StandardCharsets.UTF_8);
+            notifyContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
         assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 

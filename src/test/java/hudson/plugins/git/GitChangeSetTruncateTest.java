@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -159,9 +159,9 @@ public class GitChangeSetTruncateTest {
         if (parentDir != null) {
             parentDir.mkdirs();
         }
-        try (PrintWriter writer = new PrintWriter(aFile, "UTF-8")) {
+        try (PrintWriter writer = new PrintWriter(aFile, StandardCharsets.UTF_8)) {
             writer.printf(content);
-        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
+        } catch (FileNotFoundException ex) {
             throw new GitException(ex);
         }
     }

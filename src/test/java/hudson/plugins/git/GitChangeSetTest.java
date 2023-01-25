@@ -183,7 +183,7 @@ public class GitChangeSetTest {
                 times(1)
             );
             user.verify(
-                () -> User.getUnknown(),
+                User::getUnknown,
                 times(2)
             );
         }

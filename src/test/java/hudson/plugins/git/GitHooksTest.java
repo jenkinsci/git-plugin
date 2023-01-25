@@ -6,7 +6,6 @@ import hudson.slaves.DumbSlave;
 import hudson.tools.ToolProperty;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitHooksConfiguration;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
@@ -193,7 +192,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     private void checkFileOutput(final File postCheckoutOutput, final Instant before, final Instant after) throws IOException {
         assertTrue("Output file should exist", postCheckoutOutput.exists());
-        final String s = FileUtils.readFileToString(postCheckoutOutput, Charset.defaultCharset()).trim();
+        final String s = Files.readString(postCheckoutOutput.toPath(), Charset.defaultCharset()).trim();
         final Instant when = Instant.ofEpochSecond(Integer.parseInt(s));
         assertTrue("Sometime else", when.isAfter(before) && when.isBefore(after));
         Files.delete(postCheckoutOutput.toPath());
