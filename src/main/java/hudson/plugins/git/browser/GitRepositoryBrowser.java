@@ -25,8 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
@@ -102,7 +100,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      */
     @CheckForNull
     public URL getChangeSetLink(final String commitId) throws IOException {
-        if (!StringUtils.isBlank(commitId)) {
+        if (commitId != null && !commitId.isBlank()) {
             return getChangeSetLink(new CommitChangeSet(commitId));
         }
         return null;

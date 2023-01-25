@@ -10,7 +10,6 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
@@ -57,7 +56,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     /*default*/ URL getRepoUrl(GitChangeSet changeSet) throws IOException { // default visibility for tests
         String result = getRepoUrl();
         
-        if (StringUtils.isBlank(result))
+        if (result == null || result.isBlank())
             return normalizeToEndWithSlash(getUrlFromFirstConfiguredRepository(changeSet));
 
         else if (!result.contains("/"))

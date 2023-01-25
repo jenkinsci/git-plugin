@@ -8,7 +8,6 @@ import hudson.views.ListViewColumnDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.triggers.SCMTriggerItem;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -38,7 +37,7 @@ public class GitBranchSpecifierColumn extends ListViewColumn {
     }
 
     public String breakOutString(List<String> branches) {
-        return StringUtils.join(branches, ", ");
+        return String.join(", ", branches);
     }
 
     @Extension

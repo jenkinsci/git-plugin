@@ -7,7 +7,6 @@ import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import org.apache.commons.io.LineIterator;
-import org.xml.sax.SAXException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -81,7 +80,7 @@ public class GitChangeLogParser extends ChangeLogParser {
     }
 
     @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
-        throws IOException, SAXException {
+        throws IOException {
         // Parse the log file into GitChangeSet items - each one is a commit
         try (Stream<String> lineStream = Files.lines(changelogFile.toPath(), StandardCharsets.UTF_8)) {
             return new GitChangeSetList(build, browser, parse(lineStream.iterator()));

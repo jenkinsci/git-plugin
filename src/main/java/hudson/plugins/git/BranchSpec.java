@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -237,7 +236,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     private String join(String repositoryName, String branchWithoutRefs) {
-        return StringUtils.join(Arrays.asList(repositoryName, branchWithoutRefs), "/");
+        return String.join("/", repositoryName, branchWithoutRefs);
     }
 
     @Extension

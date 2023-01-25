@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Set;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 
 /**
@@ -189,15 +188,15 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     void readBackExtensionsFromLegacy() {
         try {
-            if (isNotBlank(excludedUsers)) {
+            if (excludedUsers != null && !excludedUsers.isBlank()) {
                 addIfMissing(new UserExclusion(excludedUsers));
                 excludedUsers = null;
             }
-            if (isNotBlank(excludedRegions) || isNotBlank(includedRegions)) {
+            if ((excludedRegions != null && !excludedRegions.isBlank()) || (includedRegions != null && !includedRegions.isBlank())) {
                 addIfMissing(new PathRestriction(includedRegions, excludedRegions));
                 excludedRegions = includedRegions = null;
             }
-            if (isNotBlank(relativeTargetDir)) {
+            if (relativeTargetDir != null && !relativeTargetDir.isBlank()) {
                 addIfMissing(new RelativeTargetDirectory(relativeTargetDir));
                 relativeTargetDir = null;
             }
@@ -208,7 +207,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (disableSubmodules || recursiveSubmodules || trackingSubmodules) {
                 addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules, null, null, false));
             }
-            if (isNotBlank(gitConfigName) || isNotBlank(gitConfigEmail)) {
+            if ((gitConfigName != null && !gitConfigName.isBlank()) || (gitConfigEmail != null && !gitConfigEmail.isBlank())) {
                 addIfMissing(new UserIdentity(gitConfigName,gitConfigEmail));
                 gitConfigName = gitConfigEmail = null;
             }
@@ -236,7 +235,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (ignoreNotifyCommit) {
                 addIfMissing(new IgnoreNotifyCommit());
             }
-            if (isNotBlank(scmName)) {
+            if (scmName != null && !scmName.isBlank()) {
                 addIfMissing(new ScmName(scmName));
             }
             if (localBranch!=null) {
@@ -245,7 +244,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (buildChooser!=null && buildChooser.getClass()!=DefaultBuildChooser.class) {
                 addIfMissing(new BuildChooserSetting(buildChooser));
             }
-            if (isNotBlank(reference) || useShallowClone) {
+            if ((reference != null && !reference.isBlank()) || useShallowClone) {
                 addIfMissing(new CloneOption(useShallowClone, reference,null));
             }
         } catch (IOException e) {

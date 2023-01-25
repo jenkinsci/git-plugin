@@ -44,7 +44,6 @@ import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
@@ -201,7 +200,7 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
          */
         @DataBoundConstructor
         public RefSpecTemplate(@NonNull String value) {
-            this.value = StringUtils.trim(value);
+            this.value = value == null ? null : value.trim();
         }
 
         /**
@@ -230,10 +229,10 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
              */
             @Restricted(NoExternalUse.class) // stapler
             public FormValidation doCheckValue(@QueryParameter String value) {
-                if (StringUtils.isBlank(value)) {
+                if (value == null || value.isBlank()) {
                     return FormValidation.error("No ref spec provided");
                 }
-                value = StringUtils.trim(value);
+                value = value.trim();
                 try {
                     String spec = value.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, "origin");
                     if (spec.contains("@{")) {

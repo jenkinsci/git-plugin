@@ -31,7 +31,6 @@ import hudson.model.PersistentDescriptor;
 import hudson.remoting.Channel;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.jenkinsci.Symbol;
@@ -124,7 +123,7 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
     private static void unset(final Repository repo) throws IOException {
         final StoredConfig repoConfig = repo.getConfig();
         final String val = repoConfig.getString("core", null, "hooksPath");
-        if (!StringUtils.isEmpty(val) && !(DISABLED_NIX.equals(val) || DISABLED_WIN.equals(val))) {
+        if (val != null && !val.isEmpty() && !DISABLED_NIX.equals(val) && !DISABLED_WIN.equals(val)) {
             LOGGER.warning(() -> String.format("core.hooksPath explicitly set to %s and will be left intact on %s.", val, repo.getDirectory()));
         } else {
             repoConfig.unset("core", null, "hooksPath");
