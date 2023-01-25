@@ -27,7 +27,6 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
 import jenkins.util.SystemProperties;
 import org.apache.commons.lang.StringUtils;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -119,15 +118,15 @@ public class GitStatus implements UnprotectedRootAction {
                                        @QueryParameter() String token) {
         if (!"disabled".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL)
                 && !"disabled-for-polling".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL)) {
-            if (StringUtils.isEmpty(token)) {
+            if (token == null || token.isEmpty()) {
                 return HttpResponses.errorWithoutStack(401, "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
             }
             if (!ApiTokenPropertyConfiguration.get().isValidApiToken(token)) {
                 return HttpResponses.errorWithoutStack(403, "Invalid access token");
             }
         }
-        if ("disabled-for-polling".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL) && StringUtils.isNotEmpty(sha1)) {
-            if (StringUtils.isEmpty(token)) {
+        if ("disabled-for-polling".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL) && sha1 != null && !sha1.isEmpty()) {
+            if (token == null || token.isEmpty()) {
                 return HttpResponses.errorWithoutStack(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
             } 
             if (!ApiTokenPropertyConfiguration.get().isValidApiToken(token)) {
@@ -136,7 +135,7 @@ public class GitStatus implements UnprotectedRootAction {
         }
         lastURL = url;
         lastBranches = branches;
-        if(StringUtils.isNotBlank(sha1)&&!SHA1_PATTERN.matcher(sha1.trim()).matches()){
+        if (sha1 != null && !sha1.isBlank() && !SHA1_PATTERN.matcher(sha1.trim()).matches()) {
             return HttpResponses.error(SC_BAD_REQUEST, new IllegalArgumentException("Illegal SHA1"));
         }
         lastSHA1 = cleanupSha1(sha1);
@@ -204,8 +203,8 @@ public class GitStatus implements UnprotectedRootAction {
      * @return true if left-hand side loosely matches right-hand side
      */
     public static boolean looselyMatches(URIish lhs, URIish rhs) {
-        return StringUtils.equals(lhs.getHost(),rhs.getHost())
-            && StringUtils.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+        return Objects.equals(lhs.getHost(),rhs.getHost())
+            && Objects.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
     }
 
     private static String normalizePath(String path) {
@@ -443,7 +442,7 @@ public class GitStatus implements UnprotectedRootAction {
                                         }
                                     }
                                 }
-                                if (!parametrizedBranchSpec && isNotEmpty(sha1)) {
+                                if (!parametrizedBranchSpec && sha1 != null && !sha1.isEmpty()) {
                                     /* If SHA1 and not a parameterized branch spec, then schedule build.
                                      * NOTE: This is SCHEDULING THE BUILD, not triggering polling of the repo.
                                      * If no SHA1 or the branch spec is parameterized, it will only poll.
@@ -475,8 +474,7 @@ public class GitStatus implements UnprotectedRootAction {
                     result.add(new MessageResponseContributor("No git jobs found"));
                 } else if (!urlFound) {
                     result.add(new MessageResponseContributor(
-                            "No git jobs using repository: " + uri.toString() + " and branches: " + StringUtils
-                                    .join(branches, ",")));
+                            "No git jobs using repository: " + uri.toString() + " and branches: " + String.join(",", branches)));
                 }
 
                 lastStaticBuildParameters = allBuildParameters;

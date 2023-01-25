@@ -1135,7 +1135,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 target = target.substring(Constants.R_HEADS.length());
             }
             List<Action> result = new ArrayList<>();
-            if (StringUtils.isNotBlank(target)) {
+            if (target != null && !target.isBlank()) {
                 result.add(new GitRemoteHeadRefAction(getRemote(), target));
             }
             return result;
@@ -1158,7 +1158,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 target = target.substring(Constants.R_HEADS.length());
             }
             List<Action> result = new ArrayList<>();
-            if (StringUtils.isNotBlank(target)) {
+            if (target != null && !target.isBlank()) {
                 result.add(new GitRemoteHeadRefAction(getRemote(), target));
             }
             return result;
@@ -1187,7 +1187,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     target = target.substring(Constants.R_HEADS.length());
                 }
                 List<Action> result = new ArrayList<>();
-                if (StringUtils.isNotBlank(target)) {
+                if (target != null && !target.isBlank()) {
                     result.add(new GitRemoteHeadRefAction(getRemote(), target));
                 }
                 return result;

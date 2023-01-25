@@ -223,7 +223,7 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
         @Restricted(NoExternalUse.class) // stapler
         public FormValidation doCheckRemoteName(@QueryParameter String value) {
             value = StringUtils.trimToEmpty(value);
-            if (StringUtils.isBlank(value)) {
+            if (value == null || value.isBlank()) {
                 return FormValidation.error("You must specify a remote name");
             }
             if (AbstractGitSCMSource.DEFAULT_REMOTE_NAME.equals(value)) {

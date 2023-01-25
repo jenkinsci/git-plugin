@@ -21,7 +21,6 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -456,9 +455,11 @@ public class GitPublisher extends Recorder implements Serializable {
         }
 
         private FormValidation checkFieldNotEmpty(String value, String field) {
-            value = StringUtils.strip(value);
+            if (value != null) {
+                value = value.strip();
+            }
 
-            if (value == null || value.equals("")) {
+            if (value == null || value.isEmpty()) {
                 return FormValidation.error(Messages.GitPublisher_Check_Required(field));
             }
             return FormValidation.ok();

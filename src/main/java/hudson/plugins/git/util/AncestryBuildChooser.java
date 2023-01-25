@@ -8,6 +8,7 @@ import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -140,7 +141,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
 
             // wrap IOException so it can propagate
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new UncheckedIOException(e);
             }
         }
         

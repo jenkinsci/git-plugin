@@ -98,7 +98,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import hudson.plugins.git.browser.BitbucketWeb;
@@ -111,10 +110,6 @@ import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isBlank;
-
 
 /**
  * Git SCM.
@@ -217,7 +212,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<GitSCMExtension> extensions) {
 
         // moved from createBranches
-        this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
+        if (branches == null || branches.isEmpty()) {
+            this.branches = new ArrayList<>();
+            this.branches.add(new BranchSpec("*/master"));
+        } else {
+            this.branches = branches;
+        }
 
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
@@ -1832,7 +1832,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 String name = names[i];
                 name = name.replace(' ', '_');
 
-                if (isBlank(refs[i])) {
+                if (refs[i] == null || refs[i].isBlank()) {
                     refs[i] = "+refs/heads/*:refs/remotes/" + name + "/*";
                 }
 
