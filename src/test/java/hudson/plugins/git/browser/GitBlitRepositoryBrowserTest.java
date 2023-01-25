@@ -4,6 +4,7 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -64,7 +65,7 @@ public class GitBlitRepositoryBrowserTest {
             EditType editType = path.getEditType();
             URL expectedFileLink = null;
             if (editType == EditType.ADD || editType == EditType.EDIT) {
-                expectedFileLink = new URL(repoUrl + "blob?r=" + projectName + "&h=" + sample.id + "&f=" + URLEncoder.encode(path.getPath(), "UTF-8").replaceAll("\\+", "%20"));
+                expectedFileLink = new URL(repoUrl + "blob?r=" + projectName + "&h=" + sample.id + "&f=" + URLEncoder.encode(path.getPath(), StandardCharsets.UTF_8).replaceAll("\\+", "%20"));
             } else if (editType == EditType.DELETE) {
                 expectedFileLink = null;
             } else {

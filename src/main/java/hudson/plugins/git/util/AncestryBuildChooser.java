@@ -22,11 +22,11 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.stream.Collectors;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
 
 public class AncestryBuildChooser extends DefaultBuildChooser {
 
@@ -89,7 +89,11 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 } catch (Throwable e) {
 
                     // if a wrapped IOException was thrown, unwrap before throwing it
-                    Iterator<IOException> ioeIter = Iterables.filter(Throwables.getCausalChain(e), IOException.class).iterator();
+                    Iterator<IOException> ioeIter = Throwables.getCausalChain(e).stream()
+                            .filter(IOException.class::isInstance)
+                            .map(IOException.class::cast)
+                            .collect(Collectors.toList())
+                            .iterator();
                     if (ioeIter.hasNext())
                         throw ioeIter.next();
                     else

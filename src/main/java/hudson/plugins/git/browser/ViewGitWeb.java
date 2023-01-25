@@ -23,10 +23,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class ViewGitWeb extends GitRepositoryBrowser {
 
@@ -61,9 +61,8 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         return encodeURL(new URL(url, url.getPath() + spec));
     }
 
-	private String buildCommitDiffSpec(URL url, Path path)
-			throws UnsupportedEncodingException {
-        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(),"UTF-8");
+	private String buildCommitDiffSpec(URL url, Path path) {
+        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(), StandardCharsets.UTF_8);
 	}
 
     @Override

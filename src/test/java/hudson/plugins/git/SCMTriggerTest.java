@@ -13,7 +13,6 @@ import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
@@ -28,7 +27,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Rule;
@@ -305,7 +303,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     {
         Properties properties = new Properties();
         Pattern pattern = Pattern.compile("([a-f0-9]{40})\\s*(.*)");
-        for(String lineO : FileUtils.readLines(file, StandardCharsets.UTF_8)) {
+        for(String lineO : Files.readAllLines(file.toPath(), StandardCharsets.UTF_8)) {
             String line = lineO.trim();
             Matcher matcher = pattern.matcher(line);
             if(matcher.matches()) {
@@ -327,9 +325,8 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             if (entry.isDirectory())
                 entryDestination.mkdirs();
             else {
-                try (InputStream in = zipFile.getInputStream(entry);
-                     OutputStream out = Files.newOutputStream(entryDestination.toPath())) {
-                    org.apache.commons.io.IOUtils.copy(in, out);
+                try (InputStream in = zipFile.getInputStream(entry)) {
+                    Files.copy(in, entryDestination.toPath());
                 }
             }
         }
