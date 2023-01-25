@@ -22,7 +22,6 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.stream.Collectors;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -92,7 +91,6 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                     Iterator<IOException> ioeIter = Throwables.getCausalChain(e).stream()
                             .filter(IOException.class::isInstance)
                             .map(IOException.class::cast)
-                            .collect(Collectors.toList())
                             .iterator();
                     if (ioeIter.hasNext())
                         throw ioeIter.next();
