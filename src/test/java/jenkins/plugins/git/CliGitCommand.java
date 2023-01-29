@@ -80,10 +80,14 @@ public class CliGitCommand {
         }
     }
 
-    public String[] run(String... arguments) throws IOException, InterruptedException {
+    public String[] run(boolean checkForErrors, String... arguments) throws IOException, InterruptedException {
         args = new ArgumentListBuilder("git");
         args.add(arguments);
-        return run(true);
+        return run(checkForErrors);
+    }
+
+    public String[] run(String... arguments) throws IOException, InterruptedException {
+        return run(true, arguments);
     }
 
     public String[] run() throws IOException, InterruptedException {
@@ -118,14 +122,9 @@ public class CliGitCommand {
         }
     }
 
-    private String[] runWithoutAssert(String... arguments) throws IOException, InterruptedException {
-        args = new ArgumentListBuilder("git");
-        args.add(arguments);
-        return run(false);
-    }
-
     private void setConfigIfEmpty(String configName, String value) throws Exception {
-        String[] cmdOutput = runWithoutAssert("config", "--global", configName);
+        boolean checkForErrors = false;
+        String[] cmdOutput = run(checkForErrors, "config", "--global", configName);
         if (cmdOutput == null || cmdOutput[0].isEmpty() || cmdOutput[0].equals("[]")) {
             /* Set config value globally */
             cmdOutput = run("config", "--global", configName, value);
