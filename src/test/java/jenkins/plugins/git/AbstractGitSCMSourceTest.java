@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
