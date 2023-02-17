@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.54</version>
+    <version>4.55</version>
     <relativePath />
   </parent>
 
@@ -80,6 +80,12 @@
         <version>1836.vfe602c266c05</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- Added to satisfy upper bounds checks from enforcer in parent pom 4.55 -->
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.13.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
