@@ -1,0 +1,22 @@
+security:
+  gitHooks:
+    allowedOnAgents: true
+    allowedOnController: true
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "acceptFirstConnectionStrategy"
+unclassified:
+  gitSCM:
+    addGitTagAction: true
+    allowSecondFetch: true
+    createAccountBasedOnEmail: true
+    disableGitToolChooser: true
+    globalConfigEmail: "test@example.com"
+    globalConfigName: "test_user"
+    hideCredentials: true
+    showEntireCommitSummaryInChanges: true
+    useExistingAccountWithSameEmail: true
+tool:
+  git:
+    installations:
+    - home: "git"
+      name: "Default"
