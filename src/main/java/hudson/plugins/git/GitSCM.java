@@ -1984,6 +1984,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param clone true if returned build data should be copied rather than referenced
      * @return build data for build run
      */
+    @Deprecated
     public BuildData getBuildData(Run build, boolean clone) {
         return clone ? copyBuildData(build) : getBuildData(build);
     }

@@ -265,6 +265,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param branches        the (optional) branch information.
          * @return any response contributors for the response to the push request.
          */
+        @Deprecated
         public List<ResponseContributor> onNotifyCommit(URIish uri, String[] branches) {
             throw new AbstractMethodError();
         }
@@ -276,6 +277,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param branches        the (optional) branch information.
          * @return any response contributors for the response to the push request.
          */
+        @Deprecated
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, String... branches) {
             return onNotifyCommit(uri, branches);
         }
