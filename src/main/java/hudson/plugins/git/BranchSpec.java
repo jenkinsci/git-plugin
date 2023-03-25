@@ -105,6 +105,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
      * @param branches source branch list to be filtered by configured branch specification using a newly constructed EnvVars
      * @return branch names which match
      */
+    @Deprecated
     public List<String> filterMatching(Collection<String> branches) {
         EnvVars env = new EnvVars();
         return filterMatching(branches, env);

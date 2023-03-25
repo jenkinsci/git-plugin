@@ -39,33 +39,39 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      * @deprecated
      *      Replaced by {@link GitSCM#buildChooser} instead.
      */
+    @Deprecated
     transient String choosingStrategy;
 
     /**
      * @deprecated
      *      Moved to {@link RelativePath}
      */
+    @Deprecated
     private transient String relativeTargetDir;
     /**
      * @deprecated
      *      Moved to {@link PathRestriction}.
      */
+    @Deprecated
     private transient String includedRegions;
     /**
      * @deprecated
      *      Moved to {@link PathRestriction}.
      */
+    @Deprecated
     private transient String excludedRegions;
     /**
      * @deprecated
      *      Moved to {@link UserExclusion}.
      */
+    @Deprecated
     private transient String excludedUsers;
 
     /**
      * @deprecated
      *      Moved to {@link PerBuildTag}
      */
+    @Deprecated
     private transient Boolean skipTag;
 
 
@@ -73,108 +79,126 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      * @deprecated
      *      Moved to {@link SubmoduleOption}
      */
+    @Deprecated
     private transient boolean disableSubmodules;
 
     /**
      * @deprecated
      *      Moved to {@link SubmoduleOption}
      */
+    @Deprecated
     private transient boolean recursiveSubmodules;
 
     /**
      * @deprecated
      *      Moved to {@link SubmoduleOption}
      */
+    @Deprecated
     private transient boolean trackingSubmodules;
 
     /**
      * @deprecated
      *      Moved to {@link UserIdentity}
      */
+    @Deprecated
     private transient String gitConfigName;
 
     /**
      * @deprecated
      *      Moved to {@link UserIdentity}
      */
+    @Deprecated
     private transient String gitConfigEmail;
 
     /**
      * @deprecated
      *      Moved to {@link PruneStaleBranch}
      */
+    @Deprecated
     private transient boolean pruneBranches;
 
     /**
      * @deprecated
      *      Moved to {@link PreBuildMerge}
      */
+    @Deprecated
     private transient UserMergeOptions userMergeOptions;
 
     /**
      * @deprecated
      *      Moved to {@link PreBuildMerge}. This predates {@link UserMergeOptions}
      */
+    @Deprecated
     private transient PreBuildMergeOptions mergeOptions;
 
     /**
      * @deprecated
      *      Moved to {@link CleanCheckout}
      */
+    @Deprecated
     private transient boolean clean;
 
     /**
      * @deprecated
      *      Moved to {@link WipeWorkspace}
      */
+    @Deprecated
     private transient boolean wipeOutWorkspace;
 
     /**
      * @deprecated
      *      Moved to {@link CloneOption}
      */
+    @Deprecated
     private transient boolean useShallowClone;
 
     /**
      * @deprecated
      *      Moved to {@link CloneOption}
      */
+    @Deprecated
     private transient String reference;
 
     /**
      * @deprecated
      *      Moved to {@link hudson.plugins.git.extensions.impl.DisableRemotePoll}
      */
+    @Deprecated
     private transient boolean remotePoll;
 
     /**
      * @deprecated
      *      Moved to {@link AuthorInChangelog}
      */
+    @Deprecated
     private transient boolean authorOrCommitter;
 
     /**
      * @deprecated
      *      Moved to {@link IgnoreNotifyCommit}
      */
+    @Deprecated
     private transient boolean ignoreNotifyCommit;
 
     /**
      * @deprecated
      *      Moved to {@link ScmName}
      */
+    @Deprecated
     private transient String scmName;
 
     /**
      * @deprecated
      *      Moved to {@link LocalBranch}
      */
+    @Deprecated
     private transient String localBranch;
 
     /**
      * @deprecated
      *      Moved to {@link BuildChooserSetting}
      */
+    @Deprecated
     private transient BuildChooser buildChooser;
 
 
@@ -369,6 +393,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link CleanCheckout}
      * @return true if clean before checkout extension is enabled
      */
+    @Deprecated
     public boolean getClean() {
         return getExtensions().get(CleanCheckout.class)!=null;
     }
@@ -378,6 +403,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link WipeWorkspace}
      * @return true if wipe workspace extension is enabled
      */
+    @Deprecated
     public boolean getWipeOutWorkspace() {
         return getExtensions().get(WipeWorkspace.class)!=null;
     }
@@ -387,6 +413,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link CloneOption}
      * @return true if shallow clone extension is enabled and shallow clone is configured
      */
+    @Deprecated
     public boolean getUseShallowClone() {
         CloneOption m = getExtensions().get(CloneOption.class);
     	return m!=null && m.isShallow();
@@ -397,6 +424,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link CloneOption}
      * @return reference repository or null if reference repository is not defined
      */
+    @Deprecated
     public String getReference() {
         CloneOption m = getExtensions().get(CloneOption.class);
         return m!=null ? m.getReference() : null;
@@ -407,6 +435,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link hudson.plugins.git.extensions.impl.DisableRemotePoll}
      * @return true if remote polling is allowed
      */
+    @Deprecated
     public boolean getRemotePoll() {
         return getExtensions().get(DisableRemotePoll.class)==null;
     }
@@ -419,6 +448,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link AuthorInChangelog}
      * @return true if commit author is used as the changeset author
      */
+    @Deprecated
     public boolean getAuthorOrCommitter() {
         return getExtensions().get(AuthorInChangelog.class)!=null;
     }
@@ -428,6 +458,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link IgnoreNotifyCommit}
      * @return true if commit notifications are ignored
      */
+    @Deprecated
     public boolean isIgnoreNotifyCommit() {
         return getExtensions().get(IgnoreNotifyCommit.class)!=null;
     }
@@ -437,6 +468,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link ScmName}
      * @return configured SCM name or null if none if not configured
      */
+    @Deprecated
     public String getScmName() {
         ScmName sn = getExtensions().get(ScmName.class);
         return sn!=null ? sn.getName() : null;
@@ -447,6 +479,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link LocalBranch}
      * @return name of local branch used for checkout or null if LocalBranch extension is not enabled
      */
+    @Deprecated
     public String getLocalBranch() {
         LocalBranch lb = getExtensions().get(LocalBranch.class);
         return lb!=null ? lb.getLocalBranch() : null;
