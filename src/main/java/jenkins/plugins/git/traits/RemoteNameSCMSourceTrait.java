@@ -68,9 +68,7 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
     @DataBoundConstructor
     public RemoteNameSCMSourceTrait(@CheckForNull String remoteName) {
         this.remoteName = validate(StringUtils.defaultIfBlank(
-                StringUtils.trimToEmpty(remoteName),
-                AbstractGitSCMSource.DEFAULT_REMOTE_NAME
-        ));
+                StringUtils.trimToEmpty(remoteName), AbstractGitSCMSource.DEFAULT_REMOTE_NAME));
     }
 
     /**
@@ -189,8 +187,8 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
         }
 
         /**
-
-         /**
+         *
+         * /**
          * {@inheritDoc}
          */
         @Override
@@ -227,8 +225,9 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
                 return FormValidation.error("You must specify a remote name");
             }
             if (AbstractGitSCMSource.DEFAULT_REMOTE_NAME.equals(value)) {
-                return FormValidation.warning("There is no need to configure a remote name of '%s' as "
-                        + "this is the default remote name.", AbstractGitSCMSource.DEFAULT_REMOTE_NAME);
+                return FormValidation.warning(
+                        "There is no need to configure a remote name of '%s' as " + "this is the default remote name.",
+                        AbstractGitSCMSource.DEFAULT_REMOTE_NAME);
             }
             try {
                 validate(value);
@@ -237,6 +236,5 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
                 return FormValidation.error(e.getMessage());
             }
         }
-
     }
 }

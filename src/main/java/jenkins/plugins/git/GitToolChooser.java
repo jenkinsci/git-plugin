@@ -9,13 +9,6 @@ import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
-import jenkins.model.Jenkins;
-import org.apache.commons.io.FileUtils;
-import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.JGitApacheTool;
-import org.jenkinsci.plugins.gitclient.JGitTool;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -25,6 +18,12 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.JGitApacheTool;
+import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -43,6 +42,7 @@ public class GitToolChooser {
      * Size to switch implementation in KiB
      */
     private static final int SIZE_TO_SWITCH = 5000;
+
     private boolean JGIT_SUPPORTED = false;
 
     /** Cache of repository sizes based on remoteURL. **/
@@ -61,8 +61,15 @@ public class GitToolChooser {
      * @throws IOException on error
      * @throws InterruptedException on error
      */
-    public GitToolChooser(String remoteName, Item projectContext, String credentialsId,
-                          GitTool gitExe, Node n, TaskListener listener, Boolean useJGit) throws IOException, InterruptedException {
+    public GitToolChooser(
+            String remoteName,
+            Item projectContext,
+            String credentialsId,
+            GitTool gitExe,
+            Node n,
+            TaskListener listener,
+            Boolean useJGit)
+            throws IOException, InterruptedException {
         boolean useCache = false;
         if (useJGit != null) {
             JGIT_SUPPORTED = useJGit;
@@ -90,9 +97,7 @@ public class GitToolChooser {
     private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
         if (setSizeFromInternalCache(remoteName)) {
-            LOGGER.log(Level.FINE,
-                    "Found cache key for {0} with size {1}",
-                    new Object[]{remoteName, sizeOfRepo});
+            LOGGER.log(Level.FINE, "Found cache key for {0} with size {1}", new Object[] {remoteName, sizeOfRepo});
             useCache = true;
             return useCache;
         }
@@ -100,29 +105,38 @@ public class GitToolChooser {
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(repoUrl);
             File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
             if (cacheDir != null) {
-                Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
+                Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars))
+                        .in(cacheDir)
+                        .using("git");
                 GitClient client = git.getClient();
                 if (client.hasGitRepo(false)) {
-                    long clientRepoSize = FileUtils.sizeOfDirectory(cacheDir) / 1024; // Conversion from Bytes to Kilo Bytes
+                    long clientRepoSize =
+                            FileUtils.sizeOfDirectory(cacheDir) / 1024; // Conversion from Bytes to Kilo Bytes
                     if (clientRepoSize > sizeOfRepo) {
                         if (sizeOfRepo > 0) {
-                            LOGGER.log(Level.FINE, "Replacing prior size estimate {0} with new size estimate {1} for remote {2} from cache {3}",
-                                    new Object[]{sizeOfRepo, clientRepoSize, remoteName, cacheDir});
+                            LOGGER.log(
+                                    Level.FINE,
+                                    "Replacing prior size estimate {0} with new size estimate {1} for remote {2} from cache {3}",
+                                    new Object[] {sizeOfRepo, clientRepoSize, remoteName, cacheDir});
                         }
                         sizeOfRepo = clientRepoSize;
                         assignSizeToInternalCache(remoteName, sizeOfRepo);
                     }
                     useCache = true;
                     if (remoteName.equals(repoUrl)) {
-                        LOGGER.log(Level.FINE, "Remote URL {0} found cache {1} with size {2}",
-                                new Object[]{remoteName, cacheDir, sizeOfRepo});
+                        LOGGER.log(Level.FINE, "Remote URL {0} found cache {1} with size {2}", new Object[] {
+                            remoteName, cacheDir, sizeOfRepo
+                        });
                     } else {
-                        LOGGER.log(Level.FINE, "Remote URL {0} found cache {1} with size {2}, alternative URL {3}",
-                                new Object[]{remoteName, cacheDir, sizeOfRepo, repoUrl});
+                        LOGGER.log(
+                                Level.FINE,
+                                "Remote URL {0} found cache {1} with size {2}, alternative URL {3}",
+                                new Object[] {remoteName, cacheDir, sizeOfRepo, repoUrl});
                     }
                 } else {
                     // Log the surprise but continue looking for a cache
-                    LOGGER.log(Level.FINE, "Remote URL {0} cache {1} has no git dir", new Object[]{remoteName, cacheDir});
+                    LOGGER.log(
+                            Level.FINE, "Remote URL {0} cache {1} has no git dir", new Object[] {remoteName, cacheDir});
                 }
             }
         }
@@ -177,16 +191,15 @@ public class GitToolChooser {
      * Varies the protocol (https, git, ssh) and the suffix of the repository URL.
      * Package protected for testing
      */
-    /* package */ @NonNull String convertToCanonicalURL(String remoteURL) {
+    /* package */ @NonNull
+    String convertToCanonicalURL(String remoteURL) {
         if (remoteURL == null || remoteURL.isEmpty()) {
             LOGGER.log(Level.FINE, "Null or empty remote URL not cached");
             return ""; // return an empty string
         }
 
-        Pattern [] protocolPatterns = {
-                sshAltProtocolPattern,
-                sshProtocolPattern,
-                gitProtocolPattern,
+        Pattern[] protocolPatterns = {
+            sshAltProtocolPattern, sshProtocolPattern, gitProtocolPattern,
         };
 
         String matcherReplacement = "https://$1/$2";
@@ -196,7 +209,7 @@ public class GitToolChooser {
         if (httpProtocolPattern.matcher(remoteURL).matches()) {
             canonicalURL = remoteURL;
         } else {
-            for (Pattern protocolPattern: protocolPatterns) {
+            for (Pattern protocolPattern : protocolPatterns) {
                 Matcher protocolMatcher = protocolPattern.matcher(remoteURL);
                 if (protocolMatcher.matches()) {
                     canonicalURL = protocolMatcher.replaceAll(matcherReplacement);
@@ -222,25 +235,23 @@ public class GitToolChooser {
      * Varies the protocol (https, git, ssh) and the suffix of the repository URL.
      * Package protected for testing
      */
-    /* package */ @NonNull Set<String> remoteAlternatives(String remoteURL) {
+    /* package */ @NonNull
+    Set<String> remoteAlternatives(String remoteURL) {
         Set<String> alternatives = new LinkedHashSet<>();
         if (remoteURL == null || remoteURL.isEmpty()) {
             LOGGER.log(Level.FINE, "Null or empty remote URL not cached");
             return alternatives;
         }
 
-        Pattern [] protocolPatterns = {
-                gitProtocolPattern,
-                httpProtocolPattern,
-                sshAltProtocolPattern,
-                sshProtocolPattern,
+        Pattern[] protocolPatterns = {
+            gitProtocolPattern, httpProtocolPattern, sshAltProtocolPattern, sshProtocolPattern,
         };
 
         String[] matcherReplacements = {
-                "git://$1/$2",     // git protocol
-                "git@$1:$2",       // ssh protocol alternate URL
-                "https://$1/$2",   // https protocol
-                "ssh://git@$1/$2", // ssh protocol
+            "git://$1/$2", // git protocol
+            "git@$1:$2", // ssh protocol alternate URL
+            "https://$1/$2", // https protocol
+            "ssh://git@$1/$2", // ssh protocol
         };
 
         /* For each matching protocol, form alternatives by iterating over replacements */
@@ -272,13 +283,17 @@ public class GitToolChooser {
         if (repositorySizeCache.containsKey(repoURL)) {
             long oldSize = repositorySizeCache.get(repoURL);
             if (oldSize < repoSize) {
-                LOGGER.log(Level.FINE, "Replacing old repo size {0} with new size {1} for repo {2}", new Object[]{oldSize, repoSize, repoURL});
+                LOGGER.log(Level.FINE, "Replacing old repo size {0} with new size {1} for repo {2}", new Object[] {
+                    oldSize, repoSize, repoURL
+                });
                 repositorySizeCache.put(repoURL, repoSize);
             } else if (oldSize > repoSize) {
-                LOGGER.log(Level.FINE, "Ignoring new size {1} in favor of old size {0} for repo {2}", new Object[]{oldSize, repoSize, repoURL});
+                LOGGER.log(Level.FINE, "Ignoring new size {1} in favor of old size {0} for repo {2}", new Object[] {
+                    oldSize, repoSize, repoURL
+                });
             }
         } else {
-            LOGGER.log(Level.FINE, "Caching repo size {0} for repo {1}", new Object[]{repoSize, repoURL});
+            LOGGER.log(Level.FINE, "Caching repo size {0} for repo {1}", new Object[] {repoSize, repoURL});
             repositorySizeCache.put(repoURL, repoSize);
         }
     }
@@ -289,14 +304,13 @@ public class GitToolChooser {
      * @return boolean useAPI or not.
      */
     private boolean setSizeFromAPI(String repoUrl, Item context, String credentialsId) {
-        List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all())
-                .stream()
+        List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all()).stream()
                 .filter(r -> r.isApplicableTo(repoUrl, context, credentialsId))
                 .collect(Collectors.toList());
 
         if (acceptedRepository.size() > 0) {
             try {
-                for (RepositorySizeAPI repo: acceptedRepository) {
+                for (RepositorySizeAPI repo : acceptedRepository) {
                     long size = repo.getSizeOfRepository(repoUrl, context, credentialsId);
                     if (size != 0) {
                         sizeOfRepo = size;
@@ -351,10 +365,10 @@ public class GitToolChooser {
                 return null;
             }
         } else {
-            if (!userChoice.getName().equals(JGitTool.MAGIC_EXENAME) && !userChoice.getName().equals(JGitApacheTool.MAGIC_EXENAME)) {
+            if (!userChoice.getName().equals(JGitTool.MAGIC_EXENAME)
+                    && !userChoice.getName().equals(JGitApacheTool.MAGIC_EXENAME)) {
                 return userChoice;
-            }
-            else {
+            } else {
                 return recommendGitToolOnAgent(userChoice);
             }
         }
@@ -365,13 +379,15 @@ public class GitToolChooser {
         GitTool correctTool = GitTool.getDefaultInstallation();
         String toolName = userChoice.getName();
         if (toolName.equals(JGitTool.MAGIC_EXENAME) || toolName.equals(JGitApacheTool.MAGIC_EXENAME)) {
-            GitTool[] toolList = Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+            GitTool[] toolList = Jenkins.get()
+                    .getDescriptorByType(GitTool.DescriptorImpl.class)
+                    .getInstallations();
             for (GitTool tool : toolList) {
                 if (!tool.getProperties().isEmpty()) {
                     preferredToolList.add(tool);
                 }
             }
-            for (GitTool tool: preferredToolList) {
+            for (GitTool tool : preferredToolList) {
                 if (tool.getName().equals(getResolvedGitTool(tool.getName()).getName())) {
                     correctTool = getResolvedGitTool(tool.getName());
                 }
@@ -404,7 +420,7 @@ public class GitToolChooser {
      * Other plugins can estimate the size of repository using this extension point
      * The size is assumed to be in KiBs
      */
-    public static abstract class RepositorySizeAPI implements ExtensionPoint {
+    public abstract static class RepositorySizeAPI implements ExtensionPoint {
 
         public abstract boolean isApplicableTo(String remote, Item context, String credentialsId);
 

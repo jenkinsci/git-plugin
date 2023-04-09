@@ -28,8 +28,8 @@ import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.Launcher;
 import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.ApiTokenPropertyConfiguration;
+import hudson.plugins.git.GitSCM;
 import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -50,11 +50,13 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     private static final Logger LOGGER = Logger.getLogger(GitSampleRepoRule.class.getName());
 
+    @Override
     protected void before() throws Throwable {
         super.before();
         GitSCM.ALLOW_LOCAL_CHECKOUT = true;
     }
 
+    @Override
     protected void after() {
         super.after();
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
@@ -65,7 +67,9 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     }
 
     private static void checkGlobalConfig() throws Exception {
-        if (initialized) return;
+        if (initialized) {
+            return;
+        }
         initialized = true;
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
@@ -75,13 +79,16 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     public void init() throws Exception {
         run(true, tmp.getRoot(), "git", "version");
         checkGlobalConfig();
-        git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
-	if (gitVersionAtLeast(2, 30)) {
-	    // Force branch name to master even if system default is not master
-	    // Fails on git 2.25, 2.20, 2.17, and 1.8
-	    // Works on git 2.30 and later
+        git(
+                "init",
+                "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that
+        // behaves the same everywhere
+        if (gitVersionAtLeast(2, 30)) {
+            // Force branch name to master even if system default is not master
+            // Fails on git 2.25, 2.20, 2.17, and 1.8
+            // Works on git 2.30 and later
             git("branch", "-m", "master");
-	}
+        }
         write("file", "");
         git("add", "file");
         git("config", "user.name", "Git SampleRepoRule");
@@ -97,9 +104,12 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     public void notifyCommit(JenkinsRule r) throws Exception {
         synchronousPolling(r);
-        String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
+        String notifyCommitToken = ApiTokenPropertyConfiguration.get()
+                .generateApiToken("notifyCommit")
+                .getString("value");
         WebResponse webResponse = r.createWebClient()
-                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain").getWebResponse();
+                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain")
+                .getWebResponse();
         LOGGER.log(Level.FINE, webResponse.getContentAsString());
         for (NameValuePair pair : webResponse.getResponseHeaders()) {
             if (pair.getName().equals("Triggered")) {
@@ -110,7 +120,11 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     }
 
     public String head() throws Exception {
-        return new RepositoryBuilder().setWorkTree(sampleRepo).build().resolve(Constants.HEAD).name();
+        return new RepositoryBuilder()
+                .setWorkTree(sampleRepo)
+                .build()
+                .resolve(Constants.HEAD)
+                .name();
     }
 
     public File getRoot() {
@@ -125,7 +139,11 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
-            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            int returnCode = new Launcher.LocalLauncher(procListener)
+                    .launch()
+                    .cmds("git", "--version")
+                    .stdout(out)
+                    .join();
             if (returnCode != 0) {
                 LOGGER.log(Level.WARNING, "Command 'git --version' returned " + returnCode);
             }
@@ -133,30 +151,47 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
             LOGGER.log(Level.WARNING, "Exception checking git version " + ex);
         }
         final String versionOutput = out.toString().trim();
-        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
+        final String[] fields = versionOutput
+                .split(" ")[2]
+                .replaceAll("msysgit.", "")
+                .replaceAll("windows.", "")
+                .split("\\.");
         final int gitMajor = Integer.parseInt(fields[0]);
         final int gitMinor = Integer.parseInt(fields[1]);
         final int gitPatch = Integer.parseInt(fields[2]);
         if (gitMajor < 1 || gitMajor > 3) {
-            LOGGER.log(Level.WARNING, "Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields[0] + "'");
+            LOGGER.log(
+                    Level.WARNING,
+                    "Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'"
+                            + fields[0] + "'");
         }
         if (gitMinor < 0 || gitMinor > 50) {
-            LOGGER.log(Level.WARNING, "Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields[1] + "'");
+            LOGGER.log(
+                    Level.WARNING,
+                    "Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'"
+                            + fields[1] + "'");
         }
         if (gitPatch < 0 || gitPatch > 20) {
-            LOGGER.log(Level.WARNING, "Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'" + fields[2] + "'");
+            LOGGER.log(
+                    Level.WARNING,
+                    "Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'"
+                            + fields[2] + "'");
         }
 
-        return gitMajor >  neededMajor ||
-              (gitMajor == neededMajor && gitMinor >  neededMinor) ||
-              (gitMajor == neededMajor && gitMinor == neededMinor  && gitPatch >= neededPatch);
+        return gitMajor > neededMajor
+                || (gitMajor == neededMajor && gitMinor > neededMinor)
+                || (gitMajor == neededMajor && gitMinor == neededMinor && gitPatch >= neededPatch);
     }
 
     public boolean hasGitLFS() {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
-            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "lfs", "version").stdout(out).join();
+            int returnCode = new Launcher.LocalLauncher(procListener)
+                    .launch()
+                    .cmds("git", "lfs", "version")
+                    .stdout(out)
+                    .join();
             if (returnCode != 0) {
                 return false;
             }

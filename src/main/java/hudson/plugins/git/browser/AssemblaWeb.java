@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -11,20 +12,18 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
-import net.sf.json.JSONObject;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import javax.servlet.ServletException;
+import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * AssemblaWeb Git Browser URLs
@@ -89,6 +88,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
     @Extension
     @Symbol("assembla")
     public static class AssemblaWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "AssemblaWeb";
@@ -96,17 +96,17 @@ public class AssemblaWeb extends GitRepositoryBrowser {
 
         @Override
         public AssemblaWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(AssemblaWeb.class, jsonObject);
         }
 
         @RequirePOST
-        public FormValidation doCheckRepoUrl(@AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
+        public FormValidation doCheckRepoUrl(
+                @AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-            if (initialChecksAndReturnOk(project, cleanUrl))
-            {
+            if (initialChecksAndReturnOk(project, cleanUrl)) {
                 return FormValidation.ok();
             }
             // Connect to URL and check content only if we have permission
@@ -114,6 +114,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {
+                @Override
                 protected FormValidation check() throws IOException, ServletException {
                     String v = cleanUrl;
                     if (!v.endsWith("/")) {
@@ -127,7 +128,8 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it does not look like Assembla");
                         }
                     } catch (IOException e) {
-                        return FormValidation.error("Exception reading from Assembla URL " + cleanUrl + " : " + handleIOException(v, e));
+                        return FormValidation.error(
+                                "Exception reading from Assembla URL " + cleanUrl + " : " + handleIOException(v, e));
                     }
                 }
             }.check();

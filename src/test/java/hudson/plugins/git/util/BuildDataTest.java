@@ -1,19 +1,5 @@
 package hudson.plugins.git.util;
 
-import hudson.model.Api;
-import hudson.model.Result;
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.Revision;
-import hudson.plugins.git.UserRemoteConfig;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Random;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-import nl.jqno.equalsverifier.Warning;
-import org.eclipse.jgit.lib.ObjectId;
-
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
@@ -21,6 +7,18 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import hudson.model.Api;
+import hudson.model.Result;
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.Revision;
+import hudson.plugins.git.UserRemoteConfig;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Random;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
+import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -264,7 +262,9 @@ public class BuildDataTest {
     @Test
     public void testToStringNonNullSCMBuildData() {
         BuildData nonNullSCM = new BuildData("gitless");
-        assertThat(nonNullSCM.toString(), endsWith("[scmName=gitless,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
+        assertThat(
+                nonNullSCM.toString(),
+                endsWith("[scmName=gitless,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
     }
 
     @Test
@@ -396,31 +396,32 @@ public class BuildDataTest {
         final String TRAILING_SLASH_URL = simpleURL + "/";
         BuildData trailingSlash = new BuildData("git-" + TRAILING_SLASH_URL);
         trailingSlash.addRemoteUrl(TRAILING_SLASH_URL);
-        assertTrue("Trailing slash not similar to simple URL " + TRAILING_SLASH_URL,
-                trailingSlash.similarTo(simple));
+        assertTrue("Trailing slash not similar to simple URL " + TRAILING_SLASH_URL, trailingSlash.similarTo(simple));
 
         final String TRAILING_SLASHES_URL = TRAILING_SLASH_URL + "//";
         BuildData trailingSlashes = new BuildData("git-" + TRAILING_SLASHES_URL);
         trailingSlashes.addRemoteUrl(TRAILING_SLASHES_URL);
-        assertTrue("Trailing slashes not similar to simple URL " + TRAILING_SLASHES_URL,
+        assertTrue(
+                "Trailing slashes not similar to simple URL " + TRAILING_SLASHES_URL,
                 trailingSlashes.similarTo(simple));
 
         final String DOT_GIT_URL = simpleURL + ".git";
         BuildData dotGit = new BuildData("git-" + DOT_GIT_URL);
         dotGit.addRemoteUrl(DOT_GIT_URL);
-        assertTrue("Dot git not similar to simple URL " + DOT_GIT_URL,
-                dotGit.similarTo(simple));
+        assertTrue("Dot git not similar to simple URL " + DOT_GIT_URL, dotGit.similarTo(simple));
 
         final String DOT_GIT_TRAILING_SLASH_URL = DOT_GIT_URL + "/";
         BuildData dotGitTrailingSlash = new BuildData("git-" + DOT_GIT_TRAILING_SLASH_URL);
         dotGitTrailingSlash.addRemoteUrl(DOT_GIT_TRAILING_SLASH_URL);
-        assertTrue("Dot git trailing slash not similar to dot git URL " + DOT_GIT_TRAILING_SLASH_URL,
+        assertTrue(
+                "Dot git trailing slash not similar to dot git URL " + DOT_GIT_TRAILING_SLASH_URL,
                 dotGitTrailingSlash.similarTo(dotGit));
 
         final String DOT_GIT_TRAILING_SLASHES_URL = DOT_GIT_TRAILING_SLASH_URL + "///";
         BuildData dotGitTrailingSlashes = new BuildData("git-" + DOT_GIT_TRAILING_SLASHES_URL);
         dotGitTrailingSlashes.addRemoteUrl(DOT_GIT_TRAILING_SLASHES_URL);
-        assertTrue("Dot git trailing slashes not similar to dot git URL " + DOT_GIT_TRAILING_SLASHES_URL,
+        assertTrue(
+                "Dot git trailing slashes not similar to dot git URL " + DOT_GIT_TRAILING_SLASHES_URL,
                 dotGitTrailingSlashes.similarTo(dotGit));
     }
 
@@ -484,7 +485,9 @@ public class BuildDataTest {
         BuildData dataSCM = new BuildData("scm");
         assertFalse("Object similar to data with SCM name", dataSCM.similarTo(data));
         assertTrue("Object with SCM name not similar to data with SCM name", dataSCM.similarTo(new BuildData("abc")));
-        assertTrue("Object with SCM name not similar to data with SCM name & empty", dataSCM.similarTo(new BuildData("abc", emptyList)));
+        assertTrue(
+                "Object with SCM name not similar to data with SCM name & empty",
+                dataSCM.similarTo(new BuildData("abc", emptyList)));
 
         // Cloned object equals original object
         BuildData dataClone = data.clone();

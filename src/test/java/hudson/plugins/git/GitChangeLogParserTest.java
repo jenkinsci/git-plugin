@@ -1,19 +1,19 @@
 package hudson.plugins.git;
 
-import hudson.EnvVars;
-import hudson.model.TaskListener;
-import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
-import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.JGitAPIImpl;
-
-import java.io.File;
-import java.io.FileWriter;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import hudson.EnvVars;
+import hudson.model.TaskListener;
+import java.io.File;
+import java.io.FileWriter;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.JGitAPIImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -26,13 +26,17 @@ public class GitChangeLogParserTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-    private final String firstMessageTruncated = "123456789 123456789 123456789 123456789 123456789 123456789 123456789 1";
+    private final String firstMessageTruncated =
+            "123456789 123456789 123456789 123456789 123456789 123456789 123456789 1";
     private final String firstMessage = firstMessageTruncated + " 345 789";
 
     /* Test duplicate changes filtered from parsed CLI git change set list. */
     @Test
     public void testDuplicatesFilteredCliGit() throws Exception {
-        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).using("Default").in(new File(".")).getClient();
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars())
+                .using("Default")
+                .in(new File("."))
+                .getClient();
         assertThat(gitClient, instanceOf(CliGitAPIImpl.class));
         /* JENKINS-29977 notes that CLI git impl truncates summary message - confirm default behavior retained */
         generateDuplicateChanges(gitClient, firstMessageTruncated);
@@ -41,7 +45,10 @@ public class GitChangeLogParserTest {
     /* Test duplicate changes filtered from parsed JGit change set list. */
     @Test
     public void testDuplicatesFilteredJGit() throws Exception {
-        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).using("jgit").in(new File(".")).getClient();
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars())
+                .using("jgit")
+                .in(new File("."))
+                .getClient();
         assertThat(gitClient, instanceOf(JGitAPIImpl.class));
         /* JENKINS-29977 notes that JGit impl retains full summary message - confirm default behavior retained */
         generateDuplicateChanges(gitClient, firstMessage);

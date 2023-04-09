@@ -1,5 +1,20 @@
 package hudson.plugins.git;
 
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleProject;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import java.io.File;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
@@ -13,30 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Descriptor;
-import hudson.model.FreeStyleProject;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM.DescriptorImpl;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-
-import jenkins.plugins.git.GitSampleRepoRule;
-
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -74,8 +69,7 @@ public class GitTagActionTest {
     @ClassRule
     public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
-    public GitTagActionTest() {
-    }
+    public GitTagActionTest() {}
 
     private static FreeStyleProject p;
     private static GitClient workspaceGitClient = null;
@@ -216,7 +210,9 @@ public class GitTagActionTest {
         assertThat(stringWriter.toString(), containsString(commitMessage));
 
         /* Fail if master branch is not defined in the workspace */
-        assertThat(workspaceGitClient.getRemoteUrl("origin"), is(sampleRepo.fileUrl().replace("file:/", "file:///")));
+        assertThat(
+                workspaceGitClient.getRemoteUrl("origin"),
+                is(sampleRepo.fileUrl().replace("file:/", "file:///")));
         Set<Branch> branches = workspaceGitClient.getBranches();
         if (branches.isEmpty()) {
             /* Should not be required since the LocalBranch extension was enabled */

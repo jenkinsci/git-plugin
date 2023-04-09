@@ -1,20 +1,18 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Git Browser URLs
@@ -31,7 +29,7 @@ public class GithubWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath()+"commit/" + changeSet.getId());
+        return new URL(url, url.getPath() + "commit/" + changeSet.getId());
     }
 
     /**
@@ -44,7 +42,9 @@ public class GithubWeb extends GitRepositoryBrowser {
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
-        if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
+        if (path.getEditType() != EditType.EDIT
+                || path.getSrc() == null
+                || path.getDst() == null
                 || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
@@ -59,7 +59,7 @@ public class GithubWeb extends GitRepositoryBrowser {
      * @throws IOException on input or output error
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
-    	// Github seems to sort the output alphabetically by the path.
+        // Github seems to sort the output alphabetically by the path.
         return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + getIndexOfPath(path));
     }
 
@@ -91,16 +91,16 @@ public class GithubWeb extends GitRepositoryBrowser {
     @Extension
     @Symbol("github")
     public static class GithubWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "githubweb";
         }
 
         @Override
-		public GithubWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
-			return req.bindJSON(GithubWeb.class, jsonObject);
-		}
-	}
-
+        public GithubWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+            assert req != null; // see inherited javadoc
+            return req.bindJSON(GithubWeb.class, jsonObject);
+        }
+    }
 }

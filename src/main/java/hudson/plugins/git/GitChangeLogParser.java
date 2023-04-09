@@ -1,19 +1,13 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.RepositoryBrowser;
-import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
-import org.jenkinsci.plugins.gitclient.GitClient;
-
-import org.apache.commons.io.LineIterator;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -24,6 +18,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.apache.commons.io.LineIterator;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 /**
  * Parse the git log
@@ -68,11 +65,13 @@ public class GitChangeLogParser extends ChangeLogParser {
          * That keeps change summary truncation compatible with git client plugin 2.x and git plugin 3.x for users of
          * command line git.
          */
-        this.showEntireCommitSummaryInChanges = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
+        this.showEntireCommitSummaryInChanges =
+                GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
     }
-    
+
     public List<GitChangeSet> parse(@NonNull InputStream changelog) throws IOException {
-        try (Reader r = new InputStreamReader(changelog, StandardCharsets.UTF_8); LineIterator it = new LineIterator(r)) {
+        try (Reader r = new InputStreamReader(changelog, StandardCharsets.UTF_8);
+                LineIterator it = new LineIterator(r)) {
             return parse(it);
         }
     }
@@ -81,8 +80,8 @@ public class GitChangeLogParser extends ChangeLogParser {
         return parse(changelog.iterator());
     }
 
-    @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
-        throws IOException {
+    @Override
+    public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException {
         // Parse the log file into GitChangeSet items - each one is a commit
         try (Stream<String> lineStream = Files.lines(changelogFile.toPath(), StandardCharsets.UTF_8)) {
             return new GitChangeSetList(build, browser, parse(lineStream.iterator()));
@@ -103,8 +102,9 @@ public class GitChangeLogParser extends ChangeLogParser {
                 lines = new ArrayList<>();
             }
 
-            if (lines != null && lines.size()<THRESHOLD)
-                lines.add(line);    // TODO: if we ignored some lines, tell the user so.
+            if (lines != null && lines.size() < THRESHOLD) {
+                lines.add(line); // TODO: if we ignored some lines, tell the user so.
+            }
         }
 
         if (lines != null) {

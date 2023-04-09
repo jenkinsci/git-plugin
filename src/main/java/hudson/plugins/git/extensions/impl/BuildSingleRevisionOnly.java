@@ -13,8 +13,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class BuildSingleRevisionOnly extends GitSCMExtension {
     @DataBoundConstructor
-    public BuildSingleRevisionOnly() {
-    }
+    public BuildSingleRevisionOnly() {}
 
     @Override
     public boolean enableMultipleRevisionDetection() {

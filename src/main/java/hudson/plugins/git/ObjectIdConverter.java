@@ -26,47 +26,47 @@ public class ObjectIdConverter implements Converter {
         base64 = new Base64Encoder();
     }
 
+    @Override
     public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
         return ObjectId.class == type;
     }
 
-    public void marshal(Object source, HierarchicalStreamWriter writer,
-            MarshallingContext context) {
+    @Override
+    public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
         writer.setValue(((ObjectId) source).name());
     }
 
     /**
      * Is the current reader node a legacy node?
-     * 
+     *
      * @param reader stream reader
      * @param context usage context of reader
      * @return true if legacy, false otherwise
      */
-    protected boolean isLegacyNode(HierarchicalStreamReader reader,
-            UnmarshallingContext context) {
+    protected boolean isLegacyNode(HierarchicalStreamReader reader, UnmarshallingContext context) {
         return reader.hasMoreChildren()
                 && "byte-array".equals(((ExtendedHierarchicalStreamReader) reader).peekNextChild());
     }
 
     /**
      * Legacy unmarshalling of object id
-     * 
+     *
      * @param reader stream reader
      * @param context usage context of reader
      * @return object id
      */
-    protected Object legacyUnmarshal(HierarchicalStreamReader reader,
-            UnmarshallingContext context) {
+    protected Object legacyUnmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
         reader.moveDown();
         ObjectId sha1 = ObjectId.fromRaw(base64.decode(reader.getValue()));
         reader.moveUp();
         return sha1;
     }
 
-    public Object unmarshal(HierarchicalStreamReader reader,
-            UnmarshallingContext context) {
-        if (isLegacyNode(reader, context))
+    @Override
+    public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+        if (isLegacyNode(reader, context)) {
             return legacyUnmarshal(reader, context);
+        }
         return ObjectId.fromString(reader.getValue());
     }
 }

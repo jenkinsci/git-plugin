@@ -1,17 +1,18 @@
 package jenkins.plugins.git;
 
-import hudson.plugins.git.GitSCM;
-import io.jenkins.plugins.casc.misc.RoundTripAbstractTest;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import hudson.plugins.git.GitSCM;
+import io.jenkins.plugins.casc.misc.RoundTripAbstractTest;
+import org.jvnet.hudson.test.RestartableJenkinsRule;
+
 public class GitSCMJCasCCompatibilityTest extends RoundTripAbstractTest {
     @Override
     protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
-        GitSCM.DescriptorImpl gitSCM = (GitSCM.DescriptorImpl) restartableJenkinsRule.j.jenkins.getScm(GitSCM.class.getSimpleName());
+        GitSCM.DescriptorImpl gitSCM =
+                (GitSCM.DescriptorImpl) restartableJenkinsRule.j.jenkins.getScm(GitSCM.class.getSimpleName());
         assertEquals("user_name", gitSCM.getGlobalConfigName());
         assertEquals("me@mail.com", gitSCM.getGlobalConfigEmail());
         assertTrue("Allow second fetch setting not honored", gitSCM.isAllowSecondFetch());

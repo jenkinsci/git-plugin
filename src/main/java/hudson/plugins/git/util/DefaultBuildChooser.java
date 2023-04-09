@@ -1,21 +1,20 @@
 package hudson.plugins.git.util;
 
-import hudson.Extension;
+import static java.util.Collections.emptyList;
+
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.remoting.VirtualChannel;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.*;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.*;
-
-import static java.util.Collections.emptyList;
 
 public class DefaultBuildChooser extends BuildChooser {
 
@@ -23,8 +22,7 @@ public class DefaultBuildChooser extends BuildChooser {
     private static final BranchSpec HEAD = new BranchSpec("*/HEAD");
 
     @DataBoundConstructor
-    public DefaultBuildChooser() {
-    }
+    public DefaultBuildChooser() {}
 
     /**
      * Determines which Revisions to build.
@@ -41,16 +39,27 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws InterruptedException when interrupted
      */
     @Override
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,
-                                                      GitClient git, TaskListener listener, BuildData data, BuildChooserContext context)
+    public Collection<Revision> getCandidateRevisions(
+            boolean isPollCall,
+            String branchSpec,
+            GitClient git,
+            TaskListener listener,
+            BuildData data,
+            BuildChooserContext context)
             throws GitException, IOException, InterruptedException {
 
-        verbose(listener,"getCandidateRevisions({0},{1},,,{2}) considering branches to build",isPollCall,branchSpec,data);
+        verbose(
+                listener,
+                "getCandidateRevisions({0},{1},,,{2}) considering branches to build",
+                isPollCall,
+                branchSpec,
+                data);
 
         // if the branch name contains more wildcards then the simple usecase
         // does not apply and we need to skip to the advanced usecase
-        if (isAdvancedSpec(branchSpec))
-            return getAdvancedCandidateRevisions(isPollCall,listener,new GitUtils(listener,git),data, context);
+        if (isAdvancedSpec(branchSpec)) {
+            return getAdvancedCandidateRevisions(isPollCall, listener, new GitUtils(listener, git), data, context);
+        }
 
         // check if we're trying to build a specific commit
         // this only makes sense for a build, there is no
@@ -60,7 +69,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 ObjectId sha1 = git.revParse(branchSpec);
                 Revision revision = new Revision(sha1);
                 revision.getBranches().add(new Branch("detached", sha1));
-                verbose(listener,"Will build the detached SHA1 {0}",sha1);
+                verbose(listener, "Will build the detached SHA1 {0}", sha1);
                 return Collections.singletonList(revision);
             } catch (GitException e) {
                 // revision does not exist, may still be a branch
@@ -91,24 +100,29 @@ public class DefaultBuildChooser extends BuildChooser {
                 String fqbn;
                 if (branchSpec.startsWith(repository + "/")) {
                     fqbn = "refs/remotes/" + branchSpec;
-                } else if(branchSpec.startsWith("remotes/" + repository + "/")) {
+                } else if (branchSpec.startsWith("remotes/" + repository + "/")) {
                     fqbn = "refs/" + branchSpec;
-                } else if(branchSpec.startsWith("refs/heads/")) {
+                } else if (branchSpec.startsWith("refs/heads/")) {
                     fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
                 } else {
-                    //Check if exact branch name <branchSpec> exists
+                    // Check if exact branch name <branchSpec> exists
                     fqbn = "refs/remotes/" + repository + "/" + branchSpec;
-                    verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                    verbose(
+                            listener,
+                            "Qualifying {0} as a branch in repository {1} -> {2}",
+                            branchSpec,
+                            repository,
+                            fqbn);
                     possibleQualifiedBranches.add(fqbn);
 
-                    //Try branchSpec as it is - e.g. "refs/tags/mytag"
+                    // Try branchSpec as it is - e.g. "refs/tags/mytag"
                     fqbn = branchSpec;
                 }
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);
             }
             for (String fqbn : possibleQualifiedBranches) {
-              revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
+                revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
             }
         }
 
@@ -120,11 +134,13 @@ public class DefaultBuildChooser extends BuildChooser {
                 verbose(listener, "{0} seems to be a non-branch reference (tag?)");
             }
         }
-        
+
         return revisions;
     }
 
-    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuildData data) throws InterruptedException {
+    private Collection<Revision> getHeadRevision(
+            boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuildData data)
+            throws InterruptedException {
         try {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);
@@ -165,7 +181,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException on input or output error
      * @throws GitException on git error
      */
-    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+    private List<Revision> getAdvancedCandidateRevisions(
+            boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context)
+            throws GitException, IOException, InterruptedException {
 
         EnvVars env = context.getEnvironment();
 
@@ -175,11 +193,11 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // 2. Filter out any revisions that don't contain any branches that we
         // actually care about (spec)
-        for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
+        for (Iterator<Revision> i = revs.iterator(); i.hasNext(); ) {
             Revision r = i.next();
 
             // filter out uninteresting branches
-            for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext();) {
+            for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext(); ) {
                 Branch b = j.next();
                 boolean keep = false;
                 for (BranchSpec bspec : gitSCM.getBranches()) {
@@ -194,14 +212,14 @@ public class DefaultBuildChooser extends BuildChooser {
                     j.remove();
                 }
             }
-            
+
             // filter out HEAD ref if it's not the only ref
             if (r.getBranches().size() > 1) {
-                for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext();) {
+                for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext(); ) {
                     Branch b = j.next();
                     if (HEAD.matches(b.getName(), env)) {
-                    	verbose(listener, "Ignoring {0} because there''s named branch for this revision", b.getName());
-                    	j.remove();
+                        verbose(listener, "Ignoring {0} because there''s named branch for this revision", b.getName());
+                        j.remove();
                     }
                 }
             }
@@ -221,15 +239,15 @@ public class DefaultBuildChooser extends BuildChooser {
         // 4. Finally, remove any revisions that have already been built.
         verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
         Revision lastBuiltRevision = data.getLastBuiltRevision();
-        for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
+        for (Iterator<Revision> i = revs.iterator(); i.hasNext(); ) {
             Revision r = i.next();
 
             if (data.hasBeenBuilt(r.getSha1())) {
                 i.remove();
-                
+
                 // keep track of new branches pointing to the last built revision
                 if (lastBuiltRevision != null && lastBuiltRevision.getSha1().equals(r.getSha1())) {
-                	lastBuiltRevision = r;
+                    lastBuiltRevision = r;
                 }
             }
         }
@@ -241,8 +259,12 @@ public class DefaultBuildChooser extends BuildChooser {
         // a deterministic value for GIT_BRANCH and allows a git-flow style workflow
         // with fast-forward merges between branches
         if (!isPollCall && revs.isEmpty() && lastBuiltRevision != null) {
-            verbose(listener, "Nothing seems worth building, so falling back to the previously built revision: {0}", data.getLastBuiltRevision());
-            return Collections.singletonList(utils.sortBranchesForRevision(lastBuiltRevision, gitSCM.getBranches(), env));
+            verbose(
+                    listener,
+                    "Nothing seems worth building, so falling back to the previously built revision: {0}",
+                    data.getLastBuiltRevision());
+            return Collections.singletonList(
+                    utils.sortBranchesForRevision(lastBuiltRevision, gitSCM.getBranches(), env));
         }
 
         // 5. sort them by the date of commit, old to new
@@ -258,8 +280,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * Write the message to the listener only when the verbose mode is on.
      */
     private void verbose(TaskListener listener, String format, Object... args) {
-        if (GitSCM.VERBOSE)
-            listener.getLogger().println(MessageFormat.format(format,args));
+        if (GitSCM.VERBOSE) {
+            listener.getLogger().println(MessageFormat.format(format, args));
+        }
     }
 
     @Extension

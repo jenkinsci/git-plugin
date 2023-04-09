@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.58</version>
+    <version>4.59</version>
     <relativePath />
   </parent>
 
@@ -92,12 +92,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>structs</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>git-client</artifactId>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -105,7 +102,33 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>ssh-credentials</artifactId>
+      <artifactId>credentials-binding</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>mailer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>matrix-project</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <!-- we contribute AbstractBuildParameters for Git if it's available -->
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>parameterized-trigger</artifactId>
+      <version>2.43.1</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>promoted-builds</artifactId>
+      <version>3.11</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -116,12 +139,83 @@
       <artifactId>script-security</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-step-api</artifactId>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>ssh-credentials</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>structs</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>token-macro</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.configuration-as-code</groupId>
+      <artifactId>test-harness</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>pipeline-groovy-lib</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>nl.jqno.equalsverifier</groupId>
+      <artifactId>equalsverifier</artifactId>
+      <version>3.14.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.main</groupId>
+      <artifactId>jenkins-test-harness</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- BOM automated tests fail without conditional-buildstep plugin -->
+      <!-- TODO: Remove this dependency when parameterized trigger plugin dependency fix is released -->
+      <!-- https://github.com/jenkinsci/bom/pull/1623#issuecomment-1339989438 -->
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>conditional-buildstep</artifactId>
+      <version>1.4.2</version>
+      <scope>test</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git-tag-message</artifactId>
+      <version>1.7.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>scm-api</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-basic-steps</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -130,23 +224,24 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>matrix-project</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>mailer</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-durable-task-step</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-multibranch</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -159,105 +254,6 @@
       <artifactId>mockito-inline</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>nl.jqno.equalsverifier</groupId>
-      <artifactId>equalsverifier</artifactId>
-      <version>3.14.1</version>
-      <scope>test</scope>
-    </dependency>
-    <!--Credential Binding Plugin-->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>credentials-binding</artifactId>
-    </dependency>
-    <dependency>
-      <!-- we contribute AbstractBuildParameters for Git if it's available -->
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>parameterized-trigger</artifactId>
-      <version>2.43.1</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <!-- BOM automated tests fail without conditional-buildstep plugin -->
-      <!-- TODO: Remove this dependency when parameterized trigger plugin dependency fix is released -->
-      <!-- https://github.com/jenkinsci/bom/pull/1623#issuecomment-1339989438 -->
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>conditional-buildstep</artifactId>
-      <version>1.4.2</version>
-      <scope>test</scope>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>token-macro</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>promoted-builds</artifactId>
-      <version>3.11</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-step-api</artifactId>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>scm-api</artifactId>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-job</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-basic-steps</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-durable-task-step</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-multibranch</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.jenkins.plugins</groupId>
-      <artifactId>pipeline-groovy-lib</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>git-tag-message</artifactId>
-      <version>1.7.1</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- JCasC compatibility -->
-    <dependency>
-      <groupId>io.jenkins</groupId>
-      <artifactId>configuration-as-code</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>io.jenkins.configuration-as-code</groupId>
-      <artifactId>test-harness</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.main</groupId>
-      <artifactId>jenkins-test-harness</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <repositories>
@@ -266,6 +262,7 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
+
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
@@ -274,40 +271,6 @@
   </pluginRepositories>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>com.diffplug.spotless</groupId>
-          <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.35.0</version>
-          <configuration>
-            <!-- define a language-specific format -->
-            <java>
-              <!-- no need to specify files, inferred automatically -->
-              <endWithNewline />
-              <removeUnusedImports />
-            </java>
-            <pom>
-              <sortPom>
-                <encoding>${project.build.sourceEncoding}</encoding>
-                <lineSeparator>\n</lineSeparator>
-                <expandEmptyElements>false</expandEmptyElements>
-                <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
-              </sortPom>
-            </pom>
-          </configuration>
-          <executions>
-            <execution>
-              <!-- Runs in verify phase by default -->
-              <goals>
-                <!-- Can be disabled using -Dspotless.check.skip -->
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

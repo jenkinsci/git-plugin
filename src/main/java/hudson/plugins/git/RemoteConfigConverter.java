@@ -11,9 +11,6 @@ import com.thoughtworks.xstream.core.util.HierarchicalStreams;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.mapper.Mapper;
-import org.eclipse.jgit.lib.Config;
-import org.eclipse.jgit.transport.RemoteConfig;
-
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -21,6 +18,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.transport.RemoteConfig;
 
 /**
  * Remote config converter that handles unmarshaling legacy externalization of
@@ -31,8 +30,7 @@ public class RemoteConfigConverter implements Converter {
     /**
      * Remote config proxy
      */
-    private static class RemoteConfigProxy extends Config implements
-            Externalizable {
+    private static class RemoteConfigProxy extends Config implements Externalizable {
 
         private static final String KEY_URL = "url";
 
@@ -65,24 +63,31 @@ public class RemoteConfigConverter implements Converter {
             receivepack = "git-receive-pack";
         }
 
+        @Override
         public String getString(String section, String subsection, String name) {
-            if (KEY_UPLOADPACK.equals(name))
+            if (KEY_UPLOADPACK.equals(name)) {
                 return uploadpack;
-            if (KEY_RECEIVEPACK.equals(name))
+            }
+            if (KEY_RECEIVEPACK.equals(name)) {
                 return receivepack;
-            if (KEY_TAGOPT.equals(name))
+            }
+            if (KEY_TAGOPT.equals(name)) {
                 return tagopt;
+            }
             return super.getString(section, subsection, name);
         }
 
-        public String[] getStringList(String section, String subsection,
-                String name) {
-            if (KEY_URL.equals(name))
+        @Override
+        public String[] getStringList(String section, String subsection, String name) {
+            if (KEY_URL.equals(name)) {
                 return uris;
-            if (KEY_FETCH.equals(name))
+            }
+            if (KEY_FETCH.equals(name)) {
                 return fetch;
-            if (KEY_PUSH.equals(name))
+            }
+            if (KEY_PUSH.equals(name)) {
                 return push;
+            }
             return super.getStringList(section, subsection, name);
         }
 
@@ -90,37 +95,41 @@ public class RemoteConfigConverter implements Converter {
             for (Entry<String, Collection<String>> entry : map.entrySet()) {
                 String key = entry.getKey();
                 Collection<String> values = entry.getValue();
-                if (null != key)
+                if (null != key) {
                     switch (key) {
-                    case KEY_URL:
-                        uris = values.toArray(new String[0]);
-                        break;
-                    case KEY_FETCH:
-                        fetch = values.toArray(new String[0]);
-                        break;
-                    case KEY_PUSH:
-                        push = values.toArray(new String[0]);
-                        break;
-                    case KEY_UPLOADPACK:
-                        for (String value : values)
-                            uploadpack = value;
-                        break;
-                    case KEY_RECEIVEPACK:
-                        for (String value : values)
-                            receivepack = value;
-                        break;
-                    case KEY_TAGOPT:
-                        for (String value : values)
-                            tagopt = value;
-                        break;
-                    default:
-                        break;
+                        case KEY_URL:
+                            uris = values.toArray(new String[0]);
+                            break;
+                        case KEY_FETCH:
+                            fetch = values.toArray(new String[0]);
+                            break;
+                        case KEY_PUSH:
+                            push = values.toArray(new String[0]);
+                            break;
+                        case KEY_UPLOADPACK:
+                            for (String value : values) {
+                                uploadpack = value;
+                            }
+                            break;
+                        case KEY_RECEIVEPACK:
+                            for (String value : values) {
+                                receivepack = value;
+                            }
+                            break;
+                        case KEY_TAGOPT:
+                            for (String value : values) {
+                                tagopt = value;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }
 
-        public void readExternal(ObjectInput in) throws IOException,
-                ClassNotFoundException {
+        @Override
+        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
             name = in.readUTF();
             final int items = in.readInt();
             Map<String, Collection<String>> map = new HashMap<>();
@@ -133,6 +142,7 @@ public class RemoteConfigConverter implements Converter {
             fromMap(map);
         }
 
+        @Override
         public void writeExternal(ObjectOutput out) throws IOException {
             throw new IOException("writeExternal not supported");
         }
@@ -151,49 +161,48 @@ public class RemoteConfigConverter implements Converter {
 
     /**
      * Create remote config converter.
-     * 
+     *
      * @param xStream XStream used for remote configuration conversion
      */
     public RemoteConfigConverter(XStream xStream) {
         mapper = xStream.getMapper();
         @SuppressWarnings("deprecation")
-        SerializableConverter tempConvertor = new SerializableConverter(mapper,
-                xStream.getReflectionProvider());
+        SerializableConverter tempConvertor = new SerializableConverter(mapper, xStream.getReflectionProvider());
         converter = tempConvertor;
     }
 
+    @Override
     public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
         return RemoteConfig.class == type;
     }
 
-    public void marshal(Object source, HierarchicalStreamWriter writer,
-            MarshallingContext context) {
+    @Override
+    public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
         converter.marshal(source, writer, context);
     }
 
     /**
      * Is the current reader node a legacy node?
-     * 
+     *
      * @param reader stream reader
      * @param context usage context of reader
      * @return true if legacy, false otherwise
      */
-    protected boolean isLegacyNode(HierarchicalStreamReader reader,
-            final UnmarshallingContext context) {
+    protected boolean isLegacyNode(HierarchicalStreamReader reader, final UnmarshallingContext context) {
         return reader.getNodeName().startsWith("org.spearce");
     }
 
     /**
      * Legacy unmarshalling of remote config
-     * 
+     *
      * @param reader stream reader
      * @param context usage context of reader
      * @return remote config
      */
-    protected Object legacyUnmarshal(final HierarchicalStreamReader reader,
-            final UnmarshallingContext context) {
+    protected Object legacyUnmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
         final RemoteConfigProxy proxy = new RemoteConfigProxy();
         CustomObjectInputStream.StreamCallback callback = new CustomObjectInputStream.StreamCallback() {
+            @Override
             public Object readFromStream() {
                 reader.moveDown();
                 @SuppressWarnings("rawtypes")
@@ -203,28 +212,30 @@ public class RemoteConfigConverter implements Converter {
                 return streamItem;
             }
 
+            @Override
             @SuppressWarnings("rawtypes")
             public Map readFieldsFromStream() {
                 throw new UnsupportedOperationException();
             }
 
+            @Override
             public void defaultReadObject() {
                 throw new UnsupportedOperationException();
             }
 
-            public void registerValidation(ObjectInputValidation validation,
-                    int priority) throws NotActiveException {
+            @Override
+            public void registerValidation(ObjectInputValidation validation, int priority) throws NotActiveException {
                 throw new NotActiveException();
             }
 
+            @Override
             public void close() {
                 throw new UnsupportedOperationException();
             }
         };
         try {
             @SuppressWarnings("deprecation")
-            CustomObjectInputStream objectInput = CustomObjectInputStream
-                    .getInstance(context, callback);
+            CustomObjectInputStream objectInput = CustomObjectInputStream.getInstance(context, callback);
             proxy.readExternal(objectInput);
             objectInput.popCallback();
             return proxy.toRemote();
@@ -233,10 +244,11 @@ public class RemoteConfigConverter implements Converter {
         }
     }
 
-    public Object unmarshal(final HierarchicalStreamReader reader,
-            final UnmarshallingContext context) {
-        if (isLegacyNode(reader, context))
+    @Override
+    public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
+        if (isLegacyNode(reader, context)) {
             return legacyUnmarshal(reader, context);
+        }
         return converter.unmarshal(reader, context);
     }
 }

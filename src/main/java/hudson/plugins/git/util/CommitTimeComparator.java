@@ -25,18 +25,19 @@ package hudson.plugins.git.util;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.plugins.git.Revision;
+import java.io.IOException;
+import java.util.Comparator;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-import java.io.IOException;
-import java.util.Comparator;
-
 /**
  * Compares {@link Revision} by their timestamps.
- * 
+ *
  * @author Kohsuke Kawaguchi
  */
-@SuppressFBWarnings(value="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE", justification="Known non-serializable field critical part of class")
+@SuppressFBWarnings(
+        value = "SE_COMPARATOR_SHOULD_BE_SERIALIZABLE",
+        justification = "Known non-serializable field critical part of class")
 public class CommitTimeComparator implements Comparator<Revision> {
     private final RevWalk walk;
 
@@ -44,8 +45,9 @@ public class CommitTimeComparator implements Comparator<Revision> {
         walk = new RevWalk(r);
     }
 
+    @Override
     public int compare(Revision lhs, Revision rhs) {
-        return compare(time(lhs),time(rhs));
+        return compare(time(lhs), time(rhs));
     }
 
     private int time(Revision r) {
@@ -53,7 +55,7 @@ public class CommitTimeComparator implements Comparator<Revision> {
         try {
             return walk.parseCommit(r.getSha1()).getCommitTime();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to parse "+r.getSha1(),e);
+            throw new RuntimeException("Failed to parse " + r.getSha1(), e);
         }
     }
 

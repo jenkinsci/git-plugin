@@ -7,19 +7,17 @@ import hudson.model.Run;
 import hudson.model.View;
 import hudson.plugins.git.AbstractGitTestCase;
 import hudson.plugins.git.BranchSpec;
-
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitStatusTest;
 import hudson.util.RunList;
 import java.io.File;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
 
@@ -46,7 +44,8 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
                 rule.waitForCompletion(run);
             } catch (InterruptedException ex) {
-                Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
+                Logger.getLogger(GitStatusTest.class.getName())
+                        .log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
             }
         });
     }
@@ -58,9 +57,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         branchSpec.add(new BranchSpec("master"));
         branchSpec.add(new BranchSpec("foo"));
         branchSpec.add(new BranchSpec("bar"));
-        FreeStyleProject project = setupProject(branchSpec, false, "",
-                "","",
-                "", false, "");
+        FreeStyleProject project = setupProject(branchSpec, false, "", "", "", "", false, "");
 
         ((GitSCM) project.getScm()).getExtensions().add(new BuildSingleRevisionOnly());
         final String commitFile = "commitFile1";
@@ -78,8 +75,8 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile);
 
         rule.assertBuildStatusSuccess(build);
-        boolean result = build.getLog(100).contains(
-                String.format("Scheduling another build to catch up with %s", project.getName()));
+        boolean result = build.getLog(100)
+                .contains(String.format("Scheduling another build to catch up with %s", project.getName()));
         Assert.assertFalse("Single revision scheduling did not prevent a build of a different revision", result);
     }
 
@@ -90,9 +87,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         branchSpec.add(new BranchSpec("master"));
         branchSpec.add(new BranchSpec("foo"));
         branchSpec.add(new BranchSpec("bar"));
-        FreeStyleProject project = setupProject(branchSpec, false, "",
-                "","",
-                "", false, "");
+        FreeStyleProject project = setupProject(branchSpec, false, "", "", "", "", false, "");
 
         final String commitFile = "commitFile1";
         // create the initial master commit

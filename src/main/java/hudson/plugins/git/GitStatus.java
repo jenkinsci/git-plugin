@@ -1,5 +1,8 @@
 package hudson.plugins.git;
 
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -19,15 +22,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
 import jenkins.util.SystemProperties;
 import org.apache.commons.lang.StringUtils;
-
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
@@ -45,6 +44,7 @@ public class GitStatus implements UnprotectedRootAction {
         return "Git";
     }
 
+    @Override
     public String getIconFileName() {
         // TODO
         return null;
@@ -61,9 +61,9 @@ public class GitStatus implements UnprotectedRootAction {
         allowNotifyCommitParameters = allowed;
     }
 
-    private String lastURL = "";        // Required query parameter
+    private String lastURL = ""; // Required query parameter
     private String lastBranches = null; // Optional query parameter
-    private String lastSHA1 = null;     // Optional query parameter
+    private String lastSHA1 = null; // Optional query parameter
     private List<ParameterValue> lastBuildParameters = null;
     private static List<ParameterValue> lastStaticBuildParameters = null;
 
@@ -113,13 +113,18 @@ public class GitStatus implements UnprotectedRootAction {
         return s.toString();
     }
 
-    public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
-                                       @QueryParameter() String branches, @QueryParameter() String sha1,
-                                       @QueryParameter() String token) {
+    public HttpResponse doNotifyCommit(
+            HttpServletRequest request,
+            @QueryParameter(required = true) String url,
+            @QueryParameter() String branches,
+            @QueryParameter() String sha1,
+            @QueryParameter() String token) {
         if (!"disabled".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL)
                 && !"disabled-for-polling".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL)) {
             if (token == null || token.isEmpty()) {
-                return HttpResponses.errorWithoutStack(401, "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
+                return HttpResponses.errorWithoutStack(
+                        401,
+                        "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
             }
             if (!ApiTokenPropertyConfiguration.get().isValidApiToken(token)) {
                 return HttpResponses.errorWithoutStack(403, "Invalid access token");
@@ -127,15 +132,19 @@ public class GitStatus implements UnprotectedRootAction {
         }
         if ("disabled-for-polling".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL) && sha1 != null && !sha1.isEmpty()) {
             if (token == null || token.isEmpty()) {
-                return HttpResponses.errorWithoutStack(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
-            } 
+                return HttpResponses.errorWithoutStack(
+                        401,
+                        "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
+            }
             if (!ApiTokenPropertyConfiguration.get().isValidApiToken(token)) {
                 return HttpResponses.errorWithoutStack(403, "Invalid access token");
             }
         }
         lastURL = url;
         lastBranches = branches;
-        if (sha1 != null && !sha1.isBlank() && !SHA1_PATTERN.matcher(sha1.trim()).matches()) {
+        if (sha1 != null
+                && !sha1.isBlank()
+                && !SHA1_PATTERN.matcher(sha1.trim()).matches()) {
             return HttpResponses.error(SC_BAD_REQUEST, new IllegalArgumentException("Illegal SHA1"));
         }
         lastSHA1 = cleanupSha1(sha1);
@@ -153,9 +162,14 @@ public class GitStatus implements UnprotectedRootAction {
         if (allowNotifyCommitParameters || !safeParameters.isEmpty()) { // Allow SECURITY-275 bug
             final Map<String, String[]> parameterMap = request.getParameterMap();
             for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-                if (!(entry.getKey().equals("url")) && !(entry.getKey().equals("branches")) && !(entry.getKey().equals("sha1")))
-                    if (entry.getValue()[0] != null && (allowNotifyCommitParameters || safeParameters.contains(entry.getKey())))
+                if (!(entry.getKey().equals("url"))
+                        && !(entry.getKey().equals("branches"))
+                        && !(entry.getKey().equals("sha1"))) {
+                    if (entry.getValue()[0] != null
+                            && (allowNotifyCommitParameters || safeParameters.contains(entry.getKey()))) {
                         buildParameters.add(new StringParameterValue(entry.getKey(), entry.getValue()[0]));
+                    }
+                }
             }
         }
         lastBuildParameters = buildParameters;
@@ -203,14 +217,20 @@ public class GitStatus implements UnprotectedRootAction {
      * @return true if left-hand side loosely matches right-hand side
      */
     public static boolean looselyMatches(URIish lhs, URIish rhs) {
-        return Objects.equals(lhs.getHost(),rhs.getHost())
-            && Objects.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+        return Objects.equals(lhs.getHost(), rhs.getHost())
+                && Objects.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
     }
 
     private static String normalizePath(String path) {
-        if (path.startsWith("/"))   path=path.substring(1);
-        if (path.endsWith("/"))     path=path.substring(0,path.length()-1);
-        if (path.endsWith(".git"))  path=path.substring(0,path.length()-4);
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        if (path.endsWith(".git")) {
+            path = path.substring(0, path.length() - 4);
+        }
         return path;
     }
 
@@ -227,8 +247,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param rsp the response.
          * @since 1.4.1
          */
-        public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
-        }
+        public void addHeaders(StaplerRequest req, StaplerResponse rsp) {}
 
         /**
          * Write the contributed body.
@@ -248,8 +267,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param w the writer.
          * @since 1.4.1
          */
-        public void writeBody(PrintWriter w) {
-        }
+        public void writeBody(PrintWriter w) {}
     }
 
     /**
@@ -257,7 +275,7 @@ public class GitStatus implements UnprotectedRootAction {
      *
      * @since 1.4.1
      */
-    public static abstract class Listener implements ExtensionPoint {
+    public abstract static class Listener implements ExtensionPoint {
 
         /**
          * @deprecated implement {@link #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, List, String...)}
@@ -297,7 +315,8 @@ public class GitStatus implements UnprotectedRootAction {
          * @deprecated use {@link #onNotifyCommit(String, URIish, String, List, String...)}
          */
         @Deprecated
-        public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(
+                URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) {
             return onNotifyCommit(uri, sha1, branches);
         }
 
@@ -316,15 +335,14 @@ public class GitStatus implements UnprotectedRootAction {
          * @return any response contributors for the response to the push request.
          * @since 2.6.5
          */
-        public List<ResponseContributor> onNotifyCommit(@CheckForNull String origin,
-                                                        URIish uri,
-                                                        @Nullable String sha1,
-                                                        List<ParameterValue> buildParameters,
-                                                        String... branches) {
+        public List<ResponseContributor> onNotifyCommit(
+                @CheckForNull String origin,
+                URIish uri,
+                @Nullable String sha1,
+                List<ParameterValue> buildParameters,
+                String... branches) {
             return onNotifyCommit(uri, sha1, buildParameters, branches);
         }
-
-
     }
 
     /**
@@ -340,11 +358,14 @@ public class GitStatus implements UnprotectedRootAction {
          * {@inheritDoc}
          */
         @Override
-        public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(
+                String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             sha1 = cleanupSha1(sha1);
             if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, "Received notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3}",
-                           new Object[]{StringUtils.defaultIfBlank(origin, "?"), uri, sha1, Arrays.toString(branches)});
+                LOGGER.log(
+                        Level.FINE,
+                        "Received notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3}",
+                        new Object[] {StringUtils.defaultIfBlank(origin, "?"), uri, sha1, Arrays.toString(branches)});
             }
 
             GitStatus.clearLastStaticBuildParameters();
@@ -354,8 +375,7 @@ public class GitStatus implements UnprotectedRootAction {
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
             try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
-                boolean scmFound = false,
-                        urlFound = false;
+                boolean scmFound = false, urlFound = false;
                 Jenkins jenkins = Jenkins.getInstanceOrNull();
                 if (jenkins == null) {
                     LOGGER.severe("Jenkins.getInstance() is null in GitStatus.onNotifyCommit");
@@ -366,7 +386,8 @@ public class GitStatus implements UnprotectedRootAction {
                     if (scmTriggerItem == null) {
                         continue;
                     }
-                    SCMS: for (SCM scm : scmTriggerItem.getSCMs()) {
+                    SCMS:
+                    for (SCM scm : scmTriggerItem.getSCMs()) {
                         if (!(scm instanceof GitSCM)) {
                             continue;
                         }
@@ -374,8 +395,7 @@ public class GitStatus implements UnprotectedRootAction {
                         scmFound = true;
 
                         for (RemoteConfig repository : git.getRepositories()) {
-                            boolean repositoryMatches = false,
-                                    branchMatches = false;
+                            boolean repositoryMatches = false, branchMatches = false;
                             URIish matchedURL = null;
                             for (URIish remoteURL : repository.getURIs()) {
                                 if (looselyMatches(uri, remoteURL)) {
@@ -385,28 +405,34 @@ public class GitStatus implements UnprotectedRootAction {
                                 }
                             }
 
-                            if (!repositoryMatches || git.getExtensions().get(IgnoreNotifyCommit.class)!=null) {
+                            if (!repositoryMatches || git.getExtensions().get(IgnoreNotifyCommit.class) != null) {
                                 continue;
                             }
 
                             SCMTrigger trigger = scmTriggerItem.getSCMTrigger();
                             if (trigger == null || trigger.isIgnorePostCommitHooks()) {
                                 if (LOGGER.isLoggable(Level.FINE)) {
-                                    LOGGER.log(Level.FINE, "no trigger, or post-commit hooks disabled, on {0}", project.getFullDisplayName());
+                                    LOGGER.log(
+                                            Level.FINE,
+                                            "no trigger, or post-commit hooks disabled, on {0}",
+                                            project.getFullDisplayName());
                                 }
                                 continue;
                             }
 
-                            boolean branchFound = false,
-                                    parametrizedBranchSpec = false;
+                            boolean branchFound = false, parametrizedBranchSpec = false;
                             if (branches.length == 0) {
                                 branchFound = true;
                             } else {
-                                OUT: for (BranchSpec branchSpec : git.getBranches()) {
+                                OUT:
+                                for (BranchSpec branchSpec : git.getBranches()) {
                                     if (branchSpec.getName().contains("$")) {
                                         // If the branchspec is parametrized, always run the polling
                                         if (LOGGER.isLoggable(Level.FINE)) {
-                                            LOGGER.log(Level.FINE, "Branch Spec is parametrized for {0}", project.getFullDisplayName());
+                                            LOGGER.log(
+                                                    Level.FINE,
+                                                    "Branch Spec is parametrized for {0}",
+                                                    project.getFullDisplayName());
                                         }
                                         branchFound = true;
                                         parametrizedBranchSpec = true;
@@ -414,7 +440,12 @@ public class GitStatus implements UnprotectedRootAction {
                                         for (String branch : branches) {
                                             if (branchSpec.matchesRepositoryBranch(repository.getName(), branch)) {
                                                 if (LOGGER.isLoggable(Level.FINE)) {
-                                                    LOGGER.log(Level.FINE, "Branch Spec {0} matches modified branch {1} for {2}", new Object[]{branchSpec, branch, project.getFullDisplayName()});
+                                                    LOGGER.log(
+                                                            Level.FINE,
+                                                            "Branch Spec {0} matches modified branch {1} for {2}",
+                                                            new Object[] {
+                                                                branchSpec, branch, project.getFullDisplayName()
+                                                            });
                                                 }
                                                 branchFound = true;
                                                 break OUT;
@@ -423,21 +454,25 @@ public class GitStatus implements UnprotectedRootAction {
                                     }
                                 }
                             }
-                            if (!branchFound) continue;
+                            if (!branchFound) {
+                                continue;
+                            }
                             urlFound = true;
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
-                                //JENKINS-30178 Add default parameters defined in the job
+                                // JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
                                     Set<String> buildParametersNames = new HashSet<>();
                                     if (allowNotifyCommitParameters || !safeParameters.isEmpty()) {
-                                        for (ParameterValue parameterValue: allBuildParameters) {
-                                            if (allowNotifyCommitParameters || safeParameters.contains(parameterValue.getName())) {
+                                        for (ParameterValue parameterValue : allBuildParameters) {
+                                            if (allowNotifyCommitParameters
+                                                    || safeParameters.contains(parameterValue.getName())) {
                                                 buildParametersNames.add(parameterValue.getName());
                                             }
                                         }
                                     }
 
-                                    List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
+                                    List<ParameterValue> jobParametersValues =
+                                            getDefaultParametersValues((Job) project);
                                     for (ParameterValue defaultParameterValue : jobParametersValues) {
                                         if (!buildParametersNames.contains(defaultParameterValue.getName())) {
                                             allBuildParameters.add(defaultParameterValue);
@@ -449,10 +484,14 @@ public class GitStatus implements UnprotectedRootAction {
                                      * NOTE: This is SCHEDULING THE BUILD, not triggering polling of the repo.
                                      * If no SHA1 or the branch spec is parameterized, it will only poll.
                                      */
-                                    LOGGER.log(Level.INFO, "Scheduling {0} to build commit {1}", new Object[]{project.getFullDisplayName(), sha1});
-                                    scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
+                                    LOGGER.log(Level.INFO, "Scheduling {0} to build commit {1}", new Object[] {
+                                        project.getFullDisplayName(), sha1
+                                    });
+                                    scmTriggerItem.scheduleBuild2(
+                                            scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(allBuildParameters));
+                                            new RevisionParameterAction(sha1, matchedURL),
+                                            new ParametersAction(allBuildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     /* Poll the repository for changes
@@ -460,23 +499,26 @@ public class GitStatus implements UnprotectedRootAction {
                                      * If the polling detects changes, it will schedule the build
                                      */
                                     if (LOGGER.isLoggable(Level.FINE)) {
-                                        LOGGER.log(Level.FINE, "Triggering the polling of {0}", project.getFullDisplayName());
+                                        LOGGER.log(
+                                                Level.FINE,
+                                                "Triggering the polling of {0}",
+                                                project.getFullDisplayName());
                                     }
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
-                                    break SCMS; // no need to trigger the same project twice, so do not consider other GitSCMs in it
+                                    break SCMS; // no need to trigger the same project twice, so do not consider other
+                                    // GitSCMs in it
                                 }
                             }
                             break;
                         }
-
                     }
                 }
                 if (!scmFound) {
                     result.add(new MessageResponseContributor("No git jobs found"));
                 } else if (!urlFound) {
-                    result.add(new MessageResponseContributor(
-                            "No git jobs using repository: " + uri.toString() + " and branches: " + String.join(",", branches)));
+                    result.add(new MessageResponseContributor("No git jobs using repository: " + uri.toString()
+                            + " and branches: " + String.join(",", branches)));
                 }
 
                 lastStaticBuildParameters = allBuildParameters;
@@ -488,12 +530,12 @@ public class GitStatus implements UnprotectedRootAction {
          * Get the default parameters values from a job
          *
          */
-        private ArrayList<ParameterValue> getDefaultParametersValues(Job<?,?> job) {
+        private ArrayList<ParameterValue> getDefaultParametersValues(Job<?, ?> job) {
             ArrayList<ParameterValue> defValues;
             ParametersDefinitionProperty paramDefProp = job.getProperty(ParametersDefinitionProperty.class);
 
             if (paramDefProp != null) {
-                List <ParameterDefinition> parameterDefinition = paramDefProp.getParameterDefinitions();
+                List<ParameterDefinition> parameterDefinition = paramDefProp.getParameterDefinitions();
                 defValues = new ArrayList<>(parameterDefinition.size());
 
             } else {
@@ -503,7 +545,7 @@ public class GitStatus implements UnprotectedRootAction {
 
             /* Scan for all parameter with an associated default values */
             for (ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions()) {
-                ParameterValue defaultValue  = paramDefinition.getDefaultParameterValue();
+                ParameterValue defaultValue = paramDefinition.getDefaultParameterValue();
 
                 if (defaultValue != null) {
                     defValues.add(defaultValue);
@@ -632,7 +674,8 @@ public class GitStatus implements UnprotectedRootAction {
         }
     }
 
-    public static final Pattern SHA1_PATTERN = Pattern.compile("[a-fA-F0-9]++"); // we should have {40} but some compact sha1
+    public static final Pattern SHA1_PATTERN =
+            Pattern.compile("[a-fA-F0-9]++"); // we should have {40} but some compact sha1
 
     public static final Pattern CLEANER_SHA1_PATTERN = Pattern.compile("[^a-fA-F0-9]");
 
@@ -640,8 +683,8 @@ public class GitStatus implements UnprotectedRootAction {
      * @param sha1 the String to cleanup
      * @return the String with all non hexa characters removed
      */
-    private static String cleanupSha1(String sha1){
-        return sha1 == null?null:CLEANER_SHA1_PATTERN.matcher(sha1.trim()).replaceAll("");
+    private static String cleanupSha1(String sha1) {
+        return sha1 == null ? null : CLEANER_SHA1_PATTERN.matcher(sha1.trim()).replaceAll("");
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
@@ -664,8 +707,10 @@ public class GitStatus implements UnprotectedRootAction {
      * "hudson.model.ParametersAction.keepUndefinedParameters" if it
      * is set to true.
      */
-    public static final boolean ALLOW_NOTIFY_COMMIT_PARAMETERS = Boolean.valueOf(System.getProperty(GitStatus.class.getName() + ".allowNotifyCommitParameters", "false"))
+    public static final boolean ALLOW_NOTIFY_COMMIT_PARAMETERS = Boolean.valueOf(
+                    System.getProperty(GitStatus.class.getName() + ".allowNotifyCommitParameters", "false"))
             || Boolean.valueOf(System.getProperty("hudson.model.ParametersAction.keepUndefinedParameters", "false"));
+
     private static boolean allowNotifyCommitParameters = ALLOW_NOTIFY_COMMIT_PARAMETERS;
 
     /* Package protected for test.
@@ -683,8 +728,10 @@ public class GitStatus implements UnprotectedRootAction {
 
     @NonNull
     private static String getSafeParameters() {
-        String globalSafeParameters = System.getProperty("hudson.model.ParametersAction.safeParameters", "").trim();
-        String gitStatusSafeParameters = System.getProperty(GitStatus.class.getName() + ".safeParameters", "").trim();
+        String globalSafeParameters = System.getProperty("hudson.model.ParametersAction.safeParameters", "")
+                .trim();
+        String gitStatusSafeParameters = System.getProperty(GitStatus.class.getName() + ".safeParameters", "")
+                .trim();
         if (globalSafeParameters.isEmpty()) {
             return gitStatusSafeParameters;
         }
@@ -711,5 +758,6 @@ public class GitStatus implements UnprotectedRootAction {
      * "hudson.model.ParametersAction.safeParameters" if set.
      */
     public static final String SAFE_PARAMETERS = getSafeParameters();
+
     private static Set<String> safeParameters = csvToSet(SAFE_PARAMETERS);
 }

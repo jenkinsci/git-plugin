@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
@@ -7,15 +8,12 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * @author Chris Klaiber (cklaiber@gmail.com)
@@ -57,7 +55,9 @@ public class KilnGit extends GitRepositoryBrowser {
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
-        if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
+        if (path.getEditType() != EditType.EDIT
+                || path.getSrc() == null
+                || path.getDst() == null
                 || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
@@ -97,13 +97,16 @@ public class KilnGit extends GitRepositoryBrowser {
         } else {
             GitChangeSet changeSet = path.getChangeSet();
             URL url = getUrl();
-            return encodeURL(new URL(url, url.getPath() + "FileHistory/" + path.getPath() + param(url).add("rev=" + changeSet.getId())));
+            return encodeURL(new URL(
+                    url,
+                    url.getPath() + "FileHistory/" + path.getPath() + param(url).add("rev=" + changeSet.getId())));
         }
     }
 
     @Extension
     @Symbol("kiln")
     public static class KilnGitDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "Kiln";
@@ -111,7 +114,7 @@ public class KilnGit extends GitRepositoryBrowser {
 
         @Override
         public KilnGit newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(KilnGit.class, jsonObject);
         }
     }

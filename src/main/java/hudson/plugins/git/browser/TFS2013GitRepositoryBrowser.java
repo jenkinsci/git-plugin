@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractProject;
@@ -8,22 +9,20 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.regex.Pattern;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.regex.Pattern;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Browser for Git repositories on Microsoft Team Foundation Server (TFS) 2013 and higher versions using the
@@ -38,13 +37,15 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
 
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
-        String spec = String.format("commit/%s#path=%s&_a=compare", path.getChangeSet().getId(), path.getPath());
+        String spec = String.format(
+                "commit/%s#path=%s&_a=compare", path.getChangeSet().getId(), path.getPath());
         return new URL(getRepoUrl(path.getChangeSet()), spec);
     }
 
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
-        String spec = String.format("commit/%s#path=%s&_a=history", path.getChangeSet().getId(), path.getPath());
+        String spec = String.format(
+                "commit/%s#path=%s&_a=history", path.getChangeSet().getId(), path.getPath());
         return encodeURL(new URL(getRepoUrl(path.getChangeSet()), spec));
     }
 
@@ -55,12 +56,12 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
 
     /*default*/ URL getRepoUrl(GitChangeSet changeSet) throws IOException { // default visibility for tests
         String result = getRepoUrl();
-        
-        if (result == null || result.isBlank())
-            return normalizeToEndWithSlash(getUrlFromFirstConfiguredRepository(changeSet));
 
-        else if (!result.contains("/"))
+        if (result == null || result.isBlank()) {
+            return normalizeToEndWithSlash(getUrlFromFirstConfiguredRepository(changeSet));
+        } else if (!result.contains("/")) {
             return normalizeToEndWithSlash(getResultFromNamedRepository(changeSet));
+        }
 
         return getUrl();
     }
@@ -76,7 +77,8 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     }
 
     private GitSCM getScmFromProject(GitChangeSet changeSet) {
-        AbstractProject<?,?> build = (AbstractProject<?, ?>) changeSet.getParent().getRun().getParent();
+        AbstractProject<?, ?> build =
+                (AbstractProject<?, ?>) changeSet.getParent().getRun().getParent();
 
         return (GitSCM) build.getScm();
     }
@@ -85,15 +87,19 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     @Symbol("teamFoundation")
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
-        private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
+        private static final String REPOSITORY_BROWSER_LABEL =
+                "Microsoft Team Foundation Server/Visual Studio Team Services";
+
+        @Override
         @NonNull
         public String getDisplayName() {
             return REPOSITORY_BROWSER_LABEL;
         }
 
         @Override
-        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject)
+                throws FormException {
+            assert req != null; // see inherited javadoc
             try {
                 req.getSubmittedForm();
             } catch (ServletException e) {
@@ -111,29 +117,36 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
          * @throws ServletException on servlet error
          */
         @RequirePOST
-        public FormValidation doCheckRepoUrl(@QueryParameter(fixEmpty = true) String value, @AncestorInPath AbstractProject project) throws IOException,
-                ServletException {
+        public FormValidation doCheckRepoUrl(
+                @QueryParameter(fixEmpty = true) String value, @AncestorInPath AbstractProject project)
+                throws IOException, ServletException {
 
             // Connect to URL and check content only if we have admin permission
-            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                 return FormValidation.ok();
+            }
 
-            if (value == null) // nothing entered yet
+            if (value == null) { // nothing entered yet
                 value = "origin";
+            }
 
             if (!value.contains("/") && project != null) {
                 GitSCM scm = (GitSCM) project.getScm();
                 RemoteConfig remote = scm.getRepositoryByName(value);
-                if (remote == null)
-                    return FormValidation.errorWithMarkup("There is no remote with the name <code>" + Util.escape(value) + "</code>");
-                
+                if (remote == null) {
+                    return FormValidation.errorWithMarkup(
+                            "There is no remote with the name <code>" + Util.escape(value) + "</code>");
+                }
+
                 value = remote.getURIs().get(0).toString();
             }
-            
-            if (!value.endsWith("/"))
+
+            if (!value.endsWith("/")) {
                 value += '/';
-            if (!URL_PATTERN.matcher(value).matches())
+            }
+            if (!URL_PATTERN.matcher(value).matches()) {
                 return FormValidation.errorWithMarkup("The URL should end like <code>.../_git/foobar/</code>");
+            }
 
             final String finalValue = value;
             return new FormValidation.URLCheck() {
@@ -143,7 +156,8 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                         if (findText(open(new URL(finalValue)), "icrosoft")) {
                             return FormValidation.ok();
                         } else {
-                            return FormValidation.error("This is a valid URL but it doesn't look like a Microsoft server");
+                            return FormValidation.error(
+                                    "This is a valid URL but it doesn't look like a Microsoft server");
                         }
                     } catch (IOException e) {
                         return handleIOException(finalValue, e);

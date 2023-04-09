@@ -7,8 +7,6 @@ public class GitLFSPullTest {
 
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(GitLFSPull.class)
-                .usingGetClass()
-                .verify();
+        EqualsVerifier.forClass(GitLFSPull.class).usingGetClass().verify();
     }
 }

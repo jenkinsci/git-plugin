@@ -1,12 +1,12 @@
 package hudson.plugins.git.util;
 
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertTrue;
+
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,11 +77,9 @@ public class BuildDataLoggingTest {
         }
 
         @Override
-        public void close() {
-        }
+        public void close() {}
 
         @Override
-        public void flush() {
-        }
+        public void flush() {}
     }
 }

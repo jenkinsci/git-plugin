@@ -23,24 +23,24 @@
  */
 package hudson.plugins.git;
 
-import hudson.model.AbstractBuild;
-import hudson.model.TaskListener;
-import hudson.plugins.git.util.BuildData;
-import org.eclipse.jgit.lib.ObjectId;
-import org.junit.Test;
-import org.junit.Before;
-import org.mockito.Mockito;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import hudson.model.AbstractBuild;
+import hudson.model.TaskListener;
+import hudson.plugins.git.util.BuildData;
+import org.eclipse.jgit.lib.ObjectId;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
 public class GitRevisionTokenMacroTest {
 
     private GitRevisionTokenMacro tokenMacro;
 
-    public GitRevisionTokenMacroTest() {
-    }
+    public GitRevisionTokenMacroTest() {}
 
     @Before
     public void createTokenMacro() {
@@ -101,6 +101,8 @@ public class GitRevisionTokenMacroTest {
         AbstractBuild build = Mockito.mock(AbstractBuild.class);
         Mockito.when(build.getAction(BuildData.class)).thenReturn(buildData);
         tokenMacro.length = 8;
-        assertThat(tokenMacro.evaluate(build, TaskListener.NULL, "GIT_REVISION"), is(revision.getSha1String().substring(0, 8)));
+        assertThat(
+                tokenMacro.evaluate(build, TaskListener.NULL, "GIT_REVISION"),
+                is(revision.getSha1String().substring(0, 8)));
     }
 }

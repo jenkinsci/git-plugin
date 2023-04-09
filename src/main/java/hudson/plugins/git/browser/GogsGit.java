@@ -1,20 +1,18 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * @author Norbert Lange (nolange79@gmail.com)
@@ -52,7 +50,9 @@ public class GogsGit extends GitRepositoryBrowser {
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
-        if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
+        if (path.getEditType() != EditType.EDIT
+                || path.getSrc() == null
+                || path.getDst() == null
                 || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
@@ -86,13 +86,15 @@ public class GogsGit extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             URL url = getUrl();
-            return encodeURL(new URL(url, url.getPath() + "src/" + path.getChangeSet().getId() + "/" + path.getPath()));
+            return encodeURL(
+                    new URL(url, url.getPath() + "src/" + path.getChangeSet().getId() + "/" + path.getPath()));
         }
     }
 
     @Extension
     @Symbol("gogs")
     public static class GogsGitDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "gogs";
@@ -100,7 +102,7 @@ public class GogsGit extends GitRepositoryBrowser {
 
         @Override
         public GogsGit newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(GogsGit.class, jsonObject);
         }
     }

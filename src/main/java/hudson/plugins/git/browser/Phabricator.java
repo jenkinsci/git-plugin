@@ -1,18 +1,17 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Git Browser for Phabricator
@@ -83,6 +82,7 @@ public class Phabricator extends GitRepositoryBrowser {
     @Extension
     @Symbol("phabricator")
     public static class PhabricatorDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "phabricator";
@@ -90,7 +90,7 @@ public class Phabricator extends GitRepositoryBrowser {
 
         @Override
         public Phabricator newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(Phabricator.class, jsonObject);
         }
     }

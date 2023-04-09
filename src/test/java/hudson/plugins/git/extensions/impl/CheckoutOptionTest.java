@@ -1,5 +1,7 @@
 package hudson.plugins.git.extensions.impl;
 
+import static org.junit.Assert.*;
+
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -12,15 +14,13 @@ import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class CheckoutOptionTest {
 
     private CheckoutOption option;
     private static final int INITIAL_TIMEOUT = 10;
 
-    public CheckoutOptionTest() {
-    }
+    public CheckoutOptionTest() {}
 
     @Before
     public void setUp() {

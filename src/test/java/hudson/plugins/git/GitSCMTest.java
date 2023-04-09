@@ -1,5 +1,20 @@
 package hudson.plugins.git;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
+import static org.jvnet.hudson.test.LoggerRule.recorded;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
@@ -8,7 +23,6 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Functions;
@@ -34,26 +48,6 @@ import hudson.tools.ToolLocationNodeProperty;
 import hudson.util.LogTaskListener;
 import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
-
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.util.SystemReader;
-import org.jenkinsci.plugins.tokenmacro.TokenMacro;
-import org.jenkinsci.plugins.gitclient.*;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.LoggerRule;
-import org.jvnet.hudson.test.MockAuthorizationStrategy;
-import org.jvnet.hudson.test.TestExtension;
-
-import static org.jvnet.hudson.test.LoggerRule.recorded;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,42 +57,41 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.*;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.eclipse.jgit.transport.RemoteConfig;
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.rules.Stopwatch;
-import org.junit.rules.TestName;
-import org.junit.runner.OrderWith;
-
-import org.mockito.Mockito;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.RandomOrder;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.util.SystemReader;
+import org.jenkinsci.plugins.gitclient.*;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.Stopwatch;
+import org.junit.rules.TestName;
+import org.junit.runner.OrderWith;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.TestExtension;
+import org.mockito.Mockito;
 
 /**
  * Tests for {@link GitSCM}.
@@ -116,6 +109,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @ClassRule
     public static Stopwatch stopwatch = new Stopwatch();
+
     @Rule
     public TestName testName = new TestName();
 
@@ -139,13 +133,12 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Before
     public void enableSystemCredentialsProvider() throws Exception {
-        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
-                Collections.singletonMap(Domain.global(), Collections.emptyList()));
+        SystemCredentialsProvider.getInstance()
+                .setDomainCredentialsMap(Collections.singletonMap(Domain.global(), Collections.emptyList()));
         for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;
                 break;
-
             }
         }
         assertThat("The system credentials provider is enabled", store, notNullValue());
@@ -174,9 +167,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupSimpleProject("master");
-        List<UserRemoteConfig> remoteConfigs = GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
-        project.setScm(new GitSCM(remoteConfigs,
-                Collections.singletonList(new BranchSpec("master")), false, null, null, null, null));
+        List<UserRemoteConfig> remoteConfigs =
+                GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
+        project.setScm(new GitSCM(
+                remoteConfigs, Collections.singletonList(new BranchSpec("master")), false, null, null, null, null));
 
         GitSCM scm = (GitSCM) project.getScm();
         final DescriptorImpl descriptor = scm.getDescriptor();
@@ -221,13 +215,18 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String MANAGER = "manager";
         rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
         rule.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
-                                                   // Read access
-                                                   .grant(Jenkins.READ).everywhere().to(USER)
+                // Read access
+                .grant(Jenkins.READ)
+                .everywhere()
+                .to(USER)
 
-                                                   // Read and Manage
-                                                   .grant(Jenkins.READ).everywhere().to(MANAGER)
-                                                   .grant(Jenkins.MANAGE).everywhere().to(MANAGER)
-        );
+                // Read and Manage
+                .grant(Jenkins.READ)
+                .everywhere()
+                .to(MANAGER)
+                .grant(Jenkins.MANAGE)
+                .everywhere()
+                .to(MANAGER));
 
         try (ACLContext c = ACL.as(User.getById(USER, true))) {
             Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
@@ -235,8 +234,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
         try (ACLContext c = ACL.as(User.getById(MANAGER, true))) {
             Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
-            Optional<Descriptor> found =
-                    descriptors.stream().filter(descriptor -> descriptor instanceof GitSCM.DescriptorImpl).findFirst();
+            Optional<Descriptor> found = descriptors.stream()
+                    .filter(descriptor -> descriptor instanceof GitSCM.DescriptorImpl)
+                    .findFirst();
             assertTrue("Global configuration should be accessible to MANAGE users", found.isPresent());
         }
     }
@@ -294,37 +294,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        //... and build it...
-        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
-        final Set<User> culprits = build2.getCulprits();
-        assertEquals("The build should have only one culprit", 1, culprits.size());
-        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
-        assertTrue(build2.getWorkspace().child(commitFile2).exists());
-        rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
-    }
-
-    @Test
-    @Issue("JENKINS-56176")
-    public void testBasicRemotePoll() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-//        FreeStyleProject project = setupProject("master", true, false);
-        FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
-        // create initial commit and then run the build against it:
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        build(project, Result.SUCCESS, commitFile1);
-
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
-
-        final String commitFile2 = "commitFile2";
-        String sha1String = commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
         // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         final Set<User> culprits = build2.getCulprits();
@@ -332,7 +310,41 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
+    }
+
+    @Test
+    @Issue("JENKINS-56176")
+    public void testBasicRemotePoll() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        //        FreeStyleProject project = setupProject("master", true, false);
+        FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
+
+        final String commitFile2 = "commitFile2";
+        String sha1String = commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have only one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        rule.assertBuildStatusSuccess(build2);
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
         // JENKINS-56176 token macro expansion broke when BuildData was no longer updated
         assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION,length=7}"), is(sha1String.substring(0, 7)));
         assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION}"), is(sha1String));
@@ -342,7 +354,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testBranchSpecWithRemotesMaster() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        FreeStyleProject projectMasterBranch = setupProject("remotes/origin/master", false, null, null, null, true, null);
+        FreeStyleProject projectMasterBranch =
+                setupProject("remotes/origin/master", false, null, null, null, true, null);
         // create initial commit and build
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
@@ -362,19 +375,22 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testSpecificRefspecs() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         List<UserRemoteConfig> repos = new ArrayList<>();
-        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
+        repos.add(new UserRemoteConfig(
+                testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
 
         /* Set CloneOption to honor refspec on initial clone */
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         CloneOption cloneOptionMaster = new CloneOption(false, null, null);
         cloneOptionMaster.setHonorRefspec(true);
-        ((GitSCM)projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
 
         /* Set CloneOption to honor refspec on initial clone */
-        FreeStyleProject projectWithFoo = setupProject(repos, Collections.singletonList(new BranchSpec("foo")), null, false, null);
+        FreeStyleProject projectWithFoo =
+                setupProject(repos, Collections.singletonList(new BranchSpec("foo")), null, false, null);
         CloneOption cloneOptionFoo = new CloneOption(false, null, null);
         cloneOptionFoo.setHonorRefspec(true);
-        ((GitSCM)projectWithMaster.getScm()).getExtensions().add(cloneOptionFoo);
+        ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionFoo);
 
         // create initial commit
         final String commitFile1 = "commitFile1";
@@ -395,10 +411,12 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testAvoidRedundantFetch() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         List<UserRemoteConfig> repos = new ArrayList<>();
-        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/*:refs/remotes/*", null));
+        repos.add(new UserRemoteConfig(
+                testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/*:refs/remotes/*", null));
 
         /* Without honor refspec on initial clone */
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         if (random.nextBoolean()) {
             /* Randomly enable shallow clone, should not alter test assertions */
             CloneOption cloneOptionMaster = new CloneOption(false, null, null);
@@ -426,10 +444,12 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testAvoidRedundantFetchWithoutHonorRefSpec() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         List<UserRemoteConfig> repos = new ArrayList<>();
-        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
+        repos.add(new UserRemoteConfig(
+                testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
 
         /* Without honor refspec on initial clone */
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         if (random.nextBoolean()) {
             /* Randomly enable shallow clone, should not alter test assertions */
             CloneOption cloneOptionMaster = new CloneOption(false, null, null);
@@ -475,10 +495,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refSpec, null));
 
         /* With honor refspec on initial clone */
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         CloneOption cloneOptionMaster = new CloneOption(false, null, null);
         cloneOptionMaster.setHonorRefspec(true);
-        ((GitSCM)projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
 
         // create initial commit
         final String commitFile1 = "commitFile1";
@@ -497,8 +518,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         final List<String> buildLog = build.getLog(50);
         assertThat("master branch was fetched: " + buildLog, fetchHeadContents, not(containsString("branch 'master'")));
         assertThat("foo branch was not fetched: " + buildLog, fetchHeadContents, containsString("branch 'foo'"));
-        assertThat("master branch SHA1 '" + commitFile1SHA1a + "' fetched " + buildLog, fetchHeadContents, not(containsString(commitFile1SHA1a)));
-        assertThat("foo branch SHA1 '" + commitFile1SHA1b + "' was not fetched " + buildLog, fetchHeadContents, containsString(commitFile1SHA1b));
+        assertThat(
+                "master branch SHA1 '" + commitFile1SHA1a + "' fetched " + buildLog,
+                fetchHeadContents,
+                not(containsString(commitFile1SHA1a)));
+        assertThat(
+                "foo branch SHA1 '" + commitFile1SHA1b + "' was not fetched " + buildLog,
+                fetchHeadContents,
+                containsString(commitFile1SHA1b));
         assertRedundantFetchIsSkipped(build, refSpec);
 
         assertThat(build.getResult(), is(Result.FAILURE));
@@ -513,7 +540,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", nullRefspec, null));
 
         /* Without honor refspec on initial clone */
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         if (random.nextBoolean()) {
             /* Randomly enable shallow clone, should not alter test assertions */
             CloneOption cloneOptionMaster = new CloneOption(false, null, null);
@@ -548,7 +576,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refspec, null));
 
         /* Without honor refspec on initial clone */
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         if (random.nextBoolean()) {
             /* Randomly enable shallow clone, should not alter test assertions */
             CloneOption cloneOptionMaster = new CloneOption(false, null, null);
@@ -571,9 +600,9 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /*
-    * When "Preserve second fetch during checkout" is checked in during configuring Jenkins,
-    * the second fetch should be retained
-    */
+     * When "Preserve second fetch during checkout" is checked in during configuring Jenkins,
+     * the second fetch should be retained
+     */
     @Test
     @Issue("JENKINS-49757")
     public void testRetainRedundantFetchIfSecondFetchIsAllowed() throws Exception {
@@ -583,7 +612,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refspec, null));
 
         /* Without honor refspec on initial clone */
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
 
         GitSCM scm = (GitSCM) projectWithMaster.getScm();
         final DescriptorImpl descriptor = scm.getDescriptor();
@@ -618,12 +648,15 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     // Checks if the second fetch is being avoided
-    private void assertRedundantFetchCount(FreeStyleBuild build, String refSpec, int expectedFetchCount) throws IOException {
+    private void assertRedundantFetchCount(FreeStyleBuild build, String refSpec, int expectedFetchCount)
+            throws IOException {
         List<String> values = build.getLog(Integer.MAX_VALUE);
 
-        //String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() + argRefSpec + " # timeout=10";
+        // String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() +
+        // argRefSpec + " # timeout=10";
         Pattern fetchPattern = Pattern.compile(".* git.* fetch .*");
-        List<String> fetchCommands = values.stream().filter(fetchPattern.asPredicate()).collect(Collectors.toList());
+        List<String> fetchCommands =
+                values.stream().filter(fetchPattern.asPredicate()).collect(Collectors.toList());
 
         // After the fix, git fetch is called exactly once
         assertThat("Fetch commands were: " + fetchCommands, fetchCommands, hasSize(expectedFetchCount));
@@ -634,7 +667,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         List<FilePath> files = build.getProject().getWorkspace().list();
         FilePath resultFile = null;
         for (FilePath s : files) {
-            if(s.getName().equals(".git")) {
+            if (s.getName().equals(".git")) {
                 resultFile = s.child("FETCH_HEAD");
             }
         }
@@ -654,9 +687,12 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testSpecificRefspecsWithoutCloneOption() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         List<UserRemoteConfig> repos = new ArrayList<>();
-        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
-        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
-        FreeStyleProject projectWithFoo = setupProject(repos, Collections.singletonList(new BranchSpec("foo")), null, false, null);
+        repos.add(new UserRemoteConfig(
+                testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
+        FreeStyleProject projectWithMaster =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithFoo =
+                setupProject(repos, Collections.singletonList(new BranchSpec("foo")), null, false, null);
 
         // create initial commit
         final String commitFile1 = "commitFile1";
@@ -678,18 +714,24 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Test
     @Issue("JENKINS-38608")
-    public void testAddFirstRepositoryWithNullRepoURL() throws Exception{
+    public void testAddFirstRepositoryWithNullRepoURL() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         List<UserRemoteConfig> repos = new ArrayList<>();
         repos.add(new UserRemoteConfig(null, null, null, null));
-        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject project =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertThat("Build log reports 'Null value not allowed'",
-                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL")));
+        assertThat(
+                "Build log reports 'Null value not allowed'",
+                build.getLog(175),
+                not(hasItem("Null value not allowed as an environment variable: GIT_URL")));
         // After JENKINS-38608 fix
-        assertThat("Build log did not report empty string in job definition",
-                   build.getLog(175), hasItem("FATAL: Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat(
+                "Build log did not report empty string in job definition",
+                build.getLog(175),
+                hasItem(
+                        "FATAL: Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     /**
@@ -701,36 +743,43 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Test
     @Issue("JENKINS-38608")
-    public void testAddSecondRepositoryWithNullRepoURL() throws Exception{
+    public void testAddSecondRepositoryWithNullRepoURL() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         String repoURL = "https://example.com/non-empty/repo/url";
         List<UserRemoteConfig> repos = new ArrayList<>();
         repos.add(new UserRemoteConfig(repoURL, null, null, null));
         repos.add(new UserRemoteConfig(null, null, null, null));
-        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject project =
+                setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertThat("Build log reports 'Null value not allowed'",
-                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL_2")));
+        assertThat(
+                "Build log reports 'Null value not allowed'",
+                build.getLog(175),
+                not(hasItem("Null value not allowed as an environment variable: GIT_URL_2")));
         // After JENKINS-38608 fix
-        assertThat("Build log did not report empty string in job definition for URL 2",
-                   build.getLog(175), hasItem("FATAL: Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat(
+                "Build log did not report empty string in job definition for URL 2",
+                build.getLog(175),
+                hasItem(
+                        "FATAL: Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
     public void testBranchSpecWithRemotesHierarchical() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-      FreeStyleProject projectMasterBranch = setupProject("master", false, null, null, null, true, null);
-      FreeStyleProject projectHierarchicalBranch = setupProject("remotes/origin/rel-1/xy", false, null, null, null, true, null);
-      // create initial commit
-      final String commitFile1 = "commitFile1";
-      commit(commitFile1, johnDoe, "Commit number 1");
-      // create hierarchical branch, delete master branch, and build
-      git.branch("rel-1/xy");
-      git.checkout("rel-1/xy");
-      git.deleteBranch("master");
-      build(projectMasterBranch, Result.FAILURE);
-      build(projectHierarchicalBranch, Result.SUCCESS, commitFile1);
+        FreeStyleProject projectMasterBranch = setupProject("master", false, null, null, null, true, null);
+        FreeStyleProject projectHierarchicalBranch =
+                setupProject("remotes/origin/rel-1/xy", false, null, null, null, true, null);
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        // create hierarchical branch, delete master branch, and build
+        git.branch("rel-1/xy");
+        git.checkout("rel-1/xy");
+        git.deleteBranch("master");
+        build(projectMasterBranch, Result.FAILURE);
+        build(projectHierarchicalBranch, Result.SUCCESS, commitFile1);
     }
 
     @Test
@@ -742,7 +791,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1 will be tagged with path/tag");
         testRepo.git.tag("path/tag", "tag with a slash in the tag name");
         build(projectMasterBranch, Result.SUCCESS, commitFile1);
-      }
+    }
 
     @Test
     public void testBasicIncludedRegion() throws Exception {
@@ -754,28 +803,36 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertFalse("scm polling detected commit2 change, which should not have been included", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling detected commit2 change, which should not have been included",
+                project.poll(listener).hasChanges());
 
         final String commitFile3 = "commitFile3";
         commit(commitFile3, johnDoe, "Commit number 3");
-        assertTrue("scm polling did not detect commit3 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit3 change",
+                project.poll(listener).hasChanges());
 
-        //... and build it...
+        // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
-        
+
         PersonIdent[] expected = {johnDoe, janeDoe};
         assertCulprits("jane doe and john doe should be the culprits", culprits, expected);
 
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     /**
@@ -786,7 +843,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitInExcludedRegionIsIgnored() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -811,7 +868,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         mergeCommand.execute();
 
         // Should return false, because our merge commit falls within the excluded region.
-        assertFalse("Polling should report no changes, because they are in the excluded region.",
+        assertFalse(
+                "Polling should report no changes, because they are in the excluded region.",
                 project.poll(listener).hasChanges());
     }
 
@@ -823,7 +881,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitInExcludedDirectoryIsIgnored() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -848,7 +906,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         mergeCommand.execute();
 
         // Should return false, because our merge commit falls within the excluded directory.
-        assertFalse("Polling should see no changes, because they are in the excluded directory.",
+        assertFalse(
+                "Polling should see no changes, because they are in the excluded directory.",
                 project.poll(listener).hasChanges());
     }
 
@@ -860,7 +919,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitInIncludedRegionIsProcessed() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -877,7 +936,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
         final String fileToMerge = "fileToMerge.included";
-        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+        commit(
+                fileToMerge,
+                johnDoe,
+                "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
 
         ObjectId branchSHA = git.revParse("HEAD");
         testRepo.git.checkoutBranch("master", "refs/heads/master");
@@ -886,7 +948,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         mergeCommand.execute();
 
         // Should return true, because our commit falls within the included region.
-        assertTrue("Polling should report changes, because they fall within the included region.",
+        assertTrue(
+                "Polling should report changes, because they fall within the included region.",
                 project.poll(listener).hasChanges());
     }
 
@@ -898,7 +961,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitInIncludedDirectoryIsProcessed() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -915,7 +978,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
         final String fileToMerge = "included/should-be-processed";
-        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+        commit(
+                fileToMerge,
+                johnDoe,
+                "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
 
         ObjectId branchSHA = git.revParse("HEAD");
         testRepo.git.checkoutBranch("master", "refs/heads/master");
@@ -925,7 +991,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // When this test passes, project.poll(listener).hasChanges()) should return
         // true, because our commit falls within the included region.
-        assertTrue("Polling should report changes, because they are in the included directory.",
+        assertTrue(
+                "Polling should report changes, because they are in the included directory.",
                 project.poll(listener).hasChanges());
     }
 
@@ -937,7 +1004,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitOutsideIncludedRegionIsIgnored() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -963,7 +1030,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         mergeCommand.execute();
 
         // Should return false, because our commit falls outside the included region.
-        assertFalse("Polling should ignore the change, because it falls outside the included region.",
+        assertFalse(
+                "Polling should ignore the change, because it falls outside the included region.",
                 project.poll(listener).hasChanges());
     }
 
@@ -975,7 +1043,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitOutsideIncludedDirectoryIsIgnored() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -1001,7 +1069,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         mergeCommand.execute();
 
         // Should return false, because our commit falls outside of the included directory
-        assertFalse("Polling should ignore the change, because it falls outside the included directory.",
+        assertFalse(
+                "Polling should ignore the change, because it falls outside the included directory.",
                 project.poll(listener).hasChanges());
     }
 
@@ -1014,7 +1083,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitOutsideExcludedRegionIsProcessed() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -1031,7 +1100,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
         final String fileToMerge = "fileToMerge.should-be-processed";
-        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+        commit(
+                fileToMerge,
+                johnDoe,
+                "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
 
         ObjectId branchSHA = git.revParse("HEAD");
         testRepo.git.checkoutBranch("master", "refs/heads/master");
@@ -1040,7 +1112,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         mergeCommand.execute();
 
         // Should return true, because our commit falls outside of the excluded region
-        assertTrue("Polling should process the change, because it falls outside the excluded region.",
+        assertTrue(
+                "Polling should process the change, because it falls outside the excluded region.",
                 project.poll(listener).hasChanges());
     }
 
@@ -1053,7 +1126,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      *
      * @throws Exception on error
      */
-    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Issue({"JENKINS-20389", "JENKINS-23606"})
     @Test
     public void testMergeCommitOutsideExcludedDirectoryIsProcessed() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -1071,7 +1144,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
         // Create this new file outside of our excluded directory
         final String fileToMerge = "directory-to-include/file-should-be-processed";
-        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+        commit(
+                fileToMerge,
+                johnDoe,
+                "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
 
         ObjectId branchSHA = git.revParse("HEAD");
         testRepo.git.checkoutBranch("master", "refs/heads/master");
@@ -1080,7 +1156,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         mergeCommand.execute();
 
         // Should return true, because our commit falls outside of the excluded directory
-        assertTrue("SCM polling should process the change, because it falls outside the excluded directory.",
+        assertTrue(
+                "SCM polling should process the change, because it falls outside the excluded directory.",
                 project.poll(listener).hasChanges());
     }
 
@@ -1094,32 +1171,39 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertFalse("scm polling detected commit2 change, which should not have been included", project.poll(listener).hasChanges());
-        
+        assertFalse(
+                "scm polling detected commit2 change, which should not have been included",
+                project.poll(listener).hasChanges());
 
         final String commitFile3 = "commitFile3";
         commit(commitFile3, johnDoe, "Commit number 3");
-        
+
         final String commitFile4 = "commitFile4";
         commit(commitFile4, janeDoe, "Commit number 4");
-        assertTrue("scm polling did not detect commit3 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit3 change",
+                project.poll(listener).hasChanges());
 
-        //... and build it...
+        // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
-        
+
         PersonIdent[] expected = {johnDoe, janeDoe};
         assertCulprits("jane doe and john doe should be the culprits", culprits, expected);
 
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
@@ -1132,16 +1216,22 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertFalse("scm polling detected commit2 change, which should have been excluded", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling detected commit2 change, which should have been excluded",
+                project.poll(listener).hasChanges());
 
         final String commitFile3 = "commitFile3";
         commit(commitFile3, johnDoe, "Commit number 3");
-        assertTrue("scm polling did not detect commit3 change", project.poll(listener).hasChanges());
-        //... and build it...
+        assertTrue(
+                "scm polling did not detect commit3 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
@@ -1152,7 +1242,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     private int findLogLineStartsWith(List<String> buildLog, String initialString) {
@@ -1169,8 +1261,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testCleanBeforeCheckout() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-    	FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
-        ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout());
+        FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
+        ((GitSCM) p.getScm()).getExtensions().add(new CleanBeforeCheckout());
 
         /* First build should not clean, since initial clone is always clean */
         final String commitFile1 = "commitFile1";
@@ -1200,21 +1292,33 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(clientProject, Result.SUCCESS, initialCommitFile);
         build(serverProject, Result.SUCCESS, initialCommitFile);
 
-        assertFalse("scm polling should not detect any more changes after initial build", clientProject.poll(listener).hasChanges());
-        assertFalse("scm polling should not detect any more changes after initial build", serverProject.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after initial build",
+                clientProject.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after initial build",
+                serverProject.poll(listener).hasChanges());
 
         // Got commits on serverFile, so only server project should build.
         commit("myserverFile", johnDoe, "commit first server file");
 
-        assertFalse("scm polling should not detect any changes in client project", clientProject.poll(listener).hasChanges());
-        assertTrue("scm polling did not detect changes in server project", serverProject.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any changes in client project",
+                clientProject.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect changes in server project",
+                serverProject.poll(listener).hasChanges());
 
         // Got commits on both client and serverFile, so both projects should build.
         commit("myNewserverFile", johnDoe, "commit new server file");
         commit("myclientFile", johnDoe, "commit first clientfile");
 
-        assertTrue("scm polling did not detect changes in client project", clientProject.poll(listener).hasChanges());
-        assertTrue("scm polling did not detect changes in server project", serverProject.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect changes in client project",
+                clientProject.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect changes in server project",
+                serverProject.poll(listener).hasChanges());
     }
 
     /*
@@ -1303,15 +1407,21 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertFalse("scm polling detected commit2 change, which should have been excluded", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling detected commit2 change, which should have been excluded",
+                project.poll(listener).hasChanges());
         final String commitFile3 = "commitFile3";
         commit(commitFile3, johnDoe, "Commit number 3");
-        assertTrue("scm polling did not detect commit3 change", project.poll(listener).hasChanges());
-        //... and build it...
+        assertTrue(
+                "scm polling did not detect commit3 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
@@ -1322,36 +1432,46 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
-
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
     public void testBasicInSubdir() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = setupSimpleProject("master");
-        ((GitSCM)project.getScm()).getExtensions().add(new RelativeTargetDirectory("subdir"));
+        ((GitSCM) project.getScm()).getExtensions().add(new RelativeTargetDirectory("subdir"));
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, "subdir", Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        //... and build it...
-        final FreeStyleBuild build2 = build(project, "subdir", Result.SUCCESS,
-                                            commitFile2);
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, "subdir", Result.SUCCESS, commitFile2);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have only one culprit", 1, culprits.size());
         assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
-        assertTrue("The workspace should have a 'subdir' subdirectory, but does not.", build2.getWorkspace().child("subdir").exists());
-        assertTrue("The 'subdir' subdirectory should contain commitFile2, but does not.", build2.getWorkspace().child("subdir").child(commitFile2).exists());
+        assertTrue(
+                "The workspace should have a 'subdir' subdirectory, but does not.",
+                build2.getWorkspace().child("subdir").exists());
+        assertTrue(
+                "The 'subdir' subdirectory should contain commitFile2, but does not.",
+                build2.getWorkspace().child("subdir").child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Issue("HUDSON-7547")
@@ -1369,19 +1489,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        //... and build it...
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have only one culprit", 1, culprits.size());
         assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
@@ -1395,21 +1521,29 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
         final FreeStyleBuild firstBuild = build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
 
         final FreeStyleBuild secondBuild = build(project, Result.SUCCESS, commitFile2);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final Set<User> secondCulprits = secondBuild.getCulprits();
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
-        assertEquals("Did not get the committer as the change author with authorOrCommitter==false",
-                     janeDoe.getName(), secondCulprits.iterator().next().getFullName());
+        assertEquals(
+                "Did not get the committer as the change author with authorOrCommitter==false",
+                janeDoe.getName(),
+                secondCulprits.iterator().next().getFullName());
     }
 
     @Test
@@ -1417,28 +1551,36 @@ public class GitSCMTest extends AbstractGitTestCase {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         // Next, test with authorOrCommitter set to true and make sure we get the author.
         FreeStyleProject project = setupSimpleProject("master");
-        ((GitSCM)project.getScm()).getExtensions().add(new AuthorInChangelog());
+        ((GitSCM) project.getScm()).getExtensions().add(new AuthorInChangelog());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
         final FreeStyleBuild firstBuild = build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
 
         final FreeStyleBuild secondBuild = build(project, Result.SUCCESS, commitFile2);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final Set<User> secondCulprits = secondBuild.getCulprits();
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
-        assertEquals("Did not get the author as the change author with authorOrCommitter==true",
-                johnDoe.getName(), secondCulprits.iterator().next().getFullName());
+        assertEquals(
+                "Did not get the author as the change author with authorOrCommitter==true",
+                johnDoe.getName(),
+                secondCulprits.iterator().next().getFullName());
     }
 
     @Test
@@ -1451,12 +1593,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        //now create and checkout a new branch:
+        // now create and checkout a new branch:
         git.checkout(Constants.HEAD, "untracked");
-        //.. and commit to it:
+        // .. and commit to it:
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
-        assertFalse("scm polling should not detect commit2 change because it is not in the branch we are tracking.", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect commit2 change because it is not in the branch we are tracking.",
+                project.poll(listener).hasChanges());
     }
 
     private String checkoutString(FreeStyleProject project, String envVar) {
@@ -1501,7 +1645,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         String gitExe = scm.getGitExe(agent, TaskListener.NULL);
         assertEquals("/usr/bin/git", gitExe);
 
-        ToolLocationNodeProperty nodeGitLocation = new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(gitToolDescriptor, "Default", "C:\\Program Files\\Git\\bin\\git.exe"));
+        ToolLocationNodeProperty nodeGitLocation =
+                new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(
+                        gitToolDescriptor, "Default", "C:\\Program Files\\Git\\bin\\git.exe"));
         agent.setNodeProperties(Collections.singletonList(nodeGitLocation));
 
         gitExe = scm.getGitExe(agent, TaskListener.NULL);
@@ -1527,15 +1673,17 @@ public class GitSCMTest extends AbstractGitTestCase {
         // actual data.
         build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
 
-        //now create and checkout a new branch:
+        // now create and checkout a new branch:
         final String tmpBranch = "tmp";
         git.branch(tmpBranch);
         git.checkout(tmpBranch);
         // commit to it
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
-        assertFalse("scm polling should not detect any more changes since mytag is untouched right now", project.poll(listener).hasChanges());
-        build(project, Result.FAILURE);  // fail, because there's nothing to be checked out here
+        assertFalse(
+                "scm polling should not detect any more changes since mytag is untouched right now",
+                project.poll(listener).hasChanges());
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
 
         // tag it, then delete the tmp branch
         git.tag(mytag, "mytag initial");
@@ -1544,9 +1692,13 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // at this point we're back on master, there are no other branches, tag "mytag" exists but is
         // not part of "master"
-        assertTrue("scm polling should detect commit2 change in 'mytag'", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling should detect commit2 change in 'mytag'",
+                project.poll(listener).hasChanges());
         build(project, Result.SUCCESS, commitFile2);
-        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after last build",
+                project.poll(listener).hasChanges());
 
         // now, create tmp branch again against mytag:
         git.checkout(mytag);
@@ -1554,17 +1706,24 @@ public class GitSCMTest extends AbstractGitTestCase {
         // another commit:
         final String commitFile3 = "commitFile3";
         commit(commitFile3, johnDoe, "Commit number 3");
-        assertFalse("scm polling should not detect any more changes since mytag is untouched right now", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes since mytag is untouched right now",
+                project.poll(listener).hasChanges());
 
-        // now we're going to force mytag to point to the new commit, if everything goes well, gitSCM should pick the change up:
+        // now we're going to force mytag to point to the new commit, if everything goes well, gitSCM should pick the
+        // change up:
         git.tag(mytag, "mytag moved");
         git.checkout("master");
         git.deleteBranch(tmpBranch);
 
         // at this point we're back on master, there are no other branches, "mytag" has been updated to a new commit:
-        assertTrue("scm polling should detect commit3 change in 'mytag'", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling should detect commit3 change in 'mytag'",
+                project.poll(listener).hasChanges());
         build(project, Result.SUCCESS, commitFile3);
-        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after last build",
+                project.poll(listener).hasChanges());
     }
 
     /*
@@ -1588,9 +1747,13 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile2, johnDoe, "Commit number 2");
         final String commitFile3 = "commitFile3";
         commit(commitFile3, johnDoe, "Commit number 3");
-        assertTrue("scm polling should detect changes in 'master' branch", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling should detect changes in 'master' branch",
+                project.poll(listener).hasChanges());
         build(project, Result.SUCCESS, commitFile1, commitFile2);
-        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after last build",
+                project.poll(listener).hasChanges());
 
         // now jump back...
         git.checkout(fork);
@@ -1600,17 +1763,20 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(forkFile1, johnDoe, "Fork commit number 1");
         final String forkFile2 = "forkFile2";
         commit(forkFile2, johnDoe, "Fork commit number 2");
-        assertTrue("scm polling should detect changes in 'fork' branch", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling should detect changes in 'fork' branch",
+                project.poll(listener).hasChanges());
         build(project, Result.SUCCESS, forkFile1, forkFile2);
-        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after last build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
     public void testMultipleBranchesWithTags() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        List<BranchSpec> branchSpecs = Arrays.asList(
-                new BranchSpec("refs/tags/v*"),
-                new BranchSpec("refs/remotes/origin/non-existent"));
+        List<BranchSpec> branchSpecs =
+                Arrays.asList(new BranchSpec("refs/tags/v*"), new BranchSpec("refs/remotes/origin/non-existent"));
         FreeStyleProject project = setupProject(branchSpecs, false, null, null, janeDoe.getName(), null, false, null);
 
         // create initial commit and then run the build against it:
@@ -1634,7 +1800,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         freeStyleBuild = build(project, Result.SUCCESS);
 
         ObjectId tag = git.revParse(Constants.R_TAGS + v1);
-        GitSCM scm = (GitSCM)project.getScm();
+        GitSCM scm = (GitSCM) project.getScm();
         BuildData buildData = scm.getBuildData(freeStyleBuild);
 
         assertEquals("last build matches the v1 tag revision", tag, buildData.lastBuild.getSHA1());
@@ -1655,9 +1821,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         File repo = secondRepo.getRoot();
         FilePath moduleWs = new FilePath(repo);
-        org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
+        org.jenkinsci.plugins.gitclient.GitClient moduleRepo =
+                Git.with(listener, new EnvVars()).in(repo).getClient();
 
-        {// first we create a Git repository with submodule
+        { // first we create a Git repository with submodule
             moduleRepo.init();
             moduleWs.child("a").touch(0);
             moduleRepo.add("a");
@@ -1672,32 +1839,31 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject d = createFreeStyleProject();
 
         u.setScm(new GitSCM(workDir.getPath()));
-        u.getPublishersList().add(new BuildTrigger(new hudson.plugins.parameterizedtrigger.BuildTriggerConfig(d.getName(), ResultCondition.SUCCESS,
-                new GitRevisionBuildParameters())));
+        u.getPublishersList()
+                .add(new BuildTrigger(new hudson.plugins.parameterizedtrigger.BuildTriggerConfig(
+                        d.getName(), ResultCondition.SUCCESS, new GitRevisionBuildParameters())));
 
         d.setScm(new GitSCM(workDir.getPath()));
         rule.jenkins.rebuildDependencyGraph();
 
-
         FreeStyleBuild ub = rule.buildAndAssertSuccess(u);
-        for  (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<100; i++) // wait only up to 10 sec to avoid infinite loop
+        // wait only up to 10 sec to avoid infinite loop
+        for (int i = 0; (d.getLastBuild() == null || d.getLastBuild().isBuilding()) && i < 100; i++) {
             Thread.sleep(100);
+        }
 
         FreeStyleBuild db = d.getLastBuild();
-        assertNotNull("downstream build didn't happen",db);
+        assertNotNull("downstream build didn't happen", db);
 
         db = rule.waitForCompletion(db);
         rule.assertBuildStatusSuccess(db);
     }
 
     // eg: "jane doe and john doe should be the culprits", culprits, [johnDoe, janeDoe])
-    static public void assertCulprits(String assertMsg, Set<User> actual, PersonIdent[] expected)
-    {
-        List<String> fullNames =
-                actual.stream().map(User::getFullName).collect(Collectors.toList());
+    public static void assertCulprits(String assertMsg, Set<User> actual, PersonIdent[] expected) {
+        List<String> fullNames = actual.stream().map(User::getFullName).collect(Collectors.toList());
 
-        for(PersonIdent p : expected)
-        {
+        for (PersonIdent p : expected) {
             assertTrue(assertMsg, fullNames.contains(p.getName()));
         }
     }
@@ -1708,9 +1874,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
         // setup global config
-        List<UserRemoteConfig> remoteConfigs = GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
-        project.setScm(new GitSCM(remoteConfigs,
-                Collections.singletonList(new BranchSpec("master")), false, null, null, null, null));
+        List<UserRemoteConfig> remoteConfigs =
+                GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
+        project.setScm(new GitSCM(
+                remoteConfigs, Collections.singletonList(new BranchSpec("master")), false, null, null, null, null));
 
         GitSCM scm = (GitSCM) project.getScm();
         final DescriptorImpl descriptor = scm.getDescriptor();
@@ -1737,9 +1904,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS);
         logLines = project.getLastBuild().getLog(100);
         assertThat(logLines, not(hasItem("using credential github")));
-
     }
-
 
     @Test
     public void testEmailCommitter() throws Exception {
@@ -1753,23 +1918,30 @@ public class GitSCMTest extends AbstractGitTestCase {
         descriptor.setCreateAccountBasedOnEmail(true);
         assertTrue("Create account based on e-mail not set", scm.isCreateAccountBasedOnEmail());
 
-        assertFalse("Wrong initial value for use existing user if same e-mail already found", scm.isUseExistingAccountWithSameEmail());
+        assertFalse(
+                "Wrong initial value for use existing user if same e-mail already found",
+                scm.isUseExistingAccountWithSameEmail());
         descriptor.setUseExistingAccountWithSameEmail(true);
-        assertTrue("Use existing user if same e-mail already found is not set", scm.isUseExistingAccountWithSameEmail());
+        assertTrue(
+                "Use existing user if same e-mail already found is not set", scm.isUseExistingAccountWithSameEmail());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
 
         final PersonIdent jeffDoe = new PersonIdent("Jeff Doe", "jeff@doe.com");
         commit(commitFile2, jeffDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        //... and build it...
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
 
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         final Set<User> culprits = build2.getCulprits();
@@ -1781,7 +1953,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         rule.assertBuildStatusSuccess(build);
     }
-    
+
     @Issue("JENKINS-59868")
     @Test
     public void testNonExistentWorkingDirectoryPoll() throws Exception {
@@ -1792,9 +1964,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
         project.setScm(new GitSCM(
-                ((GitSCM)project.getScm()).getUserRemoteConfigs(),
+                ((GitSCM) project.getScm()).getUserRemoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
-                null, null,
+                null,
+                null,
                 // configure GitSCM with the DisableRemotePoll extension to ensure that polling use the workspace
                 Collections.singletonList(new DisableRemotePoll())));
         FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
@@ -1810,10 +1983,13 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // Make sure that polling returns BUILD_NOW and properly log the reason
         FilePath filePath = build1.getWorkspace();
-        assertThat(project.getScm().compareRemoteRevisionWith(project, new Launcher.LocalLauncher(taskListener), 
-                filePath, taskListener, null), is(PollingResult.BUILD_NOW));
-        assertTrue(pollLogHandler.getView().stream().anyMatch(m -> 
-                m.getMessage().contains("[poll] Working Directory does not exist")));
+        assertThat(
+                project.getScm()
+                        .compareRemoteRevisionWith(
+                                project, new Launcher.LocalLauncher(taskListener), filePath, taskListener, null),
+                is(PollingResult.BUILD_NOW));
+        assertTrue(pollLogHandler.getView().stream()
+                .anyMatch(m -> m.getMessage().contains("[poll] Working Directory does not exist")));
     }
 
     // Disabled - consistently fails, needs more analysis
@@ -1828,10 +2004,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         remotes.addAll(secondTestRepo.remoteConfigs());
 
         project.setScm(new GitSCM(
-                remotes,
-                Collections.singletonList(new BranchSpec("master")),
-                null, null,
-                Collections.emptyList()));
+                remotes, Collections.singletonList(new BranchSpec("master")), null, null, Collections.emptyList()));
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -1842,17 +2015,23 @@ public class GitSCMTest extends AbstractGitTestCase {
         SCMRevisionState baseline = project.poll(listener).baseline;
         Change change = project.poll(listener).change;
         SCMRevisionState remote = project.poll(listener).remote;
-        String assertionMessage = MessageFormat.format("polling incorrectly detected change after build. Baseline: {0}, Change: {1}, Remote: {2}", baseline, change, remote);
+        String assertionMessage = MessageFormat.format(
+                "polling incorrectly detected change after build. Baseline: {0}, Change: {1}, Remote: {2}",
+                baseline, change, remote);
         assertFalse(assertionMessage, project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         secondTestRepo.commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        //... and build it...
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     private void branchSpecWithMultipleRepositories(String branchName) throws Exception {
@@ -1868,10 +2047,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
 
         project.setScm(new GitSCM(
-                remotes,
-                Collections.singletonList(new BranchSpec(branchName)),
-                null, null,
-                Collections.emptyList()));
+                remotes, Collections.singletonList(new BranchSpec(branchName)), null, null, Collections.emptyList()));
 
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile1);
         rule.assertBuildStatusSuccess(build);
@@ -1901,14 +2077,18 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM gitSCM = new GitSCM(
                 remotes,
                 Collections.singletonList(new BranchSpec("origin/master")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(gitSCM);
 
         /* Check that polling would force build through
          * compareRemoteRevisionWith by detecting no last build */
         FilePath filePath = new FilePath(new File("."));
-        assertThat(gitSCM.compareRemoteRevisionWith(project, new Launcher.LocalLauncher(listener), filePath, listener, null), is(PollingResult.BUILD_NOW));
+        assertThat(
+                gitSCM.compareRemoteRevisionWith(
+                        project, new Launcher.LocalLauncher(listener), filePath, listener, null),
+                is(PollingResult.BUILD_NOW));
 
         commit("commitFile1", johnDoe, "Commit number 1");
         FreeStyleBuild build = build(project, Result.SUCCESS, "commitFile1");
@@ -1919,10 +2099,12 @@ public class GitSCMTest extends AbstractGitTestCase {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
         BuildChooser buildChooser = gitSCM.getBuildChooser();
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(
+                false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertEquals(1, candidateRevisions.size());
         gitSCM.setBuildChooser(buildChooser); // Should be a no-op
-        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(
+                false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertThat(candidateRevisions2, is(candidateRevisions));
     }
 
@@ -1946,9 +2128,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        scm.getExtensions()
+                .add(new PreBuildMerge(new UserMergeOptions(
+                        "origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
@@ -1963,7 +2148,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
@@ -1971,11 +2158,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         testRepo.git.checkout("master", "topic2");
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Issue("JENKINS-20392")
@@ -1987,9 +2178,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        scm.getExtensions()
+                .add(new PreBuildMerge(new UserMergeOptions(
+                        "origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
@@ -2011,7 +2205,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("Changelog should contain one item", 1, changeLog.getItems().length);
 
         GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
-        assertEquals("Changelog should contain commit number 2", commitMessage, singleChange.getComment().trim());
+        assertEquals(
+                "Changelog should contain commit number 2",
+                commitMessage,
+                singleChange.getComment().trim());
     }
 
     @Test
@@ -2022,10 +2219,13 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(scm);
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        scm.getExtensions()
+                .add(new PreBuildMerge(
+                        new UserMergeOptions("origin", "integration", "", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
 
         // create initial commit and then run the build against it:
@@ -2039,56 +2239,69 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
 
         testRepo.git.checkout("master", "topic2");
         commit(commitFile1, "other content", johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
         rule.buildAndAssertStatus(Result.FAILURE, project);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
-    
+
     @Issue("JENKINS-25191")
     @Test
     public void testMultipleMergeFailed() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-    	FreeStyleProject project = setupSimpleProject("master");
-    	
-    	GitSCM scm = new GitSCM(
-    			createRemoteRepositories(),
-    			Collections.singletonList(new BranchSpec("master")),
-    			null, null,
-    			Collections.emptyList());
-    	project.setScm(scm);
-	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration1", "", MergeCommand.GitPluginFastForwardMode.FF)));
-	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration2", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("master")),
+                null,
+                null,
+                Collections.emptyList());
+        project.setScm(scm);
+        scm.getExtensions()
+                .add(new PreBuildMerge(
+                        new UserMergeOptions("origin", "integration1", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        scm.getExtensions()
+                .add(new PreBuildMerge(
+                        new UserMergeOptions("origin", "integration2", "", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
-    	
-    	commit("dummyFile", johnDoe, "Initial Commit");
-    	testRepo.git.branch("integration1");
-    	testRepo.git.branch("integration2");
-    	build(project, Result.SUCCESS);
-    	
-    	final String commitFile = "commitFile";
-    	testRepo.git.checkoutBranch("integration1","master");
-    	commit(commitFile,"abc", johnDoe, "merge conflict with integration2");
-    	
-    	testRepo.git.checkoutBranch("integration2","master");
-    	commit(commitFile,"cde", johnDoe, "merge conflict with integration1");
-    	
-    	final FreeStyleBuild build = build(project, Result.FAILURE);
-    	
-    	assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+
+        commit("dummyFile", johnDoe, "Initial Commit");
+        testRepo.git.branch("integration1");
+        testRepo.git.branch("integration2");
+        build(project, Result.SUCCESS);
+
+        final String commitFile = "commitFile";
+        testRepo.git.checkoutBranch("integration1", "master");
+        commit(commitFile, "abc", johnDoe, "merge conflict with integration2");
+
+        testRepo.git.checkoutBranch("integration2", "master");
+        commit(commitFile, "cde", johnDoe, "merge conflict with integration1");
+
+        final FreeStyleBuild build = build(project, Result.FAILURE);
+
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
     public void testEnvironmentVariableExpansion() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject project = createFreeStyleProject();
-        project.setScm(new GitSCM("${CAT}"+testRepo.gitDir.getPath()));
+        project.setScm(new GitSCM("${CAT}" + testRepo.gitDir.getPath()));
 
         // create initial commit and then run the build against it:
         commit("a.txt", johnDoe, "Initial Commit");
@@ -2109,8 +2322,9 @@ public class GitSCMTest extends AbstractGitTestCase {
     @TestExtension("testEnvironmentVariableExpansion")
     public static class SupplySomeEnvVars extends EnvironmentContributor {
         @Override
-        public void buildEnvironmentFor(Run r, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
-            envs.put("CAT","");
+        public void buildEnvironmentFor(Run r, EnvVars envs, TaskListener listener)
+                throws IOException, InterruptedException {
+            envs.put("CAT", "");
         }
     }
 
@@ -2120,7 +2334,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testDataCompatibility1() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        FreeStyleProject p = (FreeStyleProject) rule.jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
+        FreeStyleProject p = (FreeStyleProject)
+                rule.jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
         GitSCM oldGit = (GitSCM) p.getScm();
         assertEquals(Collections.emptyList(), oldGit.getExtensions().toList());
         assertEquals(0, oldGit.getSubmoduleCfg().size());
@@ -2149,46 +2364,65 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         WorkflowJob p = rule.jenkins.createProject(WorkflowJob.class, "pipeline-checkout-3-tags");
         p.setDefinition(new CpsFlowDefinition(
-            "node {\n" +
-            "    def tokenBranch = ''\n" +
-            "    def tokenRevision = ''\n" +
-            "    def checkout1 = checkout([$class: 'GitSCM', branches: [[name: 'git-1.1']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
-            "    echo \"checkout1: ${checkout1}\"\n" +
-            "    tokenBranch = tm '${GIT_BRANCH}'\n" +
-            "    tokenRevision = tm '${GIT_REVISION}'\n" +
-            "    echo \"token1: ${tokenBranch}\"\n" +
-            "    echo \"revision1: ${tokenRevision}\"\n" +
-            "    def checkout2 = checkout([$class: 'GitSCM', branches: [[name: 'git-2.0.2']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
-            "    echo \"checkout2: ${checkout2}\"\n" +
-            "    tokenBranch = tm '${GIT_BRANCH,all=true}'\n" +
-            "    tokenRevision = tm '${GIT_REVISION,length=8}'\n" +
-            "    echo \"token2: ${tokenBranch}\"\n" +
-            "    echo \"revision2: ${tokenRevision}\"\n" +
-            "    def checkout3 = checkout([$class: 'GitSCM', branches: [[name: 'git-3.0.0']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
-            "    echo \"checkout3: ${checkout3}\"\n" +
-            "    tokenBranch = tm '${GIT_BRANCH,fullName=true}'\n" +
-            "    tokenRevision = tm '${GIT_REVISION,length=6}'\n" +
-            "    echo \"token3: ${tokenBranch}\"\n" +
-            "    echo \"revision3: ${tokenRevision}\"\n" +
-            "}", true));
+                "node {\n" + "    def tokenBranch = ''\n"
+                        + "    def tokenRevision = ''\n"
+                        + "    def checkout1 = checkout([$class: 'GitSCM', branches: [[name: 'git-1.1']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n"
+                        + "    echo \"checkout1: ${checkout1}\"\n"
+                        + "    tokenBranch = tm '${GIT_BRANCH}'\n"
+                        + "    tokenRevision = tm '${GIT_REVISION}'\n"
+                        + "    echo \"token1: ${tokenBranch}\"\n"
+                        + "    echo \"revision1: ${tokenRevision}\"\n"
+                        + "    def checkout2 = checkout([$class: 'GitSCM', branches: [[name: 'git-2.0.2']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n"
+                        + "    echo \"checkout2: ${checkout2}\"\n"
+                        + "    tokenBranch = tm '${GIT_BRANCH,all=true}'\n"
+                        + "    tokenRevision = tm '${GIT_REVISION,length=8}'\n"
+                        + "    echo \"token2: ${tokenBranch}\"\n"
+                        + "    echo \"revision2: ${tokenRevision}\"\n"
+                        + "    def checkout3 = checkout([$class: 'GitSCM', branches: [[name: 'git-3.0.0']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n"
+                        + "    echo \"checkout3: ${checkout3}\"\n"
+                        + "    tokenBranch = tm '${GIT_BRANCH,fullName=true}'\n"
+                        + "    tokenRevision = tm '${GIT_REVISION,length=6}'\n"
+                        + "    echo \"token3: ${tokenBranch}\"\n"
+                        + "    echo \"revision3: ${tokenRevision}\"\n"
+                        + "}",
+                true));
         WorkflowRun b = rule.buildAndAssertSuccess(p);
-        
+
         String log = b.getLog();
         // The getLineStartsWith is to ease reading the test failure, to avoid Hamcrest shows all the log
-        assertThat(getLineStartsWith(log, "checkout1:"), containsString("checkout1: [GIT_BRANCH:git-1.1, GIT_COMMIT:82db9509c068f60c41d7a4572c0114cc6d23cd0d, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
-        assertThat(getLineStartsWith(log, "checkout2:"), containsString("checkout2: [GIT_BRANCH:git-2.0.2, GIT_COMMIT:377a0fdbfbf07f70a3e9a566d749b2a185909c33, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
-        assertThat(getLineStartsWith(log, "checkout3:"), containsString("checkout3: [GIT_BRANCH:git-3.0.0, GIT_COMMIT:858dee578b79ac6683419faa57a281ccb9d347aa, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(
+                getLineStartsWith(log, "checkout1:"),
+                containsString(
+                        "checkout1: [GIT_BRANCH:git-1.1, GIT_COMMIT:82db9509c068f60c41d7a4572c0114cc6d23cd0d, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(
+                getLineStartsWith(log, "checkout2:"),
+                containsString(
+                        "checkout2: [GIT_BRANCH:git-2.0.2, GIT_COMMIT:377a0fdbfbf07f70a3e9a566d749b2a185909c33, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(
+                getLineStartsWith(log, "checkout3:"),
+                containsString(
+                        "checkout3: [GIT_BRANCH:git-3.0.0, GIT_COMMIT:858dee578b79ac6683419faa57a281ccb9d347aa, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
         assertThat(getLineStartsWith(log, "token1:"), containsString("token1: git-1.1"));
-        assertThat(getLineStartsWith(log, "token2:"), containsString("token2: git-1.1")); // Unexpected but current behavior
-        assertThat(getLineStartsWith(log, "token3:"), containsString("token3: git-1.1")); // Unexpected but current behavior
-        assertThat(getLineStartsWith(log, "revision1:"), containsString("revision1: 82db9509c068f60c41d7a4572c0114cc6d23cd0d"));
-        assertThat(getLineStartsWith(log, "revision2:"), containsString("revision2: 82db9509")); // Unexpected but current behavior - should be 377a0fdb
-        assertThat(getLineStartsWith(log, "revision3:"), containsString("revision3: 82db95"));   // Unexpected but current behavior - should be 858dee
+        assertThat(
+                getLineStartsWith(log, "token2:"),
+                containsString("token2: git-1.1")); // Unexpected but current behavior
+        assertThat(
+                getLineStartsWith(log, "token3:"),
+                containsString("token3: git-1.1")); // Unexpected but current behavior
+        assertThat(
+                getLineStartsWith(log, "revision1:"),
+                containsString("revision1: 82db9509c068f60c41d7a4572c0114cc6d23cd0d"));
+        assertThat(
+                getLineStartsWith(log, "revision2:"),
+                containsString("revision2: 82db9509")); // Unexpected but current behavior - should be 377a0fdb
+        assertThat(
+                getLineStartsWith(log, "revision3:"),
+                containsString("revision3: 82db95")); // Unexpected but current behavior - should be 858dee
     }
 
     private String getLineStartsWith(String text, String startOfLine) {
         try (Scanner scanner = new Scanner(text)) {
-            while(scanner.hasNextLine()) {
+            while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (line.startsWith(startOfLine)) {
                     return line;
@@ -2197,7 +2431,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
         return "";
     }
-    
+
     @Test
     public void testPleaseDontContinueAnyway() throws Exception {
         /* Wastes time waiting for the build to fail */
@@ -2208,7 +2442,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         // create an empty repository with some commits
-        testRepo.commit("a","foo",johnDoe, "added");
+        testRepo.commit("a", "foo", johnDoe, "added");
 
         FreeStyleProject p = createFreeStyleProject();
         p.setScm(new GitSCM(testRepo.gitDir.getAbsolutePath()));
@@ -2231,22 +2465,24 @@ public class GitSCMTest extends AbstractGitTestCase {
         p.setScm(oldGit);
 
         FreeStyleBuild b = rule.buildAndAssertSuccess(p);
-        GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
+        GitClient gc = Git.with(StreamTaskListener.fromStdout(), null)
+                .in(b.getWorkspace())
+                .getClient();
         gc.withRepository((RepositoryCallback<Void>) (repo, channel) -> {
             Ref head = repo.findRef("HEAD");
-            assertTrue("Detached HEAD",head.isSymbolic());
+            assertTrue("Detached HEAD", head.isSymbolic());
             Ref t = head.getTarget();
-            assertEquals(t.getName(),"refs/heads/master");
+            assertEquals(t.getName(), "refs/heads/master");
 
             return null;
         });
     }
-    
+
     /**
-     * Verifies that if project specifies LocalBranch with value of "**" 
+     * Verifies that if project specifies LocalBranch with value of "**"
      * that the checkout to a local branch using remote branch name sans 'origin'.
      * This feature is necessary to support Maven release builds that push updated
-     * pom.xml to remote branch as 
+     * pom.xml to remote branch as
      * <pre>
      * git push origin localbranch:localbranch
      * </pre>
@@ -2254,24 +2490,24 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Test
     public void testCheckoutToDefaultLocalBranch_StarStar() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       FreeStyleProject project = setupSimpleProject("master");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject project = setupSimpleProject("master");
 
-       final String commitFile1 = "commitFile1";
-       commit(commitFile1, johnDoe, "Commit number 1");
-       GitSCM git = (GitSCM)project.getScm();
-       git.getExtensions().add(new LocalBranch("**"));
-       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        GitSCM git = (GitSCM) project.getScm();
+        git.getExtensions().add(new LocalBranch("**"));
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
-       assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-       assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
+        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+        assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
 
     /**
-     * Verifies that if project specifies LocalBranch with null value (empty string) 
+     * Verifies that if project specifies LocalBranch with null value (empty string)
      * that the checkout to a local branch using remote branch name sans 'origin'.
      * This feature is necessary to support Maven release builds that push updated
-     * pom.xml to remote branch as 
+     * pom.xml to remote branch as
      * <pre>
      * git push origin localbranch:localbranch
      * </pre>
@@ -2279,17 +2515,17 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Test
     public void testCheckoutToDefaultLocalBranch_NULL() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       FreeStyleProject project = setupSimpleProject("master");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject project = setupSimpleProject("master");
 
-       final String commitFile1 = "commitFile1";
-       commit(commitFile1, johnDoe, "Commit number 1");
-       GitSCM git = (GitSCM)project.getScm();
-       git.getExtensions().add(new LocalBranch(""));
-       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        GitSCM git = (GitSCM) project.getScm();
+        git.getExtensions().add(new LocalBranch(""));
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
-       assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-       assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
+        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+        assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
 
     /*
@@ -2298,33 +2534,33 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Test
     public void testCheckoutSansLocalBranchExtension() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       FreeStyleProject project = setupSimpleProject("master");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject project = setupSimpleProject("master");
 
-       final String commitFile1 = "commitFile1";
-       commit(commitFile1, johnDoe, "Commit number 1");
-       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
-       assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
         assertNull("GIT_LOCAL_BRANCH", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
-    
+
     /*
      * Verifies that GIT_CHECKOUT_DIR is set to "checkoutDir" if RelativeTargetDirectory extension
      * is configured.
      */
     @Test
     public void testCheckoutRelativeTargetDirectoryExtension() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       FreeStyleProject project = setupProject("master", false, "checkoutDir");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject project = setupProject("master", false, "checkoutDir");
 
-       final String commitFile1 = "commitFile1";
-       commit(commitFile1, johnDoe, "Commit number 1");
-       GitSCM git = (GitSCM)project.getScm();
-       git.getExtensions().add(new RelativeTargetDirectory("checkoutDir"));
-       FreeStyleBuild build1 = build(project, "checkoutDir", Result.SUCCESS, commitFile1);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        GitSCM git = (GitSCM) project.getScm();
+        git.getExtensions().add(new RelativeTargetDirectory("checkoutDir"));
+        FreeStyleBuild build1 = build(project, "checkoutDir", Result.SUCCESS, commitFile1);
 
-       assertEquals("GIT_CHECKOUT_DIR", "checkoutDir", getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
+        assertEquals("GIT_CHECKOUT_DIR", "checkoutDir", getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
     }
 
     /*
@@ -2333,15 +2569,16 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Test
     public void testCheckoutSansRelativeTargetDirectoryExtension() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       FreeStyleProject project = setupSimpleProject("master");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject project = setupSimpleProject("master");
 
-       final String commitFile1 = "commitFile1";
-       commit(commitFile1, johnDoe, "Commit number 1");
-       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
         assertNull("GIT_CHECKOUT_DIR", getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
     }
+
     @Test
     public void testCheckoutFailureIsRetryable() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -2383,7 +2620,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build1.getWorkspace().child("toto").exists());
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        ((GitSCM) project.getScm()).getExtensions().add(new SparseCheckoutPaths(Collections.singletonList(new SparseCheckoutPath("titi"))));
+        ((GitSCM) project.getScm())
+                .getExtensions()
+                .add(new SparseCheckoutPaths(Collections.singletonList(new SparseCheckoutPath("titi"))));
 
         final FreeStyleBuild build2 = build(project, Result.SUCCESS);
         assertTrue(build2.getWorkspace().child("titi").exists());
@@ -2416,7 +2655,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build1.getWorkspace().child(commitFile2).exists());
         assertTrue(build1.getWorkspace().child("toto").exists());
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
-
     }
 
     @Test
@@ -2428,7 +2666,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(scm);
         project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
@@ -2439,17 +2678,16 @@ public class GitSCMTest extends AbstractGitTestCase {
         // build the project
         build(project, Result.SUCCESS);
 
-        assertFalse("No changes to git since last build, thus no new build is expected", project.poll(listener).hasChanges());
+        assertFalse(
+                "No changes to git since last build, thus no new build is expected",
+                project.poll(listener).hasChanges());
     }
 
     public void baseTestPolling_parentHead(List<GitSCMExtension> extensions) throws Exception {
         // create parameterized project with environment value in branch specification
         FreeStyleProject project = createFreeStyleProject();
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
-                Collections.singletonList(new BranchSpec("**")),
-                null, null,
-                extensions);
+                createRemoteRepositories(), Collections.singletonList(new BranchSpec("**")), null, null, extensions);
         project.setScm(scm);
 
         // commit something in order to create an initial base version in git
@@ -2457,7 +2695,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.branch("someBranch");
         commit("toto/commitFile2", johnDoe, "Commit number 2");
 
-        assertTrue("polling should detect changes",project.poll(listener).hasChanges());
+        assertTrue("polling should detect changes", project.poll(listener).hasChanges());
 
         // build the project
         build(project, Result.SUCCESS);
@@ -2467,7 +2705,7 @@ public class GitSCMTest extends AbstractGitTestCase {
          */
         assertEquals("Wrong number of builds", 1, project.getBuilds().size());
 
-        assertFalse("polling should not detect changes",project.poll(listener).hasChanges());
+        assertFalse("polling should not detect changes", project.poll(listener).hasChanges());
     }
 
     @Issue("JENKINS-29066")
@@ -2492,21 +2730,24 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(scm);
-        project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "trackedbranch")));
+        project.addProperty(
+                new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "trackedbranch")));
 
         // Initial commit to master
         commit("file1", johnDoe, "Initial Commit");
-        
+
         // Create the branches
         git.branch("trackedbranch");
         git.branch("manualbranch");
-        
+
         final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
         final Action[] actions = {new ParametersAction(branchParam)};
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
+        FreeStyleBuild build =
+                project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, build);
 
         assertFalse("No changes to git since last build", project.poll(listener).hasChanges());
@@ -2517,10 +2758,11 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         git.checkout("trackedbranch");
         commit("file3", johnDoe, "Commit to tracked branch");
-        assertTrue("A change should be detected in tracked branch", project.poll(listener).hasChanges());
-        
+        assertTrue(
+                "A change should be detected in tracked branch",
+                project.poll(listener).hasChanges());
     }
-    
+
     private final class FakeParametersAction implements EnvironmentContributingAction, Serializable {
         // Test class for testPolling_environmentValueAsEnvironmentContributingAction test case
         final ParametersAction m_forwardingAction;
@@ -2529,19 +2771,23 @@ public class GitSCMTest extends AbstractGitTestCase {
             this.m_forwardingAction = new ParametersAction(params);
         }
 
+        @Override
         @Deprecated
         public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
             this.m_forwardingAction.buildEnvVars(ab, ev);
         }
 
+        @Override
         public String getIconFileName() {
             return this.m_forwardingAction.getIconFileName();
         }
 
+        @Override
         public String getDisplayName() {
             return this.m_forwardingAction.getDisplayName();
         }
 
+        @Override
         public String getUrlName() {
             return this.m_forwardingAction.getUrlName();
         }
@@ -2550,37 +2796,39 @@ public class GitSCMTest extends AbstractGitTestCase {
             return this.m_forwardingAction.getParameters();
         }
 
-        private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        }
+        private void writeObject(java.io.ObjectOutputStream out) throws IOException {}
 
-        private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        }
+        private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {}
 
-        private void readObjectNoData() throws ObjectStreamException {
-        }
+        private void readObjectNoData() throws ObjectStreamException {}
     }
 
     @Test
-	public void testPolling_CanDoRemotePollingIfOneBranchButMultipleRepositories() throws Exception {
-                assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-		FreeStyleProject project = createFreeStyleProject();
-		List<UserRemoteConfig> remoteConfigs = new ArrayList<>();
-		remoteConfigs.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "", null));
-		remoteConfigs.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "someOtherRepo", "", null));
-		GitSCM scm = new GitSCM(remoteConfigs,
-				Collections.singletonList(new BranchSpec("origin/master")), false,
-				Collections.emptyList(), null, null,
-				Collections.emptyList());
-		project.setScm(scm);
-		commit("commitFile1", johnDoe, "Commit number 1");
+    public void testPolling_CanDoRemotePollingIfOneBranchButMultipleRepositories() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject project = createFreeStyleProject();
+        List<UserRemoteConfig> remoteConfigs = new ArrayList<>();
+        remoteConfigs.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "", null));
+        remoteConfigs.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "someOtherRepo", "", null));
+        GitSCM scm = new GitSCM(
+                remoteConfigs,
+                Collections.singletonList(new BranchSpec("origin/master")),
+                false,
+                Collections.emptyList(),
+                null,
+                null,
+                Collections.emptyList());
+        project.setScm(scm);
+        commit("commitFile1", johnDoe, "Commit number 1");
 
-		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
+        FreeStyleBuild first_build =
+                project.scheduleBuild2(0, new Cause.UserIdCause()).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
-		first_build.getWorkspace().deleteContents();
-		PollingResult pollingResult = scm.poll(project, null, first_build.getWorkspace(), listener, null);
-		assertFalse(pollingResult.hasChanges());
-	}
+        first_build.getWorkspace().deleteContents();
+        PollingResult pollingResult = scm.poll(project, null, first_build.getWorkspace(), listener, null);
+        assertFalse(pollingResult.hasChanges());
+    }
 
     @Issue("JENKINS-24467")
     @Test
@@ -2591,7 +2839,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(scm);
 
@@ -2606,7 +2855,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         // SECURITY-170 - have to use ParametersDefinitionProperty
         project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
 
-        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
+        FreeStyleBuild first_build =
+                project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
         Launcher launcher = workspace.createLauncher(listener);
@@ -2626,8 +2876,14 @@ public class GitSCMTest extends AbstractGitTestCase {
      * @param git git SCM
      * @throws Exception on error
      */
-    private int notifyAndCheckScmName(FreeStyleProject project, ObjectId commit,
-            String expectedScmName, int ordinal, GitSCM git, ObjectId... priorCommits) throws Exception {
+    private int notifyAndCheckScmName(
+            FreeStyleProject project,
+            ObjectId commit,
+            String expectedScmName,
+            int ordinal,
+            GitSCM git,
+            ObjectId... priorCommits)
+            throws Exception {
         StringBuilder priorCommitIDs = new StringBuilder();
         for (ObjectId priorCommit : priorCommits) {
             priorCommitIDs.append(" ").append(priorCommit);
@@ -2636,9 +2892,14 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         final Build build = project.getLastBuild();
         final BuildData buildData = git.getBuildData(build);
-        assertEquals("Expected SHA1 != built SHA1 for commit " + ordinal + " priors:" + priorCommitIDs, commit, buildData
-                .getLastBuiltRevision().getSha1());
-        assertEquals("Expected SHA1 != retrieved SHA1 for commit " + ordinal + " priors:" + priorCommitIDs, commit, buildData.getLastBuild(commit).getSHA1());
+        assertEquals(
+                "Expected SHA1 != built SHA1 for commit " + ordinal + " priors:" + priorCommitIDs,
+                commit,
+                buildData.getLastBuiltRevision().getSha1());
+        assertEquals(
+                "Expected SHA1 != retrieved SHA1 for commit " + ordinal + " priors:" + priorCommitIDs,
+                commit,
+                buildData.getLastBuild(commit).getSHA1());
         assertTrue("Commit " + ordinal + " not marked as built", buildData.hasBeenBuilt(commit));
 
         assertEquals("Wrong SCM Name for commit " + ordinal, expectedScmName, buildData.getScmName());
@@ -2646,15 +2907,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         return build.getNumber();
     }
 
-    private void checkNumberedBuildScmName(FreeStyleProject project, int buildNumber,
-            String expectedScmName, GitSCM git) throws Exception {
+    private void checkNumberedBuildScmName(
+            FreeStyleProject project, int buildNumber, String expectedScmName, GitSCM git) throws Exception {
 
         final BuildData buildData = git.getBuildData(project.getBuildByNumber(buildNumber));
         assertEquals("Wrong SCM Name", expectedScmName, buildData.getScmName());
     }
 
     /* A null pointer exception was detected because the plugin failed to
-     * write a branch name to the build data, so there was a SHA1 recorded 
+     * write a branch name to the build data, so there was a SHA1 recorded
      * in the build data, but no branch name.
      */
     @Test
@@ -2697,129 +2958,129 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchStarStar() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
-       /* This is the null that causes NPE */
-       Branch branch = new Branch("origin/master", sha1);
+        /* This is the null that causes NPE */
+        Branch branch = new Branch("origin/master", sha1);
 
-       List<Branch> branchList = new ArrayList<>();
-       branchList.add(branch);
+        List<Branch> branchList = new ArrayList<>();
+        branchList.add(branch);
 
-       Revision revision = new Revision(sha1, branchList);
+        Revision revision = new Revision(sha1, branchList);
 
-       /* BuildData mock that will use the Revision with null branch name */
-       BuildData buildData = Mockito.mock(BuildData.class);
-       Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
-       Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+        /* BuildData mock that will use the Revision with null branch name */
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
 
-       /* List of build data that will be returned by the mocked BuildData */
-       List<BuildData> buildDataList = new ArrayList<>();
-       buildDataList.add(buildData);
+        /* List of build data that will be returned by the mocked BuildData */
+        List<BuildData> buildDataList = new ArrayList<>();
+        buildDataList.add(buildData);
 
-       /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
-       AbstractBuild build = Mockito.mock(AbstractBuild.class);
-       Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+        /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+        AbstractBuild build = Mockito.mock(AbstractBuild.class);
+        Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
 
-       final FreeStyleProject project = setupProject("*/*", false);
-       GitSCM scm = (GitSCM) project.getScm();
-       scm.getExtensions().add(new LocalBranch("**"));
+        final FreeStyleProject project = setupProject("*/*", false);
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.getExtensions().add(new LocalBranch("**"));
 
-       EnvVars env = new EnvVars();
-       scm.buildEnvVars(build, env); // NPE here before fix applied
-       
-       assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
-       assertEquals("GIT_LOCAL_BRANCH", "master", env.get("GIT_LOCAL_BRANCH"));
+        EnvVars env = new EnvVars();
+        scm.buildEnvVars(build, env); // NPE here before fix applied
 
-       /* Verify mocks were called as expected */
-       verify(buildData, times(1)).getLastBuiltRevision();
-       verify(buildData, times(1)).hasBeenReferenced(anyString());
-       verify(build, times(1)).getActions(BuildData.class);
+        assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
+        assertEquals("GIT_LOCAL_BRANCH", "master", env.get("GIT_LOCAL_BRANCH"));
+
+        /* Verify mocks were called as expected */
+        verify(buildData, times(1)).getLastBuiltRevision();
+        verify(buildData, times(1)).hasBeenReferenced(anyString());
+        verify(build, times(1)).getActions(BuildData.class);
     }
 
     @Test
     @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNull() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
-       /* This is the null that causes NPE */
-       Branch branch = new Branch("origin/master", sha1);
+        /* This is the null that causes NPE */
+        Branch branch = new Branch("origin/master", sha1);
 
-       List<Branch> branchList = new ArrayList<>();
-       branchList.add(branch);
+        List<Branch> branchList = new ArrayList<>();
+        branchList.add(branch);
 
-       Revision revision = new Revision(sha1, branchList);
+        Revision revision = new Revision(sha1, branchList);
 
-       /* BuildData mock that will use the Revision with null branch name */
-       BuildData buildData = Mockito.mock(BuildData.class);
-       Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
-       Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+        /* BuildData mock that will use the Revision with null branch name */
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
 
-       /* List of build data that will be returned by the mocked BuildData */
-       List<BuildData> buildDataList = new ArrayList<>();
-       buildDataList.add(buildData);
+        /* List of build data that will be returned by the mocked BuildData */
+        List<BuildData> buildDataList = new ArrayList<>();
+        buildDataList.add(buildData);
 
-       /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
-       AbstractBuild build = Mockito.mock(AbstractBuild.class);
-       Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+        /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+        AbstractBuild build = Mockito.mock(AbstractBuild.class);
+        Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
 
-       final FreeStyleProject project = setupProject("*/*", false);
-       GitSCM scm = (GitSCM) project.getScm();
-       scm.getExtensions().add(new LocalBranch(""));
+        final FreeStyleProject project = setupProject("*/*", false);
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.getExtensions().add(new LocalBranch(""));
 
-       EnvVars env = new EnvVars();
-       scm.buildEnvVars(build, env); // NPE here before fix applied
-       
-       assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
-       assertEquals("GIT_LOCAL_BRANCH", "master", env.get("GIT_LOCAL_BRANCH"));
+        EnvVars env = new EnvVars();
+        scm.buildEnvVars(build, env); // NPE here before fix applied
 
-       /* Verify mocks were called as expected */
-       verify(buildData, times(1)).getLastBuiltRevision();
-       verify(buildData, times(1)).hasBeenReferenced(anyString());
-       verify(build, times(1)).getActions(BuildData.class);
+        assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
+        assertEquals("GIT_LOCAL_BRANCH", "master", env.get("GIT_LOCAL_BRANCH"));
+
+        /* Verify mocks were called as expected */
+        verify(buildData, times(1)).getLastBuiltRevision();
+        verify(buildData, times(1)).hasBeenReferenced(anyString());
+        verify(build, times(1)).getActions(BuildData.class);
     }
 
     @Test
     @Deprecated // testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNotSet() throws Exception {
-       assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-       ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
-       /* This is the null that causes NPE */
-       Branch branch = new Branch("origin/master", sha1);
+        /* This is the null that causes NPE */
+        Branch branch = new Branch("origin/master", sha1);
 
-       List<Branch> branchList = new ArrayList<>();
-       branchList.add(branch);
+        List<Branch> branchList = new ArrayList<>();
+        branchList.add(branch);
 
-       Revision revision = new Revision(sha1, branchList);
+        Revision revision = new Revision(sha1, branchList);
 
-       /* BuildData mock that will use the Revision with null branch name */
-       BuildData buildData = Mockito.mock(BuildData.class);
-       Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
-       Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+        /* BuildData mock that will use the Revision with null branch name */
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
 
-       /* List of build data that will be returned by the mocked BuildData */
-       List<BuildData> buildDataList = new ArrayList<>();
-       buildDataList.add(buildData);
+        /* List of build data that will be returned by the mocked BuildData */
+        List<BuildData> buildDataList = new ArrayList<>();
+        buildDataList.add(buildData);
 
-       /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
-       AbstractBuild build = Mockito.mock(AbstractBuild.class);
-       Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+        /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+        AbstractBuild build = Mockito.mock(AbstractBuild.class);
+        Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
 
-       final FreeStyleProject project = setupProject("*/*", false);
-       GitSCM scm = (GitSCM) project.getScm();
+        final FreeStyleProject project = setupProject("*/*", false);
+        GitSCM scm = (GitSCM) project.getScm();
 
-       EnvVars env = new EnvVars();
-       scm.buildEnvVars(build, env); // NPE here before fix applied
-       
-       assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
+        EnvVars env = new EnvVars();
+        scm.buildEnvVars(build, env); // NPE here before fix applied
+
+        assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
         assertNull("GIT_LOCAL_BRANCH", env.get("GIT_LOCAL_BRANCH"));
 
-       /* Verify mocks were called as expected */
-       verify(buildData, times(1)).getLastBuiltRevision();
-       verify(buildData, times(1)).hasBeenReferenced(anyString());
-       verify(build, times(1)).getActions(BuildData.class);
+        /* Verify mocks were called as expected */
+        verify(buildData, times(1)).getLastBuiltRevision();
+        verify(buildData, times(1)).hasBeenReferenced(anyString());
+        verify(build, times(1)).getActions(BuildData.class);
     }
 
     @Test
@@ -2892,7 +3153,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 userRemoteConfigs,
                 Collections.singletonList(new BranchSpec(branch.getName())),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(scm);
 
@@ -2916,7 +3178,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=test commit");
         FreeStyleProject p = setupSimpleProject("master");
-        Run<?,?> run = rule.buildAndAssertSuccess(p);
+        Run<?, ?> run = rule.buildAndAssertSuccess(p);
         rule.waitForMessage("Commit message: \"test commit\"", run);
     }
 
@@ -2930,18 +3192,24 @@ public class GitSCMTest extends AbstractGitTestCase {
      * @param git git SCM
      * @throws Exception on error
      */
-    private void notifyAndCheckBranch(FreeStyleProject project, ObjectId commit,
-            String expectedBranch, int ordinal, GitSCM git) throws Exception {
+    private void notifyAndCheckBranch(
+            FreeStyleProject project, ObjectId commit, String expectedBranch, int ordinal, GitSCM git)
+            throws Exception {
         assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
         final BuildData buildData = git.getBuildData(project.getLastBuild());
-        final Collection<Branch> builtBranches = buildData.lastBuild.getRevision().getBranches();
-        assertEquals("Commit " + ordinal + " should be built", commit, buildData
-                .getLastBuiltRevision().getSha1());
+        final Collection<Branch> builtBranches =
+                buildData.lastBuild.getRevision().getBranches();
+        assertEquals(
+                "Commit " + ordinal + " should be built",
+                commit,
+                buildData.getLastBuiltRevision().getSha1());
 
         final String expectedBranchString = "origin/" + expectedBranch;
         assertFalse("Branches should be detected for the build", builtBranches.isEmpty());
-        assertEquals(expectedBranch + " branch should be detected", expectedBranchString,
-                     builtBranches.iterator().next().getName());
+        assertEquals(
+                expectedBranch + " branch should be detected",
+                expectedBranchString,
+                builtBranches.iterator().next().getName());
         assertEquals(expectedBranchString, getEnvVars(project).get(GitSCM.GIT_BRANCH));
     }
 
@@ -2957,14 +3225,16 @@ public class GitSCMTest extends AbstractGitTestCase {
         final int initialBuildNumber = project.getLastBuild().getNumber();
         final String commit1 = ObjectId.toString(commitId);
 
-        final String notificationPath = rule.getURL().toExternalForm()
-                + "git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
+        final String notificationPath = rule.getURL().toExternalForm() + "git/notifyCommit?url="
+                + testRepo.gitDir.toString() + "&sha1=" + commit1;
         final URL notifyUrl = new URL(notificationPath);
         String notifyContent;
         try (final InputStream is = notifyUrl.openStream()) {
             notifyContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
-        assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
+        assertThat(
+                notifyContent,
+                containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 
         if ((project.getLastBuild().getNumber() == initialBuildNumber)
                 && (rule.jenkins.getQueue().isEmpty())) {
@@ -2982,8 +3252,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     private void setupJGit(GitSCM git) {
-        git.gitTool="jgit";
-        rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.emptyList()));
+        git.gitTool = "jgit";
+        rule.jenkins
+                .getDescriptorByType(GitTool.DescriptorImpl.class)
+                .setInstallations(new JGitTool(Collections.emptyList()));
     }
 
     /** We clean the environment, just in case the test is being run from a Jenkins job using this same plugin :). */
@@ -3008,7 +3280,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
-        return java.io.File.pathSeparatorChar==';';
+        return java.io.File.pathSeparatorChar == ';';
     }
 
     private StandardCredentials createCredential(CredentialsScope scope, String id) {

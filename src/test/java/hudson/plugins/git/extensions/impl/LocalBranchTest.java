@@ -1,18 +1,16 @@
 package hudson.plugins.git.extensions.impl;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.Test;
 
 public class LocalBranchTest {
 
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(LocalBranch.class)
-                .usingGetClass()
-                .verify();
+        EqualsVerifier.forClass(LocalBranch.class).usingGetClass().verify();
     }
 
     @Test

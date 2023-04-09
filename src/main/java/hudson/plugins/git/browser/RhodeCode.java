@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
@@ -7,14 +8,12 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * RhodeCode Browser URLs
@@ -58,7 +57,11 @@ public class RhodeCode extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId()) + "&diff=diff+to+revision");
+        return new URL(
+                url,
+                url.getPath() + "diff/" + path.getPath()
+                        + param(url).add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId())
+                        + "&diff=diff+to+revision");
     }
 
     /**
@@ -88,6 +91,7 @@ public class RhodeCode extends GitRepositoryBrowser {
     @Extension
     @Symbol("rhodeCode")
     public static class RhodeCodeDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "rhodecode";
@@ -95,7 +99,7 @@ public class RhodeCode extends GitRepositoryBrowser {
 
         @Override
         public RhodeCode newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(RhodeCode.class, jsonObject);
         }
     }

@@ -7,8 +7,6 @@ public class PruneStaleBranchTest {
 
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(PruneStaleBranch.class)
-                .usingGetClass()
-                .verify();
+        EqualsVerifier.forClass(PruneStaleBranch.class).usingGetClass().verify();
     }
 }

@@ -1,10 +1,9 @@
 package org.jenkinsci.plugins.gitclient;
 
 import hudson.model.TaskListener;
+import java.io.File;
 import jenkins.plugins.git.AbstractGitSCMSourceTest;
 import org.jenkinsci.plugins.gitclient.jgit.PreemptiveAuthHttpClientConnectionFactory;
-
-import java.io.File;
 
 /**
  * This is just here to make the constructors public
@@ -15,7 +14,8 @@ public class TestJGitAPIImpl extends JGitAPIImpl {
         super(workspace, listener);
     }
 
-    public TestJGitAPIImpl(File workspace, TaskListener listener, PreemptiveAuthHttpClientConnectionFactory httpConnectionFactory) {
+    public TestJGitAPIImpl(
+            File workspace, TaskListener listener, PreemptiveAuthHttpClientConnectionFactory httpConnectionFactory) {
         super(workspace, listener, httpConnectionFactory);
     }
 }

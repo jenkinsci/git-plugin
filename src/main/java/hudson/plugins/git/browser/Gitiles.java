@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -10,22 +11,17 @@ import hudson.plugins.git.Messages;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
-
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * @author Manolo Carrasco Moñino
@@ -59,10 +55,10 @@ public class Gitiles extends GitRepositoryBrowser {
         return new URL(url + "+/" + changeSet.getId() + "%5E%21");
     }
 
-
     @Extension
     @Symbol("gitiles")
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "gitiles";
@@ -70,26 +66,29 @@ public class Gitiles extends GitRepositoryBrowser {
 
         @Override
         public Gitiles newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(Gitiles.class, jsonObject);
         }
 
         @RequirePOST
-        public FormValidation doCheckRepoUrl(@AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
+        public FormValidation doCheckRepoUrl(
+                @AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-            if(initialChecksAndReturnOk(project, cleanUrl)){
+            if (initialChecksAndReturnOk(project, cleanUrl)) {
                 return FormValidation.ok();
             }
             if (!validateUrl(cleanUrl)) {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {
+                @Override
                 protected FormValidation check() throws IOException, ServletException {
                     String v = cleanUrl;
-                    if (!v.endsWith("/"))
+                    if (!v.endsWith("/")) {
                         v += '/';
+                    }
 
                     try {
                         // gitiles has a line in main page indicating how to clone the project

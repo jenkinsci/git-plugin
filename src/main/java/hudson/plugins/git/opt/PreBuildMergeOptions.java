@@ -1,11 +1,10 @@
 package hudson.plugins.git.opt;
 
+import java.io.Serializable;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import java.io.Serializable;
 
 /**
  * Git SCM can optionally perform a merge with another branch (possibly another repository.)
@@ -52,9 +51,11 @@ public class PreBuildMergeOptions implements Serializable {
 
     @Exported
     public MergeCommand.Strategy getMergeStrategy() {
-        for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
-            if (strategy.toString().equals(mergeStrategy))
+        for (MergeCommand.Strategy strategy : MergeCommand.Strategy.values()) {
+            if (strategy.toString().equals(mergeStrategy)) {
                 return strategy;
+            }
+        }
         return MergeCommand.Strategy.DEFAULT;
     }
 
@@ -64,14 +65,16 @@ public class PreBuildMergeOptions implements Serializable {
 
     @Exported
     public MergeCommand.GitPluginFastForwardMode getFastForwardMode() {
-        for (MergeCommand.GitPluginFastForwardMode ffMode : MergeCommand.GitPluginFastForwardMode.values())
-            if (ffMode == fastForwardMode)
+        for (MergeCommand.GitPluginFastForwardMode ffMode : MergeCommand.GitPluginFastForwardMode.values()) {
+            if (ffMode == fastForwardMode) {
                 return ffMode;
+            }
+        }
         return MergeCommand.GitPluginFastForwardMode.FF;
     }
 
     public void setFastForwardMode(MergeCommand.GitPluginFastForwardMode fastForwardMode) {
-      this.fastForwardMode = fastForwardMode;
+        this.fastForwardMode = fastForwardMode;
     }
 
     @Exported
