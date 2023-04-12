@@ -11,6 +11,7 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTool;
+import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
@@ -37,12 +38,10 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
-import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -92,11 +91,12 @@ public class GitSCMSourceTest {
     @Test
     @Deprecated
     public void testSourceOwnerTriggeredByDoNotifyCommit() throws Exception {
+        String notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         GitSCMSource gitSCMSource = new GitSCMSource("id", REMOTE, "", "*", "", false);
         GitSCMSourceOwner scmSourceOwner = setupGitSCMSourceOwner(gitSCMSource);
         jenkins.getInstance().add(scmSourceOwner, "gitSourceOwner");
 
-        gitStatus.doNotifyCommit(mock(HttpServletRequest.class), REMOTE, "master", "");
+        gitStatus.doNotifyCommit(mock(HttpServletRequest.class), REMOTE, "master", "", notifyCommitApiToken);
 
         SCMHeadEvent event =
                 jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
@@ -110,7 +110,7 @@ public class GitSCMSourceTest {
     private GitSCMSourceOwner setupGitSCMSourceOwner(GitSCMSource gitSCMSource) {
         GitSCMSourceOwner owner = mock(GitSCMSourceOwner.class);
         when(owner.hasPermission(Item.READ)).thenReturn(true, true, true);
-        when(owner.getSCMSources()).thenReturn(Collections.<SCMSource>singletonList(gitSCMSource));
+        when(owner.getSCMSources()).thenReturn(Collections.singletonList(gitSCMSource));
         return owner;
     }
 
@@ -171,9 +171,9 @@ public class GitSCMSourceTest {
         instance.setOwner(mock(SCMSourceOwner.class));
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
-        instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         Map<SCMHead, SCMRevision> result = instance.fetch(SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+        assertThat(result.values(), Matchers.containsInAnyOrder(
                 new AbstractGitSCMSource.SCMRevisionImpl(
                         new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
@@ -187,9 +187,9 @@ public class GitSCMSourceTest {
                         new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
                 )));
 
-        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        instance.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
         result = instance.fetch(SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+        assertThat(result.values(), Matchers.containsInAnyOrder(
                 new AbstractGitSCMSource.SCMRevisionImpl(
                         new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
@@ -200,9 +200,9 @@ public class GitSCMSourceTest {
                         new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
                 )));
 
-        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
+        instance.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
         result = instance.fetch(SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+        assertThat(result.values(), Matchers.containsInAnyOrder(
                 new GitTagSCMRevision(
                         new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
                 )));
@@ -217,10 +217,10 @@ public class GitSCMSourceTest {
         instance.setOwner(mock(SCMSourceOwner.class));
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
-        instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         Map<SCMHead, SCMRevision> result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"),
                 SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+        assertThat(result.values(), Matchers.containsInAnyOrder(
                 new AbstractGitSCMSource.SCMRevisionImpl(
                         new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
@@ -232,7 +232,7 @@ public class GitSCMSourceTest {
                 )));
         result = instance.fetch(new MySCMSourceCriteria("README.md"),
                 SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+        assertThat(result.values(), Matchers.containsInAnyOrder(
                 new AbstractGitSCMSource.SCMRevisionImpl(
                         new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                 ),
@@ -240,9 +240,9 @@ public class GitSCMSourceTest {
                         new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
                 )));
 
-        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        instance.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
         result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+        assertThat(result.values(), Matchers.containsInAnyOrder(
                 new AbstractGitSCMSource.SCMRevisionImpl(
                         new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
@@ -250,9 +250,9 @@ public class GitSCMSourceTest {
                         new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                 )));
 
-        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
+        instance.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
         result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+        assertThat(result.values(), Matchers.containsInAnyOrder(
                 new GitTagSCMRevision(
                         new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
                 )));
@@ -267,15 +267,15 @@ public class GitSCMSourceTest {
         instance.setOwner(mock(SCMSourceOwner.class));
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
-        instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         Set<String> result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("foo", "bar", "manchu", "v1.0.0"));
 
-        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        instance.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
         result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("foo", "bar", "manchu"));
 
-        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
+        instance.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
         result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("v1.0.0"));
     }
@@ -289,7 +289,7 @@ public class GitSCMSourceTest {
         instance.setOwner(mock(SCMSourceOwner.class));
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
-        instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         assertThat(instance.fetch(new SCMHead("foo"), null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
         assertThat(instance.fetch(new GitBranchSCMHead("foo"), null),
@@ -311,7 +311,7 @@ public class GitSCMSourceTest {
         instance.setOwner(mock(SCMSourceOwner.class));
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
-        instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         assertThat(instance.fetch("foo", null, null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
         assertThat(instance.fetch("bar", null, null),
@@ -331,11 +331,11 @@ public class GitSCMSourceTest {
         AbstractGitSCMSourceTest.ActionableSCMSourceOwner owner =
                 Mockito.mock(AbstractGitSCMSourceTest.ActionableSCMSourceOwner.class);
         when(owner.getSCMSource(instance.getId())).thenReturn(instance);
-        when(owner.getSCMSources()).thenReturn(Collections.<SCMSource>singletonList(instance));
+        when(owner.getSCMSources()).thenReturn(Collections.singletonList(instance));
         instance.setOwner(owner);
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
-        instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
 
         List<Action> actions = instance.fetchActions(null, null);
         assertThat(actions,
@@ -364,7 +364,7 @@ public class GitSCMSourceTest {
             return;
         }
         TaskListener log = StreamTaskListener.fromStdout();
-        HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", "git");
+        HelloToolInstaller inst = new HelloToolInstaller(jenkins.jenkins.getSelfLabel().getName(), "echo Hello", "git");
         GitTool t = new GitTool("myGit", null, Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
         t.getDescriptor().setInstallations(t);
@@ -529,7 +529,7 @@ public class GitSCMSourceTest {
         public Iterable<SCMRevision> getRevisions(@NonNull String remote, StandardCredentials credentials,
                                                   @NonNull Set<ReferenceType> referenceTypes)
                 throws IOException, InterruptedException {
-            return Arrays.<SCMRevision>asList(
+            return Arrays.asList(
                     new AbstractGitSCMSource.SCMRevisionImpl(
                             new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                     ),

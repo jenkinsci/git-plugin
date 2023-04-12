@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +66,7 @@ public class BuildDataTest {
 
     @Test
     public void testGetIconFileName() {
-        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-32x32.png"));
+        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-icon.svg"));
     }
 
     @Test
@@ -88,7 +89,75 @@ public class BuildDataTest {
 
     @Test
     public void testGetLastBuild() {
-        assertEquals(null, data.getLastBuild(sha1));
+        assertNull(data.getLastBuild(sha1));
+    }
+
+    @Test
+    public void testGetLastBuildSingleBranch() {
+        String branchName = "origin/master";
+        Collection<Branch> branches = new ArrayList<>();
+        Branch branch = new Branch(branchName, sha1);
+        branches.add(branch);
+        Revision revision = new Revision(sha1, branches);
+        Build build = new Build(revision, 13, Result.FAILURE);
+        data.saveBuild(build);
+        assertThat(data.getLastBuild(sha1), is(build));
+
+        ObjectId newSha1 = ObjectId.fromString("31a987bc9fc0b08d1ad297cac8584d5871a21581");
+        Revision newRevision = new Revision(newSha1, branches);
+        Revision marked = revision;
+        Build newBuild = new Build(marked, newRevision, 17, Result.SUCCESS);
+        data.saveBuild(newBuild);
+        assertThat(data.getLastBuild(newSha1), is(newBuild));
+
+        assertThat(data.getLastBuild(sha1), is(newBuild));
+
+        ObjectId unbuiltSha1 = ObjectId.fromString("da99ce34121292bc887e91fc0a9d60cf8a701662");
+        assertThat(data.getLastBuild(unbuiltSha1), is(nullValue()));
+    }
+
+    @Test
+    public void testGetLastBuildMultipleBranches() {
+
+        String branchName = "origin/master";
+        Collection<Branch> branches = new ArrayList<>();
+        Branch branch = new Branch(branchName, sha1);
+        branches.add(branch);
+        Revision revision = new Revision(sha1, branches);
+        Build build = new Build(revision, 13, Result.FAILURE);
+        data.saveBuild(build);
+        assertThat(data.getLastBuild(sha1), is(build));
+
+        ObjectId newSha1 = ObjectId.fromString("31a987bc9fc0b08d1ad297cac8584d5871a21581");
+        Branch newBranch = new Branch("origin/stable-3.x", newSha1);
+        branches.add(newBranch);
+        Revision newRevision = new Revision(newSha1, branches);
+        Revision marked = revision;
+        Build newBuild = new Build(marked, newRevision, 17, Result.SUCCESS);
+        data.saveBuild(newBuild);
+        assertThat(data.getLastBuild(newSha1), is(newBuild));
+
+        assertThat(data.getLastBuild(sha1), is(newBuild));
+
+        ObjectId unbuiltSha1 = ObjectId.fromString("da99ce34121292bc887e91fc0a9d60cf8a701662");
+        assertThat(data.getLastBuild(unbuiltSha1), is(nullValue()));
+    }
+
+    @Test
+    public void testGetLastBuildWithNullSha1() {
+        assertThat(data.getLastBuild(null), is(nullValue()));
+
+        String branchName = "origin/master";
+        Collection<Branch> branches = new ArrayList<>();
+        Branch branch = new Branch(branchName, sha1);
+        branches.add(branch);
+        Revision revision = new Revision(null, branches); // A revision with a null sha1 (unexpected)
+        Build build = new Build(revision, 29, Result.FAILURE);
+        data.saveBuild(build);
+        assertThat(data.getLastBuild(sha1), is(nullValue()));
+
+        ObjectId unbuiltSha1 = ObjectId.fromString("da99ce34121292bc887e91fc0a9d60cf8a701662");
+        assertThat(data.getLastBuild(unbuiltSha1), is(nullValue()));
     }
 
     @Test
@@ -97,12 +166,21 @@ public class BuildDataTest {
         Build build = new Build(revision, 1, Result.SUCCESS);
         data.saveBuild(build);
         assertThat(data.getLastBuild(sha1), is(build));
+
+        Revision nullRevision = new Revision(null);
+        Build newBuild = new Build(revision, nullRevision, 2, Result.SUCCESS);
+        data.saveBuild(newBuild);
+        assertThat(data.getLastBuild(sha1), is(newBuild));
+
+        Build anotherBuild = new Build(nullRevision, revision, 3, Result.SUCCESS);
+        data.saveBuild(anotherBuild);
+        assertThat(data.getLastBuild(sha1), is(anotherBuild));
     }
 
     @Test
     public void testGetLastBuildOfBranch() {
         String branchName = "origin/master";
-        assertEquals(null, data.getLastBuildOfBranch(branchName));
+        assertNull(data.getLastBuildOfBranch(branchName));
 
         Collection<Branch> branches = new ArrayList<>();
         Branch branch = new Branch(branchName, sha1);
@@ -193,44 +271,44 @@ public class BuildDataTest {
     public void testEquals() {
         // Null object not equal non-null
         BuildData nullData = null;
-        assertFalse("Null object not equal non-null", data.equals(nullData));
+        assertNotEquals("Null object not equal non-null", data, nullData);
 
         // Object should equal itself
         assertEquals("Object not equal itself", data, data);
-        assertTrue("Object not equal itself", data.equals(data));
+        assertEquals("Object not equal itself", data, data);
         assertEquals("Object hashCode not equal itself", data.hashCode(), data.hashCode());
 
         // Cloned object equals original object
         BuildData data1 = data.clone();
         assertEquals("Cloned objects not equal", data1, data);
-        assertTrue("Cloned objects not equal", data1.equals(data));
-        assertTrue("Cloned objects not equal", data.equals(data1));
+        assertEquals("Cloned objects not equal", data1, data);
+        assertEquals("Cloned objects not equal", data, data1);
         assertEquals("Cloned object hashCodes not equal", data.hashCode(), data1.hashCode());
 
         // Saved build makes object unequal
         Revision revision1 = new Revision(sha1);
         Build build1 = new Build(revision1, 1, Result.SUCCESS);
         data1.saveBuild(build1);
-        assertFalse("Distinct objects shouldn't be equal", data.equals(data1));
-        assertFalse("Distinct objects shouldn't be equal", data1.equals(data));
+        assertNotEquals("Distinct objects shouldn't be equal", data, data1);
+        assertNotEquals("Distinct objects shouldn't be equal", data1, data);
 
         // Same saved build makes objects equal
         BuildData data2 = data.clone();
         data2.saveBuild(build1);
-        assertTrue("Objects with same saved build not equal", data2.equals(data1));
-        assertTrue("Objects with same saved build not equal", data1.equals(data2));
+        assertEquals("Objects with same saved build not equal", data2, data1);
+        assertEquals("Objects with same saved build not equal", data1, data2);
         assertEquals("Objects with same saved build not equal hashCodes", data2.hashCode(), data1.hashCode());
 
         // Add remote URL makes objects unequal
-        final String remoteUrl2 = "git://github.com/jenkinsci/git-plugin.git";
+        final String remoteUrl2 = "git@github.com:jenkinsci/git-plugin.git";
         data1.addRemoteUrl(remoteUrl2);
-        assertFalse("Distinct objects shouldn't be equal", data.equals(data1));
-        assertFalse("Distinct objects shouldn't be equal", data1.equals(data));
+        assertNotEquals("Distinct objects shouldn't be equal", data, data1);
+        assertNotEquals("Distinct objects shouldn't be equal", data1, data);
 
         // Add same remote URL makes objects equal
         data2.addRemoteUrl(remoteUrl2);
-        assertTrue("Objects with same remote URL not equal", data2.equals(data1));
-        assertTrue("Objects with same remote URL not equal", data1.equals(data2));
+        assertEquals("Objects with same remote URL not equal", data2, data1);
+        assertEquals("Objects with same remote URL not equal", data1, data2);
         assertEquals("Objects with same remote URL not equal hashCodes", data2.hashCode(), data1.hashCode());
 
         // Another saved build still keeps objects equal
@@ -243,22 +321,22 @@ public class BuildDataTest {
         assertEquals(build1, build2); // Surprising, since build1 result is SUCCESS, build2 result is FAILURE
         data1.saveBuild(build2);
         data2.saveBuild(build2);
-        assertTrue(data1.equals(data2));
+        assertEquals(data1, data2);
         assertEquals(data1.hashCode(), data2.hashCode());
 
         // Saving different build results still equal BuildData,
         // because the different build results are equal
         data1.saveBuild(build1);
         data2.saveBuild(build2);
-        assertTrue(data1.equals(data2));
+        assertEquals(data1, data2);
         assertEquals(data1.hashCode(), data2.hashCode());
 
         // Set SCM name doesn't change equality or hashCode
         data1.setScmName("scm 1");
-        assertTrue(data1.equals(data2));
+        assertEquals(data1, data2);
         assertEquals(data1.hashCode(), data2.hashCode());
         data2.setScmName("scm 2");
-        assertTrue(data1.equals(data2));
+        assertEquals(data1, data2);
         assertEquals(data1.hashCode(), data2.hashCode());
 
         BuildData emptyData = new BuildData();
@@ -279,15 +357,15 @@ public class BuildDataTest {
     @Test
     public void testSetIndex() {
         data.setIndex(null);
-        assertEquals(null, data.getIndex());
+        assertNull(data.getIndex());
         data.setIndex(-1);
-        assertEquals(null, data.getIndex());
+        assertNull(data.getIndex());
         data.setIndex(0);
-        assertEquals(null, data.getIndex());
+        assertNull(data.getIndex());
         data.setIndex(13);
         assertEquals(13, data.getIndex().intValue());
         data.setIndex(-1);
-        assertEquals(null, data.getIndex());
+        assertNull(data.getIndex());
     }
 
     @Test
@@ -367,7 +445,7 @@ public class BuildDataTest {
 
     @Test
     public void testGetIndex() {
-        assertEquals(null, data.getIndex());
+        assertNull(data.getIndex());
     }
 
     @Test
@@ -429,7 +507,7 @@ public class BuildDataTest {
         assertTrue("Objects with same saved build not similar (2)", dataClone.similarTo(data2));
 
         // Add remote URL makes objects dissimilar
-        final String remoteUrl = "git://github.com/jenkinsci/git-client-plugin.git";
+        final String remoteUrl = "https://github.com/jenkinsci/git-client-plugin.git";
         dataClone.addRemoteUrl(remoteUrl);
         assertFalse("Distinct objects shouldn't be similar (1)", data.similarTo(dataClone));
         assertFalse("Distinct objects shouldn't be similar (2)", dataClone.similarTo(data));
@@ -486,6 +564,11 @@ public class BuildDataTest {
         assertTrue(dataClone.similarTo(data2));
         data2.setScmName("scm 2");
         assertTrue(dataClone.similarTo(data2));
+    }
+
+    @Test
+    public void testHashCode() {
+        // Tested in testEquals
     }
 
     @Test

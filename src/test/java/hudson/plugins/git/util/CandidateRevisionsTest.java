@@ -7,8 +7,8 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.util.StreamTaskListener;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Random;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -87,7 +87,7 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
         /* This refspec doesn't clone master branch, don't checkout master */
         RefSpec tagsRefSpec = new RefSpec("+refs/tags/tag/*:refs/remotes/origin/tags/tag/*");
         testGitClient2.clone_()
-                .refspecs(Arrays.asList(tagsRefSpec))
+                .refspecs(Collections.singletonList(tagsRefSpec))
                 .repositoryName("origin")
                 .url(testGitDir.getAbsolutePath())
                 .execute();

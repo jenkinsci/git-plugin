@@ -4,9 +4,17 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.18</version>
+    <version>4.59</version>
     <relativePath />
   </parent>
+
+  <artifactId>git</artifactId>
+  <version>${revision}${changelist}</version>
+  <packaging>hpi</packaging>
+  <name>Git plugin</name>
+  <description>Integrates Jenkins with Git SCM</description>
+  <url>https://github.com/jenkinsci/git-plugin</url>
+  <inceptionYear>2007</inceptionYear>
 
   <licenses>
     <license>
@@ -15,62 +23,6 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
-  <artifactId>git</artifactId>
-  <version>${revision}${changelist}</version>
-  <packaging>hpi</packaging>
-  <name>Jenkins Git plugin</name>
-  <description>Integrates Jenkins with Git SCM</description>
-  <url>https://github.com/jenkinsci/git-plugin/blob/master/README.adoc</url>
-  <inceptionYear>2007</inceptionYear>
-
-  <properties>
-    <revision>4.7.2</revision>
-    <changelist>-SNAPSHOT</changelist>
-    <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
-    <jenkins.version>2.263.1</jenkins.version>
-    <java.level>8</java.level>
-    <no-test-jar>false</no-test-jar>
-    <useBeta>true</useBeta>
-    <linkXRef>false</linkXRef>
-    <spotbugs.effort>Max</spotbugs.effort>
-    <spotbugs.failOnError>true</spotbugs.failOnError>
-    <spotbugs.threshold>Medium</spotbugs.threshold>
-  </properties>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.2</version>
-        <configuration>
-          <configLocation>google_checks.xml</configLocation>
-          <failOnViolation>true</failOnViolation>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.spotbugs</groupId>
-        <artifactId>spotbugs-maven-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs</artifactId>
-            <version>4.2.2</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-    </plugins>
-  </build>
-
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
 
   <developers>
     <developer>
@@ -93,10 +45,50 @@
       <id>olamy</id>
       <name>Olivier Lamy</name>
       <email>olamy@apache.org</email>
-      <timezone>Australia/Brisbane</timezone>
       <url>https://about.me/olamy</url>
+      <timezone>Australia/Brisbane</timezone>
     </developer>
   </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
+    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+    <tag>${scmTag}</tag>
+    <url>https://github.com/${gitHubRepo}</url>
+  </scm>
+
+  <properties>
+    <revision>5.0.1</revision>
+    <changelist>-SNAPSHOT</changelist>
+    <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+    <jenkins.version>2.361.4</jenkins.version>
+    <no-test-jar>false</no-test-jar>
+    <!-- Jenkins.MANAGE is still in Beta -->
+    <useBeta>true</useBeta>
+    <!-- Do not run extra reporting for checkstyle or pmd -->
+    <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
+    <linkXRef>false</linkXRef>
+    <spotbugs.effort>Max</spotbugs.effort>
+    <spotbugs.threshold>Medium</spotbugs.threshold>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom-2.361.x</artifactId>
+        <version>1981.v17df70e84a_a_1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Added to satisfy upper bounds checks from enforcer in parent pom 4.55 -->
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.14.4</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -106,7 +98,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.7.1</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -123,12 +114,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <exclusions>
-        <exclusion> <!-- script-security plugin depends on error_prone_annotations:2.3.4, others 2.4.0 -->
-          <groupId>com.google.errorprone</groupId>
-          <artifactId>error_prone_annotations</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -137,6 +122,12 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -152,18 +143,6 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion> <!-- junit plugin depends on error_prone_annotations:2.3.4, others 2.4.0 -->
-          <groupId>com.google.errorprone</groupId>
-          <artifactId>error_prone_annotations</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <version>2.2</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -176,18 +155,39 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>nl.jqno.equalsverifier</groupId>
-      <artifactId>equalsverifier</artifactId>
-      <version>3.5.5</version>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
       <scope>test</scope>
     </dependency>
-
-    <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
+    <dependency>
+      <groupId>nl.jqno.equalsverifier</groupId>
+      <artifactId>equalsverifier</artifactId>
+      <version>3.14.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!--Credential Binding Plugin-->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials-binding</artifactId>
+    </dependency>
+    <dependency>
+      <!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
-      <version>2.39</version>
+      <version>2.43.1</version>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <!-- BOM automated tests fail without conditional-buildstep plugin -->
+      <!-- TODO: Remove this dependency when parameterized trigger plugin dependency fix is released -->
+      <!-- https://github.com/jenkinsci/bom/pull/1623#issuecomment-1339989438 -->
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>conditional-buildstep</artifactId>
+      <version>1.4.2</version>
+      <scope>test</scope>
+      <optional>true</optional>
+    </dependency>
+
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
@@ -196,7 +196,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>3.9.1</version>
+      <version>3.11</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -232,38 +232,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-cps-global-lib</artifactId>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>pipeline-groovy-lib</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xmlunit</groupId>
-      <artifactId>xmlunit-matchers</artifactId>
-      <version>2.8.2</version>
-      <scope>test</scope>
-      <exclusions> <!-- Rely on version from junit plugin 1.43 -->
-        <exclusion>
-          <groupId>jakarta.activation</groupId>
-          <artifactId>jakarta.activation-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-tag-message</artifactId>
       <version>1.7.1</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.spotbugs</groupId>
-      <artifactId>spotbugs-annotations</artifactId>
-      <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
-        <exclusion>
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>jsr305</artifactId>
-        </exclusion>
-      </exclusions>
-      <optional>true</optional>
     </dependency>
     <!-- JCasC compatibility -->
     <dependency>
@@ -283,29 +260,79 @@
     </dependency>
   </dependencies>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.263.x</artifactId>
-        <version>27</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-  <scm>
-    <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
-    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
-    <url>https://github.com/${gitHubRepo}</url>
-    <tag>${scmTag}</tag>
-  </scm>
-
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
   <pluginRepositories>
-     <pluginRepository>
-       <id>repo.jenkins-ci.org</id>
-       <url>https://repo.jenkins-ci.org/public/</url>
-     </pluginRepository>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
   </pluginRepositories>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>2.36.0</version>
+          <configuration>
+            <!-- define a language-specific format -->
+            <java>
+              <!-- no need to specify files, inferred automatically -->
+              <endWithNewline />
+              <removeUnusedImports />
+            </java>
+            <pom>
+              <sortPom>
+                <encoding>${project.build.sourceEncoding}</encoding>
+                <lineSeparator>\n</lineSeparator>
+                <expandEmptyElements>false</expandEmptyElements>
+                <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
+              </sortPom>
+            </pom>
+          </configuration>
+          <executions>
+            <execution>
+              <!-- Runs in verify phase by default -->
+              <goals>
+                <!-- Can be disabled using -Dspotless.check.skip -->
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.2.1</version>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <failOnViolation>true</failOnViolation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>continuous-integration</id>
+      <activation>
+        <property>
+          <name>env.CI</name>
+        </property>
+      </activation>
+      <properties>
+        <!-- Fork a JVM per core for automated tests on continuous integration servers -->
+        <forkCount>1C</forkCount>
+      </properties>
+    </profile>
+  </profiles>
 </project>

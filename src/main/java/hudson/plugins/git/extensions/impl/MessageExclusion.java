@@ -57,6 +57,7 @@ public class MessageExclusion extends GitSCMExtension {
 	}
 
 	@Extension
+        // No @Symbol annotation because message exclusion is done using a trait in Pipeline
 	public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
 		public FormValidation doCheckExcludedMessage(@QueryParameter String value) {

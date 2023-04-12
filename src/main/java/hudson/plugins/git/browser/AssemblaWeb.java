@@ -12,6 +12,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -86,6 +87,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("assembla")
     public static class AssemblaWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

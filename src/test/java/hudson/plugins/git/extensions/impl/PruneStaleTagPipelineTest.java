@@ -28,12 +28,14 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import hudson.plugins.git.GitSCM;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestCliGitAPIImpl;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,6 +65,16 @@ public class PruneStaleTagPipelineTest {
         listener = new LogTaskListener(Logger.getLogger("prune tags"), Level.FINEST);
     }
 
+    @Before
+    public void allowNonRemoteCheckout() {
+        GitSCM.ALLOW_LOCAL_CHECKOUT = true;
+    }
+
+    @After
+    public void disallowNonRemoteCheckout() {
+        GitSCM.ALLOW_LOCAL_CHECKOUT = false;
+    }
+
     @Issue("JENKINS-61869")
     @Test
     public void verify_that_local_tag_is_pruned_when_not_exist_on_remote_using_pipeline() throws Exception {
@@ -81,16 +93,20 @@ public class PruneStaleTagPipelineTest {
 
         job.setDefinition(new CpsFlowDefinition(""
                 + "  node {\n"
-                + "    checkout([$class: 'GitSCM',"
-                + "             branches: [[name: '*/master']],"
-                + "             extensions: [pruneTags(true)],"
-                + "             userRemoteConfigs: [[url: '" + remoteURL + "']]"
-                + "    ])"
+                + "    checkout([$class: 'GitSCM',\n"
+                + "             branches: [[name: '*/master']],\n"
+                + "             extensions: [pruneTags(true)],\n"
+                + "             userRemoteConfigs: [[url: '" + remoteURL + "']]\n"
+                + "    ])\n"
+                + "    def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
+                + "    echo \"token macro expanded branch is ${tokenBranch}\"\n"
                 + "  }\n", true));
 
         // first run clone the repository
         WorkflowRun r = job.scheduleBuild2(0).waitForStart();
         j.assertBuildStatus(Result.SUCCESS, j.waitForCompletion(r));
+        // Check JENKINS-66651 - token macro expansion in Pipeline
+        j.waitForMessage("token macro expanded branch is remotes/origin/master", r); // Unexpected but current behavior
 
         // remove tag on remote, tag remains on local cloned repository
         remoteClient.deleteTag(tagName);

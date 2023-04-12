@@ -1,10 +1,9 @@
 package hudson.plugins.git;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,12 +54,12 @@ public abstract class AbstractGitRepository {
     protected void commitNewFile(final String fileName) throws GitException, InterruptedException {
         File newFile = new File(testGitDir, fileName);
         assert !newFile.exists(); // Not expected to use commitNewFile to update existing file
-        try (PrintWriter writer = new PrintWriter(newFile, "UTF-8")) {
+        try (PrintWriter writer = new PrintWriter(newFile, StandardCharsets.UTF_8)) {
             writer.println("A file named " + fileName);
             writer.close();
             testGitClient.add(fileName);
             testGitClient.commit("Added a file named " + fileName);
-        } catch (FileNotFoundException | UnsupportedEncodingException notFound) {
+        } catch (IOException notFound) {
             throw new GitException(notFound);
         }
     }

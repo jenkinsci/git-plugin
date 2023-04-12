@@ -48,6 +48,7 @@ public class WipeWorkspaceTrait extends GitSCMExtensionTrait<WipeWorkspace> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    // No @Symbol annotation, because wipeWorkspace is considered a deprecated Pipeline step.
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

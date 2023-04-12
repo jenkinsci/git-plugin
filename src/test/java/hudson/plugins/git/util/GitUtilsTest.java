@@ -319,11 +319,11 @@ public class GitUtilsTest {
     public void testFixupNames() {
         String[] names = {"origin", "origin2", null, "", null};
         String[] urls = {
-            "git://github.com/jenkinsci/git-plugin.git",
-            "git@github.com:jenkinsci/git-plugin.git",
-            "https://github.com/jenkinsci/git-plugin",
-            "https://github.com/jenkinsci/git-plugin.git",
-            "ssh://github.com/jenkinsci/git-plugin.git"
+            "git://example.com/jenkinsci/git-plugin.git",
+            "git@example.com:jenkinsci/git-plugin.git",
+            "https://example.com/jenkinsci/git-plugin",
+            "https://example.com/jenkinsci/git-plugin.git",
+            "ssh://example.com/jenkinsci/git-plugin.git"
         };
         String[] expected = {"origin", "origin2", "origin1", "origin3", "origin4"};
         String[] actual = GitUtils.fixupNames(names, urls);
@@ -359,5 +359,15 @@ public class GitUtilsTest {
         Set<String> expectedNames = getExpectedNames();
         Set<String> actualNames = getActualNames(allRevisions);
         assertThat(actualNames, is(expectedNames));
+    }
+
+    /**
+     *
+     * @return EnvVars including GIT_CONFIG_NOSYSTEM set to
+     */
+    public static EnvVars getConfigNoSystemEnvsVars() {
+        EnvVars envVars = new EnvVars();
+        envVars.put("GIT_CONFIG_NOSYSTEM", "1");
+        return envVars;
     }
 }

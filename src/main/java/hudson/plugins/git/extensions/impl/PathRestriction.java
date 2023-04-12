@@ -3,14 +3,12 @@ package hudson.plugins.git.extensions.impl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -62,7 +60,10 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     private String[] normalize(String s) {
-        return StringUtils.isBlank(s) ? null : s.split("[\\r\\n]+");
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        return s.split("[\\r\\n]+");
     }
 
     private List<Pattern> getIncludedPatterns() {
@@ -139,7 +140,7 @@ public class PathRestriction extends GitSCMExtension {
              // If every affected path is excluded, return true.
             listener.getLogger().println("Ignored commit " + commit.getCommitId()
                     + ": Found only excluded paths: "
-                    + Util.join(excludedPaths, ", "));
+                    + String.join(", ", excludedPaths));
             return true;
         }
 
@@ -147,6 +148,7 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     @Extension
+    // No @Symbol annotation because path exclusion is done using a trait in Pipeline
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {

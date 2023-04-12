@@ -35,6 +35,19 @@ Try to maintain reasonable consistency with the existing files where feasible.
 Please don't perform wholesale reformatting of a file without discussing with the current maintainers.
 New code should follow the https://github.com/jenkinsci/scm-api-plugin/blob/master/CONTRIBUTING.md#code-style-guidelines[SCM API code style guidelines].
 
+**Beware:** when building locally, some global gitconfig settings can make tests fail. 
+Currently they expect the default branch to be called `master`.
+If the default branch has been set to another value than master, it should be temporarily disabled.
+This is done by adding **#** before `defaultBranch = main` in the `init` section 
+of the `.gitconfig` file (located in your home directory).
+
+There are enough automated tests in the plugin that it can require more than 60 minutes to complete testing on slower hardware.
+The `buildPlugin()` Pipeline shared library limits plugin jobs to 60 minutes and fails them if they take more than 60 minutes.
+The longest running automated tests have been adapted to have an upper bound on their runtime.
+Once the runtime set in those long running tests has been reached, new tests in that test class are skipped with the message that the max time was exceeded.
+Those tests have also been adapted to execute the individuals tests in those classes in random order.
+By executing the tests in random order, it increases the chances that at least one of the parallel branches of `buildPlugin()` will execute each test in the long running test classes.
+
 [[pull-request-review]]
 == Reviewing Pull Requests
 
@@ -53,8 +66,7 @@ Steps to test a pull request build are:
 
 . *Find the pull request on link:https://github.com/jenkinsci/git-plugin/pulls[GitHub]* - for example, link:https://github.com/jenkinsci/git-plugin/pull/676[pull request 676]
 . *Find the link:https://ci.jenkins.io/job/Plugins/job/git-plugin/view/change-requests/[ci.jenkins.io] artifacts for that pull request* from the link to the link:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/PR-676/lastSuccessfulBuild/[artifacts in the Jenkins job] in "*Show all checks*"
-. *Download the `hpi` file* (like `git-4.0.1-rc3444.b3d767e3d46a.hpi`) to your computer
-. *Upload the `hpi` file* to Jenkins from the Jenkins Plugin Manager
+. *Copy the URL of the `hpi` file* into the "Advanced settings of the Plugin Manager
 . *Restart your Jenkins* and you're ready to test
 
 [[bug-triage]]

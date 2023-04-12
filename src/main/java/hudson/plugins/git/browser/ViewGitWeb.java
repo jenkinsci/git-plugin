@@ -13,6 +13,7 @@ import hudson.scm.browsers.QueryBuilder;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -22,10 +23,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class ViewGitWeb extends GitRepositoryBrowser {
 
@@ -60,15 +61,14 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         return encodeURL(new URL(url, url.getPath() + spec));
     }
 
-	private String buildCommitDiffSpec(URL url, Path path)
-			throws UnsupportedEncodingException {
-        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(),"UTF-8");
+	private String buildCommitDiffSpec(URL url, Path path) {
+        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(), StandardCharsets.UTF_8);
 	}
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + param(url).add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath() + param(url).add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()));
     }
 
     private QueryBuilder param(URL url) {
@@ -80,6 +80,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("viewgit")
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

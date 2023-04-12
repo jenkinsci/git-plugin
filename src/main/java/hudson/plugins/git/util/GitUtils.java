@@ -49,11 +49,11 @@ public class GitUtils implements Serializable {
      * Resolves Git Tool by name.
      * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
      * @param builtOn Node for which the tool should be resolved
-     *                Can be {@link Jenkins#getInstance()} when running on master
+     *                Can be {@link Jenkins#getInstance()} when running on controller
      * @param env Additional environment variables
      * @param listener Event listener
      * @return Tool installation or {@code null} if it cannot be resolved
-     * @since TODO
+     * @since 4.0.0
      */
     @CheckForNull
     public static GitTool resolveGitTool(@CheckForNull String gitTool,
@@ -88,14 +88,14 @@ public class GitUtils implements Serializable {
      * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
      * @param listener Event listener
      * @return Tool installation or {@code null} if it cannot be resolved
-     * @since TODO
+     * @since 4.0.0
      */
     @CheckForNull
     public static GitTool resolveGitTool(@CheckForNull String gitTool, @NonNull TaskListener listener) {
         return resolveGitTool(gitTool, null, null, listener);
     }
 
-    public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
+    public static Node workspaceToNode(FilePath workspace) {
         Jenkins j = Jenkins.get();
         if (workspace != null && workspace.isRemote()) {
             for (Computer c : j.getComputers()) {
@@ -309,7 +309,7 @@ public class GitUtils implements Serializable {
                 if (lastComputer != null) {
                     env = lastComputer.getEnvironment().overrideAll(b.getCharacteristicEnvVars());
                     for (NodeProperty nodeProperty : lastBuiltOn.getNodeProperties()) {
-                        Environment environment = nodeProperty.setUp(b, launcher, (BuildListener) buildListener);
+                        Environment environment = nodeProperty.setUp(b, launcher, buildListener);
                         if (environment != null) {
                             environment.buildEnvVars(env);
                         }
@@ -347,7 +347,7 @@ public class GitUtils implements Serializable {
             env.put("WORKSPACE", ws.getRemote());
 
         for (NodeProperty nodeProperty: jenkinsInstance.getGlobalNodeProperties()) {
-            Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
+            Environment environment = nodeProperty.setUp(b, launcher, buildListener);
             if (environment != null) {
                 environment.buildEnvVars(env);
             }

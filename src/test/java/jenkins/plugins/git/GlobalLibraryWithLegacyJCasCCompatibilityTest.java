@@ -21,6 +21,7 @@ import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import hudson.plugins.git.extensions.impl.PruneStaleTag;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.plugins.git.extensions.impl.SparseCheckoutPath;
@@ -85,7 +86,7 @@ public class GlobalLibraryWithLegacyJCasCCompatibilityTest extends RoundTripAbst
 
         assertFalse(gitSCM.isDoGenerateSubmoduleConfigurations());
 
-        assertThat(gitSCM.getExtensions(), hasSize(22));
+        assertThat(gitSCM.getExtensions(), hasSize(23));
         assertThat(gitSCM.getExtensions(), containsInAnyOrder(
                 // Advanced checkout behaviours
                 allOf(
@@ -156,6 +157,10 @@ public class GlobalLibraryWithLegacyJCasCCompatibilityTest extends RoundTripAbst
                 // Prune stale remote-tracking branches
                 allOf(
                         instanceOf(PruneStaleBranch.class)
+                ),
+                // Prune stale tags
+                allOf(
+                        instanceOf(PruneStaleTag.class)
                 ),
                 // Use commit author in changelog
                 allOf(

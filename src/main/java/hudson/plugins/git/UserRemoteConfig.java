@@ -35,8 +35,8 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.regex.Pattern;
+import java.util.Objects;
 import java.util.UUID;
-import org.apache.commons.lang.StringUtils;
 
 import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
@@ -107,7 +107,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 /* Construct a fake project, suppress the deprecation warning because the
                  * replacement for the deprecated API isn't accessible in this context. */
                 @SuppressWarnings("deprecation")
-                Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
+                Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID());
                 project = fakeProject;
             }
             return new StandardListBoxModel()
@@ -154,7 +154,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                     : ACL.SYSTEM,
                             GitURIRequirementsBuilder.fromUri(url).build(),
                             GitClient.CREDENTIALS_MATCHER)) {
-                if (StringUtils.equals(value, o.value)) {
+                if (Objects.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
                     // NOTE: we would need to actually lookup the credential to do the check, which may require
                     // fetching the actual credential instance from a remote credentials store. Perhaps this is
@@ -186,7 +186,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 // set by variable, can't validate
                 return FormValidation.ok();
 
-            // get git executable on master
+            // get git executable on controller
             EnvVars environment;
             Jenkins jenkins = Jenkins.get();
             if (item instanceof Job) {

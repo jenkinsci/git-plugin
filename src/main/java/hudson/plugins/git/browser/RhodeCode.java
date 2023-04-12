@@ -8,6 +8,7 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -57,7 +58,7 @@ public class RhodeCode extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId()).toString() + "&diff=diff+to+revision");
+        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId()) + "&diff=diff+to+revision");
     }
 
     /**
@@ -85,6 +86,7 @@ public class RhodeCode extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("rhodeCode")
     public static class RhodeCodeDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

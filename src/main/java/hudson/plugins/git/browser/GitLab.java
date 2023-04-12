@@ -9,6 +9,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -99,11 +100,10 @@ public class GitLab extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
         String filelink;
-        if(getVersionDouble() < 8.0) {
-                filelink = "#" + path.getPath();
-        } else
-        {
-        	filelink = "#diff-" + String.valueOf(getIndexOfPath(path));
+        if (getVersionDouble() < 8.0) {
+            filelink = "#" + path.getPath();
+        } else {
+            filelink = "#diff-" + getIndexOfPath(path);
         }
         return new URL(getUrl(), calculatePrefix() + changeSet.getId() + filelink);
     }
@@ -134,6 +134,7 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("gitLab")
     public static class GitLabDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

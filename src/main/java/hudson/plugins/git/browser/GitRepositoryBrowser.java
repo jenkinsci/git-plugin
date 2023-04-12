@@ -19,9 +19,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
@@ -74,7 +78,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException on input or output error
      */
     public abstract URL getDiffLink(GitChangeSet.Path path) throws IOException;
-    
+
     /**
      * Determines the link to a single file under Git.
      * This page should display all the past revisions of this file, etc.
@@ -88,6 +92,21 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     public abstract URL getFileLink(GitChangeSet.Path path) throws IOException, URISyntaxException;
 
     /**
+     * Determines the link to the given change set ID (SHA).
+     *
+     * @param commitId commit identifier, usually a SHA-1 hash
+     * @return the URL to the change set or {@code null} if this repository browser doesn't have any meaningful URL for
+     *         a change set
+     */
+    @CheckForNull
+    public URL getChangeSetLink(final String commitId) throws IOException {
+        if (commitId != null && !commitId.isBlank()) {
+            return getChangeSetLink(new CommitChangeSet(commitId));
+        }
+        return null;
+    }
+
+    /**
      * Determines whether a URL should be normalized
 	 * Overridden in the rare case where it shouldn't
      *
@@ -96,7 +115,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     protected boolean getNormalizeUrl() {
 		return true;
 	}
-    
+
     /**
      * Calculate the index of the given path in a
      * sorted list of affected files
@@ -166,6 +185,44 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
             return false;
         }
         return true;
+    }
+
+    /**
+     * Used to obtain a repository link to a Git commit ID (SHA hash).
+     */
+    private static class CommitChangeSet extends GitChangeSet {
+        private final String id;
+
+        CommitChangeSet(final String id) {
+            super(Collections.emptyList(), false);
+
+            this.id = id;
+        }
+
+        @Override
+        public String getId() {
+            return id;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
+            CommitChangeSet that = (CommitChangeSet) o;
+            return Objects.equals(id, that.id);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), id);
+        }
     }
 
     private static final long serialVersionUID = 1L;

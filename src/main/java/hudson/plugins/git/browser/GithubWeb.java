@@ -8,6 +8,7 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -59,7 +60,7 @@ public class GithubWeb extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	// Github seems to sort the output alphabetically by the path.
-        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path)));
+        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + getIndexOfPath(path));
     }
 
     /**
@@ -88,6 +89,7 @@ public class GithubWeb extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("github")
     public static class GithubWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

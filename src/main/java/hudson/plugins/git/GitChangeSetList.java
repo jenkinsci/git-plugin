@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-
 /**
  * List of changeset that went into a particular build.
  * @author Nigel Magnay

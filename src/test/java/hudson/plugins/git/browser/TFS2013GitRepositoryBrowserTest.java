@@ -2,10 +2,10 @@ package hudson.plugins.git.browser;
 
 import hudson.model.*;
 import hudson.plugins.git.*;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.URL;
@@ -20,26 +20,23 @@ import static org.mockito.Mockito.when;
 
 public class TFS2013GitRepositoryBrowserTest {
 
-    private static final String projectName = "fisheyeProjectName";
+    private static final String repoUrl = "http://tfs/tfs/project/_git/repo";
+    private static final GitChangeSetSample sample = new GitChangeSetSample(false);
 
-    private final String repoUrl;
-    private final GitChangeSetSample sample;
-
-    public TFS2013GitRepositoryBrowserTest() {
-        this.repoUrl = "http://tfs/tfs/project/_git/repo";
-        sample = new GitChangeSetSample(false);
-
+    @BeforeClass
+    public static void setUp() {
         GitSCM scm = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
                 new ArrayList<>(),
                 null, JGitTool.MAGIC_EXENAME,
-                Collections.<GitSCMExtension>emptyList());
-        
+                Collections.emptyList());
+
         AbstractProject project = mock(AbstractProject.class);
         AbstractBuild build = mock(AbstractBuild.class);
-        
+
         when(project.getScm()).thenReturn(scm);
         when(build.getProject()).thenReturn(project);
+        when(build.getParent()).thenReturn(project);
 
         sample.changeSet.setParent(ChangeLogSet.createEmpty((Run) build));
     }

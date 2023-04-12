@@ -8,9 +8,12 @@ import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -23,11 +26,7 @@ import java.time.ZoneId;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class AncestryBuildChooser extends DefaultBuildChooser {
 
@@ -60,7 +59,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
             try (RevWalk walk = new RevWalk(repository)) {
 
                 RevCommit ancestor = null;
-                if (!Strings.isNullOrEmpty(ancestorCommitSha1)) {
+                if (ancestorCommitSha1 != null && !ancestorCommitSha1.isEmpty()) {
                     try {
                         ancestor = walk.parseCommit(ObjectId.fromString(ancestorCommitSha1));
                     } catch (IllegalArgumentException e) {
@@ -71,17 +70,17 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 final CommitAgeFilter ageFilter = new CommitAgeFilter(maximumAgeInDays);
                 final AncestryFilter ancestryFilter = new AncestryFilter(walk, ancestor);
 
-                final List<Revision> filteredCandidates = Lists.newArrayList();
+                final List<Revision> filteredCandidates = new ArrayList<>();
 
                 try {
                     for (Revision currentRevision : candidates) {
                         RevCommit currentRev = walk.parseCommit(ObjectId.fromString(currentRevision.getSha1String()));
 
-                        if (ageFilter.isEnabled() && !ageFilter.apply(currentRev)) {
+                        if (ageFilter.isEnabled() && !ageFilter.test(currentRev)) {
                             continue;
                         }
 
-                        if (ancestryFilter.isEnabled() && !ancestryFilter.apply(currentRev)) {
+                        if (ancestryFilter.isEnabled() && !ancestryFilter.test(currentRev)) {
                             continue;
                         }
 
@@ -90,7 +89,10 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 } catch (Throwable e) {
 
                     // if a wrapped IOException was thrown, unwrap before throwing it
-                    Iterator<IOException> ioeIter = Iterables.filter(Throwables.getCausalChain(e), IOException.class).iterator();
+                    Iterator<IOException> ioeIter = Throwables.getCausalChain(e).stream()
+                            .filter(IOException.class::isInstance)
+                            .map(IOException.class::cast)
+                            .iterator();
                     if (ioeIter.hasNext())
                         throw ioeIter.next();
                     else
@@ -113,7 +115,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
         }
         
         @Override
-        public boolean apply(@NonNull RevCommit rev) {
+        public boolean test(@NonNull RevCommit rev) {
             return LocalDateTime.ofInstant(rev.getCommitterIdent().getWhen().toInstant(), ZoneId.systemDefault()).isAfter(this.oldestAllowableCommitDate);
         }
         
@@ -132,13 +134,14 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
             this.ancestor = ancestor;
         }
         
-        public boolean apply(RevCommit rev) {
+        @Override
+        public boolean test(RevCommit rev) {
             try {
                 return revwalk.isMergedInto(ancestor, rev);
 
             // wrap IOException so it can propagate
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new UncheckedIOException(e);
             }
         }
         

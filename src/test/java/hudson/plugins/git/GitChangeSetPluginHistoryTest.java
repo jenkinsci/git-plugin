@@ -80,26 +80,13 @@ public class GitChangeSetPluginHistoryTest {
      *
      * @return ObjectId list for all changes which aren't merges
      */
-    private static List<ObjectId> getNonMergeChanges(boolean honorExclusions) throws IOException {
+    private static List<ObjectId> getNonMergeChanges() throws IOException {
         List<ObjectId> nonMergeChanges = new ArrayList<>();
         Process process = new ProcessBuilder("git", "rev-list", "--no-merges", "HEAD").start();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (honorExclusions) {
-                    boolean ignore = false;
-                    for (String exclusion : git171exceptions) {
-                        if (line.startsWith(exclusion)) {
-                            ignore = true;
-                            break;
-                        }
-                    }
-                    if (!ignore) {
-                        nonMergeChanges.add(ObjectId.fromString(line));
-                    }
-                } else {
-                    nonMergeChanges.add(ObjectId.fromString(line));
-                }
+                nonMergeChanges.add(ObjectId.fromString(line));
             }
         }
         process.destroy();
@@ -117,8 +104,7 @@ public class GitChangeSetPluginHistoryTest {
             EnvVars envVars = new EnvVars();
             TaskListener listener = StreamTaskListener.fromStdout();
             GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(implementation).getClient();
-            boolean honorExclusions = implementation.equals("git") && !sampleRepo.gitVersionAtLeast(1, 7, 10);
-            List<ObjectId> allNonMergeChanges = getNonMergeChanges(honorExclusions);
+            List<ObjectId> allNonMergeChanges = getNonMergeChanges();
             int count = allNonMergeChanges.size() / 10; /* 10% of all changes */
 
             for (boolean authorOrCommitter : choices) {

@@ -47,7 +47,7 @@ public class GitUtilsJenkinsRuleTest {
 
     @Test
     public void testWorkspaceToNode() throws Exception {
-        String labelString = "label-" + UUID.randomUUID().toString();
+        String labelString = "label-" + UUID.randomUUID();
         Label label = new LabelAtom(labelString);
         DumbSlave agent = j.createOnlineSlave(label);
         FilePath workspace = agent.getWorkspaceRoot();
@@ -105,7 +105,7 @@ public class GitUtilsJenkinsRuleTest {
     public void testResolveGitToolBuiltOnAgent() throws Exception {
         TaskListener listener = StreamTaskListener.NULL;
         String gitTool = "/opt/my-non-existing-git/bin/git";
-        String labelString = "label-" + UUID.randomUUID().toString();
+        String labelString = "label-" + UUID.randomUUID();
         Label label = new LabelAtom(labelString);
         DumbSlave agent = j.createOnlineSlave(label);
         EnvVars env = new EnvVars();

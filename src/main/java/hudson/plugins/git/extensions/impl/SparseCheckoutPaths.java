@@ -26,7 +26,7 @@ public class SparseCheckoutPaths extends GitSCMExtension {
 
     @DataBoundConstructor
     public SparseCheckoutPaths(List<SparseCheckoutPath> sparseCheckoutPaths) {
-        this.sparseCheckoutPaths = sparseCheckoutPaths == null ? Collections.<SparseCheckoutPath>emptyList() : sparseCheckoutPaths;
+        this.sparseCheckoutPaths = sparseCheckoutPaths == null ? Collections.emptyList() : sparseCheckoutPaths;
     }
 
     @Whitelisted

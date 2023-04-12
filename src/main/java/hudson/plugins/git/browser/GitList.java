@@ -8,6 +8,7 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -59,7 +60,7 @@ public class GitList extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	//GitList diff indices begin at 1
-        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1)));
+        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + (getIndexOfPath(path) + 1)));
     }
 
     /**
@@ -82,6 +83,7 @@ public class GitList extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("gitList")
     public static class GitListDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

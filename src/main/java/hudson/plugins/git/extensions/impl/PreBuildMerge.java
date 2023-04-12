@@ -168,11 +168,13 @@ public class PreBuildMerge extends GitSCMExtension {
     @Override
     public String toString() {
         return "PreBuildMerge{" +
-                "options=" + options.toString() +
+                "options=" + options +
                 '}';
     }
 
     @Extension
+    // No @Symbol because merge before build requires credentials with git large file support.
+    // Users that need merge before build in Pipeline can script the merge themselves with sh commands.
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}

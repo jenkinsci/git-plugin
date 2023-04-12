@@ -4,12 +4,10 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -107,6 +105,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
      * @param branches source branch list to be filtered by configured branch specification using a newly constructed EnvVars
      * @return branch names which match
      */
+    @Deprecated
     public List<String> filterMatching(Collection<String> branches) {
         EnvVars env = new EnvVars();
         return filterMatching(branches, env);
@@ -237,7 +236,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     private String join(String repositoryName, String branchWithoutRefs) {
-        return StringUtils.join(Arrays.asList(repositoryName, branchWithoutRefs), "/");
+        return String.join("/", repositoryName, branchWithoutRefs);
     }
 
     @Extension

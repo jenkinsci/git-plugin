@@ -12,6 +12,8 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+import org.springframework.security.core.AuthenticationException;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
@@ -392,6 +394,38 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     /**
+     * Get a user by id or full name
+     *
+     * Jenkins UserDetailsCache.loadUserByUsername() catches ExecutionException
+     * and will throw it back unless the cause is an instance of
+     * UsernameNotFoundException. It thus misses others AuthenticationException
+     * such as DisabledException (thrown by the ldap plugin when a user has
+     * been administratively disabled).
+     *
+     * This intercept the ExecutionException and throw the cause instead if
+     * it is an AuthenticationException.
+     *
+     * @param idOrFullName
+     * @return User | "unknown" User if no user was found
+     *
+     * @throws AuthenticationException The reason the user is not available if any
+     * @throws ExecutionException      Any other unhandled cases
+     */
+    private User getUser(String idOrFullName, Boolean create) {
+        try {
+            return User.get(idOrFullName, create, Collections.emptyMap());
+        } catch (AuthenticationException e) {
+            throw e;
+        } catch (UncheckedExecutionException e) {
+            if (e.getCause() instanceof AuthenticationException) {
+                throw (AuthenticationException) e.getCause();
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
      * Returns user of the change set.
      *
      * @param csAuthor user name.
@@ -411,11 +445,15 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // Avoid exception from User.get("", false)
                 return User.getUnknown();
             }
-            user = User.get(csAuthorEmail, false, Collections.emptyMap());
+            try {
+                user = getUser(csAuthorEmail, false);
+            } catch (AuthenticationException authException) {
+                return User.getUnknown();
+            }
 
             if (user == null) {
                 try {
-                    user = User.get(csAuthorEmail, !useExistingAccountWithSameEmail, Collections.emptyMap());
+                    user = getUser(csAuthorEmail, !useExistingAccountWithSameEmail);
                     boolean setUserDetails = true;
                     if (user == null && useExistingAccountWithSameEmail && hasMailerPlugin()) {
                         for(User existingUser : User.getAll()) {
@@ -427,14 +465,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         }
                     }
                     if (user == null) {
-                        user = User.get(csAuthorEmail, true, Collections.emptyMap());
+                        user = getUser(csAuthorEmail, true);
                     }
-                    if (setUserDetails) {
+                    if (user != null && setUserDetails) {
                         user.setFullName(csAuthor);
                         if (hasMailerPlugin())
                             setMail(user, csAuthorEmail);
                         user.save();
                     }
+                } catch (AuthenticationException authException) {
+                    return User.getUnknown();
                 } catch (IOException e) {
                     // add logging statement?
                 }
@@ -444,7 +484,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // Avoid exception from User.get("", false)
                 return User.getUnknown();
             }
-            user = User.get(csAuthor, false, Collections.emptyMap());
+            try {
+                user = getUser(csAuthor, false);
+            } catch (AuthenticationException authException) {
+                return User.getUnknown();
+            }
 
             if (user == null) {
                 if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
@@ -454,7 +498,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // don't mess us up.
                 String[] emailParts = csAuthorEmail.split("@");
                 if (emailParts.length > 0) {
-                    user = User.get(emailParts[0], true, Collections.emptyMap());
+                    try {
+                        user = getUser(emailParts[0], true);
+                    } catch (AuthenticationException authException) {
+                        // JENKINS-67491 - do not fail due to an authentication exception
+                        return User.getUnknown();
+                    }
                 } else {
                     return User.getUnknown();
                 }

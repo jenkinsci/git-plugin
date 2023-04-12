@@ -13,9 +13,7 @@ public class ChangelogToBranchTest {
     public void checkConstructorIllegalArgument() {
         ChangelogToBranchOptions nullOptions = null;
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                                                  () -> {
-                                                      new ChangelogToBranch(nullOptions);
-                                                  });
+                                                  () -> new ChangelogToBranch(nullOptions));
         assertThat(e.getMessage(), containsString("options may not be null"));
     }
 }

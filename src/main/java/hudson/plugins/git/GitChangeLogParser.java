@@ -6,21 +6,24 @@ import hudson.scm.RepositoryBrowser;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.xml.sax.SAXException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Parse the git log
@@ -69,7 +72,9 @@ public class GitChangeLogParser extends ChangeLogParser {
     }
     
     public List<GitChangeSet> parse(@NonNull InputStream changelog) throws IOException {
-        return parse(IOUtils.readLines(changelog, "UTF-8"));
+        try (Reader r = new InputStreamReader(changelog, StandardCharsets.UTF_8); LineIterator it = new LineIterator(r)) {
+            return parse(it);
+        }
     }
 
     public List<GitChangeSet> parse(@NonNull List<String> changelog) {
@@ -77,10 +82,12 @@ public class GitChangeLogParser extends ChangeLogParser {
     }
 
     @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
-        throws IOException, SAXException {
+        throws IOException {
         // Parse the log file into GitChangeSet items - each one is a commit
-        try (LineIterator lineIterator = FileUtils.lineIterator(changelogFile, "UTF-8")) {
-            return new GitChangeSetList(build, browser, parse(lineIterator));
+        try (Stream<String> lineStream = Files.lines(changelogFile.toPath(), StandardCharsets.UTF_8)) {
+            return new GitChangeSetList(build, browser, parse(lineStream.iterator()));
+        } catch (InvalidPathException e) {
+            throw new IOException(e);
         }
     }
 

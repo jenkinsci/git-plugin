@@ -23,6 +23,6 @@ public class GitJCasCCompatibilityTest extends RoundTripAbstractTest {
 
     @Override
     protected String stringInLogExpected() {
-        return "Setting class hudson.plugins.git.GitSCM.extensions = [cleanCheckout, gitLFSPull, {checkoutOption={}}, {userIdentity={}}, {preBuildMerge={}}]";
+        return "Setting class hudson.plugins.git.GitSCM.extensions = [cleanCheckout, lfs, {checkoutOption={}}, {userIdentity={}}, {preBuildMerge={}}]";
     }
 }

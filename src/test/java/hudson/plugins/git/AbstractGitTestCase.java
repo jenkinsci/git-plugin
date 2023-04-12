@@ -18,7 +18,6 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PathRestriction;
@@ -41,6 +40,7 @@ import java.util.List;
 import jenkins.MasterToSlaveFileCallable;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
@@ -80,6 +80,7 @@ public abstract class AbstractGitTestCase {
 
     @Before
     public void setUp() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         listener = StreamTaskListener.fromStderr();
 
         testRepo = new TestGitRepo("unnamed", sampleRepo.getRoot(), listener);
@@ -188,7 +189,7 @@ public abstract class AbstractGitTestCase {
                 createRemoteRepositories(credential),
                 branches,
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         if (credential != null) {
             project.getBuildersList().add(new HasCredentialBuilder(credential.getId()));
         }
@@ -224,7 +225,7 @@ public abstract class AbstractGitTestCase {
                     repos,
                     branchSpecs,
                     null, JGitTool.MAGIC_EXENAME,
-                    Collections.<GitSCMExtension>emptyList());
+                    Collections.emptyList());
         if(disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
         if(enforceGitClient != null) scm.getExtensions().add(enforceGitClient);
         project.setScm(scm);

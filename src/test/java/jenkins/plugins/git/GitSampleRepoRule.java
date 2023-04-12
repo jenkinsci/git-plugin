@@ -28,6 +28,8 @@ import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.Launcher;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -48,6 +50,16 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     private static final Logger LOGGER = Logger.getLogger(GitSampleRepoRule.class.getName());
 
+    protected void before() throws Throwable {
+        super.before();
+        GitSCM.ALLOW_LOCAL_CHECKOUT = true;
+    }
+
+    protected void after() {
+        super.after();
+        GitSCM.ALLOW_LOCAL_CHECKOUT = false;
+    }
+
     public void git(String... cmds) throws Exception {
         run("git", cmds);
     }
@@ -63,11 +75,19 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     public void init() throws Exception {
         run(true, tmp.getRoot(), "git", "version");
         checkGlobalConfig();
-        git("init");
+        git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
+	if (gitVersionAtLeast(2, 30)) {
+	    // Force branch name to master even if system default is not master
+	    // Fails on git 2.25, 2.20, 2.17, and 1.8
+	    // Works on git 2.30 and later
+            git("branch", "-m", "master");
+	}
         write("file", "");
         git("add", "file");
         git("config", "user.name", "Git SampleRepoRule");
         git("config", "user.email", "gits@mplereporule");
+        git("config", "init.defaultbranch", "master");
+        git("config", "commit.gpgsign", "false");
         git("commit", "--message=init");
     }
 
@@ -77,7 +97,9 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     public void notifyCommit(JenkinsRule r) throws Exception {
         synchronousPolling(r);
-        WebResponse webResponse = r.createWebClient().goTo("git/notifyCommit?url=" + bareUrl(), "text/plain").getWebResponse();
+        String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
+        WebResponse webResponse = r.createWebClient()
+                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain").getWebResponse();
         LOGGER.log(Level.FINE, webResponse.getContentAsString());
         for (NameValuePair pair : webResponse.getResponseHeaders()) {
             if (pair.getName().equals("Triggered")) {
@@ -128,5 +150,20 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         return gitMajor >  neededMajor ||
               (gitMajor == neededMajor && gitMinor >  neededMinor) ||
               (gitMajor == neededMajor && gitMinor == neededMinor  && gitPatch >= neededPatch);
+    }
+
+    public boolean hasGitLFS() {
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "lfs", "version").stdout(out).join();
+            if (returnCode != 0) {
+                return false;
+            }
+        } catch (IOException | InterruptedException ex) {
+            return false;
+        }
+        final String versionOutput = out.toString().trim();
+        return versionOutput.startsWith("git-lfs/");
     }
 }

@@ -70,6 +70,7 @@ public class UserExclusion extends GitSCMExtension {
     }
 
     @Extension
+    // No @Symbol because ignoring commits from Pipeline users is done with a trait
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {

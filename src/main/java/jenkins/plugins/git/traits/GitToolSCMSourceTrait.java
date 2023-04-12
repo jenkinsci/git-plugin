@@ -41,6 +41,7 @@ import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -97,6 +98,7 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    @Symbol("gitTool")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
         /**
