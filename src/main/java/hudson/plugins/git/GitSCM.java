@@ -1402,12 +1402,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private String getCommitMessage(TaskListener listener, GitClient git, final Build revToBuild)
-            throws IOException {
+    private String getCommitMessage(TaskListener listener, GitClient git, final Build revToBuild) throws IOException {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             return commit.getShortMessage();
         } catch (InterruptedException | MissingObjectException e) {
+            throw new IOException("Could not get commit message", e);
+        }
     }
 
     /* Package protected for test access */
@@ -1446,7 +1447,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } catch (InterruptedException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
-        return "";
     }
 
     /**
