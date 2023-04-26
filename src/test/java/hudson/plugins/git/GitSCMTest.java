@@ -3189,7 +3189,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message", title);
         FreeStyleProject p = setupSimpleProject("master");
-        Run<?,?> run = rule.buildAndAssertSuccess(p);
+        Run<?, ?> run = rule.buildAndAssertSuccess(p);
         assertEquals("Commit message should be an env var", title, getEnvVars(p).get(GitSCM.GIT_COMMIT_TITLE));
     }
 

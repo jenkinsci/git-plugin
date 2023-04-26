@@ -143,6 +143,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @CheckForNull
     private String commitMessage;
+
     @CheckForNull
     public String gitTool;
 
@@ -1480,7 +1481,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             commitMessage = getCommitMessage(listener, git, revToBuild);
             listener.getLogger().println("Commit message: \"" + commitMessage + "\"");
-            if(commitMessage != null && !commitMessage.isEmpty()) {
+            if (commitMessage != null && !commitMessage.isEmpty()) {
                 environment.put(GIT_COMMIT_TITLE, commitMessage);
             }
         } catch (IOException | ArithmeticException | GitException ge) {
