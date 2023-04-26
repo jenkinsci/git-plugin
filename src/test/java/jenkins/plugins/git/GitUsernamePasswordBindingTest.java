@@ -115,9 +115,9 @@ public class GitUsernamePasswordBindingTest {
     private static String[] passwords = {
         "&Ampersand&",
         "He said \"Hello\", then left.",
-        "default=@#(*^!",
+        "default=@#(*^!'",
         "here's-a-quote",
-        "special%%_342@**",
+        "special%%_342'@**",
     };
     private static GitTool[] gitTools = {
         new GitTool("Default", "git", null),
@@ -126,8 +126,9 @@ public class GitUsernamePasswordBindingTest {
         new JGitTool(),
     };
 
-    /* Create two test data items using random selections from the larger set of data */
+    /* Create three test data items using random selections from the larger set of data */
     private static Object[][] testData = new Object[][]{
+        {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
         {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
         {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
     };
@@ -309,7 +310,7 @@ public class GitUsernamePasswordBindingTest {
     }
 
     @Test
-    public void test_GenerateGitScript_write() throws IOException, InterruptedException {
+    public void test_GenerateGitScript_write() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitUsernamePasswordBinding.GenerateGitScript tempGenScript = new GitUsernamePasswordBinding.GenerateGitScript(this.username, this.password, credentials.getId(), !isWindows());
         assertThat(tempGenScript.type(), is(StandardUsernamePasswordCredentials.class));
@@ -320,8 +321,33 @@ public class GitUsernamePasswordBindingTest {
         } else {
             assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
         }
-        assertThat(tempScriptFile.readToString(), containsString(this.username));
-        assertThat(tempScriptFile.readToString(), containsString(this.password));
+        FreeStyleProject prj = r.createFreeStyleProject();
+        prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
+                singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID))));
+        prj.getBuildersList().add(isWindows()
+                ? new BatchFile(tempScriptFile.getRemote())
+                : new Shell("sh " + tempScriptFile.getRemote()));
+        r.configRoundtrip((Item) prj);
+
+        SecretBuildWrapper wrapper = prj.getBuildWrappersList().get(SecretBuildWrapper.class);
+        assertThat(wrapper, is(notNullValue()));
+        List<? extends MultiBinding<?>> bindings = wrapper.getBindings();
+        assertThat(bindings.size(), is(1));
+        MultiBinding<?> binding = bindings.get(0);
+        if(isCliGitTool()) {
+            assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(gitToolInstance.getName()));
+        }else {
+            assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(""));
+        }
+
+        r.buildAndAssertSuccess(prj);
+        if(!isWindows()) {
+            assertThat(tempScriptFile.readToString(), containsString(this.username.replace("'", "'\\''")));
+            assertThat(tempScriptFile.readToString(), containsString(this.password.replace("'", "'\\''")));
+        }else {
+            assertThat(tempScriptFile.readToString(), containsString(this.username.replace("%", "%%")));
+            assertThat(tempScriptFile.readToString(), containsString(this.password.replace("%", "%%")));
+        }
     }
 
     /**
