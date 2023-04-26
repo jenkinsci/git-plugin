@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -11,14 +12,13 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import java.io.IOException;
 import java.util.Objects;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -45,10 +45,12 @@ public class SubmoduleOption extends GitSCMExtension {
     private boolean trackingSubmodules;
     /** Use --reference flag on submodule update command - requires git>=1.6.4 */
     private String reference;
+
     private boolean parentCredentials;
     private Integer timeout;
     /** Use --depth flag on submodule update command - requires git>=1.8.4 */
     private boolean shallow;
+
     private Integer depth;
     private Integer threads;
 
@@ -58,7 +60,13 @@ public class SubmoduleOption extends GitSCMExtension {
     }
 
     @Whitelisted
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference, Integer timeout, boolean parentCredentials) {
+    public SubmoduleOption(
+            boolean disableSubmodules,
+            boolean recursiveSubmodules,
+            boolean trackingSubmodules,
+            String reference,
+            Integer timeout,
+            boolean parentCredentials) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
@@ -171,7 +179,8 @@ public class SubmoduleOption extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
-    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
+    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
+            throws IOException, InterruptedException, GitException {
         BuildData revToBuild = scm.getBuildData(build);
 
         try {
@@ -249,7 +258,16 @@ public class SubmoduleOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(disableSubmodules, recursiveSubmodules, trackingSubmodules, parentCredentials, reference, timeout, shallow, depth, threads);
+        return Objects.hash(
+                disableSubmodules,
+                recursiveSubmodules,
+                trackingSubmodules,
+                parentCredentials,
+                reference,
+                timeout,
+                shallow,
+                depth,
+                threads);
     }
 
     /**
@@ -257,17 +275,16 @@ public class SubmoduleOption extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "SubmoduleOption{" +
-                "disableSubmodules=" + disableSubmodules +
-                ", recursiveSubmodules=" + recursiveSubmodules +
-                ", trackingSubmodules=" + trackingSubmodules +
-                ", reference='" + reference + '\'' +
-                ", parentCredentials=" + parentCredentials +
-                ", timeout=" + timeout +
-                ", shallow=" + shallow +
-                ", depth=" + depth +
-                ", threads=" + threads +
-                '}';
+        return "SubmoduleOption{" + "disableSubmodules="
+                + disableSubmodules + ", recursiveSubmodules="
+                + recursiveSubmodules + ", trackingSubmodules="
+                + trackingSubmodules + ", reference='"
+                + reference + '\'' + ", parentCredentials="
+                + parentCredentials + ", timeout="
+                + timeout + ", shallow="
+                + shallow + ", depth="
+                + depth + ", threads="
+                + threads + '}';
     }
 
     @Extension

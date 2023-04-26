@@ -1,23 +1,19 @@
 package hudson.plugins.git;
 
+import hudson.EnvVars;
+import hudson.model.TaskListener;
+import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.junit.Before;
-import org.junit.Rule;
-
-import hudson.EnvVars;
-import hudson.model.TaskListener;
-import hudson.util.StreamTaskListener;
-
 import jenkins.plugins.git.GitSampleRepoRule;
-
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.Before;
+import org.junit.Rule;
 
 /**
  * Temporary git repository for use with tests. Tests which need a git
@@ -78,6 +74,6 @@ public abstract class AbstractGitRepository {
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
-        return File.pathSeparatorChar==';';
+        return File.pathSeparatorChar == ';';
     }
 }

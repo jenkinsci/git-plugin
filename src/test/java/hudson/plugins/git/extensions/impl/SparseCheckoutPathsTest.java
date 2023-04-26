@@ -23,26 +23,24 @@
  */
 package hudson.plugins.git.extensions.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.model.Run;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.util.LogTaskListener;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
 
 public class SparseCheckoutPathsTest {
 
@@ -187,6 +185,5 @@ public class SparseCheckoutPathsTest {
         public void execute() throws GitException, InterruptedException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-
     }
 }

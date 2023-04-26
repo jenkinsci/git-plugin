@@ -23,14 +23,16 @@
  */
 package jenkins.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
+
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.util.GitUtilsTest;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.StreamTaskListener;
-import hudson.plugins.git.GitException;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -40,10 +42,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.lib.Repository;
-import static org.hamcrest.Matchers.hasItems;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Assert;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Run a command line git command, return output as array of String, optionally
@@ -72,7 +72,7 @@ public class CliGitCommand {
         env = envVars;
         if (client != null) {
             try (@SuppressWarnings("deprecation") // Local repository reference
-                 Repository repo = client.getRepository()) {
+                    Repository repo = client.getRepository()) {
                 dir = repo.getWorkTree();
             }
         } else {
@@ -97,7 +97,12 @@ public class CliGitCommand {
     private String[] run(boolean assertProcessStatus) throws IOException, InterruptedException {
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         ByteArrayOutputStream bytesErr = new ByteArrayOutputStream();
-        Launcher.ProcStarter p = launcher.launch().cmds(args).envs(env).stdout(bytesOut).stderr(bytesErr).pwd(dir);
+        Launcher.ProcStarter p = launcher.launch()
+                .cmds(args)
+                .envs(env)
+                .stdout(bytesOut)
+                .stderr(bytesErr)
+                .pwd(dir);
         int status = p.start().joinWithTimeout(1, TimeUnit.MINUTES, listener);
         String result = bytesOut.toString(StandardCharsets.UTF_8);
         if (bytesErr.size() > 0) {
@@ -105,7 +110,8 @@ public class CliGitCommand {
         }
         output = result.split("[\\n\\r]");
         if (assertProcessStatus) {
-            Assert.assertEquals(args.toString() + " command failed and reported '" + Arrays.toString(output) + "'", 0, status);
+            Assert.assertEquals(
+                    args.toString() + " command failed and reported '" + Arrays.toString(output) + "'", 0, status);
         }
         return output;
     }
@@ -118,7 +124,8 @@ public class CliGitCommand {
             notFound.removeIf(line::matches);
         }
         if (!notFound.isEmpty()) {
-            Assert.fail(Arrays.toString(output) + " did not match all strings in notFound: " + Arrays.toString(expectedRegExes));
+            Assert.fail(Arrays.toString(output) + " did not match all strings in notFound: "
+                    + Arrays.toString(expectedRegExes));
         }
     }
 
@@ -132,7 +139,8 @@ public class CliGitCommand {
             /* Read config value */
             cmdOutput = run("config", "--global", configName);
             if (cmdOutput == null || cmdOutput[0].isEmpty() || !cmdOutput[0].equals(value)) {
-                throw new GitException("ERROR: git config --global " + configName + " reported '" + cmdOutput[0] + "' instead of '" + value + "'");
+                throw new GitException("ERROR: git config --global " + configName + " reported '" + cmdOutput[0]
+                        + "' instead of '" + value + "'");
             }
         }
     }
@@ -150,9 +158,9 @@ public class CliGitCommand {
     public void setDefaults() throws Exception {
         if (System.getenv("JENKINS_URL") != null && System.getenv("BUILD_NUMBER") != null) {
             /* We're in a Jenkins agent environment */
-	    setConfigIfEmpty("user.name", "Name From Git-Plugin-Test");
-	    setConfigIfEmpty("user.email", "email.from.git.plugin.test@example.com");
-	}
+            setConfigIfEmpty("user.name", "Name From Git-Plugin-Test");
+            setConfigIfEmpty("user.email", "email.from.git.plugin.test@example.com");
+        }
     }
 
     /**
@@ -165,5 +173,4 @@ public class CliGitCommand {
         env.put(key, value);
         return this;
     }
-
 }

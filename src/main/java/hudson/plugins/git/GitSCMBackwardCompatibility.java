@@ -11,11 +11,9 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Set;
-
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 
 /**
@@ -32,6 +30,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     // when writing back
     @Deprecated
     transient String source;
+
     @Deprecated
     transient String branch;
 
@@ -73,7 +72,6 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     @Deprecated
     private transient Boolean skipTag;
-
 
     /**
      * @deprecated
@@ -201,13 +199,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     @Deprecated
     private transient BuildChooser buildChooser;
 
-
     @Whitelisted
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     void readBackExtensionsFromLegacy() {
@@ -216,7 +213,8 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new UserExclusion(excludedUsers));
                 excludedUsers = null;
             }
-            if ((excludedRegions != null && !excludedRegions.isBlank()) || (includedRegions != null && !includedRegions.isBlank())) {
+            if ((excludedRegions != null && !excludedRegions.isBlank())
+                    || (includedRegions != null && !includedRegions.isBlank())) {
                 addIfMissing(new PathRestriction(includedRegions, excludedRegions));
                 excludedRegions = includedRegions = null;
             }
@@ -224,15 +222,17 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new RelativeTargetDirectory(relativeTargetDir));
                 relativeTargetDir = null;
             }
-            if (skipTag!=null && !skipTag) {
+            if (skipTag != null && !skipTag) {
                 addIfMissing(new PerBuildTag());
                 skipTag = null;
             }
             if (disableSubmodules || recursiveSubmodules || trackingSubmodules) {
-                addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules, null, null, false));
+                addIfMissing(new SubmoduleOption(
+                        disableSubmodules, recursiveSubmodules, trackingSubmodules, null, null, false));
             }
-            if ((gitConfigName != null && !gitConfigName.isBlank()) || (gitConfigEmail != null && !gitConfigEmail.isBlank())) {
-                addIfMissing(new UserIdentity(gitConfigName,gitConfigEmail));
+            if ((gitConfigName != null && !gitConfigName.isBlank())
+                    || (gitConfigEmail != null && !gitConfigEmail.isBlank())) {
+                addIfMissing(new UserIdentity(gitConfigName, gitConfigEmail));
                 gitConfigName = gitConfigEmail = null;
             }
             if (pruneBranches) {
@@ -243,7 +243,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 getExtensions().replace(new PreBuildMerge(new UserMergeOptions(mergeOptions)));
                 mergeOptions = null;
             }
-            if (userMergeOptions!=null) {
+            if (userMergeOptions != null) {
                 addIfMissing(new PreBuildMerge(userMergeOptions));
                 userMergeOptions = null;
             }
@@ -262,75 +262,77 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (scmName != null && !scmName.isBlank()) {
                 addIfMissing(new ScmName(scmName));
             }
-            if (localBranch!=null) {
+            if (localBranch != null) {
                 addIfMissing(new LocalBranch(localBranch));
             }
-            if (buildChooser!=null && buildChooser.getClass()!=DefaultBuildChooser.class) {
+            if (buildChooser != null && buildChooser.getClass() != DefaultBuildChooser.class) {
                 addIfMissing(new BuildChooserSetting(buildChooser));
             }
             if ((reference != null && !reference.isBlank()) || useShallowClone) {
-                addIfMissing(new CloneOption(useShallowClone, reference,null));
+                addIfMissing(new CloneOption(useShallowClone, reference, null));
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
         }
-
     }
 
     private void addIfMissing(GitSCMExtension ext) throws IOException {
-        if (getExtensions().get(ext.getClass())==null)
+        if (getExtensions().get(ext.getClass()) == null) {
             getExtensions().add(ext);
+        }
     }
 
     @Deprecated
     public String getIncludedRegions() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
-        return pr!=null ? pr.getIncludedRegions() : null;
+        return pr != null ? pr.getIncludedRegions() : null;
     }
 
     @Deprecated
     public String getExcludedRegions() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
-        return pr!=null ? pr.getExcludedRegions() : null;
+        return pr != null ? pr.getExcludedRegions() : null;
     }
 
     @Deprecated
-    @SuppressFBWarnings(value="PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification="Not willing to change behavior of deprecated methods")
+    @SuppressFBWarnings(
+            value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS",
+            justification = "Not willing to change behavior of deprecated methods")
     public String[] getExcludedRegionsNormalized() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
-        return pr!=null ? pr.getExcludedRegionsNormalized() : null;
+        return pr != null ? pr.getExcludedRegionsNormalized() : null;
     }
 
     @Deprecated
-    @SuppressFBWarnings(value="PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification="Not willing to change behavior of deprecated methods")
+    @SuppressFBWarnings(
+            value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS",
+            justification = "Not willing to change behavior of deprecated methods")
     public String[] getIncludedRegionsNormalized() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
-        return pr!=null ? pr.getIncludedRegionsNormalized() : null;
+        return pr != null ? pr.getIncludedRegionsNormalized() : null;
     }
-
 
     @Deprecated
     public String getRelativeTargetDir() {
         RelativeTargetDirectory rt = getExtensions().get(RelativeTargetDirectory.class);
-        return rt!=null ? rt.getRelativeTargetDir() : null;
+        return rt != null ? rt.getRelativeTargetDir() : null;
     }
-
 
     @Deprecated
     public String getExcludedUsers() {
         UserExclusion ue = getExtensions().get(UserExclusion.class);
-        return ue!=null ? ue.getExcludedUsers() : null;
+        return ue != null ? ue.getExcludedUsers() : null;
     }
 
     @Deprecated
     public Set<String> getExcludedUsersNormalized() {
         UserExclusion ue = getExtensions().get(UserExclusion.class);
-        return ue!=null ? ue.getExcludedUsersNormalized() : null;
+        return ue != null ? ue.getExcludedUsersNormalized() : null;
     }
 
     @Deprecated
     public boolean getSkipTag() {
-        return getExtensions().get(PerBuildTag.class)!=null;
+        return getExtensions().get(PerBuildTag.class) != null;
     }
 
     @Deprecated
@@ -354,38 +356,42 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     @Deprecated
     public String getGitConfigName() {
         UserIdentity ui = getExtensions().get(UserIdentity.class);
-        return ui!=null ? ui.getName() : null;
+        return ui != null ? ui.getName() : null;
     }
 
     @Deprecated
     public String getGitConfigEmail() {
         UserIdentity ui = getExtensions().get(UserIdentity.class);
-        return ui!=null ? ui.getEmail() : null;
+        return ui != null ? ui.getEmail() : null;
     }
 
     @Deprecated
     public String getGitConfigNameToUse() {
         String n = getGitConfigName();
-        if (n==null)    n = getDescriptor().getGlobalConfigName();
+        if (n == null) {
+            n = getDescriptor().getGlobalConfigName();
+        }
         return n;
     }
 
     @Deprecated
     public String getGitConfigEmailToUse() {
         String n = getGitConfigEmail();
-        if (n==null)    n = getDescriptor().getGlobalConfigEmail();
+        if (n == null) {
+            n = getDescriptor().getGlobalConfigEmail();
+        }
         return n;
     }
 
     @Deprecated
     public boolean getPruneBranches() {
-        return getExtensions().get(PruneStaleBranch.class)!=null;
+        return getExtensions().get(PruneStaleBranch.class) != null;
     }
 
     @Deprecated
     public UserMergeOptions getUserMergeOptions() {
         PreBuildMerge m = getExtensions().get(PreBuildMerge.class);
-        return m!=null ? m.getOptions() : null;
+        return m != null ? m.getOptions() : null;
     }
 
     /**
@@ -395,7 +401,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     @Deprecated
     public boolean getClean() {
-        return getExtensions().get(CleanCheckout.class)!=null;
+        return getExtensions().get(CleanCheckout.class) != null;
     }
 
     /**
@@ -405,7 +411,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     @Deprecated
     public boolean getWipeOutWorkspace() {
-        return getExtensions().get(WipeWorkspace.class)!=null;
+        return getExtensions().get(WipeWorkspace.class) != null;
     }
 
     /**
@@ -416,7 +422,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     @Deprecated
     public boolean getUseShallowClone() {
         CloneOption m = getExtensions().get(CloneOption.class);
-    	return m!=null && m.isShallow();
+        return m != null && m.isShallow();
     }
 
     /**
@@ -427,7 +433,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     @Deprecated
     public String getReference() {
         CloneOption m = getExtensions().get(CloneOption.class);
-        return m!=null ? m.getReference() : null;
+        return m != null ? m.getReference() : null;
     }
 
     /**
@@ -437,7 +443,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     @Deprecated
     public boolean getRemotePoll() {
-        return getExtensions().get(DisableRemotePoll.class)==null;
+        return getExtensions().get(DisableRemotePoll.class) == null;
     }
 
     /**
@@ -450,7 +456,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     @Deprecated
     public boolean getAuthorOrCommitter() {
-        return getExtensions().get(AuthorInChangelog.class)!=null;
+        return getExtensions().get(AuthorInChangelog.class) != null;
     }
 
     /**
@@ -460,7 +466,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     @Deprecated
     public boolean isIgnoreNotifyCommit() {
-        return getExtensions().get(IgnoreNotifyCommit.class)!=null;
+        return getExtensions().get(IgnoreNotifyCommit.class) != null;
     }
 
     /**
@@ -471,7 +477,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     @Deprecated
     public String getScmName() {
         ScmName sn = getExtensions().get(ScmName.class);
-        return sn!=null ? sn.getName() : null;
+        return sn != null ? sn.getName() : null;
     }
 
     /**
@@ -482,9 +488,8 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     @Deprecated
     public String getLocalBranch() {
         LocalBranch lb = getExtensions().get(LocalBranch.class);
-        return lb!=null ? lb.getLocalBranch() : null;
+        return lb != null ? lb.getLocalBranch() : null;
     }
-
 
     private static final long serialVersionUID = 1L;
 }

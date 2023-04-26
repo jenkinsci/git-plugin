@@ -7,7 +7,6 @@ import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
 import hudson.model.BuildListener;
 import hudson.plugins.git.GitPublisher;
-
 import java.io.IOException;
 
 @Extension(optional = true)
@@ -15,8 +14,9 @@ public class MatrixGitPublisher implements MatrixAggregatable {
     /**
      * For a matrix project, push should only happen once.
      */
+    @Override
     public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
-        return new MatrixAggregator(build,launcher,listener) {
+        return new MatrixAggregator(build, launcher, listener) {
             @Override
             public boolean endBuild() throws InterruptedException, IOException {
                 GitPublisher publisher = build.getParent().getPublishersList().get(GitPublisher.class);

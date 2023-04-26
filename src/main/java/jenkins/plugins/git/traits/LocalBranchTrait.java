@@ -54,7 +54,7 @@ public class LocalBranchTrait extends GitSCMExtensionTrait<LocalBranch> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol(value={"localBranch", "localBranchTrait"}) // Avoid JCasC message about obsolete symbol
+    @Symbol(value = {"localBranch", "localBranchTrait"}) // Avoid JCasC message about obsolete symbol
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

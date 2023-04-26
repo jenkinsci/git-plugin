@@ -15,5 +15,4 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * @author Kohsuke Kawaguchi
  */
 @Restricted(NoExternalUse.class)
-public abstract class FakeGitSCMExtension extends GitSCMExtension {
-}
+public abstract class FakeGitSCMExtension extends GitSCMExtension {}

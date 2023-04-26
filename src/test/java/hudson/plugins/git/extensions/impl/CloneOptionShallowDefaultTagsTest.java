@@ -2,15 +2,14 @@ package hudson.plugins.git.extensions.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import hudson.model.Result;
-import hudson.model.FreeStyleProject;
-import hudson.plugins.git.TestGitRepo;
-import hudson.plugins.git.extensions.GitSCMExtensionTest;
-import hudson.plugins.git.extensions.GitSCMExtension;
 
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
+import hudson.plugins.git.TestGitRepo;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import java.io.IOException;
 import java.util.Set;
-
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
@@ -44,11 +43,16 @@ public class CloneOptionShallowDefaultTagsTest extends GitSCMExtensionTest {
         repo.commit("repo-init", repo.johnDoe, "repo0 initial commit");
         repo.tag(tagName, "a tag that should be fetched by default");
 
-        assertTrue("scm polling should detect a change after initial commit", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling should detect a change after initial commit",
+                project.poll(listener).hasChanges());
 
         build(project, Result.SUCCESS);
 
-        assertEquals("tag " + tagName + " should have been cloned from remote", 1, tagsInProjectWorkspaceWithName(tagName).size());
+        assertEquals(
+                "tag " + tagName + " should have been cloned from remote",
+                1,
+                tagsInProjectWorkspaceWithName(tagName).size());
     }
 
     private Set<String> tagsInProjectWorkspaceWithName(String tagPattern) throws IOException, InterruptedException {

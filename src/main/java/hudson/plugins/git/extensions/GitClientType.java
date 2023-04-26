@@ -1,22 +1,28 @@
 package hudson.plugins.git.extensions;
 
 /**
-* @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
-*/
+ * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
+ */
 public enum GitClientType {
     JGIT {
         @Override
         public GitClientType combine(GitClientType c) throws GitClientConflictException {
-            if (c == GITCLI) throw new GitClientConflictException();
+            if (c == GITCLI) {
+                throw new GitClientConflictException();
+            }
             return this;
         }
-    }, GITCLI {
+    },
+    GITCLI {
         @Override
         public GitClientType combine(GitClientType c) throws GitClientConflictException {
-            if (c == JGIT) throw new GitClientConflictException();
+            if (c == JGIT) {
+                throw new GitClientConflictException();
+            }
             return this;
         }
-    }, ANY {
+    },
+    ANY {
         @Override
         public GitClientType combine(GitClientType c) {
             return c;

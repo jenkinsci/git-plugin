@@ -96,17 +96,16 @@ public class GitSCMSourceDefaults extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "GitSCMSourceDefaults{" +
-                "includeTags=" + includeTags +
-                '}';
+        return "GitSCMSourceDefaults{" + "includeTags=" + includeTags + '}';
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
-                                     CloneCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateCloneCommand(
+            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd)
+            throws IOException, InterruptedException, GitException {
         listener.getLogger()
                 .printf("Cloning with configured refspecs honoured and %s tags%n", includeTags ? "with" : "without");
         RemoteConfig rc = scm.getRepositories().get(0);
@@ -122,8 +121,7 @@ public class GitSCMSourceDefaults extends GitSCMExtension {
     @Deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd)
             throws IOException, InterruptedException, GitException {
-        listener.getLogger()
-                .printf("Fetching %s tags%n", includeTags ? "with" : "without");
+        listener.getLogger().printf("Fetching %s tags%n", includeTags ? "with" : "without");
         cmd.tags(includeTags);
     }
 }

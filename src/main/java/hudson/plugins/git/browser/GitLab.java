@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
@@ -7,20 +8,15 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.net.URL;
+import javax.servlet.ServletException;
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
-
-import java.io.IOException;
-import java.net.URL;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
-
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Git Browser for GitLab
@@ -136,6 +132,7 @@ public class GitLab extends GitRepositoryBrowser {
     @Extension
     @Symbol("gitLab")
     public static class GitLabDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "gitlab";
@@ -143,7 +140,7 @@ public class GitLab extends GitRepositoryBrowser {
 
         @Override
         public GitLab newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(GitLab.class, jsonObject);
         }
 
@@ -170,11 +167,10 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     private String calculatePrefix() {
-        if(getVersionDouble() < 3) {
+        if (getVersionDouble() < 3) {
             return "commits/";
         } else {
             return "commit/";
         }
     }
-
 }

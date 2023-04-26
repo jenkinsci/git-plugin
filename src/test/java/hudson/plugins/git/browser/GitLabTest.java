@@ -1,20 +1,19 @@
 package hudson.plugins.git.browser;
 
+import static org.junit.Assert.*;
+
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
-import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-
-import static org.junit.Assert.*;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
 
 @Deprecated
@@ -26,8 +25,8 @@ public class GitLabTest {
     private final GitLab gitlab50 = new GitLab(GITLAB_URL, "5.0");
     private final GitLab gitlab51 = new GitLab(GITLAB_URL, "5.1");
     private final GitLab gitlab711 = new GitLab(GITLAB_URL, "7.11"); /* Which is < 7.2 ! */
-//    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11.4.ee"); /* Totally borked */
-    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11");  /* Which is < 7.2 ! */
+    //    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11.4.ee"); /* Totally borked */
+    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11"); /* Which is < 7.2 ! */
     private final GitLab gitlab80 = new GitLab(GITLAB_URL, "8.0");
     private final GitLab gitlab87 = new GitLab(GITLAB_URL, "8.7");
     private final GitLab gitlabDefault = new GitLab(GITLAB_URL);
@@ -71,7 +70,9 @@ public class GitLabTest {
     public void testGetChangeSetLinkGitChangeSet() throws Exception {
         final GitChangeSet changeSet = createChangeSet("rawchangelog");
         final String expectedURL = GITLAB_URL + "commit/" + SHA1;
-        assertEquals(expectedURL.replace("commit/", "commits/"), gitlab29.getChangeSetLink(changeSet).toString());
+        assertEquals(
+                expectedURL.replace("commit/", "commits/"),
+                gitlab29.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlab42.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlab50.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlab51.getChangeSetLink(changeSet).toString());
@@ -80,7 +81,9 @@ public class GitLabTest {
         assertEquals(expectedURL, gitlabDefault.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlabNaN.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlabInfinity.getChangeSetLink(changeSet).toString());
-        assertEquals(expectedURL.replace("commit/", "commits/"), gitlabNegative.getChangeSetLink(changeSet).toString());
+        assertEquals(
+                expectedURL.replace("commit/", "commits/"),
+                gitlabNegative.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlabGreater.getChangeSetLink(changeSet).toString());
     }
 
@@ -101,7 +104,7 @@ public class GitLabTest {
         assertEquals(expectedPre80, gitlab7114ee.getDiffLink(modified1).toString());
         assertEquals(expectedURL, gitlab80.getDiffLink(modified1).toString());
         assertEquals(expectedURL, gitlabGreater.getDiffLink(modified1).toString());
-        
+
         assertEquals(expectedDefault, gitlabDefault.getDiffLink(modified1).toString());
         assertEquals(expectedDefault, gitlabNaN.getDiffLink(modified1).toString());
         assertEquals(expectedDefault, gitlabInfinity.getDiffLink(modified1).toString());
@@ -137,7 +140,7 @@ public class GitLabTest {
         final String expectedPre80 = GITLAB_URL + "commit/" + SHA1 + "#" + fileName;
         final String expectedURL = GITLAB_URL + "commit/" + SHA1 + "#" + "diff-0";
         final String expectedDefault = expectedURL;
- 
+
         assertEquals(expectedPre30, gitlabNegative.getFileLink(path).toString());
         assertEquals(expectedPre30, gitlab29.getFileLink(path).toString());
         assertEquals(expectedPre80, gitlab42.getFileLink(path).toString());
@@ -147,20 +150,23 @@ public class GitLabTest {
         assertEquals(expectedPre80, gitlab7114ee.getFileLink(path).toString());
         assertEquals(expectedURL, gitlab80.getFileLink(path).toString());
         assertEquals(expectedURL, gitlabGreater.getFileLink(path).toString());
-        
+
         assertEquals(expectedDefault, gitlabDefault.getFileLink(path).toString());
         assertEquals(expectedDefault, gitlabNaN.getFileLink(path).toString());
         assertEquals(expectedDefault, gitlabInfinity.getFileLink(path).toString());
-
     }
 
     private final Random random = new Random();
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws Exception {
         /* Use randomly selected git client implementation since the client implementation should not change result */
-        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(random.nextBoolean() ? "Default" : "jgit").getClient();
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars())
+                .in(new File("."))
+                .using(random.nextBoolean() ? "Default" : "jgit")
+                .getClient();
         final GitChangeLogParser logParser = new GitChangeLogParser(gitClient, false);
-        final List<GitChangeSet> changeSetList = logParser.parse(GitLabTest.class.getResourceAsStream(rawchangelogpath));
+        final List<GitChangeSet> changeSetList =
+                logParser.parse(GitLabTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }
 

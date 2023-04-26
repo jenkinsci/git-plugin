@@ -5,18 +5,6 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.PersistentDescriptor;
 import hudson.util.HttpResponses;
-import jenkins.model.GlobalConfiguration;
-import jenkins.model.GlobalConfigurationCategory;
-import jenkins.model.Jenkins;
-import net.jcip.annotations.GuardedBy;
-import net.sf.json.JSONObject;
-import org.jenkinsci.Symbol;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -29,7 +17,17 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import jenkins.model.GlobalConfiguration;
+import jenkins.model.GlobalConfigurationCategory;
+import jenkins.model.Jenkins;
+import net.jcip.annotations.GuardedBy;
+import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @Extension
 @Restricted(NoExternalUse.class)
@@ -75,7 +73,8 @@ public class ApiTokenPropertyConfiguration extends GlobalConfiguration implement
         String plainTextApiToken = Util.toHexString(random);
         assert plainTextApiToken.length() == 32;
 
-        String apiTokenValueHashed = Util.toHexString(hashedBytes(plainTextApiToken.getBytes(StandardCharsets.US_ASCII)));
+        String apiTokenValueHashed =
+                Util.toHexString(hashedBytes(plainTextApiToken.getBytes(StandardCharsets.US_ASCII)));
         HashedApiToken apiToken = new HashedApiToken(name, apiTokenValueHashed);
 
         synchronized (this) {
@@ -172,7 +171,8 @@ public class ApiTokenPropertyConfiguration extends GlobalConfiguration implement
             try {
                 hashFromHex = Util.fromHexString(hash);
             } catch (NumberFormatException e) {
-                LOGGER.log(Level.INFO, "The API token with name=[{0}] is not in hex-format and so cannot be used", name);
+                LOGGER.log(
+                        Level.INFO, "The API token with name=[{0}] is not in hex-format and so cannot be used", name);
                 return false;
             }
 

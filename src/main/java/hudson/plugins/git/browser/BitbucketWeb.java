@@ -1,18 +1,17 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Git Browser URLs
@@ -42,13 +41,14 @@ public class BitbucketWeb extends GitRepositoryBrowser {
      */
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
-        if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
+        if (path.getEditType() != EditType.EDIT
+                || path.getSrc() == null
+                || path.getDst() == null
                 || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
         return getDiffLinkRegardlessOfEditType(path);
     }
-
 
     private URL getDiffLinkRegardlessOfEditType(GitChangeSet.Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
@@ -73,6 +73,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     @Extension
     @Symbol("bitbucket")
     public static class BitbucketWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "bitbucketweb";
@@ -80,9 +81,8 @@ public class BitbucketWeb extends GitRepositoryBrowser {
 
         @Override
         public BitbucketWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+            assert req != null; // see inherited javadoc
             return req.bindJSON(BitbucketWeb.class, jsonObject);
         }
     }
-
 }

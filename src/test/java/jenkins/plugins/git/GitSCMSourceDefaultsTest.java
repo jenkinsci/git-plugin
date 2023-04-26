@@ -7,8 +7,6 @@ public class GitSCMSourceDefaultsTest {
 
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(GitSCMSourceDefaults.class)
-                .usingGetClass()
-                .verify();
+        EqualsVerifier.forClass(GitSCMSourceDefaults.class).usingGetClass().verify();
     }
 }

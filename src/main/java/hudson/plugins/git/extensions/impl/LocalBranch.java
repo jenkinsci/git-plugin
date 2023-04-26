@@ -7,8 +7,8 @@ import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.util.Objects;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -17,7 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * Configure this extension as null or as "**" to signify that
  * the local branch name should be the same as the remote branch
  * name sans the remote repository prefix (origin for example).
- * 
+ *
  * @author Kohsuke Kawaguchi
  */
 public class LocalBranch extends FakeGitSCMExtension {
@@ -65,8 +65,10 @@ public class LocalBranch extends FakeGitSCMExtension {
      */
     @Override
     public String toString() {
-        return "LocalBranch{" +
-                (localBranch == null || "**".equals(localBranch) ? "same-as-remote" : "localBranch='"+localBranch+"'")
+        return "LocalBranch{"
+                + (localBranch == null || "**".equals(localBranch)
+                        ? "same-as-remote"
+                        : "localBranch='" + localBranch + "'")
                 + '}';
     }
 

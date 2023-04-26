@@ -25,11 +25,24 @@
 
 package jenkins.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Collections;
@@ -42,7 +55,6 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
-
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -53,19 +65,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link AbstractGitSCMSource}
@@ -78,8 +77,8 @@ public class GitSCMFileSystemTest {
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
-    private final static String GIT_2_6_0_TAG = "git-2.6.0";
-    private final static String GIT_2_6_1_TAG = "git-2.6.1";
+    private static final String GIT_2_6_0_TAG = "git-2.6.0";
+    private static final String GIT_2_6_1_TAG = "git-2.6.1";
 
     /* This test requires the tag git-2.6.1 and git-2.6.0. If you're working from a
      * forked copy of the repository and your fork was created before the
@@ -93,9 +92,12 @@ public class GitSCMFileSystemTest {
     @BeforeClass
     public static void confirmTagsAvailable() throws Exception {
         File gitDir = new File(".");
-        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("jgit").getClient();
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars())
+                .in(gitDir)
+                .using("jgit")
+                .getClient();
 
-        String[] tags = { GIT_2_6_0_TAG, GIT_2_6_1_TAG };
+        String[] tags = {GIT_2_6_0_TAG, GIT_2_6_1_TAG};
         for (String tag : tags) {
             ObjectId tagId;
             try {
@@ -182,7 +184,14 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("checkout", "-b", "bug/JENKINS-42817");
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), null, null, Collections.emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(
+                r.createFreeStyleProject(),
+                new GitSCM(
+                        GitSCM.createRepoList(sampleRepo.toString(), null),
+                        Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")),
+                        null,
+                        null,
+                        Collections.emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -209,11 +218,14 @@ public class GitSCMFileSystemTest {
          * null pointer exception when trying to resolve the branch
          * name in the GitSCMFileSystem constructor.
          */
-        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(),
-                                            new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null),
-                                                       Collections.singletonList(new BranchSpec("*")), // JENKINS-57587 issue here
-                                                       null, null,
-                                                       Collections.emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(
+                r.createFreeStyleProject(),
+                new GitSCM(
+                        GitSCM.createRepoList(sampleRepo.toString(), null),
+                        Collections.singletonList(new BranchSpec("*")), // JENKINS-57587 issue here
+                        null,
+                        null,
+                        Collections.emptyList()));
         assertThat("Wildcard branch name '*' resolved to a specific checkout unexpectedly", fs, is(nullValue()));
     }
 
@@ -302,7 +314,7 @@ public class GitSCMFileSystemTest {
         SCMFile file = null;
         SCMFile file2 = null;
         SCMFile dir = null;
-        for (SCMFile f: children) {
+        for (SCMFile f : children) {
             names.add(f.getName());
             switch (f.getName()) {
                 case "file":
@@ -329,7 +341,10 @@ public class GitSCMFileSystemTest {
     @Test
     public void given_filesystem_when_askingChangesSinceSameRevision_then_changesAreEmpty() throws Exception {
         File gitDir = new File(".");
-        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars())
+                .in(gitDir)
+                .using("git")
+                .getClient();
 
         ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
@@ -344,7 +359,10 @@ public class GitSCMFileSystemTest {
     @Test
     public void given_filesystem_when_askingChangesSinceOldRevision_then_changesArePopulated() throws Exception {
         File gitDir = new File(".");
-        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars())
+                .in(gitDir)
+                .using("git")
+                .getClient();
 
         ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
@@ -363,9 +381,13 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
-    public void given_filesystem_when_askingChangesSinceNewRevision_then_changesArePopulatedButEmpty() throws Exception {
+    public void given_filesystem_when_askingChangesSinceNewRevision_then_changesArePopulatedButEmpty()
+            throws Exception {
         File gitDir = new File(".");
-        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars())
+                .in(gitDir)
+                .using("git")
+                .getClient();
 
         ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
@@ -375,8 +397,7 @@ public class GitSCMFileSystemTest {
         ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
-        GitSCMFileSystem gitPlugin261FS =
-                new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
+        GitSCMFileSystem gitPlugin261FS = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
         assertEquals(git261.getName(), gitPlugin261FS.getRevision().getHash());
 
         assertThat(git261, not(is(git260)));
@@ -395,7 +416,14 @@ public class GitSCMFileSystemTest {
         sampleRepo.write("dir/subdir/file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         sampleRepo.git("tag", "v1.0");
-        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/tags/v1.0")), null, null, Collections.emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(
+                r.createFreeStyleProject(),
+                new GitSCM(
+                        GitSCM.createRepoList(sampleRepo.toString(), null),
+                        Collections.singletonList(new BranchSpec("refs/tags/v1.0")),
+                        null,
+                        null,
+                        Collections.emptyList()));
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();
@@ -431,33 +459,33 @@ public class GitSCMFileSystemTest {
     @Issue("JENKINS-42971")
     @Test
     public void calculate_head_name_with_env() throws Exception {
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
-                new EnvVars("BRANCH", "master-a"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(
+                new BranchSpec("${BRANCH}"), null, new EnvVars("BRANCH", "master-a"));
         assertEquals("master-a", result1.headName);
         assertEquals(Constants.R_HEADS, result1.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
-                new EnvVars("BRANCH", "refs/heads/master-b"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(
+                new BranchSpec("${BRANCH}"), null, new EnvVars("BRANCH", "refs/heads/master-b"));
         assertEquals("master-b", result2.headName);
         assertEquals(Constants.R_HEADS, result2.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null,
-                new EnvVars("BRANCH", "master-c"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(
+                new BranchSpec("refs/heads/${BRANCH}"), null, new EnvVars("BRANCH", "master-c"));
         assertEquals("master-c", result3.headName);
         assertEquals(Constants.R_HEADS, result3.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
-                null);
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 =
+                GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null);
         assertEquals("${BRANCH}", result4.headName);
         assertEquals(Constants.R_HEADS, result4.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null,
-                new EnvVars("BRANCH", "master-d"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(
+                new BranchSpec("*/${BRANCH}"), null, new EnvVars("BRANCH", "master-d"));
         assertEquals("master-d", result5.headName);
         assertEquals(Constants.R_HEADS, result5.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master-e"), null,
-                new EnvVars("BRANCH", "dummy"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(
+                new BranchSpec("*/master-e"), null, new EnvVars("BRANCH", "dummy"));
         assertEquals("master-e", result6.headName);
         assertEquals(Constants.R_HEADS, result6.prefix);
     }
@@ -468,17 +496,21 @@ public class GitSCMFileSystemTest {
     @Test
     public void null_pointer_exception() throws Exception {
         File gitDir = new File(".");
-        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars())
+                .in(gitDir)
+                .using("git")
+                .getClient();
         ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null);
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 =
+                GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null);
         assertEquals("master-f", result1.headName);
         assertEquals(Constants.R_HEADS, result1.prefix);
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
-        return java.io.File.pathSeparatorChar==';';
+        return java.io.File.pathSeparatorChar == ';';
     }
 }

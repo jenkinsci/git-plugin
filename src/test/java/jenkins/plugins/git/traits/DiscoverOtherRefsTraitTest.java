@@ -23,9 +23,9 @@
  */
 package jenkins.plugins.git.traits;
 
-import org.junit.Test;
-
 import static org.junit.Assert.*;
+
+import org.junit.Test;
 
 public class DiscoverOtherRefsTraitTest {
 
@@ -46,5 +46,4 @@ public class DiscoverOtherRefsTraitTest {
         t = new DiscoverOtherRefsTrait("refs/bobby/all");
         assertEquals("other-ref", t.getNameMapping());
     }
-
 }

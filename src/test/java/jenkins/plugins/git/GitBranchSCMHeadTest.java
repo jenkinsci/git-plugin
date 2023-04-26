@@ -1,7 +1,13 @@
 package jenkins.plugins.git;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import hudson.FilePath;
 import hudson.model.Queue;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
@@ -12,21 +18,18 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 public class GitBranchSCMHeadTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule() {
         @Override
         public void before() throws Throwable {
-            if (!isWindows() && "testMigrationNoBuildStorm".equals(this.getTestDescription().getMethodName())) {
-                URL res = getClass().getResource("/jenkins/plugins/git/GitBranchSCMHeadTest/testMigrationNoBuildStorm_repositories.zip");
+            if (!isWindows()
+                    && "testMigrationNoBuildStorm"
+                            .equals(this.getTestDescription().getMethodName())) {
+                URL res = getClass()
+                        .getResource(
+                                "/jenkins/plugins/git/GitBranchSCMHeadTest/testMigrationNoBuildStorm_repositories.zip");
                 final File path = new File("/tmp/JENKINS-48061");
                 if (path.exists()) {
                     if (path.isDirectory()) {
@@ -49,7 +52,6 @@ public class GitBranchSCMHeadTest {
             FileUtils.deleteDirectory(path);
         }
     }
-
 
     @Issue("JENKINS-48061")
     @Test
@@ -85,6 +87,6 @@ public class GitBranchSCMHeadTest {
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
-        return File.pathSeparatorChar==';';
+        return File.pathSeparatorChar == ';';
     }
 }

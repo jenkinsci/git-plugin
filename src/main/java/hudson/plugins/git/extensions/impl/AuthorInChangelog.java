@@ -15,8 +15,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class AuthorInChangelog extends FakeGitSCMExtension {
 
     @DataBoundConstructor
-    public AuthorInChangelog() {
-    }
+    public AuthorInChangelog() {}
 
     /**
      * {@inheritDoc}

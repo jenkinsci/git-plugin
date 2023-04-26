@@ -7,9 +7,9 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -20,15 +20,15 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class PruneStaleBranch extends GitSCMExtension {
     @DataBoundConstructor
-    public PruneStaleBranch() {
-    }
+    public PruneStaleBranch() {}
 
     /**
      * {@inheritDoc}
      */
     @Override
     @Deprecated
-    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd)
+            throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Pruning obsolete local branches");
         cmd.prune(true);
     }

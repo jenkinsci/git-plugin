@@ -1,34 +1,52 @@
 package jenkins.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
-import hudson.EnvVars;
-import hudson.FilePath;
+import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTool;
-import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
+import hudson.util.StreamTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import hudson.util.StreamTaskListener;
+import javax.servlet.http.HttpServletRequest;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMEventListener;
@@ -48,28 +66,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.Collections;
 import org.jvnet.hudson.test.TestExtension;
 import org.mockito.Mockito;
-
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * @author Robin Müller
@@ -91,20 +89,21 @@ public class GitSCMSourceTest {
     @Test
     @Deprecated
     public void testSourceOwnerTriggeredByDoNotifyCommit() throws Exception {
-        String notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
+        String notifyCommitApiToken =
+                ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         GitSCMSource gitSCMSource = new GitSCMSource("id", REMOTE, "", "*", "", false);
         GitSCMSourceOwner scmSourceOwner = setupGitSCMSourceOwner(gitSCMSource);
         jenkins.getInstance().add(scmSourceOwner, "gitSourceOwner");
 
         gitStatus.doNotifyCommit(mock(HttpServletRequest.class), REMOTE, "master", "", notifyCommitApiToken);
 
-        SCMHeadEvent event =
-                jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
-                        .waitSCMHeadEvent(1, TimeUnit.SECONDS);
+        SCMHeadEvent event = jenkins.getInstance()
+                .getExtensionList(SCMEventListener.class)
+                .get(SCMEventListenerImpl.class)
+                .waitSCMHeadEvent(1, TimeUnit.SECONDS);
         assertThat(event, notNullValue());
         assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new GitBranchSCMHead("master"))));
         verify(scmSourceOwner, times(0)).onSCMSourceUpdated(gitSCMSource);
-
     }
 
     private GitSCMSourceOwner setupGitSCMSourceOwner(GitSCMSource gitSCMSource) {
@@ -129,8 +128,7 @@ public class GitSCMSourceTest {
      *  - The thread's context class loader is different than the mock's class loader
      *
      */
-    public interface GitSCMSourceOwner extends TopLevelItem, SCMSourceOwner {
-    }
+    public interface GitSCMSourceOwner extends TopLevelItem, SCMSourceOwner {}
 
     @TestExtension
     public static class SCMEventListenerImpl extends SCMEventListener {
@@ -172,40 +170,39 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        Map<SCMHead, SCMRevision> result = instance.fetch(SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
-                ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
-                ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
-                ),
-                new GitTagSCMRevision(
-                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
-                )));
+        Map<SCMHead, SCMRevision> result =
+                instance.fetch(SCMHeadObserver.collect(), null).result();
+        assertThat(
+                result.values(),
+                Matchers.containsInAnyOrder(
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"),
+                        new GitTagSCMRevision(
+                                new GitTagSCMHead("v1.0.0", 15086193840000L),
+                                "315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
 
         instance.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
         result = instance.fetch(SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
-                ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
-                ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
-                )));
+        assertThat(
+                result.values(),
+                Matchers.containsInAnyOrder(
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc")));
 
         instance.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
         result = instance.fetch(SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.containsInAnyOrder(
-                new GitTagSCMRevision(
-                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
-                )));
+        assertThat(
+                result.values(),
+                Matchers.containsInAnyOrder(new GitTagSCMRevision(
+                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
     }
 
     @Issue("JENKINS-47526")
@@ -218,44 +215,47 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        Map<SCMHead, SCMRevision> result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"),
-                SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
-                ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
-                ),
-                new GitTagSCMRevision(
-                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
-                )));
-        result = instance.fetch(new MySCMSourceCriteria("README.md"),
-                SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
-                ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
-                )));
+        Map<SCMHead, SCMRevision> result = instance.fetch(
+                        new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null)
+                .result();
+        assertThat(
+                result.values(),
+                Matchers.containsInAnyOrder(
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"),
+                        new GitTagSCMRevision(
+                                new GitTagSCMHead("v1.0.0", 15086193840000L),
+                                "315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
+        result = instance.fetch(new MySCMSourceCriteria("README.md"), SCMHeadObserver.collect(), null)
+                .result();
+        assertThat(
+                result.values(),
+                Matchers.containsInAnyOrder(
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc")));
 
         instance.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
-        result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
-                ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
-                )));
+        result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null)
+                .result();
+        assertThat(
+                result.values(),
+                Matchers.containsInAnyOrder(
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(
+                                new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
 
         instance.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
-        result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null).result();
-        assertThat(result.values(), Matchers.containsInAnyOrder(
-                new GitTagSCMRevision(
-                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
-                )));
+        result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null)
+                .result();
+        assertThat(
+                result.values(),
+                Matchers.containsInAnyOrder(new GitTagSCMRevision(
+                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
     }
 
     @Issue("JENKINS-47526")
@@ -290,15 +290,20 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(instance.fetch(new SCMHead("foo"), null),
+        assertThat(
+                instance.fetch(new SCMHead("foo"), null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
-        assertThat(instance.fetch(new GitBranchSCMHead("foo"), null),
+        assertThat(
+                instance.fetch(new GitBranchSCMHead("foo"), null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
-        assertThat(instance.fetch(new SCMHead("bar"), null),
+        assertThat(
+                instance.fetch(new SCMHead("bar"), null),
                 hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
-        assertThat(instance.fetch(new SCMHead("manchu"), null),
+        assertThat(
+                instance.fetch(new SCMHead("manchu"), null),
                 hasProperty("hash", is("a94782d8d90b56b7e0d277c04589bd2e6f70d2cc")));
-        assertThat(instance.fetch(new GitTagSCMHead("v1.0.0", 0L), null),
+        assertThat(
+                instance.fetch(new GitTagSCMHead("v1.0.0", 0L), null),
                 hasProperty("hash", is("315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
     }
 
@@ -312,13 +317,15 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(instance.fetch("foo", null, null),
-                hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
-        assertThat(instance.fetch("bar", null, null),
-                hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
-        assertThat(instance.fetch("manchu", null, null),
+        assertThat(
+                instance.fetch("foo", null, null), hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
+        assertThat(
+                instance.fetch("bar", null, null), hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
+        assertThat(
+                instance.fetch("manchu", null, null),
                 hasProperty("hash", is("a94782d8d90b56b7e0d277c04589bd2e6f70d2cc")));
-        assertThat(instance.fetch("v1.0.0", null, null),
+        assertThat(
+                instance.fetch("v1.0.0", null, null),
                 hasProperty("hash", is("315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
     }
 
@@ -338,21 +345,22 @@ public class GitSCMSourceTest {
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
 
         List<Action> actions = instance.fetchActions(null, null);
-        assertThat(actions,
+        assertThat(
+                actions,
                 contains(allOf(
                         instanceOf(GitRemoteHeadRefAction.class),
                         hasProperty("remote", is("http://git.test/telescope.git")),
-                        hasProperty("name", is("manchu"))
-                ))
-        );
+                        hasProperty("name", is("manchu")))));
         when(owner.getActions(GitRemoteHeadRefAction.class))
                 .thenReturn(Collections.singletonList((GitRemoteHeadRefAction) actions.get(0)));
 
         assertThat(instance.fetchActions(new SCMHead("foo"), null, null), is(Collections.<Action>emptyList()));
         assertThat(instance.fetchActions(new SCMHead("bar"), null, null), is(Collections.<Action>emptyList()));
-        assertThat(instance.fetchActions(new SCMHead("manchu"), null, null), contains(
-                instanceOf(PrimaryInstanceMetadataAction.class)));
-        assertThat(instance.fetchActions(new GitTagSCMHead("v1.0.0", 0L), null, null),
+        assertThat(
+                instance.fetchActions(new SCMHead("manchu"), null, null),
+                contains(instanceOf(PrimaryInstanceMetadataAction.class)));
+        assertThat(
+                instance.fetchActions(new GitTagSCMHead("v1.0.0", 0L), null, null),
                 is(Collections.<Action>emptyList()));
     }
 
@@ -364,9 +372,10 @@ public class GitSCMSourceTest {
             return;
         }
         TaskListener log = StreamTaskListener.fromStdout();
-        HelloToolInstaller inst = new HelloToolInstaller(jenkins.jenkins.getSelfLabel().getName(), "echo Hello", "git");
-        GitTool t = new GitTool("myGit", null, Collections.singletonList(
-                new InstallSourceProperty(Collections.singletonList(inst))));
+        HelloToolInstaller inst =
+                new HelloToolInstaller(jenkins.jenkins.getSelfLabel().getName(), "echo Hello", "git");
+        GitTool t = new GitTool(
+                "myGit", null, Collections.singletonList(new InstallSourceProperty(Collections.singletonList(inst))));
         t.getDescriptor().setInstallations(t);
 
         GitTool defaultTool = GitTool.getDefaultInstallation();
@@ -391,7 +400,8 @@ public class GitSCMSourceTest {
         }
 
         @Override
-        public FilePath performInstallation(ToolInstallation toolInstallation, Node node, TaskListener taskListener) throws IOException, InterruptedException {
+        public FilePath performInstallation(ToolInstallation toolInstallation, Node node, TaskListener taskListener)
+                throws IOException, InterruptedException {
             taskListener.error("Hello, world!");
             invoked = true;
             return super.performInstallation(toolInstallation, node, taskListener);
@@ -417,13 +427,12 @@ public class GitSCMSourceTest {
 
         @Override
         public void validate(@NonNull String remote, StandardCredentials credentials)
-                throws IOException, InterruptedException {
-        }
+                throws IOException, InterruptedException {}
 
         @Override
-        protected SCMFileSystem build(@NonNull String remote, StandardCredentials credentials,
-                                      @NonNull SCMHead head,
-                                      final SCMRevision rev) throws IOException, InterruptedException {
+        protected SCMFileSystem build(
+                @NonNull String remote, StandardCredentials credentials, @NonNull SCMHead head, final SCMRevision rev)
+                throws IOException, InterruptedException {
             final String hash;
             if (rev instanceof AbstractGitSCMSource.SCMRevisionImpl) {
                 hash = ((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash();
@@ -500,49 +509,39 @@ public class GitSCMSourceTest {
         }
 
         @Override
-        public SCMRevision getRevision(@NonNull String remote, StandardCredentials credentials,
-                                       @NonNull String refOrHash)
+        public SCMRevision getRevision(
+                @NonNull String remote, StandardCredentials credentials, @NonNull String refOrHash)
                 throws IOException, InterruptedException {
             switch (refOrHash) {
                 case "refs/heads/foo":
                     return new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
-                    );
+                            new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480");
                 case "refs/heads/bar":
                     return new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
-                    );
+                            new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470");
                 case "refs/heads/manchu":
                     return new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
-                    );
+                            new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc");
                 case "refs/tags/v1.0.0":
                     return new GitTagSCMRevision(
-                            new GitTagSCMHead("v1.0.0", 15086193840000L),
-                            "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
-                    );
+                            new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e");
             }
             return null;
         }
 
         @Override
-        public Iterable<SCMRevision> getRevisions(@NonNull String remote, StandardCredentials credentials,
-                                                  @NonNull Set<ReferenceType> referenceTypes)
+        public Iterable<SCMRevision> getRevisions(
+                @NonNull String remote, StandardCredentials credentials, @NonNull Set<ReferenceType> referenceTypes)
                 throws IOException, InterruptedException {
             return Arrays.asList(
                     new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
-                    ),
+                            new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"),
                     new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
-                    ),
+                            new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"),
                     new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
-                    ),
+                            new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"),
                     new GitTagSCMRevision(
-                            new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
-                    )
-            );
+                            new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"));
         }
 
         @Override
@@ -580,8 +579,7 @@ public class GitSCMSourceTest {
                         case "6769413a79793e242c73d7377f0006c6aea95480":
                             return Collections.singleton(newChild("Jenkinsfile", false));
                         case "3f0b897057d8b43d3b9ff55e3fdefbb021493470":
-                            return Arrays.asList(newChild("Jenkinsfile", false),
-                                    newChild("README.md", false));
+                            return Arrays.asList(newChild("Jenkinsfile", false), newChild("README.md", false));
                         case "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc":
                             return Collections.singleton(newChild("README.md", false));
                         case "315fd8b5cae3363b29050f1aabfc27c985e22f7e":
@@ -692,6 +690,6 @@ public class GitSCMSourceTest {
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
-        return File.pathSeparatorChar==';';
+        return File.pathSeparatorChar == ';';
     }
 }

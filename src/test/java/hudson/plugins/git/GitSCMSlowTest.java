@@ -1,5 +1,13 @@
 package hudson.plugins.git;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
+
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
@@ -32,15 +40,6 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.RandomOrder;
 import jenkins.security.MasterToSlaveCallable;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
-
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -71,6 +70,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @ClassRule
     public static Stopwatch stopwatch = new Stopwatch();
+
     @Rule
     public TestName testName = new TestName();
 
@@ -110,9 +110,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/jenkins";
         GitRepositoryBrowser browser = new GithubWeb(url);
-        GitSCM scm = new GitSCM(createRepoList(url),
-                Collections.singletonList(new BranchSpec("")),
-                browser, null, null);
+        GitSCM scm =
+                new GitSCM(createRepoList(url), Collections.singletonList(new BranchSpec("")), browser, null, null);
         p.setScm(scm);
         rule.configRoundtrip(p);
         rule.assertEqualDataBoundBeans(scm, p.getScm());
@@ -141,9 +140,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/git-plugin.git";
         GitRepositoryBrowser browser = new GithubWeb(url);
-        GitSCM scm = new GitSCM(createRepoList(url),
-                Collections.singletonList(new BranchSpec("*/master")),
-                browser, null, null);
+        GitSCM scm = new GitSCM(
+                createRepoList(url), Collections.singletonList(new BranchSpec("*/master")), browser, null, null);
         p.setScm(scm);
 
         /* Assert that no extensions are loaded initially */
@@ -226,7 +224,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
             try {
                 return c.actOnProject(new BuildChooserContext.ContextCallable<Job<?, ?>, String>() {
                     @Override
-                    public String invoke(Job<?, ?> param, VirtualChannel channel) throws IOException, InterruptedException {
+                    public String invoke(Job<?, ?> param, VirtualChannel channel)
+                            throws IOException, InterruptedException {
                         assertTrue(channel instanceof Channel);
                         assertNotNull(Jenkins.getInstanceOrNull());
                         return param.toString();
@@ -247,7 +246,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
@@ -264,16 +264,22 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
 
         testRepo.git.checkout("master", "topic2");
         commit(commitFile1, "other content", johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
         rule.buildAndAssertStatus(Result.FAILURE, project);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
@@ -285,7 +291,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
@@ -302,7 +309,9 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
@@ -310,24 +319,29 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         testRepo.git.checkout("master", "topic2");
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
     public void testMergeWithMatrixBuild() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        //Create a matrix project and a couple of axes
+        // Create a matrix project and a couple of axes
         MatrixProject project = rule.jenkins.createProject(MatrixProject.class, "xyz");
         project.setAxes(new AxisList(new Axis("VAR", "a", "b")));
 
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
@@ -344,7 +358,9 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         final MatrixBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
@@ -352,11 +368,15 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         testRepo.git.checkout("master", "topic2");
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
         final MatrixBuild build2 = build(project, Result.SUCCESS, commitFile2);
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     @Test
@@ -440,19 +460,25 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        //... and build it...
+        assertTrue(
+                "scm polling did not detect commit2 change",
+                project.poll(listener).hasChanges());
+        // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have only one culprit", 1, culprits.size());
         assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
     }
 
     /**

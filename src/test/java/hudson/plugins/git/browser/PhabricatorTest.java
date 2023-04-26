@@ -1,10 +1,11 @@
 package hudson.plugins.git.browser;
 
+import static org.junit.Assert.*;
+
 import hudson.plugins.git.GitChangeSet;
 import java.io.IOException;
 import java.net.URL;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class PhabricatorTest {
 
@@ -34,7 +35,8 @@ public class PhabricatorTest {
     public void testGetDiffLink() throws Exception {
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = phabricator.getDiffLink(path);
-            URL expectedDiffLink = new URL(repoUrl + "diffusion/" + repoName + "/change/master/" + path.getPath() + ";" + sample.id);
+            URL expectedDiffLink =
+                    new URL(repoUrl + "diffusion/" + repoName + "/change/master/" + path.getPath() + ";" + sample.id);
             String msg = "Wrong link for path: " + path.getPath();
             assertEquals(msg, expectedDiffLink, diffLink);
         }
@@ -44,10 +46,10 @@ public class PhabricatorTest {
     public void testGetFileLink() throws Exception {
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL fileLink = phabricator.getDiffLink(path);
-            URL expectedFileLink = new URL(repoUrl + "diffusion/" + repoName + "/change/master/" + path.getPath() + ";" + sample.id);
+            URL expectedFileLink =
+                    new URL(repoUrl + "diffusion/" + repoName + "/change/master/" + path.getPath() + ";" + sample.id);
             String msg = "Wrong link for path: " + path.getPath();
             assertEquals(msg, expectedFileLink, fileLink);
         }
     }
-
 }

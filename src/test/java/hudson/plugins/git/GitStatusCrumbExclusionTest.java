@@ -1,20 +1,18 @@
 package hudson.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-
 import org.jvnet.hudson.test.JenkinsRule;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 /**
  * Check that no crumb is required for successful calls to notifyCommit.
@@ -60,7 +58,8 @@ public class GitStatusCrumbExclusionTest {
         branchArgument = "branches=origin/some-branch-name";
         branchArgumentBytes = branchArgument.getBytes(StandardCharsets.UTF_8);
 
-        notifyCommitApiToken = "token=" + ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
+        notifyCommitApiToken = "token="
+                + ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         notifyCommitApiTokenBytes = notifyCommitApiToken.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -256,7 +255,8 @@ public class GitStatusCrumbExclusionTest {
 
     @Test
     public void testGETValidPathMandatoryAndOptionalArgument() throws Exception {
-        URL getURL = new URL(notifyCommitURL + "?" + urlArgument + separator + branchArgument + separator + notifyCommitApiToken);
+        URL getURL = new URL(
+                notifyCommitURL + "?" + urlArgument + separator + branchArgument + separator + notifyCommitApiToken);
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
         connectionGET.connect();

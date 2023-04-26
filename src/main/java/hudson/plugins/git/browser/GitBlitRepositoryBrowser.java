@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -11,21 +12,19 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
-import net.sf.json.JSONObject;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import javax.servlet.ServletException;
+import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
 
@@ -42,8 +41,12 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         URL url = getUrl();
-        return new URL(url,
-                String.format(url.getPath() + "blobdiff?r=%s&h=%s&hb=%s", encodeString(projectName), path.getChangeSet().getId(),
+        return new URL(
+                url,
+                String.format(
+                        url.getPath() + "blobdiff?r=%s&h=%s&hb=%s",
+                        encodeString(projectName),
+                        path.getChangeSet().getId(),
                         path.getChangeSet().getParentCommit()));
     }
 
@@ -53,53 +56,60 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
             return null;
         }
         URL url = getUrl();
-        return new URL(url,
-                String.format(url.getPath() + "blob?r=%s&h=%s&f=%s", encodeString(projectName), path.getChangeSet().getId(),
+        return new URL(
+                url,
+                String.format(
+                        url.getPath() + "blob?r=%s&h=%s&f=%s",
+                        encodeString(projectName),
+                        path.getChangeSet().getId(),
                         encodeString(path.getPath())));
     }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, String.format(url.getPath() + "commit?r=%s&h=%s", encodeString(projectName), changeSet.getId()));
+        return new URL(
+                url, String.format(url.getPath() + "commit?r=%s&h=%s", encodeString(projectName), changeSet.getId()));
     }
 
     public String getProjectName() {
         return projectName;
     }
 
-     private String encodeString(final String s) {
+    private String encodeString(final String s) {
         return URLEncoder.encode(s, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
     }
 
     @Extension
     @Symbol("gitblit")
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Override
         @NonNull
         public String getDisplayName() {
             return "gitblit";
         }
 
         @Override
-        public GitBlitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
+        public GitBlitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject)
+                throws FormException {
+            assert req != null; // see inherited javadoc
             return req.bindJSON(GitBlitRepositoryBrowser.class, jsonObject);
         }
 
         @RequirePOST
-        public FormValidation doCheckRepoUrl(@AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
+        public FormValidation doCheckRepoUrl(
+                @AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-            if (initialChecksAndReturnOk(project, cleanUrl))
-            {
+            if (initialChecksAndReturnOk(project, cleanUrl)) {
                 return FormValidation.ok();
             }
-            if (!validateUrl(cleanUrl))
-            {
+            if (!validateUrl(cleanUrl)) {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {
+                @Override
                 protected FormValidation check() throws IOException, ServletException {
                     String v = cleanUrl;
                     if (!v.endsWith("/")) {

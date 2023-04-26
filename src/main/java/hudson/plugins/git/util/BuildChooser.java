@@ -7,19 +7,18 @@ import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import jenkins.model.Jenkins;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
-import org.jenkinsci.plugins.gitclient.GitClient;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 /**
  * Interface defining an API to choose which revisions ought to be
@@ -79,10 +78,14 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws GitException on git error
      * @throws InterruptedException when interrupted
      */
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, @CheckForNull String singleBranch,
-                    @NonNull GitClient git, @NonNull TaskListener listener, 
-                    @NonNull BuildData buildData, @NonNull BuildChooserContext context) 
-                    throws GitException, IOException, InterruptedException {
+    public Collection<Revision> getCandidateRevisions(
+            boolean isPollCall,
+            @CheckForNull String singleBranch,
+            @NonNull GitClient git,
+            @NonNull TaskListener listener,
+            @NonNull BuildData buildData,
+            @NonNull BuildChooserContext context)
+            throws GitException, IOException, InterruptedException {
         // fallback to the previous signature
         @SuppressWarnings("deprecation")
         hudson.plugins.git.IGitAPI iGit = (hudson.plugins.git.IGitAPI) git;
@@ -118,12 +121,17 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws InterruptedException when interrupted
      */
     @Deprecated
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                               hudson.plugins.git.IGitAPI git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+    public Collection<Revision> getCandidateRevisions(
+            boolean isPollCall,
+            String singleBranch,
+            hudson.plugins.git.IGitAPI git,
+            TaskListener listener,
+            BuildData buildData,
+            BuildChooserContext context)
+            throws GitException, IOException, InterruptedException {
         // fallback to the previous signature
-        return getCandidateRevisions(isPollCall,singleBranch,git,listener,buildData);
+        return getCandidateRevisions(isPollCall, singleBranch, git, listener, buildData);
     }
-
 
     /**
      * @deprecated as of 1.1.17
@@ -143,8 +151,13 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws GitException on git error
      */
     @Deprecated
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                               hudson.plugins.git.IGitAPI git, TaskListener listener, BuildData buildData) throws GitException, IOException {
+    public Collection<Revision> getCandidateRevisions(
+            boolean isPollCall,
+            String singleBranch,
+            hudson.plugins.git.IGitAPI git,
+            TaskListener listener,
+            BuildData buildData)
+            throws GitException, IOException {
         throw new UnsupportedOperationException("getCandidateRevisions method must be overridden");
     }
 
@@ -191,7 +204,9 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws InterruptedException when interrupted
      * @return candidate revision. Can be an empty set to indicate that there's nothing to build.
      */
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
+    public Build prevBuildForChangelog(
+            String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context)
+            throws IOException, InterruptedException {
         @SuppressWarnings("deprecation")
         hudson.plugins.git.IGitAPI iGit = (hudson.plugins.git.IGitAPI) git;
         return prevBuildForChangelog(branch, data, iGit, context);
@@ -223,25 +238,27 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws InterruptedException if interrupted
      */
     @Deprecated
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, hudson.plugins.git.IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
-        return prevBuildForChangelog(branch,data,git);
+    public Build prevBuildForChangelog(
+            String branch, @Nullable BuildData data, hudson.plugins.git.IGitAPI git, BuildChooserContext context)
+            throws IOException, InterruptedException {
+        return prevBuildForChangelog(branch, data, git);
     }
 
     /**
      * Returns build chooser descriptor.
      * @return build chooser descriptor
      */
+    @Override
     public BuildChooserDescriptor getDescriptor() {
-        return (BuildChooserDescriptor)Jenkins.get().getDescriptorOrDie(getClass());
+        return (BuildChooserDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
     }
 
     /**
      * All the registered build choosers.
      * @return all registered build choosers
      */
-    public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Jenkins.get()
-               .getDescriptorList(BuildChooser.class);
+    public static DescriptorExtensionList<BuildChooser, BuildChooserDescriptor> all() {
+        return Jenkins.get().getDescriptorList(BuildChooser.class);
     }
 
     /**
@@ -252,9 +269,10 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      */
     public static List<BuildChooserDescriptor> allApplicableTo(Item item) {
         List<BuildChooserDescriptor> result = new ArrayList<>();
-        for (BuildChooserDescriptor d: all()) {
-            if (d.isApplicable(item.getClass()))
+        for (BuildChooserDescriptor d : all()) {
+            if (d.isApplicable(item.getClass())) {
                 result.add(d);
+            }
         }
         return result;
     }
@@ -276,7 +294,8 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */
-    public void prepareWorkingTree(GitClient git, TaskListener listener, BuildChooserContext context) throws IOException,InterruptedException {
+    public void prepareWorkingTree(GitClient git, TaskListener listener, BuildChooserContext context)
+            throws IOException, InterruptedException {
         // Nop
     }
 }

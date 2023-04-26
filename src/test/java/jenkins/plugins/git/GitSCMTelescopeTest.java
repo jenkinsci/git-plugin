@@ -23,6 +23,11 @@
  */
 package jenkins.plugins.git;
 
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Item;
@@ -65,14 +70,10 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.acegisecurity.AccessDeniedException;
-import org.junit.Test;
-import static org.hamcrest.Matchers.*;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.hamcrest.MatcherAssert.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Test;
 
 public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
@@ -80,7 +81,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     /* REPO can be allocated once for the whole test suite so long as nothing changes it */
     @ClassRule
-    static public final GitSampleRepoRule READ_ONLY_REPO = new GitSampleRepoRule();
+    public static final GitSampleRepoRule READ_ONLY_REPO = new GitSampleRepoRule();
 
     private final String remote;
     private GitSCMTelescope telescope;
@@ -134,11 +135,8 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
      * @return GitSCM with a single branch in its definition
      */
     private GitSCM getSingleBranchSource(String repoUrl) {
-        UserRemoteConfig remoteConfig = new UserRemoteConfig(
-                repoUrl,
-                "origin",
-                "+refs/heads/master:refs/remotes/origin/master",
-                null);
+        UserRemoteConfig remoteConfig =
+                new UserRemoteConfig(repoUrl, "origin", "+refs/heads/master:refs/remotes/origin/master", null);
         List<UserRemoteConfig> remoteConfigList = new ArrayList<>();
         remoteConfigList.add(remoteConfig);
         BranchSpec masterBranchSpec = new BranchSpec("master");
@@ -147,11 +145,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         GitRepositoryBrowser browser = new GitWeb(repoUrl);
         String gitTool = "Default";
         List<GitSCMExtension> extensions = null;
-        GitSCM singleBranchSource = new GitSCM(remoteConfigList,
-                branchSpecList,
-                browser,
-                gitTool,
-                extensions);
+        GitSCM singleBranchSource = new GitSCM(remoteConfigList, branchSpecList, browser, gitTool, extensions);
         return singleBranchSource;
     }
 
@@ -323,8 +317,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     /* ********************* Test helper classes **************************** */
     private static class ItemImpl implements Item {
 
-        public ItemImpl() {
-        }
+        public ItemImpl() {}
 
         @Override
         public ItemGroup<? extends Item> getParent() {
@@ -450,11 +443,11 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     private static class SCMSourceImpl extends SCMSource {
 
-        public SCMSourceImpl() {
-        }
+        public SCMSourceImpl() {}
 
         @Override
-        protected void retrieve(SCMSourceCriteria scmsc, SCMHeadObserver scmho, SCMHeadEvent<?> scmhe, TaskListener tl) throws IOException, InterruptedException {
+        protected void retrieve(SCMSourceCriteria scmsc, SCMHeadObserver scmho, SCMHeadEvent<?> scmhe, TaskListener tl)
+                throws IOException, InterruptedException {
             throw new UnsupportedOperationException("Not called.");
         }
 
@@ -466,8 +459,8 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     private static class GitSCMTelescopeImpl extends GitSCMTelescope {
 
-        final private String allowedRemote;
-        final private SCMRevision revision;
+        private final String allowedRemote;
+        private final SCMRevision revision;
         private List<SCMRevision> revisionList = new ArrayList<>();
 
         public GitSCMTelescopeImpl(String allowedRemote, SCMRevision revision) {
@@ -508,11 +501,11 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         }
 
         @Override
-        public void validate(String remote, StandardCredentials credentials) throws IOException, InterruptedException {
-        }
+        public void validate(String remote, StandardCredentials credentials) throws IOException, InterruptedException {}
 
         @Override
-        public SCMFileSystem build(String remote, StandardCredentials credentials, SCMHead head, SCMRevision rev) throws IOException, InterruptedException {
+        public SCMFileSystem build(String remote, StandardCredentials credentials, SCMHead head, SCMRevision rev)
+                throws IOException, InterruptedException {
             GitClient client = null;
             AbstractGitSCMSource.SCMRevisionImpl myRev = null;
             if (rev != null) {
@@ -523,22 +516,27 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         }
 
         @Override
-        public long getTimestamp(String remote, StandardCredentials credentials, String refOrHash) throws IOException, InterruptedException {
+        public long getTimestamp(String remote, StandardCredentials credentials, String refOrHash)
+                throws IOException, InterruptedException {
             return 12345L;
         }
 
         @Override
-        public SCMRevision getRevision(String remote, StandardCredentials credentials, String refOrHash) throws IOException, InterruptedException {
+        public SCMRevision getRevision(String remote, StandardCredentials credentials, String refOrHash)
+                throws IOException, InterruptedException {
             return revision;
         }
 
         @Override
-        public Iterable<SCMRevision> getRevisions(String remote, StandardCredentials credentials, Set<ReferenceType> referenceTypes) throws IOException, InterruptedException {
+        public Iterable<SCMRevision> getRevisions(
+                String remote, StandardCredentials credentials, Set<ReferenceType> referenceTypes)
+                throws IOException, InterruptedException {
             return revisionList;
         }
 
         @Override
-        public String getDefaultTarget(String remote, StandardCredentials credentials) throws IOException, InterruptedException {
+        public String getDefaultTarget(String remote, StandardCredentials credentials)
+                throws IOException, InterruptedException {
             return "";
         }
     }

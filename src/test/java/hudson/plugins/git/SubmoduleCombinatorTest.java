@@ -1,5 +1,7 @@
 package hudson.plugins.git;
 
+import static org.junit.Assert.*;
+
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
@@ -13,7 +15,6 @@ import java.util.Map;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,13 +23,13 @@ public class SubmoduleCombinatorTest {
 
     private SubmoduleCombinator combinator = null;
 
-    public SubmoduleCombinatorTest() {
-    }
+    public SubmoduleCombinatorTest() {}
 
     @Before
     public void setUp() throws IOException, InterruptedException {
         TaskListener listener = StreamTaskListener.fromStderr();
-        GitClient gitClient = Git.with(listener, new EnvVars()).in(new File(".")).getClient();
+        GitClient gitClient =
+                Git.with(listener, new EnvVars()).in(new File(".")).getClient();
         Collection<SubmoduleConfig> cfg = null;
         combinator = new SubmoduleCombinator(gitClient, listener, cfg);
     }

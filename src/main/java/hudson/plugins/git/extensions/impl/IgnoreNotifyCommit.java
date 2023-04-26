@@ -12,8 +12,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class IgnoreNotifyCommit extends FakeGitSCMExtension {
     @DataBoundConstructor
-    public IgnoreNotifyCommit() {
-    }
+    public IgnoreNotifyCommit() {}
 
     /**
      * {@inheritDoc}

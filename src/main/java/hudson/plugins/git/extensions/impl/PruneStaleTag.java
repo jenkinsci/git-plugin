@@ -32,14 +32,13 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import net.sf.json.JSONObject;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
+import net.sf.json.JSONObject;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -86,11 +85,9 @@ public class PruneStaleTag extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
-    public void decorateFetchCommand(GitSCM scm,
-                                     @CheckForNull Run<?, ?> run,
-                                     GitClient git,
-                                     TaskListener listener,
-                                     FetchCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateFetchCommand(
+            GitSCM scm, @CheckForNull Run<?, ?> run, GitClient git, TaskListener listener, FetchCommand cmd)
+            throws IOException, InterruptedException, GitException {
 
         if (!pruneTags) {
             return;
@@ -116,7 +113,8 @@ public class PruneStaleTag extends GitSCMExtension {
                         remoteTagName = remoteTagName.substring(TAG_REF.length());
                     }
                     ObjectId remoteTagId = ref.getValue();
-                    if (localTags.containsKey(remoteTagName) && localTags.get(remoteTagName).equals(remoteTagId)) {
+                    if (localTags.containsKey(remoteTagName)
+                            && localTags.get(remoteTagName).equals(remoteTagId)) {
                         localTags.remove(remoteTagName);
                     }
                 }

@@ -1,5 +1,7 @@
 package hudson.plugins.git.util;
 
+import static hudson.Util.fixNull;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
@@ -9,6 +11,8 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +20,8 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -24,11 +30,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import static hudson.Util.fixNull;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 /**
  * Captures the Git related information for a build.
  *
@@ -70,8 +71,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     @CheckForNull
     private Integer index;
 
-    public BuildData() {
-    }
+    public BuildData() {}
 
     public BuildData(String scmName) {
         this.scmName = scmName;
@@ -79,7 +79,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs) {
         this.scmName = scmName;
-        for(UserRemoteConfig c : remoteConfigs) {
+        for (UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
         }
     }
@@ -95,19 +95,20 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     @Override
     public String getDisplayName() {
-        if (scmName != null && !scmName.isEmpty())
+        if (scmName != null && !scmName.isEmpty()) {
             return "Git Build Data:" + scmName;
+        }
         return "Git Build Data";
     }
 
     @Override
     public String getIconFileName() {
-        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-icon.svg";
+        return jenkins.model.Jenkins.RESOURCE_PATH + "/plugin/git/icons/git-icon.svg";
     }
 
     @Override
     public String getUrlName() {
-        return index == null ? "git" : "git-"+index;
+        return index == null ? "git" : "git-" + index;
     }
 
     /**
@@ -131,7 +132,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Restricted(NoExternalUse.class) // only used from stapler/jelly
     @CheckForNull
-    public Run<?,?> getOwningRun() {
+    public Run<?, ?> getOwningRun() {
         StaplerRequest req = Stapler.getCurrentRequest();
         if (req == null) {
             return null;
@@ -140,7 +141,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Object readResolve() {
-        Map<String,Build> newBuildsByBranchName = new HashMap<>();
+        Map<String, Build> newBuildsByBranchName = new HashMap<>();
 
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = fixNull(buildByBranchName.getKey());
@@ -150,8 +151,9 @@ public class BuildData implements Action, Serializable, Cloneable {
 
         this.buildsByBranchName = newBuildsByBranchName;
 
-        if(this.remoteUrls == null)
+        if (this.remoteUrls == null) {
             this.remoteUrls = new HashSet<>();
+        }
 
         return this;
     }
@@ -163,7 +165,7 @@ public class BuildData implements Action, Serializable, Cloneable {
      * @return true if sha1 has been built
      */
     public boolean hasBeenBuilt(ObjectId sha1) {
-    	return getLastBuild(sha1) != null;
+        return getLastBuild(sha1) != null;
     }
 
     public Build getLastBuild(ObjectId sha1) {
@@ -177,11 +179,16 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ObjectId lastBuildRevisionSha1 = lastBuild.revision.getSha1();
                 if (lastBuildRevisionSha1 != null) {
                     if (lastBuildRevisionSha1.equals(sha1)) {
-                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1 matches sha1:{0}, returning lastBuild", sha1.getName());
+                        LOGGER.log(
+                                Level.FINEST,
+                                "lastBuildRevisionSha1 matches sha1:{0}, returning lastBuild",
+                                sha1.getName());
                         return lastBuild;
                     } else {
-                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1: {0} does not match sha1:{1}, checking lastBuild.marked",
-                                new Object[]{lastBuildRevisionSha1.getName(), sha1.getName()});
+                        LOGGER.log(
+                                Level.FINEST,
+                                "lastBuildRevisionSha1: {0} does not match sha1:{1}, checking lastBuild.marked",
+                                new Object[] {lastBuildRevisionSha1.getName(), sha1.getName()});
                     }
                 } else {
                     LOGGER.log(Level.FINEST, "lastBuild.revision.getSha1() is null, checking lastBuild.marked");
@@ -193,11 +200,15 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ObjectId lastBuildMarkedSha1 = lastBuild.marked.getSha1();
                 if (lastBuildMarkedSha1 != null) {
                     if (lastBuildMarkedSha1.equals(sha1)) {
-                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1 matches sha1:{0}, returning lastBuild", sha1.getName());
+                        LOGGER.log(
+                                Level.FINEST,
+                                "lastBuildMarkedSha1 matches sha1:{0}, returning lastBuild",
+                                sha1.getName());
                         return lastBuild;
                     } else {
-                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1: {0} does not match sha1:{1}",
-                                new Object[]{lastBuildMarkedSha1.getName(), sha1.getName()});
+                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1: {0} does not match sha1:{1}", new Object[] {
+                            lastBuildMarkedSha1.getName(), sha1.getName()
+                        });
                     }
                 } else {
                     LOGGER.log(Level.FINEST, "lastBuild.marked.getSha1() is null");
@@ -230,11 +241,11 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public void saveBuild(Build build) {
-    	lastBuild = build;
-    	for(Branch branch : build.marked.getBranches()) {
+        lastBuild = build;
+        for (Branch branch : build.marked.getBranches()) {
             buildsByBranchName.put(fixNull(branch.getName()), build);
-    	}
-        for(Branch branch : build.revision.getBranches()) {
+        }
+        for (Branch branch : build.revision.getBranches()) {
             buildsByBranchName.put(fixNull(branch.getName()), build);
         }
     }
@@ -250,24 +261,23 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     @Exported
     public @CheckForNull Revision getLastBuiltRevision() {
-        return lastBuild==null?null:lastBuild.revision;
+        return lastBuild == null ? null : lastBuild.revision;
     }
 
     @Exported
-    public Map<String,Build> getBuildsByBranchName() {
+    public Map<String, Build> getBuildsByBranchName() {
         return buildsByBranchName;
     }
 
-    public void setScmName(String scmName)
-    {
+    public void setScmName(String scmName) {
         this.scmName = scmName;
     }
 
     @Exported
-    public String getScmName()
-    {
-        if (scmName == null)
+    public String getScmName() {
+        if (scmName == null) {
             scmName = "";
+        }
         return scmName;
     }
 
@@ -276,7 +286,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     @Exported
-    public  Set<String> getRemoteUrls() {
+    public Set<String> getRemoteUrls() {
         return remoteUrls;
     }
 
@@ -289,8 +299,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         BuildData clone;
         try {
             clone = (BuildData) super.clone();
-        }
-        catch (CloneNotSupportedException e) {
+        } catch (CloneNotSupportedException e) {
             throw new RuntimeException("Error cloning BuildData", e);
         }
 
@@ -321,8 +330,7 @@ public class BuildData implements Action, Serializable, Cloneable {
             }
         }
 
-        for(String remoteUrl : getRemoteUrls())
-        {
+        for (String remoteUrl : getRemoteUrls()) {
             clone.addRemoteUrl(remoteUrl);
         }
 
@@ -336,10 +344,10 @@ public class BuildData implements Action, Serializable, Cloneable {
     @Override
     public String toString() {
         final String scmNameString = scmName == null ? "<null>" : scmName;
-        return super.toString()+"[scmName="+scmNameString+
-                ",remoteUrls="+remoteUrls+
-                ",buildsByBranchName="+buildsByBranchName+
-                ",lastBuild="+lastBuild+"]";
+        return super.toString() + "[scmName=" + scmNameString + ",remoteUrls="
+                + remoteUrls + ",buildsByBranchName="
+                + buildsByBranchName + ",lastBuild="
+                + lastBuild + "]";
     }
 
     /**
@@ -392,11 +400,11 @@ public class BuildData implements Action, Serializable, Cloneable {
             return false;
         }
         Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());
-        for (String url: this.remoteUrls) {
+        for (String url : this.remoteUrls) {
             thisUrls.add(normalize(url));
         }
         Set<String> thatUrls = new HashSet<>(that.remoteUrls.size());
-        for (String url: that.remoteUrls) {
+        for (String url : that.remoteUrls) {
             thatUrls.add(normalize(url));
         }
         return thisUrls.equals(thatUrls);

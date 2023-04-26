@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.EnvVars;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -7,10 +8,6 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
-
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-
 import java.io.IOException;
 import java.net.IDN;
 import java.net.InetAddress;
@@ -24,8 +21,8 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
@@ -33,8 +30,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     private static final Logger LOGGER = Logger.getLogger(GitRepositoryBrowser.class.getName());
 
     @Deprecated
-    protected GitRepositoryBrowser() {
-    }
+    protected GitRepositoryBrowser() {}
 
     protected GitRepositoryBrowser(String repourl) {
         this.url = repourl;
@@ -62,8 +58,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
 
         if (getNormalizeUrl()) {
             return normalizeToEndWithSlash(new URL(u));
-        }
-        else {
+        } else {
             return new URL(u);
         }
     }
@@ -108,13 +103,13 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
 
     /**
      * Determines whether a URL should be normalized
-	 * Overridden in the rare case where it shouldn't
+     * Overridden in the rare case where it shouldn't
      *
      * @return True if the URL should be normalized
      */
     protected boolean getNormalizeUrl() {
-		return true;
-	}
+        return true;
+    }
 
     /**
      * Calculate the index of the given path in a
@@ -125,26 +120,34 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException on input or output error
      */
     protected int getIndexOfPath(Path path) throws IOException {
-    	final String pathAsString = path.getPath();
-    	final GitChangeSet changeSet = path.getChangeSet();
-    	int i = 0;
-    	for (String affected : changeSet.getAffectedPaths())
-    	{
-		if (affected.compareTo(pathAsString) < 0)
-    			i++;
-    	}
+        final String pathAsString = path.getPath();
+        final GitChangeSet changeSet = path.getChangeSet();
+        int i = 0;
+        for (String affected : changeSet.getAffectedPaths()) {
+            if (affected.compareTo(pathAsString) < 0) {
+                i++;
+            }
+        }
         return i;
     }
 
     public static URL encodeURL(URL url) throws IOException {
         try {
-            return new URI(url.getProtocol(), url.getUserInfo(), IDN.toASCII(url.getHost()), url.getPort(), url.getPath(), url.getQuery(), url.getRef()).toURL();
+            return new URI(
+                            url.getProtocol(),
+                            url.getUserInfo(),
+                            IDN.toASCII(url.getHost()),
+                            url.getPort(),
+                            url.getPath(),
+                            url.getQuery(),
+                            url.getRef())
+                    .toURL();
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
     }
 
-    protected static boolean initialChecksAndReturnOk(Item project, String cleanUrl){
+    protected static boolean initialChecksAndReturnOk(Item project, String cleanUrl) {
         if (cleanUrl == null) {
             return true;
         }

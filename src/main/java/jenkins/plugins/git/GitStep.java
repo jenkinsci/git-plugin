@@ -82,7 +82,12 @@ public final class GitStep extends SCMStep {
 
     @Override
     public SCM createSCM() {
-        return new GitSCM(GitSCM.createRepoList(url, credentialsId), Collections.singletonList(new BranchSpec("*/" + branch)), null, null, Collections.singletonList(new LocalBranch(branch)));
+        return new GitSCM(
+                GitSCM.createRepoList(url, credentialsId),
+                Collections.singletonList(new BranchSpec("*/" + branch)),
+                null,
+                null,
+                Collections.singletonList(new LocalBranch(branch)));
     }
 
     @Extension
@@ -91,16 +96,15 @@ public final class GitStep extends SCMStep {
         @Inject
         private UserRemoteConfig.DescriptorImpl delegate;
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
-                                                     @QueryParameter String url,
-                                                     @QueryParameter String credentialsId) {
+        public ListBoxModel doFillCredentialsIdItems(
+                @AncestorInPath Item project, @QueryParameter String url, @QueryParameter String credentialsId) {
             return delegate.doFillCredentialsIdItems(project, url, credentialsId);
         }
 
         @RequirePOST
-        public FormValidation doCheckUrl(@AncestorInPath Item item,
-                                         @QueryParameter String credentialsId,
-                                         @QueryParameter String value) throws IOException, InterruptedException {
+        public FormValidation doCheckUrl(
+                @AncestorInPath Item item, @QueryParameter String credentialsId, @QueryParameter String value)
+                throws IOException, InterruptedException {
             return delegate.doCheckUrl(item, credentialsId, value);
         }
 
@@ -113,7 +117,5 @@ public final class GitStep extends SCMStep {
         public String getDisplayName() {
             return Messages.GitStep_git();
         }
-
     }
-
 }

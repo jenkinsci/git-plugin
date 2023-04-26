@@ -7,8 +7,6 @@ public class SparseCheckoutPathTest {
 
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(SparseCheckoutPath.class)
-                .usingGetClass()
-                .verify();
+        EqualsVerifier.forClass(SparseCheckoutPath.class).usingGetClass().verify();
     }
 }
