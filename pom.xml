@@ -28,17 +28,26 @@
       <id>markewaite</id>
       <name>Mark Waite</name>
       <email>mark.earl.waite@gmail.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
     </developer>
     <developer>
       <id>rsandell</id>
       <name>Robert Sandell</name>
       <email>rsandell@cloudbees.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
       <url>http://rsandell.com</url>
     </developer>
     <developer>
       <id>mramonleon</id>
       <name>M Ramon Leon</name>
       <email>rleon@cloudbees.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
     </developer>
     <developer>
       <id>olamy</id>
