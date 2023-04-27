@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
@@ -12,15 +13,13 @@
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Git plugin</name>
-  <description>Integrates Jenkins with Git SCM</description>
-  <url>https://github.com/jenkinsci/git-plugin</url>
+  <url>https://github.com/${gitHubRepo}</url>
   <inceptionYear>2007</inceptionYear>
 
   <licenses>
     <license>
-      <name>The MIT License (MIT)</name>
+      <name>MIT License</name>
       <url>https://opensource.org/licenses/MIT</url>
-      <distribution>repo</distribution>
     </license>
   </licenses>
 
@@ -47,11 +46,14 @@
       <email>olamy@apache.org</email>
       <url>https://about.me/olamy</url>
       <timezone>Australia/Brisbane</timezone>
+      <roles>
+        <role>developer</role>
+      </roles>
     </developer>
   </developers>
 
-  <scm>
-    <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+    <connection>scm:git:https://github.com/${gitHubRepo}</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <tag>${scmTag}</tag>
     <url>https://github.com/${gitHubRepo}</url>
@@ -83,7 +85,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -255,6 +256,7 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
+
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
