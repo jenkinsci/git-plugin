@@ -81,12 +81,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- Added to satisfy upper bounds checks from enforcer in parent pom 4.55 -->
-      <dependency>
-        <groupId>net.bytebuddy</groupId>
-        <artifactId>byte-buddy</artifactId>
-        <version>1.14.4</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
