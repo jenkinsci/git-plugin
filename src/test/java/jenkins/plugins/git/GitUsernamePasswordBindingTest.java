@@ -325,7 +325,7 @@ public class GitUsernamePasswordBindingTest {
         prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
                 singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID))));
         prj.getBuildersList().add(isWindows()
-                ? new BatchFile(tempScriptFile.getRemote())
+                ? new BatchFile(tempScriptFile.getRemote() + " Username")
                 : new Shell("sh " + tempScriptFile.getRemote()));
         r.configRoundtrip((Item) prj);
 
