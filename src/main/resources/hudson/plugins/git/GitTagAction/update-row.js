@@ -1,6 +1,6 @@
 function updateRow(e, i) {
     e.parentNode.parentNode.style.color = e.checked ? "inherit" : "grey";
-    $("name"+i).disabled = !e.checked;
+    document.getElementById("name"+i).disabled = !e.checked;
 }
 
 // Adding an onchange listener to the tag checkboxes in UI
