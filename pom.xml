@@ -36,10 +36,10 @@
       <id>rsandell</id>
       <name>Robert Sandell</name>
       <email>rsandell@cloudbees.com</email>
+      <url>http://rsandell.com</url>
       <roles>
         <role>developer</role>
       </roles>
-      <url>http://rsandell.com</url>
     </developer>
     <developer>
       <id>mramonleon</id>
@@ -54,10 +54,10 @@
       <name>Olivier Lamy</name>
       <email>olamy@apache.org</email>
       <url>https://about.me/olamy</url>
-      <timezone>Australia/Brisbane</timezone>
       <roles>
         <role>developer</role>
       </roles>
+      <timezone>Australia/Brisbane</timezone>
     </developer>
   </developers>
 
