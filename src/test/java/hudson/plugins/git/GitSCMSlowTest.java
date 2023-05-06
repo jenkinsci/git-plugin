@@ -153,10 +153,11 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         assertTrue(scm.getExtensions().toList().contains(localBranchExtension));
 
         /* Save the configuration */
-        rule.configRoundtrip(p);
+        p = rule.configRoundtrip(p);
         List<GitSCMExtension> extensions = scm.getExtensions().toList();
         assertTrue(extensions.contains(localBranchExtension));
         assertEquals("Wrong extension count before reload", 1, extensions.size());
+        rule.assertEqualDataBoundBeans(browser, p.getScm().getBrowser());
 
         /* Reload configuration from disc */
         p.doReload();
@@ -165,6 +166,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         assertEquals("Wrong extension count after reload", 1, reloadedExtensions.size());
         LocalBranch reloadedLocalBranch = (LocalBranch) reloadedExtensions.get(0);
         assertEquals(localBranchExtension.getLocalBranch(), reloadedLocalBranch.getLocalBranch());
+        rule.assertEqualDataBoundBeans(browser, reloadedGit.getBrowser());
     }
 
     /*
