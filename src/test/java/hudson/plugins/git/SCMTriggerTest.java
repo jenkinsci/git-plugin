@@ -47,7 +47,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
     @ClassRule
     public static Stopwatch stopwatch = new Stopwatch();
 
-    private static final int MAX_SECONDS_FOR_THESE_TESTS = 1801;
+    private static final int MAX_SECONDS_FOR_THESE_TESTS = 120;
 
     private boolean isTimeAvailable() {
         String env = System.getenv("CI");
