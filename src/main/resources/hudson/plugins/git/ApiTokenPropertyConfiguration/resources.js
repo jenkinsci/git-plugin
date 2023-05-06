@@ -20,7 +20,7 @@ function revokeApiToken(anchorRevoke) {
     const apiTokenUuid = inputUuid.value;
 
     if (confirm(confirmMessage)) {
-        fetch(url + "?" + new URLSearchParams({apiTokenUuid: apiTokenUuid}), {
+        fetch(targetUrl + "?" + new URLSearchParams({apiTokenUuid: apiTokenUuid}), {
             headers: crumb.wrap({}),
             method: "post",
         }).then((rsp) => {
