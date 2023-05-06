@@ -1518,7 +1518,6 @@ Report issues and enhancements in the link:https://www.jenkins.io/participate/re
 == Contributing to the Plugin
 
 Refer to link:CONTRIBUTING.adoc#contributing-to-the-git-plugin[contributing to the plugin] for contribution guidelines.
-Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin development priorities] for the prioritized list of development topics.
 
 == Remove Git Plugin BuildsByBranch BuildData Script
 
