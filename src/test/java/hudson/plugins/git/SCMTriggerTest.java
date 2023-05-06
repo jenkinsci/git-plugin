@@ -208,33 +208,6 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "detached");
     }
 
-    @Issue("JENKINS-29796")
-    // @Test
-    public void testMultipleRefspecs() throws Exception {
-        final String remote = prepareRepo(namespaceRepoZip);
-        final UserRemoteConfig remoteConfig = new UserRemoteConfig(remote, "origin",
-                "+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*", null);
-        // First, build the master branch
-        String branchSpec = "refs/heads/master";
-        FreeStyleProject project = setupProject(Collections.singletonList(remoteConfig),
-                Collections.singletonList(new BranchSpec(branchSpec)),
-                //empty scmTriggerSpec, SCMTrigger triggered manually
-                "", isDisableRemotePoll(), getGitClient());
-        triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
-        FreeStyleBuild build1 = waitForBuildFinished(project, 1, 60000);
-        assertNotNull("Job has not been triggered", build1);
-
-        // Now switch request a different branch
-        GitSCM scm = (GitSCM) project.getScm();
-        scm.getBranches().set(0,new BranchSpec("b_namespace3/master"));
-        TaskListener listener = StreamTaskListener.fromStderr();
-
-        // Since the new branch has an additional commit, polling should report changes. Without the fix for
-        // JENKINS-29796, this assertion fails.
-        PollingResult poll = project.poll(listener);
-        assertTrue("Expected and actual polling results disagree", poll.hasChanges());
-    }
-
     public void check(ZipFile repoZip, Properties commits, String branchSpec,
             String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
         String remote = prepareRepo(repoZip);
