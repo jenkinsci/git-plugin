@@ -206,7 +206,8 @@ public class CredentialsUserRemoteConfigTest {
     private String randomPipelineCheckoutExtras() throws Exception {
         String[] browsers = {
             "",
-            "[$class: 'AssemblaWeb', repoUrl: 'https://app.assembla.com/spaces/git-plugin/git/source']",
+            // Assembla now requires login to access their URLs
+            // "[$class: 'AssemblaWeb', repoUrl: 'https://app.assembla.com/spaces/git-plugin/git/source']",
             "[$class: 'BitbucketWeb', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
             "[$class: 'CGit', repoUrl: 'https://git.zx2c4.com/cgit']",
             "[$class: 'FisheyeGitRepositoryBrowser', repoUrl: 'https://fisheye.apache.org/browse/ant-git']",
@@ -225,7 +226,8 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
             "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin']",
             "[$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value']",
-            "assembla('https://app.assembla.com/spaces/git-plugin/git/source')",
+            // Assembla now requires login to access their URLs
+            // "assembla('https://app.assembla.com/spaces/git-plugin/git/source')",
             "bitbucket('https://markewaite@bitbucket.org/markewaite/git-plugin')",
             "cgit('https://git.zx2c4.com/cgit')",
             "fisheye('https://fisheye.apache.org/browse/ant-git')",

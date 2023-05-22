@@ -90,7 +90,8 @@ public class MultibranchProjectTraitsTest {
      */
     private String randomBrowserSymbolName() {
         String[] browsersBySymbolName = {
-                "    browser: assembla('https://app.assembla.com/spaces/git-plugin/git/source'),\n",
+                // Assembla now requires login to access the space
+                // "    browser: assembla('https://app.assembla.com/spaces/git-plugin/git/source'),\n",
                 "    browser: bitbucket('https://markewaite@bitbucket.org/markewaite/git-plugin'),\n",
                 "    browser: cgit('https://git.zx2c4.com/cgit'),\n",
                 "    browser: fisheye('https://fisheye.apache.org/browse/ant-git'),\n",

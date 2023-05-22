@@ -26,12 +26,6 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testInitialChecksOnRepoUrl() throws Exception {
-        String url = "https://app.assembla.com/spaces/git-plugin/git/source";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
-    }
-
-    @Test
     public void testInitialChecksOnRepoUrlEmpty() throws Exception {
         String url = "";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
