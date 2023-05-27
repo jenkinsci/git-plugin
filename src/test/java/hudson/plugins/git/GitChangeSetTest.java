@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.tasks.Mailer;
 import hudson.tasks.Mailer.UserProperty;
@@ -12,9 +13,11 @@ import org.springframework.security.authentication.DisabledException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Random;
+import jenkins.plugins.git.JenkinsRuleUtil;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -27,6 +30,14 @@ public class GitChangeSetTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     private final Random random = new Random();
+
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(jenkins.getWebAppRoot(), listener);
+        if (jenkins.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(jenkins.jenkins.getRootDir(), listener);
+        }
+    }
 
     @Test
     public void testFindOrCreateUser() {

@@ -47,6 +47,8 @@ import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Before;
 import org.junit.Rule;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.JenkinsRuleUtil;
+import org.junit.After;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
@@ -89,6 +91,14 @@ public abstract class AbstractGitTestCase {
         workDir = testRepo.gitDir;
         workspace = testRepo.gitDirPath;
         git = testRepo.git;
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(rule.getWebAppRoot(), listener);
+        if (rule.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(rule.jenkins.getRootDir(), listener);
+        }
     }
 
     protected String commit(final String fileName, final PersonIdent committer, final String message)

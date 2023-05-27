@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git;
 
+import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CheckoutOption;
@@ -31,8 +32,10 @@ import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
 import org.jenkinsci.plugins.workflow.steps.scm.GenericSCMStep;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -74,6 +77,14 @@ public class CheckoutStepSnippetizerTest {
 
     /* Tested values common to many tests */
     private final String remoteConfig = "userRemoteConfigs: [[url: '" + url + "']]";
+
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
+    }
 
     @Test
     public void checkoutSimplest() throws Exception {

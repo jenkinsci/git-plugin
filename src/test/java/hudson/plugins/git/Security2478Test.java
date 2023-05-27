@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -13,6 +14,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
+import jenkins.plugins.git.JenkinsRuleUtil;
 
 import static org.junit.Assert.assertFalse;
 
@@ -33,6 +35,14 @@ public class Security2478Test {
     @After
     public void disallowNonRemoteCheckout() {
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
+    }
+
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(rule.getWebAppRoot(), listener);
+        if (rule.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(rule.jenkins.getRootDir(), listener);
+        }
     }
 
     @Issue("SECURITY-2478")

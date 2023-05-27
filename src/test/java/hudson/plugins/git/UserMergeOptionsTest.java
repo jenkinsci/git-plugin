@@ -1,14 +1,17 @@
 package hudson.plugins.git;
 
+import hudson.model.TaskListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.ClassRule;
@@ -53,6 +56,14 @@ public class UserMergeOptionsTest {
                 mergeStrategy == null ? null : mergeStrategy.toString(),
                 fastForwardMode);
         deprecatedOptions = defineDeprecatedOptions(mergeRemote, mergeTarget, mergeStrategy);
+    }
+
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
     }
 
     @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}")

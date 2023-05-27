@@ -31,6 +31,7 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.plugins.git.extensions.impl.PathRestriction;
@@ -48,10 +49,12 @@ import java.util.Collections;
 import java.util.List;
 
 import jenkins.MasterToSlaveFileCallable;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import org.eclipse.jgit.lib.Repository;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.junit.After;
 
 import static org.junit.Assert.assertTrue;
 
@@ -73,6 +76,15 @@ public class AbstractGitProject extends AbstractGitRepository {
     @Rule
     public FlagRule<String> notifyCommitAccessControl =
             new FlagRule<>(() -> GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL, x -> GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = x);
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(jenkins.getWebAppRoot(), listener);
+        if (jenkins.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(jenkins.jenkins.getRootDir(), listener);
+        }
+    }
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();

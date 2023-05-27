@@ -17,6 +17,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.Collections;
 import java.util.List;
+import jenkins.plugins.git.JenkinsRuleUtil;
 
 /**
  * @author Kanstantsin Shautsou
@@ -50,6 +51,15 @@ public abstract class GitSCMExtensionTest {
 	public void disallowNonRemoteCheckout() {
 		GitSCM.ALLOW_LOCAL_CHECKOUT = false;
 	}
+
+        @After
+        public void makeFilesWritable() throws Exception {
+            JenkinsRuleUtil.makeFilesWritable(tmp.getRoot(), listener);
+            JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+            if (j.jenkins != null) {
+                JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+            }
+        }
 
 	protected abstract void before() throws Exception;
 

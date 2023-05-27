@@ -24,9 +24,12 @@
 package hudson.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.TaskListener;
 import java.util.Random;
 import jenkins.plugins.git.GitStep;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -47,6 +50,14 @@ public class GitStepSnippetizerTest {
 
     private final String url = "https://github.com/jenkinsci/git-plugin.git";
     private final GitStep gitStep = new GitStep(url);
+
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
+    }
 
     /* Adding the default values to the step should not alter the output of the
      * round trip.

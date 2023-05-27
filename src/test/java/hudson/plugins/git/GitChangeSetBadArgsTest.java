@@ -1,8 +1,12 @@
 package hudson.plugins.git;
 
+import hudson.model.TaskListener;
 import java.util.ArrayList;
 
 import hudson.model.User;
+import static hudson.plugins.git.CheckoutStepSnippetizerTest.r;
+import jenkins.plugins.git.JenkinsRuleUtil;
+import org.junit.After;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -14,6 +18,14 @@ public class GitChangeSetBadArgsTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(jenkins.getWebAppRoot(), listener);
+        if (jenkins.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(jenkins.jenkins.getRootDir(), listener);
+        }
+    }
 
     private GitChangeSet createChangeSet(boolean authorOrCommitter, String name, String email) {
         String dataSource = authorOrCommitter ? "Author" : "Committer";

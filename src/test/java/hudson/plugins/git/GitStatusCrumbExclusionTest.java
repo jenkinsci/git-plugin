@@ -1,10 +1,12 @@
 package hudson.plugins.git;
 
+import hudson.model.TaskListener;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import jenkins.plugins.git.JenkinsRuleUtil;
 
 import org.junit.After;
 import org.junit.Before;
@@ -77,6 +79,14 @@ public class GitStatusCrumbExclusionTest {
     @After
     public void disconnectFromPOST() {
         connectionPOST.disconnect();
+    }
+
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
     }
 
     /*
