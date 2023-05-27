@@ -16,7 +16,7 @@ import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -45,11 +45,12 @@ public class CloneOptionDepthTest {
         this.usedDepth = usedDepth;
     }
 
-    @After
-    public void makeFilesWritable() throws Exception {
-        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+    @AfterClass
+    public static void makeFilesWritable() throws Exception {
+        TaskListener myListener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), myListener);
         if (j.jenkins != null) {
-            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), myListener);
         }
     }
 

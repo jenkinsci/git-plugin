@@ -17,6 +17,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import org.junit.AfterClass;
 
 /**
  * Check that no crumb is required for successful calls to notifyCommit.
@@ -81,8 +82,8 @@ public class GitStatusCrumbExclusionTest {
         connectionPOST.disconnect();
     }
 
-    @After
-    public void makeFilesWritable() throws Exception {
+    @AfterClass
+    public static void makeFilesWritable() throws Exception {
         TaskListener listener = TaskListener.NULL;
         JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
         if (r.jenkins != null) {

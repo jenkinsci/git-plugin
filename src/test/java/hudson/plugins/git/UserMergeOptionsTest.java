@@ -11,7 +11,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.ClassRule;
@@ -58,8 +58,8 @@ public class UserMergeOptionsTest {
         deprecatedOptions = defineDeprecatedOptions(mergeRemote, mergeTarget, mergeStrategy);
     }
 
-    @After
-    public void makeFilesWritable() throws Exception {
+    @AfterClass
+    public static void makeFilesWritable() throws Exception {
         TaskListener listener = TaskListener.NULL;
         JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
         if (r.jenkins != null) {

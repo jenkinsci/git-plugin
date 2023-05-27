@@ -37,7 +37,6 @@ import static org.junit.Assert.assertTrue;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import jenkins.plugins.git.JenkinsRuleUtil;
-import org.junit.After;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -164,8 +163,8 @@ public class GitTagActionTest {
         }
     }
 
-    @After
-    public void makeFilesWritable() throws Exception {
+    @AfterClass
+    public static void makeFilesWritable() throws Exception {
         TaskListener listener = TaskListener.NULL;
         JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
         if (r.jenkins != null) {

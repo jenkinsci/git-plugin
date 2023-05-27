@@ -35,7 +35,7 @@ import java.util.Random;
 import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
 import org.jenkinsci.plugins.workflow.steps.scm.GenericSCMStep;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -78,8 +78,8 @@ public class CheckoutStepSnippetizerTest {
     /* Tested values common to many tests */
     private final String remoteConfig = "userRemoteConfigs: [[url: '" + url + "']]";
 
-    @After
-    public void makeFilesWritable() throws Exception {
+    @AfterClass
+    public static void makeFilesWritable() throws Exception {
         TaskListener listener = TaskListener.NULL;
         JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
         if (r.jenkins != null) {
