@@ -20,7 +20,8 @@ public class GitChangeSetBadArgsTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     @After
-    public void makeFilesWritable(TaskListener listener) throws Exception {
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
         JenkinsRuleUtil.makeFilesWritable(jenkins.getWebAppRoot(), listener);
         if (jenkins.jenkins != null) {
             JenkinsRuleUtil.makeFilesWritable(jenkins.jenkins.getRootDir(), listener);

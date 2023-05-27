@@ -38,7 +38,8 @@ public class Security2478Test {
     }
 
     @After
-    public void makeFilesWritable(TaskListener listener) throws Exception {
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
         JenkinsRuleUtil.makeFilesWritable(rule.getWebAppRoot(), listener);
         if (rule.jenkins != null) {
             JenkinsRuleUtil.makeFilesWritable(rule.jenkins.getRootDir(), listener);

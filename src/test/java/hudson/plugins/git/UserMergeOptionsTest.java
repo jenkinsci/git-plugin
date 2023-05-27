@@ -59,7 +59,8 @@ public class UserMergeOptionsTest {
     }
 
     @After
-    public void makeFilesWritable(TaskListener listener) throws Exception {
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
         JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
         if (r.jenkins != null) {
             JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
