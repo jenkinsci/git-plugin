@@ -44,7 +44,7 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
         this.repoURL = new File(".").getAbsolutePath();
         this.branch = "**";
         this.sha1 = "7bb68ef21dc90bd4f7b08eca876203b2e049198d";
-        if (jenkins.jenkins != null) {
+        if (r.jenkins != null) {
             this.notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         }
     }
@@ -58,8 +58,8 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
     @After
     public void waitForAllJobsToComplete() throws Exception {
         // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
-        if (jenkins != null && jenkins.jenkins != null) {
-            jenkins.jenkins.doQuietDown();
+        if (r != null && r.jenkins != null) {
+            r.jenkins.doQuietDown();
         }
         // JenkinsRule cleanup throws exceptions during tearDown.
         // Reduce exceptions by a random delay from 0.5 to 0.9 seconds.
@@ -72,10 +72,10 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
          * build logs will not be active when the cleanup process tries to
          * delete them.
          */
-        if (!isWindows() || jenkins == null || jenkins.jenkins == null) {
+        if (!isWindows() || r == null || r.jenkins == null) {
             return;
         }
-        View allView = jenkins.jenkins.getView("All");
+        View allView = r.jenkins.getView("All");
         if (allView == null) {
             return;
         }
@@ -86,7 +86,7 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
         runList.forEach((Run run) -> {
             try {
                 Logger.getLogger(GitStatusTheoriesTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
-                jenkins.waitForCompletion(run);
+                r.waitForCompletion(run);
             } catch (InterruptedException ex) {
                 Logger.getLogger(GitStatusTheoriesTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTheoriesTest job", ex);
             }
@@ -134,7 +134,7 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
     }
 
     private void setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
-        FreeStyleProject project = jenkins.createFreeStyleProject();
+        FreeStyleProject project = r.createFreeStyleProject();
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),

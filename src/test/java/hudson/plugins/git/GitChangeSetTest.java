@@ -24,7 +24,7 @@ import static org.mockito.Mockito.times;
 public class GitChangeSetTest {
 
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     private final Random random = new Random();
 
