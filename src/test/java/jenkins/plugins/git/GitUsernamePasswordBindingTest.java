@@ -52,6 +52,7 @@ import static org.junit.Assume.assumeTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import org.junit.After;
 
 @OrderWith(RandomOrder.class)
 @RunWith(Parameterized.class)
@@ -155,6 +156,15 @@ public class GitUsernamePasswordBindingTest {
         //Setting Git Tool
         Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getDefaultInstallers().clear();
         Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(gitToolInstance);
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
     }
 
     private String batchCheck(boolean includeCliCheck) {

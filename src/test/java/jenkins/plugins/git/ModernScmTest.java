@@ -25,6 +25,7 @@
 package jenkins.plugins.git;
 
 import hudson.ExtensionList;
+import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,11 +35,21 @@ import org.jvnet.hudson.test.JenkinsRule;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.After;
 
 public class ModernScmTest {
 
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
+    }
 
     @Test
     @Issue("JENKINS-58964")
