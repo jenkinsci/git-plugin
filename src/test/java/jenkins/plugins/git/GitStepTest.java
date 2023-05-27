@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Label;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTagAction;
 import hudson.plugins.git.util.BuildData;
@@ -56,6 +57,7 @@ import org.junit.runner.OrderWith;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import org.junit.After;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -74,6 +76,15 @@ public class GitStepTest {
     public static void setGitDefaults() throws Exception {
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
     }
 
     @ClassRule

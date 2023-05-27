@@ -1,9 +1,12 @@
 package hudson.plugins.git.browser;
 
+import hudson.model.TaskListener;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -14,6 +17,15 @@ public class GitLabWorkflowTest {
     public JenkinsRule r = new JenkinsRule();
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
+    }
 
     @Test
     public void checkoutWithVersion() throws Exception {

@@ -42,6 +42,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.io.FileMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -80,6 +81,15 @@ public class GitToolChooserTest {
     @Before
     public void resetRepositorySizeCache() {
         GitToolChooser.clearRepositorySizeCache();
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(jenkins.getWebAppRoot(), listener);
+        if (jenkins.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(jenkins.jenkins.getRootDir(), listener);
+        }
     }
 
     @ClassRule
