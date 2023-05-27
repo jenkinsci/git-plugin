@@ -4,6 +4,7 @@ import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import hudson.model.TaskListener;
 import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -15,9 +16,11 @@ import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import java.util.Collection;
 import java.util.Collections;
+import jenkins.plugins.git.JenkinsRuleUtil;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -33,6 +36,15 @@ public class ApiTokenPropertyConfigurationTest {
         authorizationStrategy.grant(Jenkins.ADMINISTER).everywhere().to("alice");
         authorizationStrategy.grant(Jenkins.READ).everywhere().to("bob");
         j.jenkins.setAuthorizationStrategy(authorizationStrategy);
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+        if (j.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+        }
     }
 
     @Test

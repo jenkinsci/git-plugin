@@ -50,6 +50,7 @@ import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.util.LogTaskListener;
+import jenkins.plugins.git.JenkinsRuleUtil;
 
 public class PruneStaleTagPipelineTest {
 
@@ -73,6 +74,14 @@ public class PruneStaleTagPipelineTest {
     @After
     public void disallowNonRemoteCheckout() {
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+        if (j.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+        }
     }
 
     @Issue("JENKINS-61869")

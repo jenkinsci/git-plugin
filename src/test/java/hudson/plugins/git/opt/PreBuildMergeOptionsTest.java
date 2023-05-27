@@ -25,12 +25,15 @@
 package hudson.plugins.git.opt;
 
 import hudson.model.FreeStyleProject;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import java.util.Collections;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.Rule;
 import org.jvnet.hudson.test.Issue;
@@ -39,6 +42,15 @@ import org.jvnet.hudson.test.JenkinsRule;
 public class PreBuildMergeOptionsTest {
 
     @Rule public JenkinsRule r = new JenkinsRule();
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
+    }
 
     @Issue("JENKINS-9843")
     @Test public void exporting() throws Exception {

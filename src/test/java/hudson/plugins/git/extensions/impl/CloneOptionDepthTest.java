@@ -12,9 +12,11 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -41,6 +43,14 @@ public class CloneOptionDepthTest {
     public CloneOptionDepthTest(int configuredDepth, int usedDepth) {
         this.configuredDepth = configuredDepth;
         this.usedDepth = usedDepth;
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+        if (j.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+        }
     }
 
     @Parameterized.Parameters(name = "depth: configured={0}, used={1}")
