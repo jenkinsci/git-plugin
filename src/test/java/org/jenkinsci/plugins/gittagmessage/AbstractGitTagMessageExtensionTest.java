@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNotNull;
 
 public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & ParameterizedJobMixIn.ParameterizedJob<J, R>, R extends Run<J, R> & Queue.Executable> {
 
-    @Rule public final JenkinsRule jenkins = new JenkinsRule();
+    @Rule public final JenkinsRule r = new JenkinsRule();
 
     @Rule public final TemporaryFolder repoDir = new TemporaryFolder();
 
@@ -50,7 +50,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     public void setUp() throws IOException, InterruptedException, ConfigInvalidException {
         SystemReader.getInstance().getUserConfig().clear();
         // Set up a temporary git repository for each test case
-        repo = Git.with(jenkins.createTaskListener(), GitUtilsTest.getConfigNoSystemEnvsVars()).in(repoDir.getRoot()).getClient();
+        repo = Git.with(r.createTaskListener(), GitUtilsTest.getConfigNoSystemEnvsVars()).in(repoDir.getRoot()).getClient();
         repo.init();
     }
 
@@ -176,7 +176,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
      * @return The build that was executed.
      */
     private R buildJobAndAssertSuccess(J job) throws Exception {
-        R build = jenkins.buildAndAssertSuccess(job);
+        R build = r.buildAndAssertSuccess(job);
         assertNotNull(build.getAction(BuildData.class));
         return build;
     }

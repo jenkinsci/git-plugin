@@ -15,7 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class GitSCMExtensionTraitTest {
     @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    public static JenkinsRule r = new JenkinsRule();
 
     public List<GitSCMExtensionTraitDescriptor> descriptors() {
         List<GitSCMExtensionTraitDescriptor> list = new ArrayList<>();

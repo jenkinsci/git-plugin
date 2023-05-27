@@ -29,7 +29,7 @@ public abstract class GitSCMExtensionTest {
 	public static BuildWatcher buildWatcher = new BuildWatcher();
 
 	@Rule
-	public JenkinsRule j = new JenkinsRule();
+	public JenkinsRule r = new JenkinsRule();
 
 	@Rule
 	public TemporaryFolder tmp = new TemporaryFolder();
@@ -63,7 +63,7 @@ public abstract class GitSCMExtensionTest {
 	protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult) throws Exception {
 		final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 		if(expectedResult != null) {
-			j.assertBuildStatus(expectedResult, build);
+			r.assertBuildStatus(expectedResult, build);
 		}
 		return build;
 	}
@@ -78,7 +78,7 @@ public abstract class GitSCMExtensionTest {
 	 */
 	protected FreeStyleProject setupBasicProject(TestGitRepo repo) throws Exception {
 		GitSCMExtension extension = getExtension();
-		FreeStyleProject project = j.createFreeStyleProject("p");
+		FreeStyleProject project = r.createFreeStyleProject("p");
 		List<BranchSpec> branches = Collections.singletonList(new BranchSpec("master"));
 		GitSCM scm = new GitSCM(
 				repo.remoteConfigs(),
