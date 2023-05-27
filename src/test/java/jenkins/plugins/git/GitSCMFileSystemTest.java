@@ -65,6 +65,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.After;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -105,6 +106,15 @@ public class GitSCMFileSystemTest {
                 gitCmd.run("fetch", "--tags", "https://github.com/jenkinsci/git-plugin");
                 tagId = client.revParse(tag); /* throws if tag not available */
             }
+        }
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
         }
     }
 

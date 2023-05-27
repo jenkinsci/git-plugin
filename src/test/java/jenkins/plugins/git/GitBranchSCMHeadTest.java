@@ -2,6 +2,7 @@ package jenkins.plugins.git;
 
 import hudson.FilePath;
 import hudson.model.Queue;
+import hudson.model.TaskListener;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
@@ -50,6 +51,14 @@ public class GitBranchSCMHeadTest {
         }
     }
 
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+        if (j.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+        }
+    }
 
     @Issue("JENKINS-48061")
     @Test

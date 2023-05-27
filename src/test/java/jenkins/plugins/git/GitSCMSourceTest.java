@@ -65,6 +65,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.After;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -86,6 +87,15 @@ public class GitSCMSourceTest {
     @Before
     public void setup() {
         gitStatus = new GitStatus();
+    }
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(jenkins.getWebAppRoot(), listener);
+        if (jenkins.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(jenkins.jenkins.getRootDir(), listener);
+        }
     }
 
     @Test

@@ -74,6 +74,15 @@ public class GitHooksConfigurationTest {
         });
     }
 
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+        if (j.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+        }
+    }
+
     @Test
     public void testGet() {
         assertThat(GitHooksConfiguration.get(), is(configuration));

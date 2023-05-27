@@ -4,6 +4,8 @@ import com.cloudbees.plugins.credentials.*;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.TaskListener;
+import static hudson.plugins.git.CheckoutStepSnippetizerTest.r;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Random;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.JenkinsRuleUtil;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -22,6 +25,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.After;
 import static org.junit.Assert.assertTrue;
 
 public class CredentialsUserRemoteConfigTest {
@@ -68,6 +72,13 @@ public class CredentialsUserRemoteConfigTest {
         sampleRepo.write("src/sample.txt", "Contents of src/sample.txt");
         sampleRepo.git("add", "src/sample.txt");
         sampleRepo.git("commit", "-m", "Add src/sample.txt to sample repo");
+    }
+    @After
+    public void makeFilesWritable(TaskListener listener) throws Exception {
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
     }
 
     private String classPrologue() {

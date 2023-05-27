@@ -75,6 +75,7 @@ import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -113,6 +114,15 @@ public class AbstractGitSCMSourceTest {
     public static Stopwatch stopwatch = new Stopwatch();
     @Rule
     public TestName testName = new TestName();
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
+    }
 
     private static final int MAX_SECONDS_FOR_THESE_TESTS = 210;
 

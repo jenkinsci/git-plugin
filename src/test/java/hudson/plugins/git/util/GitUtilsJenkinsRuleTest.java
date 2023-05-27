@@ -33,9 +33,11 @@ import hudson.plugins.git.GitTool;
 import hudson.slaves.DumbSlave;
 import hudson.util.StreamTaskListener;
 import java.util.UUID;
+import jenkins.plugins.git.JenkinsRuleUtil;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -44,6 +46,15 @@ public class GitUtilsJenkinsRuleTest {
 
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(j.getWebAppRoot(), listener);
+        if (j.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(j.jenkins.getRootDir(), listener);
+        }
+    }
 
     @Test
     public void testWorkspaceToNode() throws Exception {

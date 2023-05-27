@@ -1,5 +1,6 @@
 package jenkins.plugins.git;
 
+import hudson.model.TaskListener;
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.CheckoutOption;
@@ -54,6 +55,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.After;
 
 public class GitSCMSourceTraitsTest {
     /**
@@ -64,6 +66,15 @@ public class GitSCMSourceTraitsTest {
 
     @Rule
     public TestName currentTestName = new TestName();
+
+    @After
+    public void makeFilesWritable() throws Exception {
+        TaskListener listener = TaskListener.NULL;
+        JenkinsRuleUtil.makeFilesWritable(r.getWebAppRoot(), listener);
+        if (r.jenkins != null) {
+            JenkinsRuleUtil.makeFilesWritable(r.jenkins.getRootDir(), listener);
+        }
+    }
 
     private GitSCMSource load() {
         return load(currentTestName.getMethodName());
