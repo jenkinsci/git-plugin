@@ -102,7 +102,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public String getIconFileName() {
-        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-icon.svg";
+        return "symbol-git-icon plugin-git";
     }
 
     @Override
