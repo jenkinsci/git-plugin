@@ -72,7 +72,7 @@
     <revision>5.1.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.361.4</jenkins.version>
+    <jenkins.version>2.387.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
@@ -87,7 +87,7 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.361.x</artifactId>
+        <artifactId>bom-2.387.x</artifactId>
         <version>2102.v854b_fec19c92</version>
         <type>pom</type>
         <scope>import</scope>
