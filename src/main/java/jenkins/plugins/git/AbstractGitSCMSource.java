@@ -101,6 +101,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
+import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
@@ -1251,7 +1252,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         if (jenkins == null) {
             return null;
         }
-        File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
+        String cacheRootDir = SystemProperties.getString(AbstractGitSCMSource.class.getName() + ".cacheRootDir");
+        File cacheDir = new File(cacheRootDir != null ? new File(cacheRootDir) : new File(jenkins.getRootDir(), "caches"), cacheEntry);
         if (!cacheDir.isDirectory()) {
             if (createDirectory) {
                 boolean ok = cacheDir.mkdirs();
