@@ -61,11 +61,11 @@ public class GitHooksTest extends AbstractGitTestCase {
     public void setGitTool() throws IOException {
         lr.record(GitHooksConfiguration.class.getName(), Level.ALL).capture(1024);
         GitTool tool = new GitTool("my-git", "git", Collections.<ToolProperty<?>>emptyList());
-        rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+        r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
         //Jenkins 2.308 changes the default label to "built-in" causing test failures when testing with newer core
         // e.g. java 17 testing
-        rule.jenkins.setLabelString("master");
-        rule.jenkins.setNumExecutors(3); //In case this changes in the future as well.
+        r.jenkins.setLabelString("master");
+        r.jenkins.setNumExecutors(3); //In case this changes in the future as well.
     }
 
     @After
@@ -86,7 +86,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         }
         GitHooksConfiguration.get().setAllowedOnController(true);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
-        final DumbSlave agent = rule.createOnlineSlave(Label.get("somewhere"));
+        final DumbSlave agent = r.createOnlineSlave(Label.get("somewhere"));
         commit("test.txt", "Test", johnDoe, "First");
         String jenkinsfile = lines(
                 "node('somewhere') {",
@@ -95,7 +95,7 @@ public class GitHooksTest extends AbstractGitTestCase {
                 "}"
         );
         commit("Jenkinsfile", jenkinsfile, johnDoe, "Jenkinsfile");
-        final WorkflowJob job = rule.createProject(WorkflowJob.class);
+        final WorkflowJob job = r.createProject(WorkflowJob.class);
         final GitSCM scm = new GitSCM(
                 this.createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("master")),
@@ -105,8 +105,8 @@ public class GitHooksTest extends AbstractGitTestCase {
         definition.setLightweight(false);
         job.setDefinition(definition);
         job.save();
-        WorkflowRun run = rule.buildAndAssertSuccess(job);
-        rule.assertLogContains("Hello Pipeline", run);
+        WorkflowRun run = r.buildAndAssertSuccess(job);
+        r.assertLogContains("Hello Pipeline", run);
 
         final FilePath jobWorkspace = agent.getWorkspaceFor(job);
         assertNotNull(jobWorkspace);
@@ -119,7 +119,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         FilePath hook = jobWorkspace.child(".git/hooks/post-checkout");
         createHookScriptAt(postCheckoutOutput1, hook);
 
-        FilePath scriptWorkspace = rule.jenkins.getWorkspaceFor(job).withSuffix("@script");
+        FilePath scriptWorkspace = r.jenkins.getWorkspaceFor(job).withSuffix("@script");
         scriptWorkspace = scriptWorkspace.listDirectories().stream().findFirst().get();
         createHookScriptAt(postCheckoutOutput2, scriptWorkspace.child(".git/hooks/post-checkout"));
 
@@ -129,10 +129,10 @@ public class GitHooksTest extends AbstractGitTestCase {
         //Allowed
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         Instant before = Instant.now().minus(2, ChronoUnit.SECONDS);
-        run = rule.buildAndAssertSuccess(job);
+        run = r.buildAndAssertSuccess(job);
         assertTrue(postCheckoutOutput1.exists());
         assertTrue(postCheckoutOutput2.exists());
-        rule.assertLogContains("Hello Pipeline", run);
+        r.assertLogContains("Hello Pipeline", run);
         Instant after = Instant.now().plus(2, ChronoUnit.SECONDS);
         checkFileOutput(postCheckoutOutput1, before, after);
         assertFalse(postCheckoutOutput1.exists());
@@ -144,8 +144,8 @@ public class GitHooksTest extends AbstractGitTestCase {
         //Denied
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(false);
-        run = rule.buildAndAssertSuccess(job);
-        rule.assertLogContains("Hello Pipeline", run);
+        run = r.buildAndAssertSuccess(job);
+        r.assertLogContains("Hello Pipeline", run);
         if (!sampleRepo.gitVersionAtLeast(2, 0)) {
             // Git 1.8 does not output hook text in this case
             // Not important enough to research the difference
@@ -161,10 +161,10 @@ public class GitHooksTest extends AbstractGitTestCase {
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         before = Instant.now().minus(2, ChronoUnit.SECONDS);
-        run = rule.buildAndAssertSuccess(job);
+        run = r.buildAndAssertSuccess(job);
         assertFalse(postCheckoutOutput2.exists());
         assertTrue(postCheckoutOutput1.exists());
-        rule.assertLogContains("Hello Pipeline", run);
+        r.assertLogContains("Hello Pipeline", run);
         after = Instant.now().plus(2, ChronoUnit.SECONDS);
         checkFileOutput(postCheckoutOutput1, before, after);
         assertFalse(postCheckoutOutput1.exists());
@@ -174,8 +174,8 @@ public class GitHooksTest extends AbstractGitTestCase {
         //Denied
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(false);
-        run = rule.buildAndAssertSuccess(job);
-        rule.assertLogContains("Hello Pipeline", run);
+        run = r.buildAndAssertSuccess(job);
+        r.assertLogContains("Hello Pipeline", run);
         assertFalse(postCheckoutOutput1.exists());
         assertFalse(postCheckoutOutput2.exists());
     }
@@ -212,20 +212,20 @@ public class GitHooksTest extends AbstractGitTestCase {
         WorkflowRun run;
         commit("Commit3", janeDoe, "Commit number 3");
         GitHooksConfiguration.get().setAllowedOnController(true);
-        run = rule.buildAndAssertSuccess(job);
+        run = r.buildAndAssertSuccess(job);
         if (sampleRepo.gitVersionAtLeast(2, 0)) {
             // Git 1.8 does not output hook text in this case
             // Not important enough to research the difference
-            rule.assertLogContains("h4xor3d", run);
+            r.assertLogContains("h4xor3d", run);
         }
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         commit("Commit4", janeDoe, "Commit number 4");
-        run = rule.buildAndAssertSuccess(job);
+        run = r.buildAndAssertSuccess(job);
         if (sampleRepo.gitVersionAtLeast(2, 0)) {
             // Git 1.8 does not output hook text in this case
             // Not important enough to research the difference
-            rule.assertLogNotContains("h4xor3d", run);
+            r.assertLogNotContains("h4xor3d", run);
         }
     }
 
@@ -239,25 +239,25 @@ public class GitHooksTest extends AbstractGitTestCase {
             return;
         }
 
-        rule.createOnlineSlave(Label.get("belsebob"));
+        r.createOnlineSlave(Label.get("belsebob"));
         final WorkflowJob job = setupAndRunPipelineCheckout("belsebob");
         WorkflowRun run;
         commit("Commit3", janeDoe, "Commit number 3");
         GitHooksConfiguration.get().setAllowedOnAgents(true);
-        run = rule.buildAndAssertSuccess(job);
+        run = r.buildAndAssertSuccess(job);
         if (sampleRepo.gitVersionAtLeast(2, 0)) {
             // Git 1.8 does not output hook text in this case
             // Not important enough to research the difference
-            rule.assertLogContains("h4xor3d", run);
+            r.assertLogContains("h4xor3d", run);
         }
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         GitHooksConfiguration.get().setAllowedOnController(true);
         commit("Commit4", janeDoe, "Commit number 4");
-        run = rule.buildAndAssertSuccess(job);
+        run = r.buildAndAssertSuccess(job);
         if (sampleRepo.gitVersionAtLeast(2, 0)) {
             // Git 1.8 does not output hook text in this case
             // Not important enough to research the difference
-            rule.assertLogNotContains("h4xor3d", run);
+            r.assertLogNotContains("h4xor3d", run);
         }
     }
 
@@ -265,7 +265,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
 
-        final WorkflowJob job = rule.createProject(WorkflowJob.class);
+        final WorkflowJob job = r.createProject(WorkflowJob.class);
         final String uri = testRepo.gitDir.getAbsolutePath().replace("\\", "/");
         job.setDefinition(new CpsFlowDefinition(lines(
                 "node('" + node + "') {",
@@ -284,15 +284,15 @@ public class GitHooksTest extends AbstractGitTestCase {
                 "  }",
                 "}")
                 , true));
-        WorkflowRun run = rule.buildAndAssertSuccess(job);
-        rule.assertLogNotContains("h4xor3d", run);
+        WorkflowRun run = r.buildAndAssertSuccess(job);
+        r.assertLogNotContains("h4xor3d", run);
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        run = rule.buildAndAssertSuccess(job);
+        run = r.buildAndAssertSuccess(job);
         if (sampleRepo.gitVersionAtLeast(2, 0)) {
             // Git 1.8 does not output hook text in this case
             // Not important enough to research the difference
-            rule.assertLogNotContains("h4xor3d", run);
+            r.assertLogNotContains("h4xor3d", run);
         }
         return job;
     }

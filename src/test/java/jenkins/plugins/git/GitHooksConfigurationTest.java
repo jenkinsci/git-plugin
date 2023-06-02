@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 public class GitHooksConfigurationTest {
 
     @Rule
-    public JenkinsRule j = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     private GitHooksConfiguration configuration;
     private GitClient client;

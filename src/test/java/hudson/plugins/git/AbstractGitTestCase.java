@@ -62,7 +62,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public abstract class AbstractGitTestCase {
     @Rule
-    public JenkinsRule rule = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
@@ -116,7 +116,7 @@ public abstract class AbstractGitTestCase {
     }
 
     protected FreeStyleProject createFreeStyleProject() throws IOException {
-        return rule.createFreeStyleProject();
+        return r.createFreeStyleProject();
     }
 
     protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
@@ -249,7 +249,7 @@ public abstract class AbstractGitTestCase {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            rule.assertBuildStatus(expectedResult, build);
+            r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
@@ -260,7 +260,7 @@ public abstract class AbstractGitTestCase {
             assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            rule.assertBuildStatus(expectedResult, build);
+            r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
@@ -271,7 +271,7 @@ public abstract class AbstractGitTestCase {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            rule.assertBuildStatus(expectedResult, build);
+            r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }

@@ -28,7 +28,7 @@ import org.mockito.Mockito;
 public class CloneOptionDepthTest {
 
     @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    public static JenkinsRule r = new JenkinsRule();
 
     private GitSCM scm;
     private Run<?, ?> build;
