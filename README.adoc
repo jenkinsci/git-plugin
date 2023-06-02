@@ -1389,6 +1389,17 @@ link:https://www.jenkins.io/security/advisory/2022-05-17/#SECURITY-2478[SECURITY
 Current releases of the git plugin disallow fetch from a local URL and from a path.
 If a local URL or a path is required and administrators accept the risk of disabling this security safeguard, the Java property `hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true` can be set from the command line that starts the Jenkins controller.
 
+[#cacheRootDir]
+=== Cache root directory
+
+Multibranch Pipelines that use the Git branch source will create cached git repositories on the Jenkins controller.
+By default, the cached git repositories are stored in the `caches` subdirectory of the Jenkins home directory (`JENKINS_HOME`).
+
+Administrators may want to store those git repositories in another location for better performance or to exclude them from backups.
+For example, they might choose to place the cache directories in `/var/cache/jenkins`.
+
+The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
+
 [#git-publisher]
 == Git Publisher
 
