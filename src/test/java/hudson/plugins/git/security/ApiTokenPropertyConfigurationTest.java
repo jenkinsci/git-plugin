@@ -1,9 +1,9 @@
 package hudson.plugins.git.security;
 
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.util.NameValuePair;
 import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
