@@ -1,6 +1,6 @@
 package hudson.plugins.git.browser;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
