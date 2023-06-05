@@ -71,6 +71,7 @@
   <properties>
     <revision>5.1.0</revision>
     <changelist>-SNAPSHOT</changelist>
+    <!-- TODO: Remove when updated to plugin bill of materials that includes this version -->
     <configuration-as-code-plugin.version>1647.ve39ca_b_829b_42</configuration-as-code-plugin.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.version>2.387.3</jenkins.version>
