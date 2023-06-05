@@ -71,6 +71,7 @@
   <properties>
     <revision>5.1.0</revision>
     <changelist>-SNAPSHOT</changelist>
+    <configuration-as-code-plugin.version>1647.ve39ca_b_829b_42</configuration-as-code-plugin.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.version>2.387.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
@@ -246,13 +247,13 @@
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
       <optional>true</optional>
-      <version>1647.v40e86cc20253</version>
+      <version>${configuration-as-code-plugin.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
       <scope>test</scope>
-      <version>1647.v40e86cc20253</version>
+      <version>${configuration-as-code-plugin.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
