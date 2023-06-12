@@ -97,6 +97,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
@@ -1218,20 +1219,31 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             log.println("Cloning the remote Git repository");
 
             RemoteConfig rc = repos.get(0);
-            try {
-                CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
-                for (GitSCMExtension ext : extensions) {
-                    ext.decorateCloneCommand(this, build, git, listener, cmd);
+            int tryNumber = 1;
+            while(true){
+                try {
+                    log.println("Using custom git clone code");
+                    CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
+                    for (GitSCMExtension ext : extensions) {
+                        ext.decorateCloneCommand(this, build, git, listener, cmd);
+                    }
+                    cmd.execute();
+                    // determine if second fetch is required
+                    CloneOption option = extensions.get(CloneOption.class);
+                    if (!isAllowSecondFetch()) {
+                        removeSecondFetch = determineSecondFetch(option, rc);
+                    }
+                } catch (GitException ex) {
+                    if (tryNumber >= 6) {
+                        ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
+                        throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
+                    } else {
+                        int waitTime = tryNumber * 10000;
+                        log.println("Git clone failed, will retry in " + waitTime);
+                        TimeUnit.MILLISECONDS.sleep(waitTime);
+                        tryNumber++;
+                    }
                 }
-                cmd.execute();
-                // determine if second fetch is required
-                CloneOption option = extensions.get(CloneOption.class);
-                if (!isAllowSecondFetch()) {
-                    removeSecondFetch = determineSecondFetch(option, rc);
-                }
-            } catch (GitException ex) {
-                ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
-                throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
             }
         }
         GitHooksConfiguration.configure(git);
