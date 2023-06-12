@@ -1233,6 +1233,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     if (!isAllowSecondFetch()) {
                         removeSecondFetch = determineSecondFetch(option, rc);
                     }
+                    break;
                 } catch (GitException ex) {
                     if (tryNumber >= 6) {
                         ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
