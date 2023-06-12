@@ -1207,7 +1207,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         log.println("Using custom git clone code with retry mechanism");
         boolean removeSecondFetch = false;
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
-        if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
+        if (repos.isEmpty()) return; // defensive check even though this is an invalid configuration
 
         if (git.hasGitRepo(false)) {
             // It's an update
@@ -1237,7 +1237,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         GitHooksConfiguration.configure(git);
 
         for (RemoteConfig remoteRepository : repos) {
-            if (remoteRepository.equals(repos.get(0)) && removeSecondFetch){
+            if (remoteRepository.equals(repos.get(0)) && removeSecondFetch) {
                 log.println("Avoid second fetch");
                 continue;
             }
@@ -1328,7 +1328,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // revision info for this build etc. The default assumption is that it's a duplicate.
         boolean buildDataAlreadyPresent = false;
         List<BuildData> actions = build.getActions(BuildData.class);
-        for (BuildData d : actions) {
+        for (BuildData d: actions)  {
             if (d.similarTo(buildData)) {
                 buildDataAlreadyPresent = true;
                 break;
@@ -1555,7 +1555,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 RelativeTargetDirectory rtd = getExtensions().get(RelativeTargetDirectory.class);
                 if (rtd != null) {
                     String localRelativeTargetDir = rtd.getRelativeTargetDir();
-                    if (localRelativeTargetDir == null) {
+                    if ( localRelativeTargetDir == null ){
                         localRelativeTargetDir = "";
                     }
                     env.put(GIT_CHECKOUT_DIR, localRelativeTargetDir);
