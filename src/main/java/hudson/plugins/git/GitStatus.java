@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
+import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
 import jenkins.util.SystemProperties;
@@ -425,7 +426,7 @@ public class GitStatus implements UnprotectedRootAction {
                             }
                             if (!branchFound) continue;
                             urlFound = true;
-                            if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
+                            if (!(project instanceof ParameterizedJobMixIn.ParameterizedJob && ((ParameterizedJobMixIn.ParameterizedJob) project).isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
                                     Set<String> buildParametersNames = new HashSet<>();
