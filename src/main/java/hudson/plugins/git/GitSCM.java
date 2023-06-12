@@ -1204,7 +1204,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
-
+        log.println("Using custom git clone code with retry mechanism");
         boolean removeSecondFetch = false;
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
@@ -1219,10 +1219,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             log.println("Cloning the remote Git repository");
 
             RemoteConfig rc = repos.get(0);
-            int tryNumber = 1;
+            int cloneTryNumber = 1;
             while(true){
                 try {
-                    log.println("Using custom git clone code");
                     CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                     for (GitSCMExtension ext : extensions) {
                         ext.decorateCloneCommand(this, build, git, listener, cmd);
@@ -1235,14 +1234,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     }
                     break;
                 } catch (GitException ex) {
-                    if (tryNumber >= 6) {
+                    if (cloneTryNumber >= 5) {
                         ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
                         throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
                     } else {
-                        int waitTime = tryNumber * 10000;
-                        log.println("Git clone failed, will retry in " + waitTime);
+                        int waitTime = cloneTryNumber * 5000;
+                        log.println("Git clone failed, will retry in " + waitTime/1000 + "seconds");
                         TimeUnit.MILLISECONDS.sleep(waitTime);
-                        tryNumber++;
+                        cloneTryNumber++;
                     }
                 }
             }
