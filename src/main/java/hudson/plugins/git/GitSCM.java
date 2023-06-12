@@ -1305,18 +1305,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.beforeCheckout(this, build, git, listener);
         }
 
-        for (int cloneTryNumber = 1; cloneTryNumber <= 5; cloneTryNumber++) {
+        for (int tryCount = 1; tryCount <= 5; tryCount++) {
             try {
                 retrieveChanges(build, git, listener);
                 break;
             } catch (GitException ex) {
-                if (cloneTryNumber == 5) {
+                if (tryCount == 5) {
                     ex.printStackTrace(listener.error(ex.getMessage()));
                     throw new AbortException(ex.getMessage());
                 } else {
-                    int waitTime = cloneTryNumber * 10000;
-                    listener.getLogger().println("Git retrieve changes failed with error, will try again in " + waitTime / 1000 + " seconds.");
-                    TimeUnit.MILLISECONDS.sleep(waitTime);
+                    int waitTime = tryCount * 10;
+                    listener.getLogger().println("Git retrieve changes failed with error, will try again in " + waitTime + " seconds.");
+                    TimeUnit.SECONDS.sleep(waitTime);
                 }
             }
         }
