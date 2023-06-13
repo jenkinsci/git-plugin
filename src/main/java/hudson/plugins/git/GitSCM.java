@@ -1313,6 +1313,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             try {
                 retrieveChanges(build, git, listener);
                 retrievedChanges = true;
+                break;
             } catch (AbortException ex) {
                     int waitTime = tryCount * 10;
                     listener.getLogger().println("Failed to retrieve Git changes with an error. Will make another attempt after " + waitTime + " seconds.");
