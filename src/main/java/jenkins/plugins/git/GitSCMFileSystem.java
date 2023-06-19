@@ -59,6 +59,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -403,15 +406,36 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 }
 
                 HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, env);
+                String head = Constants.R_REMOTES + remoteName + "/" + headNameResult.headName;
 
-                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
-                        "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                + headNameResult.headName))).execute();
+                if (branchSpec.getName().equals("FETCH_HEAD")) {
+                    head = "FETCH_HEAD";
+                } else {
+                    // check for a commit hash in branchSpec
+                    final String regex = "^[a-fA-F0-9]{40}$";
+                    final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                    final Matcher matcher = pattern.matcher(branchSpec.getName());
+
+                    if (matcher.find()) {
+                        head = branchSpec.getName();
+                        rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead(headNameResult.headName), head);
+                    }
+                }
+
+                String refspec = config.getRefspec();
+                if (refspec != null) {
+                    if (env != null) {
+                        refspec = env.expand(refspec);
+                    }
+                } else {
+                    refspec = "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                            + headNameResult.headName;
+                }
+
+                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(refspec))).execute();
 
                 listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
-            } catch (GitException x) {
-                throw new IOException(x);
+                return new GitSCMFileSystem(client, remote, head, (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
                 cacheLock.unlock();
             }
