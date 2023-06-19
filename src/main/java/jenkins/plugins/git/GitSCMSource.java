@@ -30,7 +30,6 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
@@ -58,6 +57,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -92,7 +92,6 @@ import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.Symbol;
@@ -180,7 +179,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         if (!DEFAULT_INCLUDES.equals(includes) || !DEFAULT_EXCLUDES.equals(excludes)) {
             traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
         }
-        if (!DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+        if (remoteName != null && !remoteName.isBlank() && !DEFAULT_REMOTE_NAME.equals(remoteName)) {
             traits.add(new RemoteNameSCMSourceTrait(remoteName));
         }
         if (ignoreOnPushNotifications) {
@@ -232,10 +231,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     }
                 }
             }
-            if (remoteName != null && !DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+            if (remoteName != null && !remoteName.isBlank() && !DEFAULT_REMOTE_NAME.equals(remoteName)) {
                 traits.add(new RemoteNameSCMSourceTrait(remoteName));
             }
-            if (StringUtils.isNotBlank(gitTool)) {
+            if (gitTool != null && !gitTool.isBlank()) {
                 traits.add(new GitToolSCMSourceTrait(gitTool));
             }
             if (browser != null) {
@@ -263,7 +262,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             if (!defaults.contains(rawRefSpecs.trim())) {
                 List<String> templates = new ArrayList<>();
                 for (String rawRefSpec : rawRefSpecs.split(" ")) {
-                    if (StringUtils.isBlank(rawRefSpec)) {
+                    if (rawRefSpec == null || rawRefSpec.isBlank()) {
                         continue;
                     }
                     if (defaults.contains(rawRefSpec)) {
@@ -401,7 +400,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @NonNull
     @Override
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<SCMSourceTrait> getTraits() {
         return traits;
     }
@@ -461,7 +459,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             : ACL.SYSTEM,
                     URIRequirementBuilder.fromUri(remote).build(),
                     GitClient.CREDENTIALS_MATCHER)) {
-                if (StringUtils.equals(value, o.value)) {
+                if (Objects.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
                     // NOTE: we would need to actually lookup the credential to do the check, which may require
                     // fetching the actual credential instance from a remote credentials store. Perhaps this is
@@ -646,7 +644,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                     continue;
                                 }
                                 if (GitStatus.looselyMatches(uri, remote)) {
-                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName()
+                                    LOGGER.fine("Triggering the indexing of " + owner.getFullDisplayName()
                                             + " as a result of event from " + origin);
                                     triggerIndexing(owner, source);
                                     result.add(new GitStatus.ResponseContributor() {

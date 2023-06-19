@@ -34,8 +34,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -286,7 +286,7 @@ public class GitTagActionTest {
 
         HtmlPage tagPage3 = browser.getPage(p, "/3/tagBuild");
         HtmlForm form3 = tagPage3.getFormByName("tag");
-        form3.getInputByName("name0").setValueAttribute("tag-build-3");
+        form3.getInputByName("name0").setValue("tag-build-3");
         HtmlPage submitted3 = r.submit(form3);
     }
 

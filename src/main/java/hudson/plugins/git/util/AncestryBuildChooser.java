@@ -8,6 +8,7 @@ import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -26,7 +27,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
 
 public class AncestryBuildChooser extends DefaultBuildChooser {
 
@@ -89,7 +89,10 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 } catch (Throwable e) {
 
                     // if a wrapped IOException was thrown, unwrap before throwing it
-                    Iterator<IOException> ioeIter = Iterables.filter(Throwables.getCausalChain(e), IOException.class).iterator();
+                    Iterator<IOException> ioeIter = Throwables.getCausalChain(e).stream()
+                            .filter(IOException.class::isInstance)
+                            .map(IOException.class::cast)
+                            .iterator();
                     if (ioeIter.hasNext())
                         throw ioeIter.next();
                     else
@@ -138,7 +141,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
 
             // wrap IOException so it can propagate
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new UncheckedIOException(e);
             }
         }
         

@@ -12,6 +12,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -21,10 +22,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
 
@@ -67,11 +68,12 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
         return projectName;
     }
 
-     private String encodeString(final String s) throws UnsupportedEncodingException {
-        return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20");
+     private String encodeString(final String s) {
+        return URLEncoder.encode(s, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
     }
 
     @Extension
+    @Symbol("gitblit")
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

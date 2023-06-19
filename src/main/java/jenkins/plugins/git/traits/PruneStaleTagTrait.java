@@ -25,6 +25,7 @@
 
 package jenkins.plugins.git.traits;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
@@ -50,6 +51,7 @@ public class PruneStaleTagTrait extends GitSCMExtensionTrait<PruneStaleTag> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    @Symbol("pruneStaleTag")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

@@ -8,6 +8,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ public class PerBuildTag extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("perBuildTag")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {

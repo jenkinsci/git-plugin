@@ -42,6 +42,8 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
+
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -424,6 +426,55 @@ public class GitSCMFileSystemTest {
     public void filesystem_supports_descriptor() throws Exception {
         SCMSourceDescriptor descriptor = r.jenkins.getDescriptorByType(GitSCMSource.DescriptorImpl.class);
         assertTrue(SCMFileSystem.supports(descriptor));
+    }
+
+    @Issue("JENKINS-42971")
+    @Test
+    public void calculate_head_name_with_env() throws Exception {
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
+                new EnvVars("BRANCH", "master-a"));
+        assertEquals("master-a", result1.headName);
+        assertEquals(Constants.R_HEADS, result1.prefix);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
+                new EnvVars("BRANCH", "refs/heads/master-b"));
+        assertEquals("master-b", result2.headName);
+        assertEquals(Constants.R_HEADS, result2.prefix);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null,
+                new EnvVars("BRANCH", "master-c"));
+        assertEquals("master-c", result3.headName);
+        assertEquals(Constants.R_HEADS, result3.prefix);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
+                null);
+        assertEquals("${BRANCH}", result4.headName);
+        assertEquals(Constants.R_HEADS, result4.prefix);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null,
+                new EnvVars("BRANCH", "master-d"));
+        assertEquals("master-d", result5.headName);
+        assertEquals(Constants.R_HEADS, result5.prefix);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master-e"), null,
+                new EnvVars("BRANCH", "dummy"));
+        assertEquals("master-e", result6.headName);
+        assertEquals(Constants.R_HEADS, result6.prefix);
+    }
+
+    /* GitSCMFileSystem in git plugin 4.14.0 reported a null pointer
+     * exception when the rev was non-null and the env was null. */
+    @Issue("JENKINS-70158")
+    @Test
+    public void null_pointer_exception() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+        ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
+        AbstractGitSCMSource.SCMRevisionImpl rev260 =
+                new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null);
+        assertEquals("master-f", result1.headName);
+        assertEquals(Constants.R_HEADS, result1.prefix);
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */

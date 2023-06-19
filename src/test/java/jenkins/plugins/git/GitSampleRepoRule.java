@@ -24,8 +24,8 @@
 
 package jenkins.plugins.git;
 
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.htmlunit.WebResponse;
+import org.htmlunit.util.NameValuePair;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
@@ -76,12 +76,18 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         run(true, tmp.getRoot(), "git", "version");
         checkGlobalConfig();
         git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
-        git("branch", "-m", "master");
+	if (gitVersionAtLeast(2, 30)) {
+	    // Force branch name to master even if system default is not master
+	    // Fails on git 2.25, 2.20, 2.17, and 1.8
+	    // Works on git 2.30 and later
+            git("branch", "-m", "master");
+	}
         write("file", "");
         git("add", "file");
         git("config", "user.name", "Git SampleRepoRule");
         git("config", "user.email", "gits@mplereporule");
         git("config", "init.defaultbranch", "master");
+        git("config", "commit.gpgsign", "false");
         git("commit", "--message=init");
     }
 
@@ -144,5 +150,20 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         return gitMajor >  neededMajor ||
               (gitMajor == neededMajor && gitMinor >  neededMinor) ||
               (gitMajor == neededMajor && gitMinor == neededMinor  && gitPatch >= neededPatch);
+    }
+
+    public boolean hasGitLFS() {
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "lfs", "version").stdout(out).join();
+            if (returnCode != 0) {
+                return false;
+            }
+        } catch (IOException | InterruptedException ex) {
+            return false;
+        }
+        final String versionOutput = out.toString().trim();
+        return versionOutput.startsWith("git-lfs/");
     }
 }

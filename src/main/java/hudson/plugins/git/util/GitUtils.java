@@ -40,7 +40,6 @@ public class GitUtils implements Serializable {
     @NonNull
     TaskListener listener;
 
-    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public GitUtils(@NonNull TaskListener listener, @NonNull GitClient git) {
         this.git = git;
         this.listener = listener;

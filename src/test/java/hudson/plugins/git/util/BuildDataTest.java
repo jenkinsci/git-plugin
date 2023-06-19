@@ -66,7 +66,7 @@ public class BuildDataTest {
 
     @Test
     public void testGetIconFileName() {
-        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-icon.svg"));
+        assertEquals("symbol-git-icon plugin-git", data.getIconFileName());
     }
 
     @Test

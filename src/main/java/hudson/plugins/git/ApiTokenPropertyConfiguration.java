@@ -10,7 +10,6 @@ import jenkins.model.GlobalConfigurationCategory;
 import jenkins.model.Jenkins;
 import net.jcip.annotations.GuardedBy;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -107,7 +106,7 @@ public class ApiTokenPropertyConfiguration extends GlobalConfiguration implement
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         String apiTokenUuid = req.getParameter("apiTokenUuid");
-        if (StringUtils.isBlank(apiTokenUuid)) {
+        if (apiTokenUuid == null || apiTokenUuid.isBlank()) {
             return HttpResponses.errorWithoutStack(400, "API token UUID cannot be empty");
         }
 
@@ -124,7 +123,7 @@ public class ApiTokenPropertyConfiguration extends GlobalConfiguration implement
     }
 
     public boolean isValidApiToken(String plainApiToken) {
-        if (StringUtils.isBlank(plainApiToken)) {
+        if (plainApiToken == null || plainApiToken.isBlank()) {
             return false;
         }
 

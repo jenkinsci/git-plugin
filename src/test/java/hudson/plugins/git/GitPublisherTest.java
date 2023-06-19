@@ -42,6 +42,7 @@ import hudson.tasks.Builder;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jvnet.hudson.test.Issue;
@@ -86,6 +87,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
     }
@@ -97,7 +99,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         commitNewFile("a");
 
-        MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
+        MatrixProject mp = r.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(testGitDir.getAbsolutePath()));
         mp.getPublishersList().add(new GitPublisher(
@@ -125,7 +127,7 @@ public class GitPublisherTest extends AbstractGitProject {
             private Object writeReplace() { return new NullSCM(); }
         });
 
-        MatrixBuild b = jenkins.buildAndAssertSuccess(mp);
+        MatrixBuild b = r.buildAndAssertSuccess(mp);
 
         assertTrue(existsTag("foo"));
 
@@ -138,7 +140,7 @@ public class GitPublisherTest extends AbstractGitProject {
     @Test
     public void GitPublisherFreestylePushBranchWithJGit() throws Exception {
         GitTool tool = new JGitTool(Collections.emptyList());
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+        r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -192,9 +194,9 @@ public class GitPublisherTest extends AbstractGitProject {
         repoList.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), null, null, null));
 
         GitTool tool = new JGitTool(Collections.emptyList()); //testGitDir.getAbsolutePath()
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+        r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
-        MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
+        MatrixProject mp = r.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("")),
@@ -224,7 +226,7 @@ public class GitPublisherTest extends AbstractGitProject {
             private Object writeReplace() { return new NullSCM(); }
         });
 
-        MatrixBuild b = jenkins.buildAndAssertSuccess(mp);
+        MatrixBuild b = r.buildAndAssertSuccess(mp);
 
         /* I don't understand why the log reports pushing tag to repo origin but the tag is not pushed */
         assertThat(b.getLog(50),

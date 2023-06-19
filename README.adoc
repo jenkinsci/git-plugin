@@ -54,7 +54,7 @@ image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 === Pipeline examples
 
 The examples below were created with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator].
-Create your own checkout commands  with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] configured for your needs.
+Create your own checkout commands with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] configured for your needs.
 
 ==== Checkout with defaults
 
@@ -62,71 +62,71 @@ Checkout from the git plugin source repository using https protocol, no credenti
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-         branches: [[name: '*/master']],
-         userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])
+checkout scmGit(
+    branches: [[name: 'master']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
 ----
 
 ==== Checkout with a specific branch
 
-Checkout from the git client plugin source repository using https protocol, no credentials, and a non-default branch.
+Checkout from the git plugin source repository using https protocol, no credentials, and the `stable-3.x` branch.
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: 'stable-2.x']],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+checkout scmGit(
+    branches: [[name: 'stable-3.x']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
 ----
 
 ==== Checkout with ssh and a private key credential
 
-Checkout from the git client plugin source repository using ssh protocol, ssh private credentials, and a non-default branch.
+Checkout from the git plugin source repository using ssh protocol, ssh private credentials, and the `v4.11.x`  branch.
 The git plugin supports private key credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: 'stable-2.x']],
-          userRemoteConfigs: [[credentialsId:  'my-ssh-private-key-id',
-                               url: 'ssh://github.com/jenkinsci/git-plugin.git']]])
+checkout scmGit(
+    branches: [[name: 'v4.11.x']],
+    userRemoteConfigs: [[credentialsId:  'my-ssh-private-key-id',
+        url: 'ssh://github.com/jenkinsci/git-plugin.git']])
 ----
 
 ==== Checkout with https and a username/password credential
 
-Checkout from the git client plugin source repository using https protocol, username/password credentials, and a non-default branch.
+Checkout from the git plugin source repository using https protocol, username/password credentials, and the `v4.9.x` branch.
 The git plugin supports username/password credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: 'stable-2.x']],
-          userRemoteConfigs: [[credentialsId: 'my-username-password-id',
-                               url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+checkout scmGit(
+    branches: [[name: 'v4.9.x']],
+    userRemoteConfigs: [[credentialsId: 'my-username-password-id',
+        url: 'https://github.com/jenkinsci/git-plugin.git']])
 ----
 
 ==== Checkout with git large file support enabled
 
-Checkout from the git client plugin source repository using https protocol and a non-default branch.
+Checkout from the git plugin source repository using https protocol with large file support enabled for the `stable-3.x` branch.
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: 'stable-2.x']],
-          extensions: [[$class: 'GitLFSPull']],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+checkout scmGit(
+    branches: [[name: 'stable-3.x']],
+    extensions: [ lfs() ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
 ----
 
 ==== Checkout without fetching tags (advanced clone behavior)
 
-Checkout from the git client plugin source repository using https with no credentials, a default branch, and without tags.
+Checkout from the git plugin source repository using https with no credentials and without tags.
 This can save time and disk space when you want to access the repository without considering tags.
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'CloneOption', noTags: true]],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [ cloneOption(noTags: true) ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
 ----
 
 ==== Checkout with a shallow clone to reduce data traffic
@@ -136,38 +136,37 @@ Shallow clone requests a limited number of commits from the tip of the requested
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'CloneOption', shallow: true]],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+checkout scmGit(
+    branches: [[name: '*/master']],
+    extensions: [ cloneOption(shallow: true) ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
 ==== Checkout with a narrow refspec
 
-Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and with refspec defined for the repository.
-This can save time, data transfer and disk space when you only need to access the references specified by the refspec.
+Checkout from the workspace cleanup plugin source repository using https without credentials, the `master` branch, and with a refspec specific to the master branch.
+This can save time, data transfer, and disk space when you only need to access the references specified by the refspec.
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'CloneOption', honorRefspec: true]],
-          userRemoteConfigs: [[refspec: '+refs/heads/master:refs/remotes/origin/master',
-                               url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
-
+checkout scmGit(
+    branches: [[name: '*/master']],
+    extensions: [ cloneOption(honorRefspec: true) ],
+    userRemoteConfigs: [[refspec: '+refs/heads/master:refs/remotes/origin/master',
+        url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
 ==== Checkout and prune stale remote branches
 
-Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and with prune tags extension enabled.
-This removes remote tracking branches from the local workspace if they no longer exist on the remote.
+Checkout from the workspace cleanup plugin source repository using https without credentials and with prune tags and prune branches extension enabled.
+This removes remote tracking branches and tags from the local workspace if they no longer exist on the remote.
 
 [source,groovy]
 ----
-checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[pruneTags(true)]],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [pruneStaleBranch(), pruneTags(true)],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
 ==== Wipe out repository before checkout
@@ -178,9 +177,9 @@ Ensures a fully fresh workspace.
 [source,groovy]
 ----
 deleteDir()
-checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+checkout scmGit(
+    branches: [[name: '*/master']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
 [#credential-binding]
@@ -311,7 +310,7 @@ Other git repositories can use a link:https://git-scm.com/book/en/v2/Customizing
 Add the following line in your `hooks/post-receive` file on the git server, replacing <URL of the Git repository> with the fully qualified URL you use when cloning the repository, and replacing <Access token> with a token generated by a Jenkins administrator using the "Git plugin notifyCommit access tokens" section of the "Configure Global Security" page.
 
 ....
-curl http://yourserver/git/notifyCommit?url=<URL of the Git repository>&token=<Access token>
+curl "http://yourserver/git/notifyCommit?url=<URL of the Git repository>&token=<Access token>"
 ....
 
 This will scan all the jobs that:
@@ -483,7 +482,7 @@ Options include:
 URL::
 
   Root URL serving this FishEye repository.
-  For example, `\https://fisheye.example.com/browser/my-project`
+  For example, `\https://fisheye.example.com/browse/my-project`
 
 [#kiln-repository-browser]
 ==== Kiln
@@ -525,7 +524,7 @@ Options include:
 URL::
 
   Root URL serving this Bitbucket repository.
-  For example, `\https://bitbucket.example.com/username/my-project`
+  For example, `\https://bitbucket.org/username/my-project`
 
 [bitbucketserver-repository-browser]
 ==== bitbucketserver
@@ -539,7 +538,7 @@ Options include:
 URL::
 
   Root URL serving this Bitbucket repository.
-  For example, `\https://bitbucket-server:7990/username/my-project`
+  For example, `\https://bitbucket.example.com/username/my-project`
 
 [#cgit-repository-browser]
 ==== cgit
@@ -618,9 +617,9 @@ URL::
 [[gitlab-version]]
 Version::
 
-  Major and minor version of GitLab you use, such as 12.6.
+  Major and minor version of GitLab you use, such as 15.6.
   If you don't specify a version, a modern version of GitLab (>= 8.0) is assumed.
-  For example, `12.6`
+  For example, `15.6`
 
 [#gitlist-repository-browser]
 ==== gitlist
@@ -679,10 +678,8 @@ URL::
 [#phabricator-repository-browser]
 ==== phabricator
 
-image:/images/git-repository-browser-phabricator.png[Phabricator Repository Browser]
-
-Repository browser for git repositories hosted by link:https://www.phacility.com/phabricator/[Phacility Phabricator].
-Options include:
+Effective June 1, 2021, Phabricator is link:https://admin.phacility.com/phame/post/view/11/phacility_is_winding_down_operations/[no longer actively maintained].
+This browser is *deprecated*.
 
 [[phabricator-url]]
 URL::
@@ -1298,20 +1295,19 @@ Previous Pipeline syntax looked like this:
 
 ```groovy
 checkout([$class: 'GitSCM',
-          branches: [[name: 'master']],
-          doGenerateSubmoduleConfigurations: false,
-          extensions: [],
-          submoduleCfg: [],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+    branches: [[name: 'master']],
+    doGenerateSubmoduleConfigurations: false,
+    extensions: [],
+    submoduleCfg: [],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
 ```
 
 Current Pipeline Syntax looks like this:
 
 ```groovy
-checkout([$class: 'GitSCM',
-          branches: [[name: 'master']],
-          extensions: [],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+checkout scmGit(
+    branches: [[name: 'master']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']])
 ```
 
 [#environment-variables]
@@ -1392,6 +1388,17 @@ Command line git and JGit can fetch a repository using a local URL (like `file:/
 link:https://www.jenkins.io/security/advisory/2022-05-17/#SECURITY-2478[SECURITY-2478] notes that fetching from a local URL or a path creates a security vulnerability on the Jenkins controller.
 Current releases of the git plugin disallow fetch from a local URL and from a path.
 If a local URL or a path is required and administrators accept the risk of disabling this security safeguard, the Java property `hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true` can be set from the command line that starts the Jenkins controller.
+
+[#cacheRootDir]
+=== Cache root directory
+
+Multibranch Pipelines that use the Git branch source will create cached git repositories on the Jenkins controller.
+By default, the cached git repositories are stored in the `caches` subdirectory of the Jenkins home directory (`JENKINS_HOME`).
+
+Administrators may want to store those git repositories in another location for better performance or to exclude them from backups.
+For example, they might choose to place the cache directories in `/var/cache/jenkins`.
+
+The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
 
 [#git-publisher]
 == Git Publisher
@@ -1522,7 +1529,6 @@ Report issues and enhancements in the link:https://www.jenkins.io/participate/re
 == Contributing to the Plugin
 
 Refer to link:CONTRIBUTING.adoc#contributing-to-the-git-plugin[contributing to the plugin] for contribution guidelines.
-Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin development priorities] for the prioritized list of development topics.
 
 == Remove Git Plugin BuildsByBranch BuildData Script
 

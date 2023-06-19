@@ -127,11 +127,7 @@ public class RemoteConfigConverter implements Converter {
             for (int i = 0; i < items; i++) {
                 String key = in.readUTF();
                 String value = in.readUTF();
-                Collection<String> values = map.get(key);
-                if (values == null) {
-                    values = new ArrayList<>();
-                    map.put(key, values);
-                }
+                Collection<String> values = map.computeIfAbsent(key, unused -> new ArrayList<>());
                 values.add(value);
             }
             fromMap(map);

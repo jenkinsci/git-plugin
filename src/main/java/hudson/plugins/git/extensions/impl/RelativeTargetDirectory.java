@@ -42,6 +42,7 @@ public class RelativeTargetDirectory extends GitSCMExtension {
     }
 
     @Extension
+    // No @Symbol annotation because relative target directory is done in Pipeline with the `dir` step
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {

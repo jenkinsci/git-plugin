@@ -40,6 +40,7 @@ import java.util.List;
 import jenkins.MasterToSlaveFileCallable;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
@@ -61,7 +62,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public abstract class AbstractGitTestCase {
     @Rule
-    public JenkinsRule rule = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
@@ -79,6 +80,7 @@ public abstract class AbstractGitTestCase {
 
     @Before
     public void setUp() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         listener = StreamTaskListener.fromStderr();
 
         testRepo = new TestGitRepo("unnamed", sampleRepo.getRoot(), listener);
@@ -114,7 +116,7 @@ public abstract class AbstractGitTestCase {
     }
 
     protected FreeStyleProject createFreeStyleProject() throws IOException {
-        return rule.createFreeStyleProject();
+        return r.createFreeStyleProject();
     }
 
     protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
@@ -247,7 +249,7 @@ public abstract class AbstractGitTestCase {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            rule.assertBuildStatus(expectedResult, build);
+            r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
@@ -258,7 +260,7 @@ public abstract class AbstractGitTestCase {
             assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            rule.assertBuildStatus(expectedResult, build);
+            r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
@@ -269,7 +271,7 @@ public abstract class AbstractGitTestCase {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            rule.assertBuildStatus(expectedResult, build);
+            r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }

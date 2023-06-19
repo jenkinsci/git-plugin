@@ -13,7 +13,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 public class GitChangeSetBadArgsTest {
 
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     private GitChangeSet createChangeSet(boolean authorOrCommitter, String name, String email) {
         String dataSource = authorOrCommitter ? "Author" : "Committer";

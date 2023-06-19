@@ -65,6 +65,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -97,7 +98,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import hudson.plugins.git.browser.BitbucketWeb;
@@ -110,10 +110,6 @@ import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isBlank;
-
 
 /**
  * Git SCM.
@@ -168,7 +164,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Whitelisted
     @Deprecated
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Unread deprecated collection")
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -209,7 +204,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @DataBoundConstructor
-    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Modify access is assumed for userRemoteConfigs")
     public GitSCM(
             List<UserRemoteConfig> userRemoteConfigs,
             List<BranchSpec> branches,
@@ -218,7 +212,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<GitSCMExtension> extensions) {
 
         // moved from createBranches
-        this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
+        if (branches == null || branches.isEmpty()) {
+            this.branches = new ArrayList<>();
+            this.branches.add(new BranchSpec("*/master"));
+        } else {
+            this.branches = branches;
+        }
 
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
@@ -241,7 +240,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @since 2.0
      */
     @Whitelisted
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;
     }
@@ -556,7 +554,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Whitelisted
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
@@ -1429,7 +1426,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
-        } catch (InterruptedException | MissingObjectException e) {
+        } catch (MissingObjectException e) {
+            listener.getLogger().println("Commit '" + e.getObjectId() + "' not found - no commit message to print");
+        } catch (InterruptedException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
     }
@@ -1643,6 +1642,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Extension
+    @Symbol({"scmGit", "gitSCM"}) // Cannot use "git" because there is already a `git` pipeline step
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
         private String gitExe;
@@ -1832,7 +1832,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 String name = names[i];
                 name = name.replace(' ', '_');
 
-                if (isBlank(refs[i])) {
+                if (refs[i] == null || refs[i].isBlank()) {
                     refs[i] = "+refs/heads/*:refs/remotes/" + name + "/*";
                 }
 
@@ -1940,7 +1940,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Exported
     @Whitelisted
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<BranchSpec> getBranches() {
         return branches;
     }
@@ -1985,6 +1984,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param clone true if returned build data should be copied rather than referenced
      * @return build data for build run
      */
+    @Deprecated
     public BuildData getBuildData(Run build, boolean clone) {
         return clone ? copyBuildData(build) : getBuildData(build);
     }

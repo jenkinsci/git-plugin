@@ -21,7 +21,6 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -34,8 +33,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class GitPublisher extends Recorder implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -57,7 +54,6 @@ public class GitPublisher extends Recorder implements Serializable {
     private List<NoteToPush> notesToPush;
     
     @DataBoundConstructor
-    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public GitPublisher(List<TagToPush> tagsToPush,
                         List<BranchToPush> branchesToPush,
                         List<NoteToPush> notesToPush,
@@ -106,7 +102,6 @@ public class GitPublisher extends Recorder implements Serializable {
         return !notesToPush.isEmpty();
     }
     
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<TagToPush> getTagsToPush() {
         if (tagsToPush == null) {
             tagsToPush = new ArrayList<>();
@@ -115,7 +110,6 @@ public class GitPublisher extends Recorder implements Serializable {
         return tagsToPush;
     }
 
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<BranchToPush> getBranchesToPush() {
         if (branchesToPush == null) {
             branchesToPush = new ArrayList<>();
@@ -124,7 +118,6 @@ public class GitPublisher extends Recorder implements Serializable {
         return branchesToPush;
     }
     
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<NoteToPush> getNotesToPush() {
         if (notesToPush == null) {
             notesToPush = new ArrayList<>();
@@ -462,9 +455,11 @@ public class GitPublisher extends Recorder implements Serializable {
         }
 
         private FormValidation checkFieldNotEmpty(String value, String field) {
-            value = StringUtils.strip(value);
+            if (value != null) {
+                value = value.strip();
+            }
 
-            if (value == null || value.equals("")) {
+            if (value == null || value.isEmpty()) {
                 return FormValidation.error(Messages.GitPublisher_Check_Required(field));
             }
             return FormValidation.ok();

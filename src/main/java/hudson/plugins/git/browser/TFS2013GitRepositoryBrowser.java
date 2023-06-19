@@ -10,8 +10,8 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -56,7 +56,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     /*default*/ URL getRepoUrl(GitChangeSet changeSet) throws IOException { // default visibility for tests
         String result = getRepoUrl();
         
-        if (StringUtils.isBlank(result))
+        if (result == null || result.isBlank())
             return normalizeToEndWithSlash(getUrlFromFirstConfiguredRepository(changeSet));
 
         else if (!result.contains("/"))
@@ -82,6 +82,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("teamFoundation")
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
         private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";

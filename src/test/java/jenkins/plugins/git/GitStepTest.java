@@ -45,15 +45,22 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Stopwatch;
+import org.junit.rules.TestName;
+import org.junit.runner.OrderWith;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
+@OrderWith(RandomOrder.class)
 public class GitStepTest {
 
     @Rule
@@ -69,8 +76,25 @@ public class GitStepTest {
         gitCmd.setDefaults();
     }
 
+    @ClassRule
+    public static Stopwatch stopwatch = new Stopwatch();
+    @Rule
+    public TestName testName = new TestName();
+
+    private static final int MAX_SECONDS_FOR_THESE_TESTS = 200;
+
+    private boolean isTimeAvailable() {
+        String env = System.getenv("CI");
+        if (env == null || !Boolean.parseBoolean(env)) {
+            // Run all tests when not in CI environment
+            return true;
+        }
+        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+    }
+
     @Test
     public void roundtrip() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStep step = new GitStep("git@github.com:jenkinsci/workflow-plugin.git");
         Step roundtrip = new StepConfigTester(r).configRoundTrip(step);
         r.assertEqualDataBoundBeans(step, roundtrip);
@@ -78,6 +102,7 @@ public class GitStepTest {
 
     @Test
     public void roundtrip_withcredentials() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         IdCredentials c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "user", "pass");
         CredentialsProvider.lookupStores(r.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
@@ -89,6 +114,7 @@ public class GitStepTest {
 
     @Test
     public void basicCloneAndUpdate() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         r.createOnlineSlave(Label.get("remote"));
@@ -112,6 +138,7 @@ public class GitStepTest {
 
     @Test
     public void changelogAndPolling() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
@@ -148,6 +175,7 @@ public class GitStepTest {
 
     @Test
     public void multipleSCMs() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         otherRepo.init();
         otherRepo.write("otherfile", "");
@@ -212,6 +240,7 @@ public class GitStepTest {
     @Issue("JENKINS-29326")
     @Test
     public void identicalGitSCMs() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         otherRepo.init();
         otherRepo.write("firstfile", "");
@@ -246,6 +275,7 @@ public class GitStepTest {
 
     @Test
     public void commitToWorkspace() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(

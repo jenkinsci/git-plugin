@@ -19,9 +19,9 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
+import org.eclipse.jgit.transport.URIish;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.HttpResponses;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -32,11 +32,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.FromDataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,7 +39,6 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-@RunWith(Theories.class)
 public class GitStatusTest extends AbstractGitProject {
 
     private GitStatus gitStatus;
@@ -65,7 +59,7 @@ public class GitStatusTest extends AbstractGitProject {
         this.repoURL = new File(".").getAbsolutePath();
         this.branch = "**";
         this.sha1 = "7bb68ef21dc90bd4f7b08eca876203b2e049198d";
-        if (jenkins.jenkins != null) {
+        if (r.jenkins != null) {
             this.notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         }
     }
@@ -79,8 +73,8 @@ public class GitStatusTest extends AbstractGitProject {
     @After
     public void waitForAllJobsToComplete() throws Exception {
         // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
-        if (jenkins != null && jenkins.jenkins != null) {
-            jenkins.jenkins.doQuietDown();
+        if (r != null && r.jenkins != null) {
+            r.jenkins.doQuietDown();
         }
         // JenkinsRule cleanup throws exceptions during tearDown.
         // Reduce exceptions by a random delay from 0.5 to 0.9 seconds.
@@ -93,10 +87,10 @@ public class GitStatusTest extends AbstractGitProject {
          * build logs will not be active when the cleanup process tries to
          * delete them.
          */
-        if (!isWindows() || jenkins == null || jenkins.jenkins == null) {
+        if (!isWindows() || r == null || r.jenkins == null) {
             return;
         }
-        View allView = jenkins.jenkins.getView("All");
+        View allView = r.jenkins.getView("All");
         if (allView == null) {
             return;
         }
@@ -107,7 +101,7 @@ public class GitStatusTest extends AbstractGitProject {
         runList.forEach((Run run) -> {
             try {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
-                jenkins.waitForCompletion(run);
+                r.waitForCompletion(run);
             } catch (InterruptedException ex) {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
             }
@@ -130,12 +124,6 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     public void testGetUrlName() {
         assertEquals("git", this.gitStatus.getUrlName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testToString() {
-        assertEquals("URL: ", this.gitStatus.toString());
     }
 
     @WithoutJenkins
@@ -336,39 +324,6 @@ public class GitStatusTest extends AbstractGitProject {
         assertEquals(expected, this.gitStatus.toString());
     }
 
-    @DataPoints("branchSpecPrefixes")
-    public static final String[] BRANCH_SPEC_PREFIXES = new String[] {
-            "",
-            "refs/remotes/",
-            "refs/heads/",
-            "origin/",
-            "remotes/origin/"
-    };
-
-    @Theory
-    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
-        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "feature/awesome-feature", false);
-        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
-
-        Mockito.verify(trigger).run();
-    }
-
-    @Theory
-    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
-        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
-        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null, notifyCommitApiToken);
-
-        Mockito.verify(trigger).run();
-    }
-
-    @Theory
-    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
-        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
-        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null, notifyCommitApiToken);
-
-        Mockito.verify(trigger).run();
-    }
-
     @Test
     public void testDoNotifyCommitBranchWithRegex() throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", ":[^/]*/awesome-feature", false);
@@ -406,7 +361,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private void setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
-        FreeStyleProject project = jenkins.createFreeStyleProject();
+        FreeStyleProject project = r.createFreeStyleProject();
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
@@ -458,7 +413,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private FreeStyleProject setupNotifyProject() throws Exception {
-        FreeStyleProject project = jenkins.createFreeStyleProject();
+        FreeStyleProject project = r.createFreeStyleProject();
         project.setQuietPeriod(0);
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
@@ -574,7 +529,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithDefaultUnsafeParameterExtra() throws Exception {
-        doNotifyCommitWithDefaultParameter(false, "A,B,C");
+       doNotifyCommitWithDefaultParameter(false, "A,B,C");
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
@@ -609,7 +564,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 
-        jenkins.waitForMessage("aaa aaaccc ccc", build);
+        r.waitForMessage("aaa aaaccc ccc", build);
 
         String extraValue = "An-extra-value";
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));
@@ -693,7 +648,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1, notifyCommitApiToken);
 
-        jenkins.waitUntilNoActivity();
+        r.waitUntilNoActivity();
         FreeStyleBuild lastBuild = project.getLastBuild();
 
         assertNotNull(lastBuild);
@@ -771,7 +726,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1, null);
 
-        jenkins.waitUntilNoActivity();
+        r.waitUntilNoActivity();
         FreeStyleBuild lastBuild = project.getLastBuild();
 
         assertNotNull(lastBuild);

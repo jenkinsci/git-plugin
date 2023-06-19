@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,13 +13,14 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import hudson.plugins.git.util.GitUtilsTest;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 
-import hudson.EnvVars;
 import hudson.model.TaskListener;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -94,7 +95,8 @@ public class GitChangeSetTruncateTest {
         this.gitImpl = gitImpl;
         this.commitSummary = commitSummary;
         this.truncatedSummary = truncatedSummary;
-        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(gitImpl).getClient();
+        GitClient gitClient = Git.with(TaskListener.NULL, GitUtilsTest.getConfigNoSystemEnvsVars())
+                .in(repoRoot).using(gitImpl).getClient();
         final ObjectId head = commitOneFile(gitClient, commitSummary);
         StringWriter changelogStringWriter = new StringWriter();
         gitClient.changelog().includes(head).to(changelogStringWriter).execute();
@@ -106,12 +108,9 @@ public class GitChangeSetTruncateTest {
 
     @Parameterized.Parameters(name = "{0} \"{1}\" --->>> \"{2}\"")
     public static Collection gitObjects() {
-        /* If CLI git is older than 1.8.3, don't test CLI git message truncation */
-        /* CLI git 1.7.1 (CentOS 6) does not support the message truncation command line flags */
         String[] bothGitImplementations = {"git", "jgit"};
-        String[] jgitImplementation = {"jgit"};
         List<Object[]> arguments = new ArrayList<>();
-        for (String implementation : versionCheckRepo.gitVersionAtLeast(1, 8, 3) ? bothGitImplementations : jgitImplementation) {
+        for (String implementation : bothGitImplementations) {
             for (TestData sample : TEST_DATA) {
                 Object[] item = {implementation, sample.testDataCommitSummary, sample.testDataTruncatedSummary};
                 arguments.add(item);
@@ -123,14 +122,20 @@ public class GitChangeSetTruncateTest {
 
     @BeforeClass
     public static void createRepo() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         repoRoot = tempFolder.newFolder();
         String initialImpl = random.nextBoolean() ? "git" : "jgit";
-        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(initialImpl).getClient();
+
+        GitClient gitClient = Git.with(TaskListener.NULL, GitUtilsTest.getConfigNoSystemEnvsVars())
+                .in(repoRoot).using(initialImpl).getClient();
         gitClient.init_().workspace(repoRoot.getAbsolutePath()).execute();
         String[] expectedResult = {""};
         CliGitCommand gitCmd = new CliGitCommand(gitClient, "config", "user.name", "ChangeSet Truncation Test");
         assertThat(gitCmd.run(), is(expectedResult));
         gitCmd = new CliGitCommand(gitClient, "config", "user.email", "ChangeSetTruncation@mail.example.com");
+        assertThat(gitCmd.run(), is(expectedResult));
+        // we have to setup the repo as commitOneFile doesn't to use the env vars
+        gitCmd = new CliGitCommand(gitClient, "config", "commit.gpgsign", "false");
         assertThat(gitCmd.run(), is(expectedResult));
     }
 
@@ -154,9 +159,9 @@ public class GitChangeSetTruncateTest {
         if (parentDir != null) {
             parentDir.mkdirs();
         }
-        try (PrintWriter writer = new PrintWriter(aFile, "UTF-8")) {
+        try (PrintWriter writer = new PrintWriter(aFile, StandardCharsets.UTF_8)) {
             writer.printf(content);
-        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
+        } catch (FileNotFoundException ex) {
             throw new GitException(ex);
         }
     }
