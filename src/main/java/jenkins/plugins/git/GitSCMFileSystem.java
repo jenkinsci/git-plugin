@@ -355,7 +355,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 }
 
                 String remoteHead = headName;
-                if (prefix.equals(Constants.R_HEADS) || prefix.equals(Constants.R_TAGS)) {
+                if (prefix != null && (prefix.equals(Constants.R_HEADS) || prefix.equals(Constants.R_TAGS))) {
                     remoteHead = Constants.R_REMOTES + remoteName + "/" + headName;
                 }
 
