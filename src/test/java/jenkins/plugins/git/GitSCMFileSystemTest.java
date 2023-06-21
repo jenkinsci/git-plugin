@@ -32,10 +32,15 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import hudson.plugins.git.UserRemoteConfig;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -396,29 +401,72 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("commit", "--all", "--message=dev");
         sampleRepo.git("tag", "v1.0");
         SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/tags/v1.0")), null, null, Collections.emptyList()));
+        assertEquals("modified", getFileContent(fs, "dir/subdir/file", "modified"));
+    }
+
+    public static List<UserRemoteConfig> createRepoListWithRefspec(String url, String refspec) {
+        List<UserRemoteConfig> repoList = new ArrayList<>();
+        repoList.add(new UserRemoteConfig(url, null, refspec, null));
+        return repoList;
+    }
+
+    public String getFileContent(SCMFileSystem fs, String path, String expectedContent) throws IOException, InterruptedException {
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
-        Iterable<SCMFile> children = fs.getRoot().children();
-        Iterator<SCMFile> iterator = children.iterator();
-        assertThat(iterator.hasNext(), is(true));
-        SCMFile dir = iterator.next();
-        assertThat(iterator.hasNext(), is(false));
-        assertThat(dir.getName(), is("dir"));
-        assertThat(dir.getType(), is(SCMFile.Type.DIRECTORY));
-        children = dir.children();
-        iterator = children.iterator();
-        assertThat(iterator.hasNext(), is(true));
-        SCMFile subdir = iterator.next();
-        assertThat(iterator.hasNext(), is(false));
-        assertThat(subdir.getName(), is("subdir"));
-        assertThat(subdir.getType(), is(SCMFile.Type.DIRECTORY));
-        children = subdir.children();
-        iterator = children.iterator();
-        assertThat(iterator.hasNext(), is(true));
-        SCMFile file = iterator.next();
-        assertThat(iterator.hasNext(), is(false));
-        assertThat(file.getName(), is("file"));
-        assertThat(file.contentAsString(), is("modified"));
+        String[] segments = path.split("/");
+
+        SCMFile parent = fs.getRoot();
+        SCMFile file = null;
+        for (String segment: segments) {
+            Iterable<SCMFile> children = parent.children();
+            Iterator<SCMFile> iterator = children.iterator();
+            if (segment == segments[segments.length - 1]) {
+                // file
+                assertThat(iterator.hasNext(), is(true));
+                SCMFile t = iterator.next();
+                assertThat(iterator.hasNext(), is(false));
+                assertThat(t.getName(), is(segment));
+                assertThat(t.getType(), is(SCMFile.Type.REGULAR_FILE));
+                file = t;
+            } else {
+                // dir
+                assertThat(iterator.hasNext(), is(true));
+                SCMFile dir = iterator.next();
+                assertThat(iterator.hasNext(), is(false));
+                assertThat(dir.getName(), is(segment));
+                assertThat(dir.getType(), is(SCMFile.Type.DIRECTORY));
+                parent = dir;
+            }
+        }
+        return file.contentAsString();
+    }
+
+    @Test
+    public void create_SCMFileSystem_from_commit() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.mkdirs("dir/subdir");
+        sampleRepo.git("mv", "file", "dir/subdir/file");
+        sampleRepo.write("dir/subdir/file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        String modifiedCommit = sampleRepo.head();
+        sampleRepo.write("dir/subdir/file", "modified again");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(createRepoListWithRefspec(sampleRepo.toString(), "dev"), Collections.singletonList(new BranchSpec(modifiedCommit)), null, null, Collections.emptyList()));
+        assertEquals(modifiedCommit, fs.getRevision().toString());
+        assertEquals("modified", getFileContent(fs, "dir/subdir/file", "modified"));
+    }
+
+    @Test
+    public void create_SCMFileSystem_from_FETCH_HEAD() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.mkdirs("dir/subdir");
+        sampleRepo.git("mv", "file", "dir/subdir/file");
+        sampleRepo.write("dir/subdir/file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(createRepoListWithRefspec(sampleRepo.toString(), "dev"), Collections.singletonList(new BranchSpec("FETCH_HEAD")), null, null, Collections.emptyList()));
+        assertEquals("modified", getFileContent(fs, "dir/subdir/file", "modified"));
     }
 
     @Issue("JENKINS-52964")
@@ -431,35 +479,87 @@ public class GitSCMFileSystemTest {
     @Issue("JENKINS-42971")
     @Test
     public void calculate_head_name_with_env() throws Exception {
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
-                new EnvVars("BRANCH", "master-a"));
+        String remote = "origin";
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null,
+                new EnvVars("BRANCH", "master-a"), remote);
         assertEquals("master-a", result1.headName);
-        assertEquals(Constants.R_HEADS, result1.prefix);
+        assertTrue(result1.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
-                new EnvVars("BRANCH", "refs/heads/master-b"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null,
+                new EnvVars("BRANCH", "refs/heads/master-b"), remote);
         assertEquals("master-b", result2.headName);
-        assertEquals(Constants.R_HEADS, result2.prefix);
+        assertTrue(result2.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null,
-                new EnvVars("BRANCH", "master-c"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null,null,
+                new EnvVars("BRANCH", "master-c"), remote);
         assertEquals("master-c", result3.headName);
-        assertEquals(Constants.R_HEADS, result3.prefix);
+        assertTrue(result3.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
-                null);
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null,
+                null, remote);
         assertEquals("${BRANCH}", result4.headName);
-        assertEquals(Constants.R_HEADS, result4.prefix);
+        assertTrue(result4.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null,
-                new EnvVars("BRANCH", "master-d"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null, null,
+                new EnvVars("BRANCH", "master-d"), remote);
         assertEquals("master-d", result5.headName);
-        assertEquals(Constants.R_HEADS, result5.prefix);
+        assertTrue(result5.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master-e"), null,
-                new EnvVars("BRANCH", "dummy"));
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master-e"), null, null,
+                new EnvVars("BRANCH", "dummy"), remote);
         assertEquals("master-e", result6.headName);
-        assertEquals(Constants.R_HEADS, result6.prefix);
+        assertTrue(result6.refspec.startsWith("+" + Constants.R_HEADS));
+    }
+
+    @Test
+    public void calculate_head_name() throws Exception {
+        String remote = "origin";
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("branch"), null, null, null, remote);
+        assertEquals("branch", result1.headName);
+        assertEquals("refs/remotes/origin/branch", result1.remoteHeadName);
+        assertEquals("+refs/heads/branch:refs/remotes/origin/branch", result1.refspec);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/branch"), null, null, null, remote);
+        assertEquals("branch", result2.headName);
+        assertEquals("refs/remotes/origin/branch", result2.remoteHeadName);
+        assertEquals("+refs/heads/branch:refs/remotes/origin/branch", result2.refspec);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/tags/my-tag"), null, null, null, remote);
+        assertEquals("my-tag", result3.headName);
+        assertEquals("refs/remotes/origin/my-tag", result3.remoteHeadName);
+        assertEquals("+refs/tags/my-tag:refs/remotes/origin/my-tag", result3.refspec);
+    }
+
+    @Test
+    public void calculate_head_name_with_refspec_commit() throws Exception {
+        String remote = "origin";
+        String commit = "0123456789" + "0123456789" + "0123456789" + "0123456789";
+        String branch = "branch";
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec(commit), null, branch, null, remote);
+        assertEquals(commit, result1.headName);
+        assertEquals(commit, result1.remoteHeadName);
+        assertEquals(branch, result1.refspec);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
+                new EnvVars("BRANCH", commit, "REFSPEC", branch), remote);
+        assertEquals(commit, result2.headName);
+        assertEquals(commit, result2.remoteHeadName);
+        assertEquals(branch, result2.refspec);
+    }
+
+    @Test
+    public void calculate_head_name_with_refspec_FETCH_HEAD() throws Exception {
+        String remote = "origin";
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("FETCH_HEAD"), null, "refs/changes/1/2/3", null, remote);
+        assertEquals("FETCH_HEAD", result1.headName);
+        assertEquals("FETCH_HEAD", result1.remoteHeadName);
+        assertEquals("refs/changes/1/2/3", result1.refspec);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
+                new EnvVars("BRANCH", "FETCH_HEAD", "REFSPEC", "refs/changes/1/2/3"), remote);
+        assertEquals("FETCH_HEAD", result2.headName);
+        assertEquals("FETCH_HEAD", result2.remoteHeadName);
+        assertEquals("refs/changes/1/2/3", result2.refspec);
     }
 
     /* GitSCMFileSystem in git plugin 4.14.0 reported a null pointer
@@ -472,9 +572,9 @@ public class GitSCMFileSystemTest {
         ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null);
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null, null, "origin");
         assertEquals("master-f", result1.headName);
-        assertEquals(Constants.R_HEADS, result1.prefix);
+        assertTrue(result1.refspec.startsWith("+" + Constants.R_HEADS));
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
