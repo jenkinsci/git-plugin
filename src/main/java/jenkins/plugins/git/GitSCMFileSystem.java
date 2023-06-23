@@ -329,7 +329,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     prefix = "refs/changes/";
                 } else {
                     // check for FETCH_HEAD
-                    if (branchSpecExpandedName.equals("FETCH_HEAD") && !refspecExpandedName.equals("")) {
+                    if (branchSpecExpandedName.equals(Constants.FETCH_HEAD) && !refspecExpandedName.equals("")) {
                         prefix = null;
                     } else {
                         // check for commit-id
