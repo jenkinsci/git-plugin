@@ -465,7 +465,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("mv", "file", "dir/subdir/file");
         sampleRepo.write("dir/subdir/file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(createRepoListWithRefspec(sampleRepo.toString(), "dev"), Collections.singletonList(new BranchSpec("FETCH_HEAD")), null, null, Collections.emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(createRepoListWithRefspec(sampleRepo.toString(), "dev"), Collections.singletonList(new BranchSpec(Constants.FETCH_HEAD)), null, null, Collections.emptyList()));
         assertEquals("modified", getFileContent(fs, "dir/subdir/file", "modified"));
     }
 
@@ -550,15 +550,15 @@ public class GitSCMFileSystemTest {
     @Test
     public void calculate_head_name_with_refspec_FETCH_HEAD() throws Exception {
         String remote = "origin";
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("FETCH_HEAD"), null, "refs/changes/1/2/3", null, remote);
-        assertEquals("FETCH_HEAD", result1.headName);
-        assertEquals("FETCH_HEAD", result1.remoteHeadName);
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec(Constants.FETCH_HEAD), null, "refs/changes/1/2/3", null, remote);
+        assertEquals(Constants.FETCH_HEAD, result1.headName);
+        assertEquals(Constants.FETCH_HEAD, result1.remoteHeadName);
         assertEquals("refs/changes/1/2/3", result1.refspec);
 
         GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
-                new EnvVars("BRANCH", "FETCH_HEAD", "REFSPEC", "refs/changes/1/2/3"), remote);
-        assertEquals("FETCH_HEAD", result2.headName);
-        assertEquals("FETCH_HEAD", result2.remoteHeadName);
+                new EnvVars("BRANCH", Constants.FETCH_HEAD, "REFSPEC", "refs/changes/1/2/3"), remote);
+        assertEquals(Constants.FETCH_HEAD, result2.headName);
+        assertEquals(Constants.FETCH_HEAD, result2.remoteHeadName);
         assertEquals("refs/changes/1/2/3", result2.refspec);
     }
 
