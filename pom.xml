@@ -80,7 +80,7 @@
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
-    <spotbugs.threshold>Medium</spotbugs.threshold>
+    <spotbugs.threshold>Low</spotbugs.threshold>
   </properties>
 
   <dependencyManagement>
