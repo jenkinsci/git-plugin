@@ -958,10 +958,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private static CredentialsMatcher gitScanCredentialsMatcher() {
-        return CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-    }
-
     @NonNull
     private BuildData fixNull(BuildData bd) {
         ScmName sn = getExtensions().get(ScmName.class);
