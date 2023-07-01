@@ -404,41 +404,36 @@ public class GitSCMFileSystemTest {
         assertEquals("modified", getFileContent(fs, "dir/subdir/file", "modified"));
     }
 
+    public String getFileContent(SCMFileSystem fs, String path, String expectedContent) throws IOException, InterruptedException {
+        assertThat(fs, notNullValue());
+        assertThat(fs.getRoot(), notNullValue());
+        Iterable<SCMFile> children = fs.getRoot().children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile dir = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(dir.getName(), is("dir"));
+        assertThat(dir.getType(), is(SCMFile.Type.DIRECTORY));
+        children = dir.children();
+        iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile subdir = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(subdir.getName(), is("subdir"));
+        assertThat(subdir.getType(), is(SCMFile.Type.DIRECTORY));
+        children = subdir.children();
+        iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        return file.contentAsString();
+    }
+
     public static List<UserRemoteConfig> createRepoListWithRefspec(String url, String refspec) {
         List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(url, null, refspec, null));
         return repoList;
-    }
-
-    public String getFileContent(SCMFileSystem fs, String path, String expectedContent) throws IOException, InterruptedException {
-        assertThat(fs, notNullValue());
-        assertThat(fs.getRoot(), notNullValue());
-        String[] segments = path.split("/");
-
-        SCMFile parent = fs.getRoot();
-        SCMFile file = null;
-        for (String segment: segments) {
-            Iterable<SCMFile> children = parent.children();
-            Iterator<SCMFile> iterator = children.iterator();
-            if (segment == segments[segments.length - 1]) {
-                // file
-                assertThat(iterator.hasNext(), is(true));
-                SCMFile t = iterator.next();
-                assertThat(iterator.hasNext(), is(false));
-                assertThat(t.getName(), is(segment));
-                assertThat(t.getType(), is(SCMFile.Type.REGULAR_FILE));
-                file = t;
-            } else {
-                // dir
-                assertThat(iterator.hasNext(), is(true));
-                SCMFile dir = iterator.next();
-                assertThat(iterator.hasNext(), is(false));
-                assertThat(dir.getName(), is(segment));
-                assertThat(dir.getType(), is(SCMFile.Type.DIRECTORY));
-                parent = dir;
-            }
-        }
-        return file.contentAsString();
     }
 
     @Test
