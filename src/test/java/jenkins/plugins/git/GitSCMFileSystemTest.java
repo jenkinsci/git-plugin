@@ -72,6 +72,8 @@ import static org.junit.Assert.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import jenkins.plugins.git.GitSCMFileSystem.BuilderImpl.HeadNameResult;
+
 /**
  * Tests for {@link AbstractGitSCMSource}
  */
@@ -475,33 +477,27 @@ public class GitSCMFileSystemTest {
     @Test
     public void calculate_head_name_with_env() throws Exception {
         String remote = "origin";
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null,
-                new EnvVars("BRANCH", "master-a"), remote);
+        HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null, new EnvVars("BRANCH", "master-a"), remote);
         assertEquals("master-a", result1.headName);
         assertTrue(result1.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null,
-                new EnvVars("BRANCH", "refs/heads/master-b"), remote);
+        HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null, new EnvVars("BRANCH", "refs/heads/master-b"), remote);
         assertEquals("master-b", result2.headName);
         assertTrue(result2.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null,null,
-                new EnvVars("BRANCH", "master-c"), remote);
+        HeadNameResult result3 = HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null, null, new EnvVars("BRANCH", "master-c"), remote);
         assertEquals("master-c", result3.headName);
         assertTrue(result3.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null,
-                null, remote);
+        HeadNameResult result4 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null, null, remote);
         assertEquals("${BRANCH}", result4.headName);
         assertTrue(result4.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null, null,
-                new EnvVars("BRANCH", "master-d"), remote);
+        HeadNameResult result5 = HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null, null, new EnvVars("BRANCH", "master-d"), remote);
         assertEquals("master-d", result5.headName);
         assertTrue(result5.refspec.startsWith("+" + Constants.R_HEADS));
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master-e"), null, null,
-                new EnvVars("BRANCH", "dummy"), remote);
+        HeadNameResult result6 = HeadNameResult.calculate(new BranchSpec("*/master-e"), null, null, new EnvVars("BRANCH", "dummy"), remote);
         assertEquals("master-e", result6.headName);
         assertTrue(result6.refspec.startsWith("+" + Constants.R_HEADS));
     }
