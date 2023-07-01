@@ -303,7 +303,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
             static HeadNameResult calculate(@NonNull BranchSpec branchSpec,
                                             @CheckForNull SCMRevision rev,
-                                            @NonNull String refSpec,
+                                            @CheckForNull String refSpec,
                                             @CheckForNull EnvVars env,
                                             @CheckForNull String remoteName) {
 
