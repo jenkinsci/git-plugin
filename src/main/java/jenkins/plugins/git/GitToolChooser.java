@@ -269,17 +269,15 @@ public class GitToolChooser {
     /** Cache the estimated repository size for variants of repository URL */
     private void assignSizeToInternalCache(String repoURL, long repoSize) {
         repoURL = convertToCanonicalURL(repoURL);
-        if (repositorySizeCache.containsKey(repoURL)) {
-            long oldSize = repositorySizeCache.get(repoURL);
-            if (oldSize < repoSize) {
-                LOGGER.log(Level.FINE, "Replacing old repo size {0} with new size {1} for repo {2}", new Object[]{oldSize, repoSize, repoURL});
-                repositorySizeCache.put(repoURL, repoSize);
-            } else if (oldSize > repoSize) {
-                LOGGER.log(Level.FINE, "Ignoring new size {1} in favor of old size {0} for repo {2}", new Object[]{oldSize, repoSize, repoURL});
-            }
-        } else {
+        Long oldSize = repositorySizeCache.put(repoURL, repoSize);
+        if (oldSize == null) {
             LOGGER.log(Level.FINE, "Caching repo size {0} for repo {1}", new Object[]{repoSize, repoURL});
-            repositorySizeCache.put(repoURL, repoSize);
+        } else if (oldSize < repoSize) {
+            LOGGER.log(Level.FINE, "Replaced old repo size {0} with new size {1} for repo {2}", new Object[]{oldSize, repoSize, repoURL});
+        } else if (oldSize > repoSize) {
+            /* Put back the larger old repo size and log a warning. This is not harmful but should be quite rare */
+            LOGGER.log(Level.WARNING, "Ignoring new repo size {1} in favor of old size {0} for repo {2}", new Object[]{oldSize, repoSize, repoURL});
+            repositorySizeCache.put(repoURL, oldSize);
         }
     }
 
