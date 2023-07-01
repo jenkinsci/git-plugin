@@ -442,7 +442,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, config.getRefspec(), env, remoteName);
                 client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(headNameResult.refspec))).execute();
 
-                listener.getLogger().println("Done.");
+                listener.getLogger().println("Done with " + remoteName + " using " + headNameResult.headName + ".");
                 return new GitSCMFileSystem(client, remote, headNameResult.remoteHeadName, (AbstractGitSCMSource.SCMRevisionImpl) headNameResult.rev);
             } finally {
                 cacheLock.unlock();

@@ -74,9 +74,4 @@
     <Class name="hudson.plugins.git.extensions.impl.PathRestriction" />
     <Method name="normalize" />
   </Match>
-  <Match>
-    <Bug pattern="URF_UNREAD_FIELD" />
-    <Class name="jenkins.plugins.git.GitSCMFileSystem$BuilderImpl$HeadNameResult" />
-    <Field name="headName" />
-  </Match>
 </FindBugsFilter>
