@@ -327,7 +327,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         prefix = null;
                     } else {
                         // check for commit-id
-                        final String regex = "^[a-fA-F0-9]{40}$";
+                        final String regex = "^([a-fA-F0-9]{40}|[a-fA-F0-9]{64})$";
                         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
                         final Matcher matcher = pattern.matcher(branchSpecExpandedName);
 
