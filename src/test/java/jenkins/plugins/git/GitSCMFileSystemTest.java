@@ -505,17 +505,17 @@ public class GitSCMFileSystemTest {
     @Test
     public void calculate_head_name() throws Exception {
         String remote = "origin";
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("branch"), null, null, null, remote);
+        HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec("branch"), null, null, null, remote);
         assertEquals("branch", result1.headName);
         assertEquals("refs/remotes/origin/branch", result1.remoteHeadName);
         assertEquals("+refs/heads/branch:refs/remotes/origin/branch", result1.refspec);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/branch"), null, null, null, remote);
+        HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("refs/heads/branch"), null, null, null, remote);
         assertEquals("branch", result2.headName);
         assertEquals("refs/remotes/origin/branch", result2.remoteHeadName);
         assertEquals("+refs/heads/branch:refs/remotes/origin/branch", result2.refspec);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/tags/my-tag"), null, null, null, remote);
+        HeadNameResult result3 = HeadNameResult.calculate(new BranchSpec("refs/tags/my-tag"), null, null, null, remote);
         assertEquals("my-tag", result3.headName);
         assertEquals("refs/remotes/origin/my-tag", result3.remoteHeadName);
         assertEquals("+refs/tags/my-tag:refs/remotes/origin/my-tag", result3.refspec);
@@ -526,12 +526,12 @@ public class GitSCMFileSystemTest {
         String remote = "origin";
         String commit = "0123456789" + "0123456789" + "0123456789" + "0123456789";
         String branch = "branch";
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec(commit), null, branch, null, remote);
+        HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec(commit), null, branch, null, remote);
         assertEquals(commit, result1.headName);
         assertEquals(commit, result1.remoteHeadName);
         assertEquals(branch, result1.refspec);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
+        HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
                 new EnvVars("BRANCH", commit, "REFSPEC", branch), remote);
         assertEquals(commit, result2.headName);
         assertEquals(commit, result2.remoteHeadName);
@@ -541,12 +541,12 @@ public class GitSCMFileSystemTest {
     @Test
     public void calculate_head_name_with_refspec_FETCH_HEAD() throws Exception {
         String remote = "origin";
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec(Constants.FETCH_HEAD), null, "refs/changes/1/2/3", null, remote);
+        HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec(Constants.FETCH_HEAD), null, "refs/changes/1/2/3", null, remote);
         assertEquals(Constants.FETCH_HEAD, result1.headName);
         assertEquals(Constants.FETCH_HEAD, result1.remoteHeadName);
         assertEquals("refs/changes/1/2/3", result1.refspec);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
+        HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
                 new EnvVars("BRANCH", Constants.FETCH_HEAD, "REFSPEC", "refs/changes/1/2/3"), remote);
         assertEquals(Constants.FETCH_HEAD, result2.headName);
         assertEquals(Constants.FETCH_HEAD, result2.remoteHeadName);
@@ -563,7 +563,7 @@ public class GitSCMFileSystemTest {
         ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null, null, "origin");
+        HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null, null, "origin");
         assertEquals("master-f", result1.headName);
         assertTrue(result1.refspec.startsWith("+" + Constants.R_HEADS));
     }
