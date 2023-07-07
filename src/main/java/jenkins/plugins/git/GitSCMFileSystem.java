@@ -289,13 +289,11 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         static class HeadNameResult {
-            final String headName;
             final String remoteHeadName;
             final String refspec;
             final SCMRevision rev;
 
-            private HeadNameResult(String headName, String remoteHeadName, String refspec, SCMRevision rev) {
-                this.headName = headName;
+            private HeadNameResult(String remoteHeadName, String refspec, SCMRevision rev) {
                 this.remoteHeadName = remoteHeadName;
                 this.refspec = refspec;
                 this.rev = rev;
@@ -364,7 +362,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     remoteHead = Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
                 }
 
-                return new HeadNameResult(calculatedHeadName, remoteHead, refspecExpandedName, rev);
+                return new HeadNameResult(remoteHead, refspecExpandedName, rev);
             }
         }
 
@@ -447,7 +445,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, config.getRefspec(), env, remoteName);
                 client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(headNameResult.refspec))).execute();
 
-                listener.getLogger().println("Done with " + remoteName + " using " + headNameResult.headName + ".");
+                listener.getLogger().println("Done with " + remoteName + " using " + headNameResult.remoteHeadName + ".");
                 return new GitSCMFileSystem(client, remote, headNameResult.remoteHeadName, (AbstractGitSCMSource.SCMRevisionImpl) headNameResult.rev);
             } finally {
                 cacheLock.unlock();

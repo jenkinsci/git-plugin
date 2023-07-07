@@ -478,27 +478,27 @@ public class GitSCMFileSystemTest {
     public void calculate_head_name_with_env() throws Exception {
         String remote = "origin";
         HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null, new EnvVars("BRANCH", "master-a"), remote);
-        assertEquals("master-a", result1.headName);
+        assertEquals("refs/remotes/origin/master-a", result1.remoteHeadName);
         assertTrue(result1.refspec.startsWith("+" + Constants.R_HEADS));
 
         HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null, new EnvVars("BRANCH", "refs/heads/master-b"), remote);
-        assertEquals("master-b", result2.headName);
+        assertEquals("refs/remotes/origin/master-b", result2.remoteHeadName);
         assertTrue(result2.refspec.startsWith("+" + Constants.R_HEADS));
 
         HeadNameResult result3 = HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null, null, new EnvVars("BRANCH", "master-c"), remote);
-        assertEquals("master-c", result3.headName);
+        assertEquals("refs/remotes/origin/master-c", result3.remoteHeadName);
         assertTrue(result3.refspec.startsWith("+" + Constants.R_HEADS));
 
         HeadNameResult result4 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, null, null, remote);
-        assertEquals("${BRANCH}", result4.headName);
+        assertEquals("refs/remotes/origin/${BRANCH}", result4.remoteHeadName);
         assertTrue(result4.refspec.startsWith("+" + Constants.R_HEADS));
 
         HeadNameResult result5 = HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null, null, new EnvVars("BRANCH", "master-d"), remote);
-        assertEquals("master-d", result5.headName);
+        assertEquals("refs/remotes/origin/master-d", result5.remoteHeadName);
         assertTrue(result5.refspec.startsWith("+" + Constants.R_HEADS));
 
         HeadNameResult result6 = HeadNameResult.calculate(new BranchSpec("*/master-e"), null, null, new EnvVars("BRANCH", "dummy"), remote);
-        assertEquals("master-e", result6.headName);
+        assertEquals("refs/remotes/origin/master-e", result6.remoteHeadName);
         assertTrue(result6.refspec.startsWith("+" + Constants.R_HEADS));
     }
 
@@ -506,17 +506,14 @@ public class GitSCMFileSystemTest {
     public void calculate_head_name() throws Exception {
         String remote = "origin";
         HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec("branch"), null, null, null, remote);
-        assertEquals("branch", result1.headName);
         assertEquals("refs/remotes/origin/branch", result1.remoteHeadName);
         assertEquals("+refs/heads/branch:refs/remotes/origin/branch", result1.refspec);
 
         HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("refs/heads/branch"), null, null, null, remote);
-        assertEquals("branch", result2.headName);
         assertEquals("refs/remotes/origin/branch", result2.remoteHeadName);
         assertEquals("+refs/heads/branch:refs/remotes/origin/branch", result2.refspec);
 
         HeadNameResult result3 = HeadNameResult.calculate(new BranchSpec("refs/tags/my-tag"), null, null, null, remote);
-        assertEquals("my-tag", result3.headName);
         assertEquals("my-tag", result3.remoteHeadName);
         assertEquals("+refs/tags/my-tag:refs/tags/my-tag", result3.refspec);
     }
@@ -527,13 +524,11 @@ public class GitSCMFileSystemTest {
         String commit = "0123456789" + "0123456789" + "0123456789" + "0123456789";
         String branch = "branch";
         HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec(commit), null, branch, null, remote);
-        assertEquals(commit, result1.headName);
         assertEquals(commit, result1.remoteHeadName);
         assertEquals(branch, result1.refspec);
 
         HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
                 new EnvVars("BRANCH", commit, "REFSPEC", branch), remote);
-        assertEquals(commit, result2.headName);
         assertEquals(commit, result2.remoteHeadName);
         assertEquals(branch, result2.refspec);
     }
@@ -542,13 +537,11 @@ public class GitSCMFileSystemTest {
     public void calculate_head_name_with_refspec_FETCH_HEAD() throws Exception {
         String remote = "origin";
         HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec(Constants.FETCH_HEAD), null, "refs/changes/1/2/3", null, remote);
-        assertEquals(Constants.FETCH_HEAD, result1.headName);
         assertEquals(Constants.FETCH_HEAD, result1.remoteHeadName);
         assertEquals("refs/changes/1/2/3", result1.refspec);
 
         HeadNameResult result2 = HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null, "${REFSPEC}",
                 new EnvVars("BRANCH", Constants.FETCH_HEAD, "REFSPEC", "refs/changes/1/2/3"), remote);
-        assertEquals(Constants.FETCH_HEAD, result2.headName);
         assertEquals(Constants.FETCH_HEAD, result2.remoteHeadName);
         assertEquals("refs/changes/1/2/3", result2.refspec);
     }
@@ -564,7 +557,7 @@ public class GitSCMFileSystemTest {
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
         HeadNameResult result1 = HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null, null, "origin");
-        assertEquals("master-f", result1.headName);
+        assertEquals("refs/remotes/origin/master-f", result1.remoteHeadName);
         assertTrue(result1.refspec.startsWith("+" + Constants.R_HEADS));
     }
 
