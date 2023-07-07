@@ -312,7 +312,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     branchSpecExpandedName = env.expand(branchSpecExpandedName);
                 }
                 String refspecExpandedName = refSpec;
-                if (env != null) {
+                if (env != null && refspecExpandedName != null) {
                     refspecExpandedName = env.expand(refspecExpandedName);
                 }
 
@@ -323,7 +323,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     prefix = Constants.R_TAGS;
                 } else {
                     // check for FETCH_HEAD
-                    if (branchSpecExpandedName.equals(Constants.FETCH_HEAD) && !refspecExpandedName.equals("")) {
+                    if (branchSpecExpandedName.equals(Constants.FETCH_HEAD) && refspecExpandedName != null &&
+                            !refspecExpandedName.equals("")) {
                         prefix = null;
                     } else {
                         // check for commit-id
@@ -351,11 +352,15 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 }
 
                 if (refspecExpandedName == null || refspecExpandedName.equals("")) {
-                    refspecExpandedName = "+" + prefix + calculatedHeadName + ":" + Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
+                    if (prefix.equals(Constants.R_TAGS)) {
+                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":"  + prefix + calculatedHeadName;
+                    } else {
+                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":" + Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
+                    }
                 }
 
                 String remoteHead = calculatedHeadName;
-                if (prefix != null && (prefix.equals(Constants.R_HEADS) || prefix.equals(Constants.R_TAGS))) {
+                if (prefix != null && prefix.equals(Constants.R_HEADS)) {
                     remoteHead = Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
                 }
 

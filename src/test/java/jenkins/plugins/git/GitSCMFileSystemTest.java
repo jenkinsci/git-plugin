@@ -517,8 +517,8 @@ public class GitSCMFileSystemTest {
 
         HeadNameResult result3 = HeadNameResult.calculate(new BranchSpec("refs/tags/my-tag"), null, null, null, remote);
         assertEquals("my-tag", result3.headName);
-        assertEquals("refs/remotes/origin/my-tag", result3.remoteHeadName);
-        assertEquals("+refs/tags/my-tag:refs/remotes/origin/my-tag", result3.refspec);
+        assertEquals("my-tag", result3.remoteHeadName);
+        assertEquals("+refs/tags/my-tag:refs/tags/my-tag", result3.refspec);
     }
 
     @Test
