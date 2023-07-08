@@ -72,9 +72,8 @@ public class GitStatusTest extends AbstractGitProject {
 
     @After
     public void waitForAllJobsToComplete() throws Exception {
-        // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
-        if (r != null && r.jenkins != null) {
-            r.jenkins.doQuietDown();
+        if (r == null || r.jenkins == null) {
+            return; // No jobs if not running with a JenkinsRule
         }
         // JenkinsRule cleanup throws exceptions during tearDown.
         // Reduce exceptions by a random delay from 0.5 to 0.9 seconds.
@@ -82,14 +81,12 @@ public class GitStatusTest extends AbstractGitProject {
         // for fewer exceptions and for better Windows job cleanup.
         java.util.Random random = new java.util.Random();
         Thread.sleep(500L + random.nextInt(400));
+
         /* Windows job cleanup fails to delete build logs in some of these tests.
          * Wait for the jobs to complete before exiting the test so that the
          * build logs will not be active when the cleanup process tries to
          * delete them.
          */
-        if (!isWindows() || r == null || r.jenkins == null) {
-            return;
-        }
         View allView = r.jenkins.getView("All");
         if (allView == null) {
             return;
