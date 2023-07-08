@@ -2,11 +2,9 @@ package hudson.plugins.git;
 
 import static org.junit.Assert.*;
 
-import java.net.URISyntaxException;
 import org.eclipse.jgit.transport.URIish;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,7 +43,7 @@ public class GitStatusSimpleTest {
     }
 
     @Test
-    public void testLooselyMatches() throws URISyntaxException {
+    public void testLooselyMatches() throws Exception {
         String[] equivalentRepoURLs = new String[] {
             "https://example.com/jenkinsci/git-plugin",
             "https://example.com/jenkinsci/git-plugin/",
