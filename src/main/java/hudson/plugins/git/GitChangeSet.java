@@ -590,7 +590,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     /**
      * Gets the author name for this changeset - note that this is mainly here
      * so that we can test authorOrCommitter without needing a fully instantiated
-     * Hudson (which is needed for User.get in getAuthor()).
+     * Jenkins (which is needed for User.get in getAuthor()).
      *
      * @return author name
      */
