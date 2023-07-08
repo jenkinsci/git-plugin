@@ -34,7 +34,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
 
 /**
- * Information screen for the use of Git in Hudson.
+ * Root action that requests the plugin to poll for changes in remote repositories.
  */
 @Extension
 public class GitStatus implements UnprotectedRootAction {
