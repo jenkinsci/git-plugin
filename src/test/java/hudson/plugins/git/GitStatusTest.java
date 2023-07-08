@@ -86,7 +86,7 @@ public class GitStatusTest extends AbstractGitProject {
          */
         View allView = r.jenkins.getView("All");
         if (allView == null) {
-            assertTrue(false); // unexpected
+            fail("All view was not found when it should always be available");
             return;
         }
         RunList<Run> runList = allView.getBuilds();
