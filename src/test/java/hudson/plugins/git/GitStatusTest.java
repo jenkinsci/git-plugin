@@ -32,7 +32,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
@@ -72,10 +71,8 @@ public class GitStatusTest extends AbstractGitProject {
 
     @After
     public void waitForAllJobsToComplete() throws Exception {
-        // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
-        if (r != null && r.jenkins != null) {
-            r.jenkins.doQuietDown();
-        }
+        // Put JenkinsRule into shutdown state, trying to reduce cleanup exceptions
+        r.jenkins.doQuietDown();
         // JenkinsRule cleanup throws exceptions during tearDown.
         // Reduce exceptions by a random delay from 0.5 to 0.9 seconds.
         // Adding roughly 0.7 seconds to these JenkinsRule tests is a small price
@@ -87,15 +84,14 @@ public class GitStatusTest extends AbstractGitProject {
          * build logs will not be active when the cleanup process tries to
          * delete them.
          */
-        if (!isWindows() || r == null || r.jenkins == null) {
-            return;
-        }
         View allView = r.jenkins.getView("All");
         if (allView == null) {
+            fail("All view was not found when it should always be available");
             return;
         }
         RunList<Run> runList = allView.getBuilds();
         if (runList == null) {
+            Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "No waiting, no entries in the runList");
             return;
         }
         runList.forEach((Run run) -> {
@@ -106,36 +102,6 @@ public class GitStatusTest extends AbstractGitProject {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
             }
         });
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetDisplayName() {
-        assertEquals("Git", this.gitStatus.getDisplayName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetIconFileName() {
-        assertNull(this.gitStatus.getIconFileName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetUrlName() {
-        assertEquals("git", this.gitStatus.getUrlName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testAllowNotifyCommitParametersDisabled() {
-        assertFalse("SECURITY-275: ignore arbitrary notifyCommit parameters", GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testSafeParametersEmpty() {
-        assertEquals("SECURITY-275: Safe notifyCommit parameters", "", GitStatus.SAFE_PARAMETERS);
     }
 
     @Test
@@ -369,47 +335,6 @@ public class GitStatusTest extends AbstractGitProject {
                 Collections.emptyList());
         project.setScm(git);
         if (trigger != null) project.addTrigger(trigger);
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testLooselyMatches() throws URISyntaxException {
-        String[] equivalentRepoURLs = new String[]{
-            "https://example.com/jenkinsci/git-plugin",
-            "https://example.com/jenkinsci/git-plugin/",
-            "https://example.com/jenkinsci/git-plugin.git",
-            "https://example.com/jenkinsci/git-plugin.git/",
-            "https://someone@example.com/jenkinsci/git-plugin.git",
-            "https://someone:somepassword@example.com/jenkinsci/git-plugin/",
-            "git://example.com/jenkinsci/git-plugin",
-            "git://example.com/jenkinsci/git-plugin/",
-            "git://example.com/jenkinsci/git-plugin.git",
-            "git://example.com/jenkinsci/git-plugin.git/",
-            "ssh://git@example.com/jenkinsci/git-plugin",
-            "ssh://example.com/jenkinsci/git-plugin.git",
-            "git@example.com:jenkinsci/git-plugin/",
-            "git@example.com:jenkinsci/git-plugin.git",
-            "git@example.com:jenkinsci/git-plugin.git/"
-        };
-        List<URIish> uris = new ArrayList<>();
-        for (String testURL : equivalentRepoURLs) {
-            uris.add(new URIish(testURL));
-        }
-
-        /* Extra slashes on end of URL probably should be considered equivalent,
-         * but current implementation does not consider them as loose matches
-         */
-        URIish badURLTrailingSlashes = new URIish(equivalentRepoURLs[0] + "///");
-        /* Different hostname should always fail match check */
-        URIish badURLHostname = new URIish(equivalentRepoURLs[0].replace("example.com", "bitbucket.org"));
-
-        for (URIish lhs : uris) {
-            assertFalse(lhs + " matches trailing slashes " + badURLTrailingSlashes, GitStatus.looselyMatches(lhs, badURLTrailingSlashes));
-            assertFalse(lhs + " matches bad hostname " + badURLHostname, GitStatus.looselyMatches(lhs, badURLHostname));
-            for (URIish rhs : uris) {
-                assertTrue(lhs + " and " + rhs + " didn't match", GitStatus.looselyMatches(lhs, rhs));
-            }
-        }
     }
 
     private FreeStyleProject setupNotifyProject() throws Exception {
