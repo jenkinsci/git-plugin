@@ -91,6 +91,7 @@ public class GitStatusTest extends AbstractGitProject {
         }
         RunList<Run> runList = allView.getBuilds();
         if (runList == null) {
+            Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "No waiting, no entries in the runList");
             return;
         }
         runList.forEach((Run run) -> {
