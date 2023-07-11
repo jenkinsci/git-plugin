@@ -176,14 +176,20 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             return StandardUsernamePasswordCredentials.class;
         }
 
-        protected String unixArgEncodeFileName(String filename) {
+        /* Escape all single quotes in filename, then surround filename in single quotes.
+         * Only useful to prepare filename for reference from a shell script.
+         */
+        private String unixArgEncodeFileName(String filename) {
             if (filename.contains("'")) {
                 filename = filename.replace("'", "'\\''");
             }
             return "'" + filename + "'";
         }
 
-        protected String windowsArgEncodeFileName(String filename) {
+        /* Escape all double quotes in filename, then surround filename in double quotes.
+         * Only useful to prepare filename for reference from a DOS batch file.
+         */
+        private String windowsArgEncodeFileName(String filename) {
             if (filename.contains("\"")) {
                 filename = filename.replace("\"", "^\"");
             }
