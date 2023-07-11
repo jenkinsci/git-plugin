@@ -151,7 +151,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             FilePath passwordFile = workspace.createTempFile("password", ".txt");
             passwordFile.write(this.passVariable + "\n", null);
 
-            //Hard Coded platform dependent newLine
+              //Hard Coded platform dependent newLine
             if (this.unixNodeType) {
                 gitEcho = workspace.createTempFile("auth", ".sh");
                 gitEcho.write("#!/bin/sh\n"
