@@ -321,9 +321,6 @@ public class GitUsernamePasswordBindingTest {
         } else {
             assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
         }
-        WorkflowJob prj = r.createProject(WorkflowJob.class);
-
-        r.buildAndAssertSuccess(prj);
 
         if(!isWindows()) {
             assertThat(tempScriptFile.readToString(), containsString("Username*) cat"));
