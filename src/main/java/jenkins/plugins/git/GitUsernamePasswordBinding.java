@@ -145,23 +145,28 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         protected FilePath write(StandardUsernamePasswordCredentials credentials, FilePath workspace)
                 throws IOException, InterruptedException {
             FilePath gitEcho;
-              //Hard Coded platform dependent newLine
+
+            FilePath usernameFile = workspace.createTempFile("username", ".txt");
+            usernameFile.write(this.userVariable + "\n", null);
+            FilePath passwordFile = workspace.createTempFile("password", ".txt");
+            passwordFile.write(this.passVariable + "\n", null);
+
+            //Hard Coded platform dependent newLine
             if (this.unixNodeType) {
                 gitEcho = workspace.createTempFile("auth", ".sh");
-                // [#!/usr/bin/env sh] to be used if required, could have some corner cases
-                gitEcho.write("case $1 in\n"
-                        + "        Username*) echo '" + this.userVariable.replace("'", "'\\''") + "'"
-                        + "                ;;\n"
-                        + "        Password*) echo '" + this.passVariable.replace("'", "'\\''") + "'"
-                        + "                ;;\n"
+                gitEcho.write("#!/bin/sh\n"
+                        + "\n"
+                        + "case \"$1\" in\n"
+                        + "        Username*) cat " + unixArgEncodeFileName(usernameFile.getRemote()) + ";;\n"
+                        + "        Password*) cat " + unixArgEncodeFileName(passwordFile.getRemote()) + ";;\n"
                         + "        esac\n", null);
                 gitEcho.chmod(0500);
             } else {
                 gitEcho = workspace.createTempFile("auth", ".bat");
                 gitEcho.write("@ECHO OFF\r\n"
                         + "SET ARG=%~1\r\n"
-                        + "IF %ARG:~0,8%==Username (ECHO \"" + this.userVariable.replace("%", "%%") + "\")\r\n"
-                        + "IF %ARG:~0,8%==Password (ECHO \"" + this.passVariable.replace("%", "%%") + "\")", null);
+                        + "IF %ARG:~0,8%==Username type " + windowsArgEncodeFileName(usernameFile.getRemote()) + "\r\n"
+                        + "IF %ARG:~0,8%==Password type " + windowsArgEncodeFileName(passwordFile.getRemote()), null);
             }
             return gitEcho;
         }
@@ -169,6 +174,20 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         @Override
         protected Class<StandardUsernamePasswordCredentials> type() {
             return StandardUsernamePasswordCredentials.class;
+        }
+
+        protected String unixArgEncodeFileName(String filename) {
+            if (filename.contains("'")) {
+                filename = filename.replace("'", "'\\''");
+            }
+            return "'" + filename + "'";
+        }
+
+        protected String windowsArgEncodeFileName(String filename) {
+            if (filename.contains("\"")) {
+                filename = filename.replace("\"", "^\"");
+            }
+            return "\"" + filename + "\"";
         }
     }
 
