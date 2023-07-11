@@ -79,7 +79,7 @@ public class GitSCMSourceTest {
     public static final String REMOTE = "git@remote:test/project.git";
 
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     private GitStatus gitStatus;
 
@@ -94,12 +94,12 @@ public class GitSCMSourceTest {
         String notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         GitSCMSource gitSCMSource = new GitSCMSource("id", REMOTE, "", "*", "", false);
         GitSCMSourceOwner scmSourceOwner = setupGitSCMSourceOwner(gitSCMSource);
-        jenkins.getInstance().add(scmSourceOwner, "gitSourceOwner");
+        r.getInstance().add(scmSourceOwner, "gitSourceOwner");
 
         gitStatus.doNotifyCommit(mock(HttpServletRequest.class), REMOTE, "master", "", notifyCommitApiToken);
 
         SCMHeadEvent event =
-                jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
+                r.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
                         .waitSCMHeadEvent(1, TimeUnit.SECONDS);
         assertThat(event, notNullValue());
         assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new GitBranchSCMHead("master"))));
@@ -364,13 +364,13 @@ public class GitSCMSourceTest {
             return;
         }
         TaskListener log = StreamTaskListener.fromStdout();
-        HelloToolInstaller inst = new HelloToolInstaller(jenkins.jenkins.getSelfLabel().getName(), "echo Hello", "git");
+        HelloToolInstaller inst = new HelloToolInstaller(r.jenkins.getSelfLabel().getName(), "echo Hello", "git");
         GitTool t = new GitTool("myGit", null, Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
         t.getDescriptor().setInstallations(t);
 
         GitTool defaultTool = GitTool.getDefaultInstallation();
-        GitTool resolved = (GitTool) defaultTool.translate(jenkins.jenkins, new EnvVars(), TaskListener.NULL);
+        GitTool resolved = (GitTool) defaultTool.translate(r.jenkins, new EnvVars(), TaskListener.NULL);
         assertThat(resolved.getGitExe(), org.hamcrest.CoreMatchers.containsString("git"));
 
         GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");

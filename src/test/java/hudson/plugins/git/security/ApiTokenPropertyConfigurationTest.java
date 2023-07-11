@@ -1,9 +1,9 @@
 package hudson.plugins.git.security;
 
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.util.NameValuePair;
 import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -24,20 +24,20 @@ import static org.junit.Assert.assertTrue;
 public class ApiTokenPropertyConfigurationTest {
 
     @Rule
-    public JenkinsRule j = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     @Before
     public void init() {
-        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
         MockAuthorizationStrategy authorizationStrategy = new MockAuthorizationStrategy();
         authorizationStrategy.grant(Jenkins.ADMINISTER).everywhere().to("alice");
         authorizationStrategy.grant(Jenkins.READ).everywhere().to("bob");
-        j.jenkins.setAuthorizationStrategy(authorizationStrategy);
+        r.jenkins.setAuthorizationStrategy(authorizationStrategy);
     }
 
     @Test
     public void testAdminPermissionRequiredToGenerateNewApiTokens() throws Exception {
-        try (JenkinsRule.WebClient wc = j.createWebClient()) {
+        try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("bob");
             WebRequest req = new WebRequest(
                     wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/generate"), HttpMethod.POST);
@@ -53,7 +53,7 @@ public class ApiTokenPropertyConfigurationTest {
 
     @Test
     public void adminPermissionsRequiredToRevokeApiTokens() throws Exception {
-        try (JenkinsRule.WebClient wc = j.createWebClient()) {
+        try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("bob");
             WebRequest req = new WebRequest(wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/revoke"), HttpMethod.POST);
             wc.setThrowExceptionOnFailingStatusCode(false);
@@ -67,7 +67,7 @@ public class ApiTokenPropertyConfigurationTest {
 
     @Test
     public void testBasicGenerationAndRevocation() throws Exception {
-        try (JenkinsRule.WebClient wc = j.createWebClient()) {
+        try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("alice");
             WebRequest generateReq = new WebRequest(
                     wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/generate"), HttpMethod.POST);

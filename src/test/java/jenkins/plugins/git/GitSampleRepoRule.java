@@ -24,8 +24,8 @@
 
 package jenkins.plugins.git;
 
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.htmlunit.WebResponse;
+import org.htmlunit.util.NameValuePair;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;

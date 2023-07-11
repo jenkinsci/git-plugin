@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.61</version>
+    <version>4.71</version>
     <relativePath />
   </parent>
 
@@ -12,15 +13,13 @@
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Git plugin</name>
-  <description>Integrates Jenkins with Git SCM</description>
-  <url>https://github.com/jenkinsci/git-plugin</url>
+  <url>https://github.com/${gitHubRepo}</url>
   <inceptionYear>2007</inceptionYear>
 
   <licenses>
     <license>
-      <name>The MIT License (MIT)</name>
+      <name>MIT License</name>
       <url>https://opensource.org/licenses/MIT</url>
-      <distribution>repo</distribution>
     </license>
   </licenses>
 
@@ -29,17 +28,26 @@
       <id>markewaite</id>
       <name>Mark Waite</name>
       <email>mark.earl.waite@gmail.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
     </developer>
     <developer>
       <id>rsandell</id>
       <name>Robert Sandell</name>
       <email>rsandell@cloudbees.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
       <url>http://rsandell.com</url>
     </developer>
     <developer>
       <id>mramonleon</id>
       <name>M Ramon Leon</name>
       <email>rleon@cloudbees.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
     </developer>
     <developer>
       <id>olamy</id>
@@ -47,21 +55,24 @@
       <email>olamy@apache.org</email>
       <url>https://about.me/olamy</url>
       <timezone>Australia/Brisbane</timezone>
+      <roles>
+        <role>developer</role>
+      </roles>
     </developer>
   </developers>
 
-  <scm>
-    <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+    <connection>scm:git:https://github.com/${gitHubRepo}</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <tag>${scmTag}</tag>
     <url>https://github.com/${gitHubRepo}</url>
   </scm>
 
   <properties>
-    <revision>5.0.1</revision>
+    <revision>5.1.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.361.4</jenkins.version>
+    <jenkins.version>2.387.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
@@ -69,27 +80,20 @@
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
-    <spotbugs.threshold>Medium</spotbugs.threshold>
+    <spotbugs.threshold>Low</spotbugs.threshold>
   </properties>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.361.x</artifactId>
-        <version>2025.v816d28f1e04f</version>
+        <artifactId>bom-2.387.x</artifactId>
+        <version>2230.v0cb_4040cde55</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- Added to satisfy upper bounds checks from enforcer in parent pom 4.55 -->
-      <dependency>
-        <groupId>net.bytebuddy</groupId>
-        <artifactId>byte-buddy</artifactId>
-        <version>1.14.4</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -157,7 +161,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.14.1</version>
+      <version>3.15</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
@@ -261,6 +265,7 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
+
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
@@ -269,45 +274,11 @@
   </pluginRepositories>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>com.diffplug.spotless</groupId>
-          <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.36.0</version>
-          <configuration>
-            <!-- define a language-specific format -->
-            <java>
-              <!-- no need to specify files, inferred automatically -->
-              <endWithNewline />
-              <removeUnusedImports />
-            </java>
-            <pom>
-              <sortPom>
-                <encoding>${project.build.sourceEncoding}</encoding>
-                <lineSeparator>\n</lineSeparator>
-                <expandEmptyElements>false</expandEmptyElements>
-                <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
-              </sortPom>
-            </pom>
-          </configuration>
-          <executions>
-            <execution>
-              <!-- Runs in verify phase by default -->
-              <goals>
-                <!-- Can be disabled using -Dspotless.check.skip -->
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>3.3.0</version>
         <configuration>
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>

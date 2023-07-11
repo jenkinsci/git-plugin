@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!--
+    Exclusions in this section have been triaged and determined to be
+    false positives.
+  -->
+  <Match>
+    <Bug pattern="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE" />
+    <Class name="hudson.plugins.git.GitChangeSet" />
+    <Method name="getUser" />
+  </Match>
+  <Match>
+    <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR" />
+    <Or>
+      <Class name="hudson.plugins.git.GitChangeSetList" />
+      <Class name="hudson.plugins.git.GitSCM" />
+    </Or>
+  </Match>
+  <Match>
+    <Bug pattern="SE_NO_SERIALVERSIONID" />
+    <Or>
+      <Class name="hudson.plugins.git.ChangelogToBranchOptions" />
+      <Class name="hudson.plugins.git.GitPublisher$BranchToPush" />
+      <Class name="hudson.plugins.git.GitPublisher$NoteToPush" />
+      <Class name="hudson.plugins.git.GitPublisher$TagToPush" />
+      <Class name="hudson.plugins.git.GitSCM$BuildChooserContextImpl" />
+      <Class name="hudson.plugins.git.UserMergeOptions" />
+      <Class name="hudson.plugins.git.UserRemoteConfig" />
+      <Class name="hudson.plugins.git.browser.TFS2013GitRepositoryBrowser" />
+      <Class name="hudson.plugins.git.extensions.impl.SparseCheckoutPath$SparseCheckoutPathToPath" />
+      <Class name="hudson.plugins.git.util.DefaultBuildChooser" />
+      <Class name="jenkins.plugins.git.AbstractGitSCMSource$SCMRevisionImpl" />
+      <Class name="jenkins.plugins.git.AbstractGitSCMSource$SpecificRevisionBuildChooser" />
+      <Class name="jenkins.plugins.git.AbstractGitSCMSource$TelescopingSCMProbe" />
+      <Class name="jenkins.plugins.git.AbstractGitSCMSource$TreeWalkingSCMProbe" />
+      <Class name="jenkins.plugins.git.GitBranchSCMHead" />
+      <Class name="jenkins.plugins.git.GitBranchSCMRevision" />
+      <Class name="jenkins.plugins.git.GitRefSCMHead" />
+      <Class name="jenkins.plugins.git.GitRefSCMRevision" />
+      <Class name="jenkins.plugins.git.GitTagSCMHead" />
+      <Class name="jenkins.plugins.git.GitTagSCMRevision" />
+    </Or>
+  </Match>
+  <Match>
+    <!-- Ignoring in all cases because per class exclusion seemed to be ignored -->
+    <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON" />
+  </Match>
+  <Match>
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
+    <Class name="hudson.plugins.git.GitStatus$JenkinsAbstractProjectListener" />
+    <Method name="onNotifyCommit" />
+  </Match>
+  <Match>
+    <Bug pattern="UWF_NULL_FIELD" />
+    <Class name="hudson.plugins.git.SubmoduleConfig" />
+    <Field name="submoduleName" />
+  </Match>
+
+  <!--
+    Here lies technical debt. Exclusions in this section have not yet
+    been triaged. When working on this section, pick an exclusion to
+    triage, then:
+
+    - Add a @SuppressFBWarnings(value = "[...]", justification = "[...]")
+      annotation if it is a false positive.  Indicate the reason why
+      it is a false positive, then remove the exclusion from this
+      section.
+
+    - If it is not a false positive, fix the bug, then remove the
+      exclusion from this section.
+   -->
+  <Match>
+    <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS" />
+    <Class name="hudson.plugins.git.extensions.impl.PathRestriction" />
+    <Method name="normalize" />
+  </Match>
+</FindBugsFilter>

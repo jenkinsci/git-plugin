@@ -1,6 +1,6 @@
 package hudson.plugins.git.browser;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TFS2013GitRepositoryBrowserXSSTest {
 
     @Rule
-    public final JenkinsRule rule = new JenkinsRule();
+    public final JenkinsRule r = new JenkinsRule();
 
     @Test
     @Issue("SECURITY-1723")
@@ -31,11 +31,11 @@ public class TFS2013GitRepositoryBrowserXSSTest {
                 Collections.emptyList());
         scm.setBrowser(new TFS2013GitRepositoryBrowser("<img src=x onerror=alert(232)>"));
 
-        FreeStyleProject p = rule.createFreeStyleProject();
+        FreeStyleProject p = r.createFreeStyleProject();
         p.setScm(scm);
 
         AtomicBoolean xss = new AtomicBoolean(false);
-        JenkinsRule.WebClient wc = rule.createWebClient();
+        JenkinsRule.WebClient wc = r.createWebClient();
         wc.setAlertHandler((page, s) -> xss.set(true));
         HtmlPage page = wc.getPage(p, "configure");
         Assert.assertFalse(xss.get());

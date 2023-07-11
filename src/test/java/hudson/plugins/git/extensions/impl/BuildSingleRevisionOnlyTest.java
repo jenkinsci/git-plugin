@@ -30,10 +30,10 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
          * build logs will not be active when the cleanup process tries to
          * delete them.
          */
-        if (!isWindows() || rule == null || rule.jenkins == null) {
+        if (!isWindows() || r == null || r.jenkins == null) {
             return;
         }
-        View allView = rule.jenkins.getView("All");
+        View allView = r.jenkins.getView("All");
         if (allView == null) {
             return;
         }
@@ -44,7 +44,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         runList.forEach((Run run) -> {
             try {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
-                rule.waitForCompletion(run);
+                r.waitForCompletion(run);
             } catch (InterruptedException ex) {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
             }
@@ -77,7 +77,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
 
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile);
 
-        rule.assertBuildStatusSuccess(build);
+        r.assertBuildStatusSuccess(build);
         boolean result = build.getLog(100).contains(
                 String.format("Scheduling another build to catch up with %s", project.getName()));
         Assert.assertFalse("Single revision scheduling did not prevent a build of a different revision", result);
@@ -108,8 +108,8 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
 
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile);
 
-        rule.assertBuildStatusSuccess(build);
-        rule.waitForMessage(String.format("Scheduling another build to catch up with %s", project.getName()), build);
+        r.assertBuildStatusSuccess(build);
+        r.waitForMessage(String.format("Scheduling another build to catch up with %s", project.getName()), build);
 
         // Wait briefly for newly scheduled job to start.
         // Once job has started, waitForAllJobsToComplete will hold the test until job completes.

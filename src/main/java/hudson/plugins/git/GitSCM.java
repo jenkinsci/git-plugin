@@ -696,7 +696,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final Pattern GIT_REF = Pattern.compile("^(refs/[^/]+)/(.+)");
 
     private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws IOException, InterruptedException {
-        // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
+        // Poll for changes. Are there any unbuilt revisions that Jenkins ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
 
@@ -956,10 +956,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     URIRequirementBuilder.fromUri(url).build());
             return c != null && GitClient.CREDENTIALS_MATCHER.matches(c) ? c : null;
         }
-    }
-
-    private static CredentialsMatcher gitScanCredentialsMatcher() {
-        return CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
     }
 
     @NonNull

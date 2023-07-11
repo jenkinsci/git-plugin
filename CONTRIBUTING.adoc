@@ -53,10 +53,8 @@ By executing the tests in random order, it increases the chances that at least o
 
 Maintainers triage pull requests by reviewing them and by assigning labels.
 Release drafter uses the labels to automate link:https://github.com/jenkinsci/git-plugin/releases[release notes].
-link:Priorities.adoc#git-plugin-development-priorities[Prioritization] uses the labels to group relevant pull requests.
 
 Others are encouraged to review pull requests, test pull request builds, and report their results in the pull request.
-Refer to the link:Priorities.adoc#priorities[maintainer's priority list] for topics the plugin maintainers are considering.
 
 === Testing a Pull Request Build
 

@@ -32,7 +32,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
@@ -59,7 +58,7 @@ public class GitStatusTest extends AbstractGitProject {
         this.repoURL = new File(".").getAbsolutePath();
         this.branch = "**";
         this.sha1 = "7bb68ef21dc90bd4f7b08eca876203b2e049198d";
-        if (jenkins.jenkins != null) {
+        if (r.jenkins != null) {
             this.notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         }
     }
@@ -72,10 +71,8 @@ public class GitStatusTest extends AbstractGitProject {
 
     @After
     public void waitForAllJobsToComplete() throws Exception {
-        // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
-        if (jenkins != null && jenkins.jenkins != null) {
-            jenkins.jenkins.doQuietDown();
-        }
+        // Put JenkinsRule into shutdown state, trying to reduce cleanup exceptions
+        r.jenkins.doQuietDown();
         // JenkinsRule cleanup throws exceptions during tearDown.
         // Reduce exceptions by a random delay from 0.5 to 0.9 seconds.
         // Adding roughly 0.7 seconds to these JenkinsRule tests is a small price
@@ -87,55 +84,24 @@ public class GitStatusTest extends AbstractGitProject {
          * build logs will not be active when the cleanup process tries to
          * delete them.
          */
-        if (!isWindows() || jenkins == null || jenkins.jenkins == null) {
-            return;
-        }
-        View allView = jenkins.jenkins.getView("All");
+        View allView = r.jenkins.getView("All");
         if (allView == null) {
+            fail("All view was not found when it should always be available");
             return;
         }
         RunList<Run> runList = allView.getBuilds();
         if (runList == null) {
+            Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "No waiting, no entries in the runList");
             return;
         }
         runList.forEach((Run run) -> {
             try {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
-                jenkins.waitForCompletion(run);
+                r.waitForCompletion(run);
             } catch (InterruptedException ex) {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
             }
         });
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetDisplayName() {
-        assertEquals("Git", this.gitStatus.getDisplayName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetIconFileName() {
-        assertNull(this.gitStatus.getIconFileName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetUrlName() {
-        assertEquals("git", this.gitStatus.getUrlName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testAllowNotifyCommitParametersDisabled() {
-        assertFalse("SECURITY-275: ignore arbitrary notifyCommit parameters", GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testSafeParametersEmpty() {
-        assertEquals("SECURITY-275: Safe notifyCommit parameters", "", GitStatus.SAFE_PARAMETERS);
     }
 
     @Test
@@ -361,7 +327,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private void setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
-        FreeStyleProject project = jenkins.createFreeStyleProject();
+        FreeStyleProject project = r.createFreeStyleProject();
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
@@ -371,49 +337,8 @@ public class GitStatusTest extends AbstractGitProject {
         if (trigger != null) project.addTrigger(trigger);
     }
 
-    @WithoutJenkins
-    @Test
-    public void testLooselyMatches() throws URISyntaxException {
-        String[] equivalentRepoURLs = new String[]{
-            "https://example.com/jenkinsci/git-plugin",
-            "https://example.com/jenkinsci/git-plugin/",
-            "https://example.com/jenkinsci/git-plugin.git",
-            "https://example.com/jenkinsci/git-plugin.git/",
-            "https://someone@example.com/jenkinsci/git-plugin.git",
-            "https://someone:somepassword@example.com/jenkinsci/git-plugin/",
-            "git://example.com/jenkinsci/git-plugin",
-            "git://example.com/jenkinsci/git-plugin/",
-            "git://example.com/jenkinsci/git-plugin.git",
-            "git://example.com/jenkinsci/git-plugin.git/",
-            "ssh://git@example.com/jenkinsci/git-plugin",
-            "ssh://example.com/jenkinsci/git-plugin.git",
-            "git@example.com:jenkinsci/git-plugin/",
-            "git@example.com:jenkinsci/git-plugin.git",
-            "git@example.com:jenkinsci/git-plugin.git/"
-        };
-        List<URIish> uris = new ArrayList<>();
-        for (String testURL : equivalentRepoURLs) {
-            uris.add(new URIish(testURL));
-        }
-
-        /* Extra slashes on end of URL probably should be considered equivalent,
-         * but current implementation does not consider them as loose matches
-         */
-        URIish badURLTrailingSlashes = new URIish(equivalentRepoURLs[0] + "///");
-        /* Different hostname should always fail match check */
-        URIish badURLHostname = new URIish(equivalentRepoURLs[0].replace("example.com", "bitbucket.org"));
-
-        for (URIish lhs : uris) {
-            assertFalse(lhs + " matches trailing slashes " + badURLTrailingSlashes, GitStatus.looselyMatches(lhs, badURLTrailingSlashes));
-            assertFalse(lhs + " matches bad hostname " + badURLHostname, GitStatus.looselyMatches(lhs, badURLHostname));
-            for (URIish rhs : uris) {
-                assertTrue(lhs + " and " + rhs + " didn't match", GitStatus.looselyMatches(lhs, rhs));
-            }
-        }
-    }
-
     private FreeStyleProject setupNotifyProject() throws Exception {
-        FreeStyleProject project = jenkins.createFreeStyleProject();
+        FreeStyleProject project = r.createFreeStyleProject();
         project.setQuietPeriod(0);
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
@@ -564,7 +489,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 
-        jenkins.waitForMessage("aaa aaaccc ccc", build);
+        r.waitForMessage("aaa aaaccc ccc", build);
 
         String extraValue = "An-extra-value";
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));
@@ -648,7 +573,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1, notifyCommitApiToken);
 
-        jenkins.waitUntilNoActivity();
+        r.waitUntilNoActivity();
         FreeStyleBuild lastBuild = project.getLastBuild();
 
         assertNotNull(lastBuild);
@@ -726,7 +651,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1, null);
 
-        jenkins.waitUntilNoActivity();
+        r.waitUntilNoActivity();
         FreeStyleBuild lastBuild = project.getLastBuild();
 
         assertNotNull(lastBuild);

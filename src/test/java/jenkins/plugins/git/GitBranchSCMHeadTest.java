@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 public class GitBranchSCMHeadTest {
 
     @Rule
-    public JenkinsRule j = new JenkinsRule() {
+    public JenkinsRule r = new JenkinsRule() {
         @Override
         public void before() throws Throwable {
             if (!isWindows() && "testMigrationNoBuildStorm".equals(this.getTestDescription().getMethodName())) {
@@ -60,7 +60,7 @@ public class GitBranchSCMHeadTest {
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
-        final WorkflowMultiBranchProject job = j.jenkins.getItemByFullName("job", WorkflowMultiBranchProject.class);
+        final WorkflowMultiBranchProject job = r.jenkins.getItemByFullName("job", WorkflowMultiBranchProject.class);
         assertEquals(4, job.getItems().size());
         WorkflowJob master = job.getItem("master");
         assertEquals(1, master.getBuilds().size());
@@ -72,7 +72,7 @@ public class GitBranchSCMHeadTest {
         final Queue.Item item = job.scheduleBuild2(0);
         assertNotNull(item);
         item.getFuture().waitForStart();
-        j.waitUntilNoActivity();
+        r.waitUntilNoActivity();
 
         assertEquals(4, job.getItems().size());
         master = job.getItem("master");
