@@ -115,9 +115,11 @@ public class GitUsernamePasswordBindingTest {
     private static String[] passwords = {
         "&Ampersand&",
         "He said \"Hello\", then left.",
-        "default=@#(*^!'",
+        "default=@#(*^!",
+        "has_a_trailing_quote=@#(*^!'",
         "here's-a-quote",
-        "special%%_342'@**",
+        "special%%_342@**",
+        "%interior-single-quote%_786'@**",
     };
     private static GitTool[] gitTools = {
         new GitTool("Default", "git", null),
