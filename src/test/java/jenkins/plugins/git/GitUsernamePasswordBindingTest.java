@@ -321,32 +321,35 @@ public class GitUsernamePasswordBindingTest {
         } else {
             assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
         }
-        FreeStyleProject prj = r.createFreeStyleProject();
-        prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
-                singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID))));
-        prj.getBuildersList().add(isWindows()
-                ? new BatchFile(tempScriptFile.getRemote() + " Username")
-                : new Shell("sh " + tempScriptFile.getRemote()));
-        r.configRoundtrip((Item) prj);
+        WorkflowJob prj = r.createProject(WorkflowJob.class);
+        // JENKINS-66214 - allow either gitUsernamePassword or GitUsernamePassword as keyword
+        String keyword = random.nextBoolean() ? "gitUsernamePassword" : "GitUsernamePassword";
 
-        SecretBuildWrapper wrapper = prj.getBuildWrappersList().get(SecretBuildWrapper.class);
-        assertThat(wrapper, is(notNullValue()));
-        List<? extends MultiBinding<?>> bindings = wrapper.getBindings();
-        assertThat(bindings.size(), is(1));
-        MultiBinding<?> binding = bindings.get(0);
-        if(isCliGitTool()) {
-            assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(gitToolInstance.getName()));
-        }else {
-            assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(""));
-        }
+        // Use default tool if JGit or JGitApache
+        String gitToolNameArg = !isCliGitTool() ? "" : ", gitToolName: '" + gitToolInstance.getName() + "'";
+        String pipeline = ""
+                + "node {\n"
+                + "  withCredentials([" + keyword + "(credentialsId: '" + credentialID + "'" + gitToolNameArg + ")]) {\n"
+                + "    if (isUnix()) {\n"
+                + "      sh 'env | grep -E \"GIT_ASKPASS\" > auth.txt; cat auth.txt'\n"
+                + "    } else {\n"
+                + "      bat 'set | findstr GIT_ASKPASS > auth.txt & set | findstr GIT_ASKPASS >> auth.txt & type auth.txt'\n"
+                + "    }\n"
+                + "  }\n"
+                + "}";
+        prj.setDefinition(new CpsFlowDefinition(pipeline, true));
+        WorkflowRun b = r.buildAndAssertSuccess(prj);
 
-        r.buildAndAssertSuccess(prj);
+        r.assertLogContains("GIT_ASKPASS=****", b);
+        r.assertLogNotContains(this.username, b);
+        r.assertLogNotContains(this.password, b);
+
         if(!isWindows()) {
-            assertThat(tempScriptFile.readToString(), containsString(this.username.replace("'", "'\\''")));
-            assertThat(tempScriptFile.readToString(), containsString(this.password.replace("'", "'\\''")));
+            assertThat(tempScriptFile.readToString(), containsString("Username*) cat"));
+            assertThat(tempScriptFile.readToString(), containsString("Password*) cat"));
         }else {
-            assertThat(tempScriptFile.readToString(), containsString(this.username.replace("%", "%%")));
-            assertThat(tempScriptFile.readToString(), containsString(this.password.replace("%", "%%")));
+            assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Username type"));
+            assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Password type"));
         }
     }
 
