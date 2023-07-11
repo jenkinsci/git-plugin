@@ -320,14 +320,10 @@ public class GitUsernamePasswordBindingTest {
         if (!isWindows()) {
             assertThat(tempScriptFile.mode(), is(0500));
             assertThat("File extension not sh", FilenameUtils.getExtension(tempScriptFile.getName()), is("sh"));
-        } else {
-            assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
-        }
-
-        if(!isWindows()) {
             assertThat(tempScriptFile.readToString(), containsString("Username*) cat"));
             assertThat(tempScriptFile.readToString(), containsString("Password*) cat"));
-        }else {
+        } else {
+            assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
             assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Username type"));
             assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Password type"));
         }
