@@ -261,16 +261,60 @@
 
   <repositories>
     <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
+      <id>releases.jenkins.io</id>
+      <url>https://repo.jenkins-ci.org/releases/</url>
     </repository>
+    <repository>
+      <id>repo1.maven.org</id>
+      <url>https://repo1.maven.org/maven2/</url>
+    </repository>
+    <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository>
+      <id>repo.eclipse.org</id>
+      <url>https://repo.eclipse.org/content/repositories/jgit-releases/</url>
+    </repository>
+    <repository>
+      <!-- jbcrypt 1.0.0 -->
+      <id>jcenter-cache.jenkins.io</id>
+      <url>https://repo.jenkins-ci.org/jcenter-cache/</url>
+    </repository>
+    <!-- Intentionally not included in order to detect missing repositories -->
+    <!-- <repository> -->
+    <!--   <id>repo.jenkins-ci.org</id> -->
+    <!--   <url>https://repo.jenkins-ci.org/public/</url> -->
+    <!-- </repository> -->
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
+      <id>releases.jenkins.io</id>
+      <url>https://repo.jenkins-ci.org/releases/</url>
     </pluginRepository>
+    <pluginRepository>
+      <id>repo1.maven.org</id>
+      <url>https://repo1.maven.org/maven2/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>repo.eclipse.org</id>
+      <url>https://repo.eclipse.org/content/repositories/jgit-releases/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <!-- jbcrypt 1.0.0 -->
+      <id>jcenter-cache.jenkins.io</id>
+      <url>https://repo.jenkins-ci.org/jcenter-cache/</url>
+    </pluginRepository>
+    <!-- Intentionally not included in order to detect missing repositories -->
+    <!-- <pluginRepository> -->
+    <!--   <id>repo.jenkins-ci.org</id> -->
+    <!--   <url>https://repo.jenkins-ci.org/public/</url> -->
+    <!-- </pluginRepository> -->
   </pluginRepositories>
 
   <build>
@@ -301,4 +345,5 @@
       </properties>
     </profile>
   </profiles>
+
 </project>
