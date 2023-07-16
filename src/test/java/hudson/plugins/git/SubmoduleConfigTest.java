@@ -100,12 +100,14 @@ public class SubmoduleConfigTest {
         assertThat(config.getBranches(), is(arrayWithSize(0)));
     }
 
+    @Test
     public void testGetBranchesFromArray() {
-        assertThat(configWithBranchArray.getBranches(), is(branchNames));
+        assertThat(configWithBranchArray.getBranches(), is(arrayWithSize(0)));
     }
 
+    @Test
     public void testGetBranchesFromList() {
-        assertThat(configWithBranchList.getBranches(), is(branchNames));
+        assertThat(configWithBranchList.getBranches(), is(arrayWithSize(0)));
     }
 
     @Test

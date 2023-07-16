@@ -1878,12 +1878,18 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Issue("JENKINS-26268")
+    @Test
     public void testBranchSpecAsSHA1WithMultipleRepositories() throws Exception {
+        String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit 1 from testBranchSpecAsSHA1WithMultipleRepositories");
         branchSpecWithMultipleRepositories(testRepo.git.revParse("HEAD").getName());
     }
 
     @Issue("JENKINS-26268")
+    @Test
     public void testBranchSpecAsRemotesOriginMasterWithMultipleRepositories() throws Exception {
+        String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit 1 from testBranchSpecAsSHA1WithMultipleRepositories");
         branchSpecWithMultipleRepositories("remotes/origin/master");
     }
 
