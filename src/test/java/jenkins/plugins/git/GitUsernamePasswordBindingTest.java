@@ -116,8 +116,10 @@ public class GitUsernamePasswordBindingTest {
         "&Ampersand&",
         "He said \"Hello\", then left.",
         "default=@#(*^!",
+        "has_a_trailing_quote=@#(*^!'",
         "here's-a-quote",
         "special%%_342@**",
+        "%interior-single-quote%_786'@**",
     };
     private static GitTool[] gitTools = {
         new GitTool("Default", "git", null),
@@ -126,8 +128,9 @@ public class GitUsernamePasswordBindingTest {
         new JGitTool(),
     };
 
-    /* Create two test data items using random selections from the larger set of data */
+    /* Create three test data items using random selections from the larger set of data */
     private static Object[][] testData = new Object[][]{
+        {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
         {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
         {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
     };
@@ -309,7 +312,7 @@ public class GitUsernamePasswordBindingTest {
     }
 
     @Test
-    public void test_GenerateGitScript_write() throws IOException, InterruptedException {
+    public void test_GenerateGitScript_write() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitUsernamePasswordBinding.GenerateGitScript tempGenScript = new GitUsernamePasswordBinding.GenerateGitScript(this.username, this.password, credentials.getId(), !isWindows());
         assertThat(tempGenScript.type(), is(StandardUsernamePasswordCredentials.class));
@@ -317,11 +320,13 @@ public class GitUsernamePasswordBindingTest {
         if (!isWindows()) {
             assertThat(tempScriptFile.mode(), is(0500));
             assertThat("File extension not sh", FilenameUtils.getExtension(tempScriptFile.getName()), is("sh"));
+            assertThat(tempScriptFile.readToString(), containsString("Username*) cat"));
+            assertThat(tempScriptFile.readToString(), containsString("Password*) cat"));
         } else {
             assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
+            assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Username type"));
+            assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Password type"));
         }
-        assertThat(tempScriptFile.readToString(), containsString(this.username));
-        assertThat(tempScriptFile.readToString(), containsString(this.password));
     }
 
     /**
