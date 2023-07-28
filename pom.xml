@@ -287,18 +287,4 @@
     </plugins>
   </build>
 
-  <profiles>
-    <profile>
-      <id>continuous-integration</id>
-      <activation>
-        <property>
-          <name>env.CI</name>
-        </property>
-      </activation>
-      <properties>
-        <!-- Fork a JVM per core for automated tests on continuous integration servers -->
-        <forkCount>1C</forkCount>
-      </properties>
-    </profile>
-  </profiles>
 </project>
