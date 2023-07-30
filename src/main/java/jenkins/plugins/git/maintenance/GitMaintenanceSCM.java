@@ -90,8 +90,4 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
 
             return caches;
     }
-
-    String getCacheEntryForTest(){
-        return getCacheEntry();
-    }
 }
