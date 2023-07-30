@@ -31,7 +31,7 @@ public class TaskSchedulerTest {
     @Before
     public void setUp() throws Exception {
         taskScheduler = new TaskScheduler();
-        config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
+        config = new MaintenanceTaskConfiguration();
     }
 
     // Tested all the internal functions of this method
