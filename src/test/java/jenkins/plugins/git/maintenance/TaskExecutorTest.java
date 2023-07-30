@@ -1,23 +1,26 @@
 package jenkins.plugins.git.maintenance;
 
-import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitSCM;
+import hudson.Launcher;
+import hudson.model.TaskListener;
+import hudson.plugins.git.*;
+import hudson.util.StreamTaskListener;
 import jenkins.model.GlobalConfiguration;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.api.SCMFileSystem;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -28,38 +31,18 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
-public class TaskExecutorTest {
+public class TaskExecutorTest extends AbstractGitRepository {
 
     @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    public static JenkinsRule rule = new JenkinsRule();
 
-    @ClassRule
-    public static GitSampleRepoRule sampleRepo1 = new GitSampleRepoRule();
+    private Task gitTask;
 
-    private static TaskExecutor taskExecutor;
-    private TaskType taskType;
 
     public TaskExecutorTest(TaskType taskType) {
-            MaintenanceTaskConfiguration config = new MaintenanceTaskConfiguration();
-            config.setIsTaskConfigured(taskType, true);
-            config.setCronSyntax(taskType, "* * * * *");
-            List<Task> tasks = config.getMaintenanceTasks().stream().filter(Task::getIsTaskConfigured).collect(Collectors.toList());
-            Task configuredTask = tasks.get(0);
-            taskExecutor = new TaskExecutor(configuredTask);
-            this.taskType = taskType;
-    }
-
-    @BeforeClass
-    public static void setUp() throws Exception{
-
-        sampleRepo1.init();
-        sampleRepo1.git("checkout", "-b", "bug/JENKINS-42817");
-        sampleRepo1.write("file", "modified");
-        sampleRepo1.git("commit", "--all", "--message=dev");
-
-        // Create caches on Jenkins controller.
-        SCMFileSystem.of(j.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo1.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), null, null, Collections.emptyList()));
-
+            this.gitTask = new Task(taskType);
+            this.gitTask.setCronSyntax("* * * * *");
+            this.gitTask.setIsTaskConfigured(true);
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -78,6 +61,7 @@ public class TaskExecutorTest {
     @Test
     public void testGitClient(){
        // Get directory of a single cache.
+        TaskExecutor taskExecutor = new TestTaskExecutorHelper(gitTask,testGitDir);
         assertTrue(taskExecutor.getCaches().size() > 0);
         GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
         File cacheFile = cache.getCacheFile();
@@ -88,44 +72,83 @@ public class TaskExecutorTest {
 
     @Test
     public void testNullFileInGetGitClient() {
-        GitClient client = taskExecutor.getGitClient(null);
+        GitClient client = new TestTaskExecutorHelper(gitTask,null).getGitClient(null);
         assertNull(client);
     }
 
     @Test
     public void testGetCaches(){
+        TaskExecutor taskExecutor = new TestTaskExecutorHelper(gitTask,testGitDir);
         assertNotNull(taskExecutor.getCaches());
     }
 
-
     @Test
     public void testExecuteGitMaintenance() throws InterruptedException {
+        TaskExecutor taskExecutor = new TestTaskExecutorHelper(gitTask,testGitDir);
         GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
         File cacheFile = cache.getCacheFile();
         GitClient client = taskExecutor.getGitClient(cacheFile);
-        boolean isExecuted = taskExecutor.executeGitMaintenance(client,taskType);
+        boolean isExecuted = taskExecutor.executeGitMaintenance(client,gitTask.getTaskType());
 
         // based on the underlying git version it will work.
         // If git version < 2.30, tests may fail.
         assertThat(isExecuted,is(true));
     }
 
-    // Test doesn't returns any result
     @Test
     public void testRunnable() {
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
         config.setIsGitMaintenanceRunning(true);
-        config.setCronSyntax(taskType,"* * * * *");
-        config.setIsTaskConfigured(taskType,true);
+        config.setCronSyntax(gitTask.getTaskType(),"* * * * *");
+        config.setIsTaskConfigured(gitTask.getTaskType(),true);
 
         TaskScheduler scheduler = new TaskScheduler();
         scheduler.scheduleTasks();
     }
-
+//
     // Todo Need a way to test termination of execution thread.
 
 //    @Test
 //    public void testTerminateThread(){
 //
 //    }
+
+    class TestTaskExecutorHelper extends TaskExecutor {
+
+        File testGitDir;
+        public TestTaskExecutorHelper(Task maintenanceTask,File testGitDir) {
+            super(maintenanceTask);
+            this.testGitDir = testGitDir;
+        }
+
+        List<GitMaintenanceSCM.Cache> getCaches(){
+            List<GitMaintenanceSCM.Cache> caches = new ArrayList<>();
+            caches.add(new GitMaintenanceSCM.Cache(testGitDir,new ReentrantLock()));
+            return caches;
+        }
+    }
+
+    static List<Integer> getGitVersion(){
+
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+        } catch (IOException | InterruptedException ex) {
+            throw new RuntimeException("Couldn't fetch git maintenance command");
+        }
+        String versionOutput = "";
+        try {
+            versionOutput = out.toString(StandardCharsets.UTF_8.toString()).trim();
+        } catch (UnsupportedEncodingException ue) {
+            throw new RuntimeException("Unsupported encoding version");
+        }
+        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
+
+        // Eg: [2, 31, 4]
+        // 0th index is Major Version.
+        // 1st index is Minor Version.
+        // 2nd index is Patch Version.
+        return Arrays.stream(fields).map(Integer::parseInt).collect(Collectors.toList());
+    }
 }
