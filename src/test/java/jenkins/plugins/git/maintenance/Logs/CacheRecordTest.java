@@ -82,7 +82,7 @@ public class CacheRecordTest {
         record.insertMaintenanceData(incrementalRepackRecord);
         record.insertMaintenanceData(looseObjectsRecord);
 
-        for(Map.Entry<String, LinkedList<CacheRecord>> entry : record.maintenanceData.entrySet()){
+        for(Map.Entry<String, List<CacheRecord>> entry : record.maintenanceData.entrySet()){
             assertEquals(1,entry.getValue().size());
         }
     }

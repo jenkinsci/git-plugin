@@ -20,7 +20,7 @@ public class CacheRecord {
     boolean executionStatus;
     long executionDuration;
 
-    Map<String,LinkedList<CacheRecord>> maintenanceData;
+    Map<String,List<CacheRecord>> maintenanceData;
 
 
     // This is to create a new Cache Record when cache is not present.
@@ -91,12 +91,12 @@ public class CacheRecord {
 
     public void insertMaintenanceData(CacheRecord record){
         if(record != null && maintenanceData != null) {
-            LinkedList<CacheRecord> list = maintenanceData.get(record.getMaintenanceType());
+            List<CacheRecord> list = maintenanceData.get(record.getMaintenanceType());
             if(list != null) {
-                list.addFirst(record);
+                list.add(0,record);
                 // Maximum storage of 5 Maintenance Records per Cache.
                 if (list.size() > 5)
-                    list.removeLast();
+                    list.remove(list.size()-1);
             }
         }
     }
@@ -104,7 +104,7 @@ public class CacheRecord {
     public List<CacheRecord> getAllMaintenanceRecordsForSingleCache(){
         List<CacheRecord> maintenanceData = new ArrayList<>();
 
-        for(Map.Entry<String,LinkedList<CacheRecord>> entry : this.maintenanceData.entrySet()){
+        for(Map.Entry<String,List<CacheRecord>> entry : this.maintenanceData.entrySet()){
             maintenanceData.addAll(entry.getValue());
         }
 

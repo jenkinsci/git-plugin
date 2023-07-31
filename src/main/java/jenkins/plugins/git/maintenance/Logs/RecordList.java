@@ -1,22 +1,18 @@
 package jenkins.plugins.git.maintenance.Logs;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class RecordList {
-    LinkedList<CacheRecord> maintenanceRecords;
+    List<CacheRecord> maintenanceRecords;
     Set<String> cacheSet;
 
     public RecordList(){
-        maintenanceRecords = new LinkedList<>();
+        maintenanceRecords = new ArrayList<>();
         cacheSet = new HashSet<>();
     }
 
     List<CacheRecord> getMaintenanceRecords(){
-        return new LinkedList<>(maintenanceRecords);
+        return new ArrayList<>(maintenanceRecords);
     }
 
     void addRecord(CacheRecord cacheRecord){
@@ -54,7 +50,7 @@ public class RecordList {
         }
 
         // Creates a new Cache Entry and adds the data.
-        maintenanceRecords.addFirst(cacheRecord);
+        maintenanceRecords.add(0,cacheRecord);
         cacheSet.add(repoName);
     }
 
