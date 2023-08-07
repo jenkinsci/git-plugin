@@ -182,7 +182,7 @@
       <!-- https://github.com/jenkinsci/bom/pull/1623#issuecomment-1339989438 -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>conditional-buildstep</artifactId>
-      <version>1.4.2</version>
+      <version>1.4.3</version>
       <scope>test</scope>
       <optional>true</optional>
     </dependency>
