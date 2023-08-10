@@ -173,20 +173,8 @@
       <!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
-      <version>2.43.1</version>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <!-- BOM automated tests fail without conditional-buildstep plugin -->
-      <!-- TODO: Remove this dependency when parameterized trigger plugin dependency fix is released -->
-      <!-- https://github.com/jenkinsci/bom/pull/1623#issuecomment-1339989438 -->
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>conditional-buildstep</artifactId>
-      <version>1.4.3</version>
-      <scope>test</scope>
-      <optional>true</optional>
-    </dependency>
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
