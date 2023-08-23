@@ -1302,7 +1302,27 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.beforeCheckout(this, build, git, listener);
         }
 
-        retrieveChanges(build, git, listener);
+        boolean retrievedChanges = false;
+
+        for (int tryCount = 1; tryCount <= 5; tryCount++) {
+            try {
+                retrieveChanges(build, git, listener);
+                retrievedChanges = true;
+                break;
+            } catch (AbortException ex) {
+                int waitTime = tryCount * 10;
+                listener.getLogger().println("Failed to retrieve Git changes with an error. Will make another attempt after " + waitTime + " seconds.");
+                TimeUnit.SECONDS.sleep(waitTime);
+            }
+        }
+
+        if (!retrievedChanges)
+        {
+            String errorMessage = "Got a fatal error while retrieving Git changes. Reached maximum retry limit, won't try again.";
+            listener.getLogger().println(errorMessage);
+            throw new AbortException(errorMessage);
+        }
+        
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
