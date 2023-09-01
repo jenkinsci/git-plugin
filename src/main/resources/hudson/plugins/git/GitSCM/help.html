@@ -117,7 +117,7 @@ checkout changelog: false,
 
     <strong><a id="checkout-step-with-git-and-polling">Example: Checkout step with git protocol and polling disabled</a></strong>
     <p>
-    Checkout from the Jenkins platform labeler repository using git protocol, no credentials, the master branch, and no polling for changes.
+    Checkout from the command line git repository using git protocol, no credentials, the master branch, and no polling for changes.
     If poll is <code>false</code>, then the remote repository will not be polled for changes.
     If poll is <code>true</code> or is not set, then the remote repository will be polled for changes.
     See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#polling">workflow scm step documentation</a> for more polling details.
@@ -125,7 +125,7 @@ checkout changelog: false,
 <pre>
 checkout poll: false,
          scmGit(userRemoteConfigs: [
-                    [ url: 'git://github.com/jenkinsci/platformlabeler-plugin' ]
+                    [ url: 'git://git.kernel.org/pub/scm/git/git.git ]
                 ])
 </pre>
     </p>
