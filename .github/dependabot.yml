@@ -21,3 +21,5 @@ updates:
       interval: "monthly"
     labels:
       - "skip-changelog"
+
+
