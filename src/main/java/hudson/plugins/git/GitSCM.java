@@ -790,7 +790,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             // If the branchSpec gets expanded using variables in the environment then print the original and expanded versions.
                             String branchSpecString = branchSpec.toString();
                             String expandedBranchSpec = branchSpec.getExpandedName(pollEnv);
-                            String branchMessageString = "testing" == expandedBranchSpec ? String.format("'%s'", branchSpecString) : String.format("'%s' (%s)", branchSpecString, expandedBranchSpec);
+                            String branchMessageString = branchSpecString.equals(expandedBranchSpec) ? String.format("'%s'", branchSpecString) : String.format("'%s' (%s)", branchSpecString, expandedBranchSpec);
                             listener.getLogger().println("[poll] Could not find remote head for branch in spec " + branchMessageString);
                         }
                     } 
