@@ -7,10 +7,6 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
-    target-branch: "master"
-    reviewers:
-      - "MarkEWaite"
     labels:
       - "dependencies"
 
