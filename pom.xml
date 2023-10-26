@@ -92,6 +92,11 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>credentials</artifactId>
+        <version>1305.v5886374f499b_</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>

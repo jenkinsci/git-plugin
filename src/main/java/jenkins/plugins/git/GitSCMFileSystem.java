@@ -368,10 +368,10 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 String credentialsId = config.getCredentialsId();
                 if (credentialsId != null) {
                     StandardCredentials credential = CredentialsMatchers.firstOrNull(
-                            CredentialsProvider.lookupCredentials(
+                            CredentialsProvider.lookupCredentialsInItem(
                                 StandardUsernameCredentials.class,
                                 owner,
-                                ACL.SYSTEM,
+                                ACL.SYSTEM2,
                                 URIRequirementBuilder.fromUri(remote).build()
                             ),
                             CredentialsMatchers.allOf(
