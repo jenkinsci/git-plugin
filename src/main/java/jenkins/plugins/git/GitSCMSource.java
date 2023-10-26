@@ -451,12 +451,12 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 return FormValidation.ok();
             }
 
-            for (ListBoxModel.Option o : CredentialsProvider.listCredentials(
+            for (ListBoxModel.Option o : CredentialsProvider.listCredentialsInItem(
                     StandardUsernameCredentials.class,
                     context,
                     context instanceof Queue.Task
-                            ? Tasks.getAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
+                            ? Tasks.getAuthenticationOf2((Queue.Task) context)
+                            : ACL.SYSTEM2,
                     URIRequirementBuilder.fromUri(remote).build(),
                     GitClient.CREDENTIALS_MATCHER)) {
                 if (Objects.equals(value, o.value)) {

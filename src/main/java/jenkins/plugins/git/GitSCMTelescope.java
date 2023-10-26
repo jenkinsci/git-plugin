@@ -195,10 +195,10 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                     String credentialsId = config.getCredentialsId();
                     if (credentialsId != null) {
                         List<StandardUsernameCredentials> urlCredentials = CredentialsProvider
-                                .lookupCredentials(StandardUsernameCredentials.class, owner,
+                                .lookupCredentialsInItem(StandardUsernameCredentials.class, owner,
                                         owner instanceof Queue.Task
-                                                ? Tasks.getAuthenticationOf((Queue.Task) owner)
-                                                : ACL.SYSTEM, URIRequirementBuilder.fromUri(remote).build());
+                                                ? Tasks.getAuthenticationOf2((Queue.Task) owner)
+                                                : ACL.SYSTEM2, URIRequirementBuilder.fromUri(remote).build());
                         credentials = CredentialsMatchers.firstOrNull(
                                 urlCredentials,
                                 CredentialsMatchers

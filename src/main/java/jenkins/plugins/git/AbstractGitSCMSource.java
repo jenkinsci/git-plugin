@@ -1288,8 +1288,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         return CredentialsMatchers
                 .firstOrNull(
-                        CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, context,
-                                ACL.SYSTEM, URIRequirementBuilder.fromUri(getRemote()).build()),
+                        CredentialsProvider.lookupCredentialsInItem(StandardUsernameCredentials.class, context,
+                                ACL.SYSTEM2, URIRequirementBuilder.fromUri(getRemote()).build()),
                         CredentialsMatchers.allOf(CredentialsMatchers.withId(credentialsId),
                                 GitClient.CREDENTIALS_MATCHER));
     }
