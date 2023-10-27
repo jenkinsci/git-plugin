@@ -117,6 +117,12 @@ public class TaskSchedulerTest {
 
         config.setCronSyntax(TaskType.PREFETCH,"* * * * *");
         config.setIsTaskConfigured(TaskType.PREFETCH,true);
+        config.setCronSyntax(TaskType.LOOSE_OBJECTS,"* * * * *");
+        config.setIsTaskConfigured(TaskType.LOOSE_OBJECTS,true);
+        config.setCronSyntax(TaskType.COMMIT_GRAPH,"* * * * *");
+        config.setIsTaskConfigured(TaskType.COMMIT_GRAPH,true);
+        config.setCronSyntax(TaskType.GC,"* * * * *");
+        config.setIsTaskConfigured(TaskType.GC,true);
 
         List<Task> maintenanceTasks = config.getMaintenanceTasks();
         taskScheduler.addTasksToQueue(maintenanceTasks);
