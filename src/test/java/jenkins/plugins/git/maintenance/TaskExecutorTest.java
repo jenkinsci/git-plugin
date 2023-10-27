@@ -39,7 +39,7 @@ public class TaskExecutorTest extends AbstractGitRepository {
     private Task gitTask;
 
 
-    public TaskExecutorTest(TaskType taskType) {
+    public TaskExecutorTest(TaskType taskType){
             this.gitTask = new Task(taskType);
             this.gitTask.setCronSyntax("* * * * *");
             this.gitTask.setIsTaskConfigured(true);
@@ -65,7 +65,6 @@ public class TaskExecutorTest extends AbstractGitRepository {
         assertTrue(taskExecutor.getCaches().size() > 0);
         GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
         File cacheFile = cache.getCacheFile();
-
         assertNotNull(taskExecutor.getGitClient(cacheFile));
         assertThat(taskExecutor.getGitClient(cacheFile),instanceOf(GitClient.class));
     }
@@ -83,7 +82,11 @@ public class TaskExecutorTest extends AbstractGitRepository {
     }
 
     @Test
-    public void testExecuteGitMaintenance() throws InterruptedException {
+    public void testExecuteGitMaintenance() throws Exception {
+
+        // This will create a pack file, incremental repack will then start to work.
+        repo.git("repack");
+
         TaskExecutor taskExecutor = new TestTaskExecutorHelper(gitTask,testGitDir);
         GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
         File cacheFile = cache.getCacheFile();
@@ -96,7 +99,11 @@ public class TaskExecutorTest extends AbstractGitRepository {
     }
 
     @Test
-    public void testRunnable() {
+    public void testRunnable() throws Exception {
+
+        // This will create a pack file, incremental repack will then start to work.
+        repo.git("repack");
+
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
         config.setIsGitMaintenanceRunning(true);
         config.setCronSyntax(gitTask.getTaskType(),"* * * * *");
