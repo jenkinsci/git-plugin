@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * TaskScheduler is responsible for scheduling maintenance tasks. It validates if a task is configured & verifies cron syntax before scheduling.
+ * TaskScheduler is responsible for scheduling maintenance tasks. It validates if a task is configured and verifies cron syntax before scheduling.
  * TaskScheduler acts as a producer by adding the appropriate task into a maintenance queue.
  *
  * @author Hrushikesh Rao
