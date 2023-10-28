@@ -13,7 +13,7 @@ public class Cron extends PeriodicWork {
 
     @Override
     public long getInitialDelay(){
-        return MIN - (Calendar.getInstance().get(Calendar.SECOND) * 1000);
+        return MIN - (Calendar.getInstance().get(Calendar.SECOND) * 1000L);
     }
 
     @Override
