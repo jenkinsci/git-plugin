@@ -149,9 +149,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 return FormValidation.ok();
             }
             for (ListBoxModel.Option o : CredentialsProvider
-                    .listCredentials(StandardUsernameCredentials.class, project, project instanceof Queue.Task
-                                    ? Tasks.getAuthenticationOf((Queue.Task) project)
-                                    : ACL.SYSTEM,
+                    .listCredentialsInItem(StandardUsernameCredentials.class, project, project instanceof Queue.Task
+                                    ? Tasks.getAuthenticationOf2((Queue.Task) project)
+                                    : ACL.SYSTEM2,
                             GitURIRequirementsBuilder.fromUri(url).build(),
                             GitClient.CREDENTIALS_MATCHER)) {
                 if (Objects.equals(value, o.value)) {
@@ -259,7 +259,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
         private static StandardCredentials lookupCredentials(@CheckForNull Item project, String credentialId, String uri) {
             return (credentialId == null) ? null : CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
+                        CredentialsProvider.lookupCredentialsInItem(StandardCredentials.class, project, ACL.SYSTEM2,
                                 GitURIRequirementsBuilder.fromUri(uri).build()),
                         CredentialsMatchers.withId(credentialId));
         }
