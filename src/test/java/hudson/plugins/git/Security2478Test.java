@@ -45,7 +45,7 @@ public class Security2478Test {
         sampleRepo.git("commit", "--all", "--message=test commit");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "pipeline");
 
-        String script = "node('slave0') {\n" +
+        String script = "node {\n" +
                 "   checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: '" + sampleRepo.fileUrl() + "', credentialsId: '']]])\n" +
                 "}";
         p.setDefinition(new CpsFlowDefinition(script, true));
