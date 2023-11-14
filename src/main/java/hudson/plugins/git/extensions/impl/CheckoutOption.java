@@ -41,14 +41,6 @@ public class CheckoutOption extends FakeGitSCMExtension {
      * {@inheritDoc}
      */
     @Override
-    public boolean requiresWorkspaceForPolling() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.timeout(timeout);
     }
