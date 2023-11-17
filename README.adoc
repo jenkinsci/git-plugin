@@ -1332,8 +1332,8 @@ GIT_LOCAL_BRANCH:: Name of branch being built without remote name, as in `master
 === Commit Variables
 
 GIT_COMMIT:: SHA-1 of the commit used in this build
-GIT_PREVIOUS_COMMIT:: SHA-1 of the commit used in the preceding build of this project
-GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA-1 of the commit used in the most recent successful build of this project
+GIT_PREVIOUS_COMMIT:: SHA-1 of the commit used in the preceding build of this project. If this is the first time a particular branch is being built, this variable is not set.
+GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA-1 of the commit used in the most recent successful build of this project. If this is the first time a particular branch is being built, this variable is not set.
 
 [#system-configuration-variables]
 === System Configuration Variables
