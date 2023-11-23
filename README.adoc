@@ -426,7 +426,31 @@ If the workspace is removed, the tag that was applied is lost.
 Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
 Applying a git tag in an agent workspace doesn't have many practical uses.
 
+[#configuration-as-code]
+=== Configuration as code
+
+The global settings of the git plugin can be defined with the Jenkins link:https://plugins.jenkins.io/configuration-as-code/[configuration as code plugin].
+Detailed descriptions of the individual settings are available in the link:#global-configuration[global configuration settings] section of this document.
+
+An example configuration might look like this:
+
+[,yaml]
+----
+unclassified:
+  scmGit:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    globalConfigEmail: "jenkins-user@example.com"
+    globalConfigName: "jenkins-user"
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: true
+    useExistingAccountWithSameEmail: false
+----
+
 [#security-configuration]
+
 === Security Configuration
 
 image:/images/git-security-configuration.png[Security Configuration]
