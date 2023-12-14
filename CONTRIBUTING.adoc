@@ -21,11 +21,12 @@ Compile the git plugin without running tests using the command:
 * `mvn clean -DskipTests verify`
 
 Code coverage reporting is available as a maven target.
-Please try to improve code coverage with tests when you submit.
+Please improve code coverage with tests when you submit a pull request.
 
 * `mvn -P enable-jacoco clean install jacoco:report` to report code coverage
 
-Please don't introduce new spotbugs output.
+New spotbugs output will fail the build.
+Do not introduce new spotbugs warnings.
 
 * `mvn spotbugs:check` to analyze project using https://spotbugs.github.io/[Spotbugs].
 * `mvn spotbugs:gui` to review Spotbugs report using GUI
