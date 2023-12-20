@@ -8,7 +8,7 @@
 	<l:main-panel>
 	<h1>${%Git Build Data}</h1>
 
-	<strong>${%Revision}</strong>: ${it.lastBuild.SHA1.name()}
+	<strong>${%Revision}</strong>: ${it.lastBuiltDisplayRevision.sha1.name()}
 	<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
 	<j:if test="${!empty(it.remoteUrls)}">
 		<j:forEach var="remoteUrl" items="${it.remoteUrls}">
@@ -21,7 +21,7 @@
 		</j:forEach>
 	</j:if>
 	<ul>
-	<j:forEach var="branch" items="${it.lastBuild.revision.branches}">
+	<j:forEach var="branch" items="${it.lastBuiltDisplayRevision.branches}">
 	<li>${branch.name}</li>
 	</j:forEach>
 	</ul>

@@ -1,7 +1,9 @@
 package hudson.plugins.git.opt;
 
+import hudson.plugins.git.UserMergeOptions;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -32,6 +34,8 @@ public class PreBuildMergeOptions implements Serializable {
     public String mergeStrategy = MergeCommand.Strategy.DEFAULT.toString();
 
     public MergeCommand.GitPluginFastForwardMode fastForwardMode = MergeCommand.GitPluginFastForwardMode.FF;
+
+    public UserMergeOptions.DisplayRevision displayRevision = UserMergeOptions.DisplayRevision.MERGED;
 
     public RemoteConfig getMergeRemote() {
         return mergeRemote;
@@ -72,6 +76,18 @@ public class PreBuildMergeOptions implements Serializable {
 
     public void setFastForwardMode(MergeCommand.GitPluginFastForwardMode fastForwardMode) {
       this.fastForwardMode = fastForwardMode;
+    }
+
+    @Exported
+    public UserMergeOptions.DisplayRevision getDisplayRevision() {
+        for (UserMergeOptions.DisplayRevision revision : UserMergeOptions.DisplayRevision.values())
+            if (revision.equals(displayRevision))
+                return revision;
+        return UserMergeOptions.DisplayRevision.MERGED;
+    }
+
+    public void setDisplayRevision(UserMergeOptions.DisplayRevision displayRevision) {
+        this.displayRevision = displayRevision;
     }
 
     @Exported

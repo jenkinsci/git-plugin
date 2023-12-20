@@ -16,4 +16,9 @@
           ${it.toString()}
       </f:enum>
   </f:entry>
+  <f:entry title="${%Revision to display}" field="displayRevision">
+        <f:enum>
+            ${it.toString()}
+        </f:enum>
+    </f:entry>
 </j:jelly>

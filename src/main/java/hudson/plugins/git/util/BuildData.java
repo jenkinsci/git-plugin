@@ -253,6 +253,16 @@ public class BuildData implements Action, Serializable, Cloneable {
         return lastBuild==null?null:lastBuild.revision;
     }
 
+    /**
+     * Gets revision of the previous build to display.
+     * @return display revision of the last build.
+     *    May be null will be returned if nothing has been checked out (e.g. due to wrong repository or branch)
+     */
+    @Exported
+    public @CheckForNull Revision getLastBuiltDisplayRevision() {
+        return lastBuild==null?null:lastBuild.getDisplayRevision();
+    }
+
     @Exported
     public Map<String,Build> getBuildsByBranchName() {
         return buildsByBranchName;
