@@ -79,7 +79,13 @@
     <!-- Do not run extra reporting for checkstyle or pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
+    <!-- TODO: Remove when plugin pom is using this version or newer -->
+    <!-- https://github.com/jenkinsci/plugin-pom/pull/869 -->
+    <spotbugs-maven-plugin.version>4.8.2.0</spotbugs-maven-plugin.version>
     <spotbugs.effort>Max</spotbugs.effort>
+    <!-- TODO: Remove when plugin pom includes this omitVisitors -->
+    <!-- https://github.com/jenkinsci/plugin-pom/pull/869 -->
+    <spotbugs.omitVisitors>ConstructorThrow,FindReturnRef</spotbugs.omitVisitors>
     <spotbugs.threshold>Low</spotbugs.threshold>
   </properties>
 
