@@ -6,13 +6,7 @@
 [#introduction]
 == Introduction
 
-[.float-group]
---
-[.text-center]
-image:https://jenkins.io/images/logos/jenkins/jenkins.png[Jenkins logo,height=192,role=center,float=right]
-image:images/signe-1923369_640.png[plus,height=64,float=right]
-image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,height=128,float=right]
---
+image::images/jenkins-and-git.png[Jenkins and Git]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
