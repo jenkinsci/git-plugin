@@ -1,5 +1,6 @@
 package hudson.plugins.git.util;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
@@ -38,6 +39,8 @@ public class Build implements Serializable, Cloneable {
      * to the same value as {@link #revision}, as we want to be able to build two pull requests rooted at the same
      * commit in the base repository.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public Revision marked;
 
     /**

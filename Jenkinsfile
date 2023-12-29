@@ -1,14 +1,11 @@
-#!/usr/bin/env groovy
-
-/* `buildPlugin` step provided by: https://github.com/jenkins-infra/pipeline-library */
+/*
+ See the documentation for more options:
+ https://github.com/jenkins-infra/pipeline-library/
+*/
 buildPlugin(
-  // Container agents start faster and are easier to administer
-  useContainerAgent: true,
-  // Do not stop parallel tests on first failure
-  failFast: false,
-  // Test Java 11 with a recent LTS, Java 17 even more recent
+  forkCount: '1C', // Run a JVM per core in tests
+  useContainerAgent: true, // Set to `false` if you need to use Docker for containerized tests
   configurations: [
-    [platform: 'linux',   jdk: '11'], // Linux first for coverage report on ci.jenkins.io
-    [platform: 'windows', jdk: '17', jenkins: '2.407']
-  ]
-)
+    [platform: 'linux', jdk: 21],
+    [platform: 'windows', jdk: 17],
+])

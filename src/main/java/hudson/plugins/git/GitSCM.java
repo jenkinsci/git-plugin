@@ -1641,6 +1641,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Symbol({"scmGit", "gitSCM"}) // Cannot use "git" because there is already a `git` pipeline step
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
+        @SuppressFBWarnings(value="UUF_UNUSED_FIELD", justification="Do not risk compatibility")
         private String gitExe;
         private String globalConfigName;
         private String globalConfigEmail;
@@ -1734,7 +1735,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          */
         @Deprecated
         public String getGitExe() {
-            return gitExe;
+            return null;
         }
 
         /**
@@ -1805,7 +1806,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return git executable
          */
         public String getOldGitExe() {
-            return gitExe;
+            return null;
         }
 
         public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,

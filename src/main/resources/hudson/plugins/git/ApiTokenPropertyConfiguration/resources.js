@@ -20,9 +20,12 @@ function revokeApiToken(anchorRevoke) {
     const apiTokenUuid = inputUuid.value;
 
     if (confirm(confirmMessage)) {
-        fetch(targetUrl + "?" + new URLSearchParams({apiTokenUuid: apiTokenUuid}), {
-            headers: crumb.wrap({}),
+        fetch(targetUrl, {
+            headers: crumb.wrap({
+              "Content-Type": "application/x-www-form-urlencoded",
+            }),
             method: "post",
+            body: new URLSearchParams({apiTokenUuid: apiTokenUuid}),
         }).then((rsp) => {
             if (rsp.ok) {
                 repeatedChunk.remove();
@@ -59,9 +62,12 @@ function saveApiToken(button){
     const nameInput = repeatedChunk.querySelector('.api-token-name-input');
     const apiTokenName = nameInput.value;
 
-    fetch(targetUrl + "?" + new URLSearchParams({apiTokenName: apiTokenName}), {
-        headers: crumb.wrap({}),
+    fetch(targetUrl, {
+        headers: crumb.wrap({
+          "Content-Type": "application/x-www-form-urlencoded",
+        }),
         method: "post",
+        body: new URLSearchParams({apiTokenName: apiTokenName}),
     }).then((rsp) => {
         if (rsp.ok) {
             rsp.json().then((json) => {

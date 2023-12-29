@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.71</version>
+    <version>4.76</version>
     <relativePath />
   </parent>
 
@@ -61,7 +61,7 @@
     </developer>
   </developers>
 
-  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+  <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <tag>${scmTag}</tag>
@@ -69,17 +69,23 @@
   </scm>
 
   <properties>
-    <revision>5.2.1</revision>
+    <revision>5.2.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.387.3</jenkins.version>
+    <jenkins.version>2.401.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
     <!-- Do not run extra reporting for checkstyle or pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
+    <!-- TODO: Remove when plugin pom is using this version or newer -->
+    <!-- https://github.com/jenkinsci/plugin-pom/pull/869 -->
+    <spotbugs-maven-plugin.version>4.8.2.0</spotbugs-maven-plugin.version>
     <spotbugs.effort>Max</spotbugs.effort>
+    <!-- TODO: Remove when plugin pom includes this omitVisitors -->
+    <!-- https://github.com/jenkinsci/plugin-pom/pull/869 -->
+    <spotbugs.omitVisitors>ConstructorThrow,FindReturnRef</spotbugs.omitVisitors>
     <spotbugs.threshold>Low</spotbugs.threshold>
   </properties>
 
@@ -87,8 +93,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.387.x</artifactId>
-        <version>2244.vd60654536b_96</version>
+        <artifactId>bom-2.401.x</artifactId>
+        <version>2675.v1515e14da_7a_6</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -161,7 +167,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.15</version>
+      <version>3.15.5</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
@@ -173,20 +179,8 @@
       <!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
-      <version>2.43.1</version>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <!-- BOM automated tests fail without conditional-buildstep plugin -->
-      <!-- TODO: Remove this dependency when parameterized trigger plugin dependency fix is released -->
-      <!-- https://github.com/jenkinsci/bom/pull/1623#issuecomment-1339989438 -->
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>conditional-buildstep</artifactId>
-      <version>1.4.2</version>
-      <scope>test</scope>
-      <optional>true</optional>
-    </dependency>
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
@@ -278,7 +272,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.1</version>
         <configuration>
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>
@@ -287,18 +281,4 @@
     </plugins>
   </build>
 
-  <profiles>
-    <profile>
-      <id>continuous-integration</id>
-      <activation>
-        <property>
-          <name>env.CI</name>
-        </property>
-      </activation>
-      <properties>
-        <!-- Fork a JVM per core for automated tests on continuous integration servers -->
-        <forkCount>1C</forkCount>
-      </properties>
-    </profile>
-  </profiles>
 </project>
