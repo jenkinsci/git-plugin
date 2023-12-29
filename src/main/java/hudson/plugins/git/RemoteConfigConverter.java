@@ -11,6 +11,7 @@ import com.thoughtworks.xstream.core.util.HierarchicalStreams;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.mapper.Mapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RemoteConfig;
 
@@ -119,6 +120,7 @@ public class RemoteConfigConverter implements Converter {
             }
         }
 
+        @SuppressFBWarnings(value="SE_PREVENT_EXT_OBJ_OVERWRITE", justification="Used during version upgrade")
         public void readExternal(ObjectInput in) throws IOException,
                 ClassNotFoundException {
             name = in.readUTF();

@@ -19,6 +19,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -92,8 +93,9 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
         public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
             try {
                 req.getSubmittedForm();
             } catch (ServletException e) {

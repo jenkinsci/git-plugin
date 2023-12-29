@@ -1,5 +1,6 @@
 package hudson.plugins.git.opt;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.export.Exported;
@@ -19,18 +20,26 @@ public class PreBuildMergeOptions implements Serializable {
     /**
      * Remote repository that contains the {@linkplain #mergeTarget ref}.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public RemoteConfig mergeRemote = null;
 
     /**
      * Remote ref to merge.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public String mergeTarget = null;
 
     /**
      * Merge strategy.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public String mergeStrategy = MergeCommand.Strategy.DEFAULT.toString();
 
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public MergeCommand.GitPluginFastForwardMode fastForwardMode = MergeCommand.GitPluginFastForwardMode.FF;
 
     public RemoteConfig getMergeRemote() {

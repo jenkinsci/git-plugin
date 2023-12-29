@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.75</version>
+    <version>4.76</version>
     <relativePath />
   </parent>
 
@@ -69,17 +69,23 @@
   </scm>
 
   <properties>
-    <revision>5.2.1</revision>
+    <revision>5.2.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.387.3</jenkins.version>
+    <jenkins.version>2.401.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
     <!-- Do not run extra reporting for checkstyle or pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
+    <!-- TODO: Remove when plugin pom is using this version or newer -->
+    <!-- https://github.com/jenkinsci/plugin-pom/pull/869 -->
+    <spotbugs-maven-plugin.version>4.8.2.0</spotbugs-maven-plugin.version>
     <spotbugs.effort>Max</spotbugs.effort>
+    <!-- TODO: Remove when plugin pom includes this omitVisitors -->
+    <!-- https://github.com/jenkinsci/plugin-pom/pull/869 -->
+    <spotbugs.omitVisitors>ConstructorThrow,FindReturnRef</spotbugs.omitVisitors>
     <spotbugs.threshold>Low</spotbugs.threshold>
   </properties>
 
@@ -87,8 +93,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.387.x</artifactId>
-        <version>2543.vfb_1a_5fb_9496d</version>
+        <artifactId>bom-2.401.x</artifactId>
+        <version>2675.v1515e14da_7a_6</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -161,7 +167,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.15.3</version>
+      <version>3.15.5</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->

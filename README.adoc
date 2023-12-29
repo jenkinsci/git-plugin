@@ -6,13 +6,7 @@
 [#introduction]
 == Introduction
 
-[.float-group]
---
-[.text-center]
-image:https://jenkins.io/images/logos/jenkins/jenkins.png[Jenkins logo,height=192,role=center,float=right]
-image:images/signe-1923369_640.png[plus,height=64,float=right]
-image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,height=128,float=right]
---
+image::images/jenkins-and-git.png[Jenkins and Git]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
@@ -23,7 +17,7 @@ toc::[]
 == Changelog in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases]
 
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
-Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
+Prior release notes are recorded in the git plugin repository link:https://github.com/jenkinsci/git-plugin/blob/git-4.7.2/CHANGELOG.adoc[change log].
 
 == Pipelines
 
@@ -426,7 +420,31 @@ If the workspace is removed, the tag that was applied is lost.
 Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
 Applying a git tag in an agent workspace doesn't have many practical uses.
 
+[#configuration-as-code]
+=== Configuration as code
+
+The global settings of the git plugin can be defined with the Jenkins link:https://plugins.jenkins.io/configuration-as-code/[configuration as code plugin].
+Detailed descriptions of the individual settings are available in the link:#global-configuration[global configuration settings] section of this document.
+
+An example configuration might look like this:
+
+[,yaml]
+----
+unclassified:
+  scmGit:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    globalConfigEmail: "jenkins-user@example.com"
+    globalConfigName: "jenkins-user"
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: true
+    useExistingAccountWithSameEmail: false
+----
+
 [#security-configuration]
+
 === Security Configuration
 
 image:/images/git-security-configuration.png[Security Configuration]
@@ -1332,8 +1350,8 @@ GIT_LOCAL_BRANCH:: Name of branch being built without remote name, as in `master
 === Commit Variables
 
 GIT_COMMIT:: SHA-1 of the commit used in this build
-GIT_PREVIOUS_COMMIT:: SHA-1 of the commit used in the preceding build of this project
-GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA-1 of the commit used in the most recent successful build of this project
+GIT_PREVIOUS_COMMIT:: SHA-1 of the commit used in the preceding build of this project. If this is the first time a particular branch is being built, this variable is not set.
+GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA-1 of the commit used in the most recent successful build of this project. If this is the first time a particular branch is being built, this variable is not set.
 
 [#system-configuration-variables]
 === System Configuration Variables

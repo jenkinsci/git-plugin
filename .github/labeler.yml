@@ -1,11 +1,15 @@
 skip-changelog:
-  - any: [ '.github/**/*', '.gitignore', 'Jenkinsfile', '.mvn/**/*', '.sonarcloud.properties' ]
+- changed-files:
+  - any-glob-to-any-file: [ '.gitattributes', '.github/**/*', '.gitignore', 'crowdin.yml', '.mvn/**/*' ]
 
 dependencies:
-  - any: [ 'pom.xml' ]
+- changed-files:
+  - any-glob-to-any-file: [ 'pom.xml' ]
 
 documentation:
-  - any: [ '*.adoc' ]
+- changed-files:
+  - any-glob-to-any-file: [ '*.adoc', '*.md', '*.txt', '**/*.html', '**/*.png', 'LICENSE*' ]
 
-test:
-  - any: [ ' src/test/**/*' ]
+tests:
+- changed-files:
+  - any-glob-to-any-file: [ 'src/test/**/*' ]
