@@ -5,6 +5,10 @@ updates:
   # Maintain dependencies for maven
   - package-ecosystem: "maven"
     directory: "/"
+    ignore:
+      # Fails plugin bill of materials tests
+      - dependency-name: "org.jenkins-ci.plugins:promoted-builds"
+        versions: ["945.v597f5c6a_d3fd"]
     schedule:
       interval: "weekly"
     labels:
