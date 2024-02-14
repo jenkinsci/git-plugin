@@ -60,9 +60,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -310,7 +307,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     branchSpecExpandedName = env.expand(branchSpecExpandedName);
                 }
                 String refspecExpandedName = refSpec;
-                if (env != null && refspecExpandedName != null) {
+                if (env != null) {
                     refspecExpandedName = env.expand(refspecExpandedName);
                 }
 
@@ -319,39 +316,27 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 // check for a tag
                 if (branchSpecExpandedName.startsWith(Constants.R_TAGS)) {
                     prefix = Constants.R_TAGS;
-                } else {
+                } else if (branchSpecExpandedName.equals(Constants.FETCH_HEAD) && StringUtils.isNotBlank(refspecExpandedName)) {
                     // check for FETCH_HEAD
-                    if (branchSpecExpandedName.equals(Constants.FETCH_HEAD) && refspecExpandedName != null &&
-                            !refspecExpandedName.equals("")) {
-                        prefix = null;
-                    } else {
-                        // check for commit-id
-                        final String regex = "^[a-fA-F0-9]{40}$";
-                        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-                        final Matcher matcher = pattern.matcher(branchSpecExpandedName);
-
-                        if (matcher.find()) {
-                            // commit-id
-                            prefix = null;
-                            rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead(branchSpecExpandedName), branchSpecExpandedName);
-                        }
-                    }
+                    prefix = null;
+                } else if (branchSpecExpandedName.matches("[0-9a-f]{6,40}")) {
+                    // commit-id
+                    prefix = null;
+                    rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead(branchSpecExpandedName), branchSpecExpandedName);
                 }
 
                 String calculatedHeadName = branchSpecExpandedName;
                 if (rev != null && env != null) {
                     calculatedHeadName = env.expand(rev.getHead().getName());
-                } else {
-                    if (prefix != null && branchSpecExpandedName.startsWith(prefix)) {
-                        calculatedHeadName = branchSpecExpandedName.substring(prefix.length());
-                    } else if (branchSpecExpandedName.startsWith("*/")) {
-                        calculatedHeadName = branchSpecExpandedName.substring(2);
-                    }
+                } else if (prefix != null && branchSpecExpandedName.startsWith(prefix)) {
+                    calculatedHeadName = branchSpecExpandedName.substring(prefix.length());
+                } else if (branchSpecExpandedName.startsWith("*/")) {
+                    calculatedHeadName = branchSpecExpandedName.substring(2);
                 }
 
-                if (refspecExpandedName == null || refspecExpandedName.equals("")) {
-                    if (prefix.equals(Constants.R_TAGS)) {
-                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":"  + prefix + calculatedHeadName;
+                if (StringUtils.isBlank(refspecExpandedName)) {
+                    if (prefix != null && prefix.equals(Constants.R_TAGS)) {
+                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":" + prefix + calculatedHeadName;
                     } else {
                         refspecExpandedName = "+" + prefix + calculatedHeadName + ":" + Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
                     }
