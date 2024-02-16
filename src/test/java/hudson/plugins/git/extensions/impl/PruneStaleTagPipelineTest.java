@@ -25,11 +25,16 @@
 package hudson.plugins.git.extensions.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.util.GitUtilsTest;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.util.SystemReader;
+import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestCliGitAPIImpl;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -66,7 +71,8 @@ public class PruneStaleTagPipelineTest {
     }
 
     @Before
-    public void allowNonRemoteCheckout() {
+    public void allowNonRemoteCheckout() throws ConfigInvalidException, IOException {
+        SystemReader.getInstance().getUserConfig().clear();
         GitSCM.ALLOW_LOCAL_CHECKOUT = true;
     }
 
@@ -119,19 +125,19 @@ public class PruneStaleTagPipelineTest {
         Assert.assertFalse("local tag has not been pruned", localClient.tagExists(tagName));
     }
 
-    private GitClient newGitClient(File localRepo) {
+    private GitClient newGitClient(File localRepo) throws IOException, InterruptedException {
         String gitExe = Functions.isWindows() ? "git.exe" : "git";
-        GitClient localClient = new TestCliGitAPIImpl(gitExe, localRepo, listener, new EnvVars());
-        return localClient;
+        return Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(localRepo).using(gitExe).getClient();
+        //TestCliGitAPIImpl localClient = new TestCliGitAPIImpl(gitExe, localRepo, listener, GitUtilsTest.getConfigNoSystemEnvsVars());
+
+        //return localClient;
     }
 
     private GitClient initRepository(File workspace) throws Exception {
         GitClient remoteClient = newGitClient(workspace);
         remoteClient.init();
-
         FileUtils.touch(new File(workspace, "test"));
         remoteClient.add("test");
-
         remoteClient.commit("initial commit");
         return remoteClient;
     }

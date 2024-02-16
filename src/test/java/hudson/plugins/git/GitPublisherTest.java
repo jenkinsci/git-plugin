@@ -747,6 +747,9 @@ public class GitPublisherTest extends AbstractGitProject {
     @Issue("JENKINS-24786")
     @Test
     public void testMergeAndPushWithCharacteristicEnvVar() throws Exception {
+        // jgit doesn't work because of missing PerBuildTag
+        //GitTool tool = new JGitTool(Collections.emptyList());
+        //r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
         FreeStyleProject project = setupSimpleProject("master");
 
         /*
