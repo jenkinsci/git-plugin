@@ -170,12 +170,6 @@
       <artifactId>credentials-binding</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.main</groupId>
-      <artifactId>jenkins-test-harness-htmlunit</artifactId>
-      <version>169.v1a_eed8806921</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
@@ -244,6 +238,13 @@
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Temporary during HTMLUnit 3.11.0 evaluation -->
+    <dependency>
+      <groupId>org.jenkins-ci.main</groupId>
+      <artifactId>jenkins-test-harness-htmlunit</artifactId>
+      <version>169.v1a_eed8806921</version>
       <scope>test</scope>
     </dependency>
     <dependency>
