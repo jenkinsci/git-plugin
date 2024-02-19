@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.Axis;
@@ -45,6 +46,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jvnet.hudson.test.Issue;
 
 import java.io.File;
@@ -102,7 +104,7 @@ public class GitPublisherTest extends AbstractGitProject {
         MatrixProject mp = r.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(testGitDir.getAbsolutePath()));
-        mp.getPublishersList().add(new GitPublisher(
+        mp.getPublishersList().add(new TestGitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -157,7 +159,7 @@ public class GitPublisherTest extends AbstractGitProject {
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
+        project.getPublishersList().add(new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.emptyList(),
@@ -201,7 +203,7 @@ public class GitPublisherTest extends AbstractGitProject {
         mp.setScm(new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("")),
                 null, tool.getName(), Collections.emptyList()));
-        mp.getPublishersList().add(new GitPublisher(
+        mp.getPublishersList().add(new TestGitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -249,7 +251,7 @@ public class GitPublisherTest extends AbstractGitProject {
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
+        project.getPublishersList().add(new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.emptyList(),
@@ -285,7 +287,7 @@ public class GitPublisherTest extends AbstractGitProject {
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
+        project.getPublishersList().add(new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.emptyList(),
@@ -369,7 +371,7 @@ public class GitPublisherTest extends AbstractGitProject {
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
+        project.getPublishersList().add(new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.emptyList(),
@@ -457,7 +459,7 @@ public class GitPublisherTest extends AbstractGitProject {
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
+        project.getPublishersList().add(new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.emptyList(),
@@ -554,7 +556,7 @@ public class GitPublisherTest extends AbstractGitProject {
         String tag_name = "test-tag";
         String note_content = "Test Note";
 
-        project.getPublishersList().add(new GitPublisher(
+        project.getPublishersList().add(new TestGitPublisher(
         		Collections.singletonList(new TagToPush("$TARGET_NAME", tag_name, "", false, false)),
                 Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH")),
                 Collections.singletonList(new NoteToPush("$TARGET_NAME", note_content, Constants.R_NOTES_COMMITS, false)),
@@ -584,7 +586,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.emptyList());
         project.setScm(scm);
 
-        GitPublisher forcedPublisher = new GitPublisher(
+        GitPublisher forcedPublisher = new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
                 Collections.emptyList(),
@@ -631,7 +633,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         // Remove forcedPublisher, add unforcedPublisher
         project.getPublishersList().remove(forcedPublisher);
-        GitPublisher unforcedPublisher = new GitPublisher(
+        GitPublisher unforcedPublisher = new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
                 Collections.emptyList(),
@@ -680,7 +682,7 @@ public class GitPublisherTest extends AbstractGitProject {
         project.setScm(scm);
 
 
-      project.getPublishersList().add(new GitPublisher(
+      project.getPublishersList().add(new TestGitPublisher(
           Collections.emptyList(),
           Collections.singletonList(new BranchToPush("origin", "integration")),
           Collections.emptyList(),
@@ -715,7 +717,7 @@ public class GitPublisherTest extends AbstractGitProject {
         BranchToPush btp = new BranchToPush("origin", "master");
         btp.setRebaseBeforePush(true);
 
-        GitPublisher rebasedPublisher = new GitPublisher(
+        GitPublisher rebasedPublisher = new TestGitPublisher(
                 Collections.emptyList(),
                 Collections.singletonList(btp),
                 Collections.emptyList(),
@@ -802,7 +804,7 @@ public class GitPublisherTest extends AbstractGitProject {
         String tagMessageReference = envReference + " tag message";
         String noteReference = "note for " + envReference;
         String noteValue = "note for " + envValue;
-        GitPublisher publisher = new GitPublisher(
+        GitPublisher publisher = new TestGitPublisher(
                 Collections.singletonList(new TagToPush("origin", tagNameReference, tagMessageReference, false, true)),
                 Collections.singletonList(new BranchToPush("origin", envReference)),
                 Collections.singletonList(new NoteToPush("origin", noteReference, Constants.R_NOTES_COMMITS, false)),
@@ -856,6 +858,36 @@ public class GitPublisherTest extends AbstractGitProject {
 
     }
 
+    /**
+     * doing this because some system and/or users may commit/tag gpgSign activated,
+     * and we cannot answer the passphrase if needed so disabled it locally for the test
+     */
+    private static class TestGitPublisher extends GitPublisher {
+        public TestGitPublisher(
+                List<TagToPush> tagsToPush,
+                List<BranchToPush> branchesToPush,
+                List<NoteToPush> notesToPush,
+                boolean pushOnlyIfSuccess,
+                boolean pushMerge,
+                boolean forcePush) {
+            super(tagsToPush, branchesToPush, notesToPush, pushOnlyIfSuccess, pushMerge, forcePush);
+        }
+
+        @Override
+        protected GitClient getGitClient(
+                GitSCM gitSCM,
+                BuildListener listener,
+                EnvVars environment,
+                AbstractBuild<?, ?> build,
+                UnsupportedCommand cmd)
+                throws IOException, InterruptedException {
+            GitClient gitClient = super.getGitClient(gitSCM, listener, environment, build, cmd);
+            gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+            gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+            return gitClient;
+        }
+    }    
+    
     private boolean existsTag(String tag) throws InterruptedException {
         return existsTagInRepo(testGitClient, tag);
     }
@@ -910,4 +942,7 @@ class LongRunningCommit extends Builder {
 
         return true;
     }
+    
+    
+    
 }

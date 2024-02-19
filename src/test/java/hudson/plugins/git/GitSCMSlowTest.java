@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jgit.util.SystemReader;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -289,7 +290,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
                 Collections.emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        scm.getExtensions().add(new TestPreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
@@ -319,6 +320,23 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    /**
+     * because of auto gpgsign we must disable it at repo level
+     */
+    public static class TestPreBuildMerge extends PreBuildMerge {
+        public TestPreBuildMerge(UserMergeOptions options) {
+            super(options);
+        }
+
+        @Override
+        public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
+            GitClient gitClient = super.decorate(scm, git);
+            gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+            gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+            return gitClient;
+        }
+    }
+
     @Test
     public void testMergeWithMatrixBuild() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
@@ -331,7 +349,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
                 Collections.emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        scm.getExtensions().add(new TestPreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
         project.setScm(scm);
 

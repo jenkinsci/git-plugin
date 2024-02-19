@@ -146,6 +146,16 @@ public class GitPublisher extends Recorder implements Serializable {
         input = input.replaceAll("\\$BUILDDURATION", buildDuration);
         return input;
     }
+
+    protected GitClient getGitClient(
+            GitSCM gitSCM,
+            BuildListener listener,
+            EnvVars environment,
+            AbstractBuild<?, ?> build,
+            UnsupportedCommand cmd)
+            throws IOException, InterruptedException {
+        return gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
+    }
     
     @Override
     public boolean perform(AbstractBuild<?, ?> build,
@@ -180,7 +190,7 @@ public class GitPublisher extends Recorder implements Serializable {
 
             UnsupportedCommand cmd = new UnsupportedCommand();
             cmd.gitPublisher(true);
-            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
+            final GitClient git  = getGitClient(gitSCM, listener, environment, build, cmd);
 
             URIish remoteURI;
 

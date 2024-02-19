@@ -34,7 +34,6 @@ import hudson.plugins.git.util.GitUtilsTest;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.util.SystemReader;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestCliGitAPIImpl;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -49,7 +48,6 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Functions;
 import hudson.model.Result;
@@ -125,18 +123,17 @@ public class PruneStaleTagPipelineTest {
         Assert.assertFalse("local tag has not been pruned", localClient.tagExists(tagName));
     }
 
-    private GitClient newGitClient(File localRepo) throws IOException, InterruptedException {
+    private GitClient newGitClient(File localRepo) {
         String gitExe = Functions.isWindows() ? "git.exe" : "git";
-        return Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(localRepo).using(gitExe).getClient();
-        //TestCliGitAPIImpl localClient = new TestCliGitAPIImpl(gitExe, localRepo, listener, GitUtilsTest.getConfigNoSystemEnvsVars());
-
-        //return localClient;
+        return new TestCliGitAPIImpl(gitExe, localRepo, listener, GitUtilsTest.getConfigNoSystemEnvsVars());
     }
 
     private GitClient initRepository(File workspace) throws Exception {
         GitClient remoteClient = newGitClient(workspace);
         remoteClient.init();
         FileUtils.touch(new File(workspace, "test"));
+        remoteClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+        remoteClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
         remoteClient.add("test");
         remoteClient.commit("initial commit");
         return remoteClient;
