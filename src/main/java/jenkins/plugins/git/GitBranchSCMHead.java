@@ -68,17 +68,13 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
 
         @Override
         public SCMRevision migrate(@NonNull GitSCMSource source, @NonNull AbstractGitSCMSource.SCMRevisionImpl revision) {
-            if (revision.getHead().getClass() == SCMHead.class) {
-                SCMHead revisionHead = revision.getHead();
-                SCMHead branchHead = migrate(source, revisionHead);
-                if (branchHead != null) {
-                    GitBranchSCMHead gitBranchHead = (GitBranchSCMHead) branchHead;
-                    String revisionHash = revision.getHash();
-                    return new GitBranchSCMRevision(gitBranchHead, revisionHash);
-                }
+            SCMHead revisionHead = revision.getHead();
+            if (revisionHead instanceof GitBranchSCMHead) {
+                GitBranchSCMHead gitBranchHead = (GitBranchSCMHead) revisionHead;
+                String revisionHash = revision.getHash();
+                return new GitBranchSCMRevision(gitBranchHead, revisionHash);
             }
             return null;
         }
-
     }
 }
