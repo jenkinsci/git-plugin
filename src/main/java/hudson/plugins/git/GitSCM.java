@@ -1495,7 +1495,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             if (!exclusion) {
                 FirstBuildChangelog firstBuildChangelog = getExtensions().get(FirstBuildChangelog.class);
-                if (firstBuildChangelog.isMakeChangelog()) {
+                if (firstBuildChangelog!=null&&firstBuildChangelog.isMakeChangelog()) {
                     changelog.to(out).max(1).execute();
                     executed = true;
                     listener.getLogger().println("First time build. Latest changes added to changelog.");
