@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +16,7 @@ import java.util.Random;
 import java.util.Set;
 
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
@@ -24,6 +26,7 @@ import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -43,6 +46,9 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
+
+import javax.servlet.ServletException;
 
 /**
  * Test git tag action. Low value test that was created as part of
@@ -240,7 +246,7 @@ public class GitTagActionTest {
         if (NO_BRANCHES.equals(message)) {
             tagRevision.setBranches(null);
         }
-        tagAction = new GitTagAction(tagRun, workspace, tagRevision);
+        tagAction = new TestGitTagAction(tagRun, workspace, tagRevision);
 
         /* Schedule tag creation if message is not null */
         if (message != null) {
@@ -253,6 +259,45 @@ public class GitTagActionTest {
         }
         return tagAction;
     }
+
+    /**
+     * doing this because some system and/or users may commit/tag gpgSign activated,
+     * and we cannot answer the passphrase if needed so disabled it locally for the test
+     */
+    private static class TestGitTagAction extends GitTagAction {
+        public TestGitTagAction(Run build, FilePath workspace, Revision revision) {
+            super(build, workspace, revision);
+        }
+
+        @Override
+        void scheduleTagCreation(Map<String, String> newTags, String comment) throws IOException, ServletException {
+            new TestTagWorkerThread(newTags, comment).start();
+        }
+
+        @TestExtension
+        public static class DescriptorImpl extends Descriptor<GitTagAction> {
+            @Override
+            public String getDisplayName() {
+                return "Tag";
+            }
+        }
+
+        private class TestTagWorkerThread extends GitTagAction.TagWorkerThread {
+            public TestTagWorkerThread(Map<String, String> tagSet, String ignoredComment) {
+                super(tagSet, ignoredComment);
+            }
+
+            @Override
+            protected GitClient getGitClient(TaskListener listener, EnvVars environment, FilePath workspace) throws IOException, InterruptedException {
+                GitClient gitClient = super.getGitClient(listener, environment, workspace);
+                gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+                gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+                return gitClient;
+            }
+        }
+
+    }
+
 
     private static Set<String> getMatchingTagNames() throws Exception {
         Set<GitObject> tags = workspaceGitClient.getTags();

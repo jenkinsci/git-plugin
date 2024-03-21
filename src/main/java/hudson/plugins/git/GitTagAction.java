@@ -185,7 +185,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     /**
      * The thread that performs tagging operation asynchronously.
      */
-    public final class TagWorkerThread extends TaskThread {
+    public class TagWorkerThread extends TaskThread {
         private final Map<String, String> tagSet;
 
         public TagWorkerThread(Map<String, String> tagSet,String ignoredComment) {
@@ -193,14 +193,18 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             this.tagSet = tagSet;
         }
 
+        protected GitClient getGitClient(TaskListener listener, EnvVars environment, FilePath workspace)
+                throws IOException, InterruptedException {
+            return Git.with(listener, environment)
+                    .in(workspace)
+                    .getClient();
+        }
+
         @Override
         protected void perform(final TaskListener listener) throws Exception {
             final EnvVars environment = getRun().getEnvironment(listener);
             final FilePath workspace = new FilePath(new File(ws));
-            final GitClient git = Git.with(listener, environment)
-                    .in(workspace)
-                    .getClient();
-
+            final GitClient git = getGitClient(listener, environment, workspace);
 
             for (Map.Entry<String, String> entry : tagSet.entrySet()) {
                 try {
