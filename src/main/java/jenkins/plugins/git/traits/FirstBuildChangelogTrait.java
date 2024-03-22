@@ -36,7 +36,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 /**
  * Exposes {@link FirstBuildChangelog} as a {@link SCMSourceTrait}.
  *
- * @since 3.4.0
+ * @since 5.2.0
  */
 public class FirstBuildChangelogTrait extends GitSCMExtensionTrait<FirstBuildChangelog> {
 
