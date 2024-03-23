@@ -1,10 +1,8 @@
 package hudson.plugins.git;
 
-import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
 
@@ -64,6 +62,7 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.*;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -924,7 +923,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("No credentials specified");
             } else {
                 String url = getParameterString(uc.getUrl(), environment);
-                StandardUsernameCredentials credentials = lookupScanCredentials(build, url, ucCredentialsId);
+                var credentials = lookupScanCredentials(build, url, ucCredentialsId);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
                     if(!isHideCredentials()) {
@@ -943,19 +942,35 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return c;
     }
 
-    private static StandardUsernameCredentials lookupScanCredentials(@NonNull Run<?, ?> build,
-                                                              @CheckForNull String url,
-                                                              @CheckForNull String ucCredentialsId) {
+    private static StandardCredentials lookupScanCredentials(@NonNull Run<?, ?> build,
+                                                             @CheckForNull String url,
+                                                             @CheckForNull String ucCredentialsId) {
         if (Util.fixEmpty(ucCredentialsId) == null) {
             return null;
-        } else {
-            StandardUsernameCredentials c = CredentialsProvider.findCredentialById(
-                    ucCredentialsId,
-                    StandardUsernameCredentials.class,
-                    build,
-                    URIRequirementBuilder.fromUri(url).build());
-            return c != null && GitClient.CREDENTIALS_MATCHER.matches(c) ? c : null;
         }
+
+        StandardCredentials c;
+        c = CredentialsProvider.findCredentialById(
+                ucCredentialsId,
+                StandardUsernameCredentials.class,
+                build,
+                URIRequirementBuilder.fromUri(url).build());
+
+        if (c != null && GitClient.CREDENTIALS_MATCHER.matches(c)) {
+            return c;
+        }
+
+        c = CredentialsProvider.findCredentialById(
+                ucCredentialsId,
+                StringCredentials.class,
+                build,
+                URIRequirementBuilder.fromUri(url).build());
+
+        if (c != null && GitClient.CREDENTIALS_MATCHER.matches(c)) {
+            return c;
+        }
+
+        return null;
     }
 
     @NonNull
