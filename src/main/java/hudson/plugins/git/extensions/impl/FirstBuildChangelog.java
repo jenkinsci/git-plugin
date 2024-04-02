@@ -60,7 +60,7 @@ public class FirstBuildChangelog extends GitSCMExtension {
     }
 
     @Extension
-    @Symbol("FirstBuildChangelog")
+    @Symbol("firstBuildChangelog")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         /**
