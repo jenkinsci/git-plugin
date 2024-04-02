@@ -1,12 +1,11 @@
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.FirstBuildChangelog;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 /**
  * Exposes {@link FirstBuildChangelog} as a {@link SCMSourceTrait}.

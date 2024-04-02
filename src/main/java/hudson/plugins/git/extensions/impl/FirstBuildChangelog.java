@@ -4,7 +4,6 @@ import hudson.Extension;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.util.Objects;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -18,8 +17,7 @@ public class FirstBuildChangelog extends GitSCMExtension {
     private boolean makeChangelog;
 
     @DataBoundConstructor
-    public FirstBuildChangelog() {
-    }
+    public FirstBuildChangelog() {}
 
     public boolean isMakeChangelog() {
         return makeChangelog;
@@ -58,9 +56,7 @@ public class FirstBuildChangelog extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "FirstBuildChangelog{" +
-                "makeChangelog=" + makeChangelog +
-                '}';
+        return "FirstBuildChangelog{" + "makeChangelog=" + makeChangelog + '}';
     }
 
     @Extension
