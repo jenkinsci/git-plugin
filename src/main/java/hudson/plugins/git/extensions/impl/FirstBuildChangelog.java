@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import com.google.common.base.Objects;
 import hudson.Extension;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -33,14 +34,14 @@ public class FirstBuildChangelog extends GitSCMExtension {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (this==o ) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
         FirstBuildChangelog that = (FirstBuildChangelog) o;
-        return makeChangelog == that.makeChangelog;
+        return Objects.equal(that.makeChangelog,makeChangelog);
     }
 
     /**
