@@ -10,7 +10,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 /**
  * Exposes {@link FirstBuildChangelog} as a {@link SCMSourceTrait}.
  *
- * @since 5.2.0
+ * @since 5.3.0
  */
 public class FirstBuildChangelogTrait extends GitSCMExtensionTrait<FirstBuildChangelog> {
 
