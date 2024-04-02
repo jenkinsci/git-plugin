@@ -68,7 +68,7 @@ public class FirstBuildChangelog extends GitSCMExtension {
          */
         @Override
         public String getDisplayName() {
-            return "First Build Changelog";
+            return "First build changelog";
         }
     }
 }
