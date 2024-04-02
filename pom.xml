@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.79</version>
+    <version>4.80</version>
     <relativePath />
   </parent>
 
@@ -88,7 +88,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.414.x</artifactId>
-        <version>2907.vcb_35d6f2f7de</version>
+        <version>2950.va_633b_f42f759</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -161,7 +161,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.15.8</version>
+      <version>3.16</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
