@@ -41,7 +41,7 @@ public class FirstBuildChangelog extends GitSCMExtension {
             return false;
         }
         FirstBuildChangelog that = (FirstBuildChangelog) o;
-        return Objects.equal(that.makeChangelog,makeChangelog);
+        return Objects.equal(makeChangelog,that.makeChangelog);
     }
 
     /**
