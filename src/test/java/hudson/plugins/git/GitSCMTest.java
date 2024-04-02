@@ -1195,7 +1195,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         FirstBuildChangelog fbc = new FirstBuildChangelog();
         fbc.setMakeChangelog(true);
         ((GitSCM) p.getScm()).getExtensions().add(fbc);
-        
+
         /* First build should should generate a changelog */
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
