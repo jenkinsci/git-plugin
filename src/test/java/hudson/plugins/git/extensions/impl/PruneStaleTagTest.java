@@ -85,7 +85,8 @@ public class PruneStaleTagTest {
 
         // clone remote repository to workspace
         GitClient localClient =  cloneRepository(remoteRepo);
-
+        localClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+        localClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
         GitSCM scm = new GitSCM(localClient.getRemoteUrl("origin"));
         PruneStaleTag extension = new PruneStaleTag(true);
 
@@ -227,7 +228,8 @@ public class PruneStaleTagTest {
     private GitClient initRepository(File workspace) throws Exception {
         GitClient remoteClient = newGitClient(workspace);
         remoteClient.init();
-
+        remoteClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+        remoteClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
         FileUtils.touch(new File(workspace, "test"));
         remoteClient.add("test");
 

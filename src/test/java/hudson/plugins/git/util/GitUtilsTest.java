@@ -106,6 +106,7 @@ public class GitUtilsTest {
         originRepo.init();
         originRepo.git("config", "user.name", "Author User Name");
         originRepo.git("config", "user.email", "author.user.name@mail.example.com");
+
         originRepo.git("tag", PRIOR_TAG_NAME_1);
         originRepo.git("tag", "-a", PRIOR_TAG_NAME_2, "-m", "Annotated tag " + PRIOR_TAG_NAME_2);
         priorHeadId = ObjectId.fromString(originRepo.head());

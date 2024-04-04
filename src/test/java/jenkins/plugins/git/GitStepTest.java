@@ -283,6 +283,8 @@ public class GitStepTest {
             "node {\n" +
             "  git url: $/" + sampleRepo + "/$\n" +
             "  writeFile file: 'file', text: 'edited by build'\n" +
+            "  rungit 'config --local commit.gpgsign false'\n" +
+            "  rungit 'config --local tag.gpgSign false'\n" +
             "  rungit 'commit --all --message=edits'\n" +
             "  rungit 'show master'\n" +
             "}", true));
