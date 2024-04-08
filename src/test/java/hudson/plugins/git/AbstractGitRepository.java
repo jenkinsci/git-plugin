@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import hudson.plugins.git.util.GitUtilsTest;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
 import org.junit.Rule;
 
@@ -38,10 +40,11 @@ public abstract class AbstractGitRepository {
 
     @Before
     public void createGitRepository() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         TaskListener listener = StreamTaskListener.fromStderr();
         repo.init();
         testGitDir = repo.getRoot();
-        testGitClient = Git.with(listener, new EnvVars()).in(testGitDir).getClient();
+        testGitClient = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(testGitDir).getClient();
     }
 
     /**
