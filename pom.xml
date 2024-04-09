@@ -88,7 +88,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.414.x</artifactId>
-        <version>2950.va_633b_f42f759</version>
+        <version>2961.v1f472390972e</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -161,7 +161,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.16</version>
+      <version>3.16.1</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
