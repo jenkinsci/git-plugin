@@ -50,12 +50,14 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     private static final Logger LOGGER = Logger.getLogger(GitSampleRepoRule.class.getName());
 
-    protected void before() throws Throwable {
+    @Override
+    public void before() throws Throwable {
         super.before();
         GitSCM.ALLOW_LOCAL_CHECKOUT = true;
     }
 
-    protected void after() {
+    @Override
+    public void after() {
         super.after();
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
