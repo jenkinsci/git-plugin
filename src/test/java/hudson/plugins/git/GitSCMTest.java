@@ -1193,7 +1193,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
         FirstBuildChangelog fbc = new FirstBuildChangelog();
-        fbc.setMakeChangelog(true);
         ((GitSCM) p.getScm()).getExtensions().add(fbc);
 
         /* First build should should generate a changelog */
