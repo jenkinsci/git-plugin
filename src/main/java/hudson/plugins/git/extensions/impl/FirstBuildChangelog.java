@@ -17,7 +17,9 @@ public class FirstBuildChangelog extends GitSCMExtension {
     private boolean makeChangelog;
 
     @DataBoundConstructor
-    public FirstBuildChangelog() {}
+    public FirstBuildChangelog() {
+        makeChangelog = true;
+    }
 
     public boolean isMakeChangelog() {
         return makeChangelog;
