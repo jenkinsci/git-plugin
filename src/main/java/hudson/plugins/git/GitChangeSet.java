@@ -1,5 +1,9 @@
 package hudson.plugins.git;
 
+import static hudson.Util.fixEmpty;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.MarkupText;
 import hudson.Plugin;
 import hudson.model.User;
@@ -8,18 +12,14 @@ import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
-import jenkins.model.Jenkins;
-import org.apache.commons.lang.math.NumberUtils;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-import org.springframework.security.core.AuthenticationException;
-import com.google.common.util.concurrent.UncheckedExecutionException;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -30,13 +30,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static hudson.Util.fixEmpty;
-
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.math.NumberUtils;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+import org.springframework.security.core.AuthenticationException;
 
 /**
  * Represents a change set.
@@ -48,11 +46,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String PREFIX_COMMITTER = "committer ";
     private static final String IDENTITY = "([^<]*)<(.*)> (.*)";
 
-    private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
-    private static final Pattern AUTHOR_ENTRY = Pattern.compile("^"
-            + PREFIX_AUTHOR + IDENTITY + "$");
-    private static final Pattern COMMITTER_ENTRY = Pattern.compile("^"
-            + PREFIX_COMMITTER + IDENTITY + "$");
+    private static final Pattern FILE_LOG_ENTRY =
+            Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
+    private static final Pattern AUTHOR_ENTRY = Pattern.compile("^" + PREFIX_AUTHOR + IDENTITY + "$");
+    private static final Pattern COMMITTER_ENTRY = Pattern.compile("^" + PREFIX_COMMITTER + IDENTITY + "$");
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
 
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
@@ -60,7 +57,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String ISO_8601_WITH_TZ = "yyyy-MM-dd'T'HH:mm:ssX";
     static final int TRUNCATE_LIMIT = 72;
 
-    private final DateTimeFormatter [] dateFormatters;
+    private final DateTimeFormatter[] dateFormatters;
 
     public static final Logger LOGGER = Logger.getLogger(GitChangeSet.class.getName());
 
@@ -84,6 +81,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * just one branch, in which case it's safe to attribute the commit to that branch.
      */
     private String committer;
+
     private String committerEmail;
     private String committerTime;
     private String author;
@@ -170,7 +168,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     static boolean isShowEntireCommitSummaryInChanges() {
         try {
             return new DescriptorImpl().isShowEntireCommitSummaryInChanges();
-        }catch (Throwable t){
+        } catch (Throwable t) {
             return false;
         }
     }
@@ -180,8 +178,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         StringBuilder message = new StringBuilder();
 
         for (String line : lines) {
-            if( line.length() < 1)
-                continue;
+            if (line.length() < 1) continue;
             if (line.startsWith("commit ")) {
                 String[] split = line.split(" ");
                 if (split.length > 1) this.id = split[1];
@@ -193,8 +190,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 if (split.length > 1) this.parentCommit = split[1];
             } else if (line.startsWith(PREFIX_COMMITTER)) {
                 Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
-                if (committerMatcher.matches()
-                        && committerMatcher.groupCount() >= 3) {
+                if (committerMatcher.matches() && committerMatcher.groupCount() >= 3) {
                     this.committer = committerMatcher.group(1).trim();
                     this.committerEmail = committerMatcher.group(2);
                     this.committerTime = isoDateFormat(committerMatcher.group(3));
@@ -217,8 +213,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         String dst = null;
                         String path = fileMatcher.group(4);
                         char editMode = mode.charAt(0);
-                        if (editMode == 'M' || editMode == 'A' || editMode == 'D'
-                            || editMode == 'R' || editMode == 'C') {
+                        if (editMode == 'M'
+                                || editMode == 'A'
+                                || editMode == 'D'
+                                || editMode == 'R'
+                                || editMode == 'C') {
                             src = parseHash(fileMatcher.group(1));
                             dst = parseHash(fileMatcher.group(2));
                         }
@@ -240,8 +239,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                                 String newPath = copySplitMatcher.group(2);
                                 this.paths.add(new Path(src, dst, 'A', newPath, this));
                             }
-                        }
-                        else {
+                        } else {
                             this.paths.add(new Path(src, dst, editMode, path, this));
                         }
                     }
@@ -255,16 +253,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         } else {
             this.title = this.comment.substring(0, endOfFirstLine).trim();
         }
-         if(!showEntireCommitSummaryInChanges){
+        if (!showEntireCommitSummaryInChanges) {
             this.title = splitString(this.title, TRUNCATE_LIMIT);
         }
     }
 
     /* Package protected for testing */
     static String splitString(String msg, int lineSize) {
-        if (msg ==  null) return "";
+        if (msg == null) return "";
         if (msg.matches(".*[\r\n].*")) {
-            String [] msgArray = msg.split("[\r\n]");
+            String[] msgArray = msg.split("[\r\n]");
             msg = msgArray[0];
         }
         if (msg.length() <= lineSize || !msg.contains(" ")) {
@@ -285,7 +283,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         int spaceIndex = s.indexOf(' ');
         if (spaceIndex > 0) {
             date = s.substring(0, spaceIndex);
-            timezone = s.substring(spaceIndex+1);
+            timezone = s.substring(spaceIndex + 1);
         }
         if (NumberUtils.isDigits(date)) {
             // legacy mode
@@ -328,7 +326,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         for (DateTimeFormatter dateFormatter : dateFormatters) {
             try {
                 ZonedDateTime dateTime = ZonedDateTime.parse(date, dateFormatter);
-                return dateTime.toEpochSecond()* 1000L;
+                return dateTime.toEpochSecond() * 1000L;
             } catch (DateTimeParseException | IllegalArgumentException e) {
             }
         }
@@ -350,8 +348,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         super.setParent(parent);
     }
 
-    public @CheckForNull
-    String getParentCommit() {
+    public @CheckForNull String getParentCommit() {
         return parentCommit;
     }
 
@@ -434,8 +431,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * @param useExistingAccountWithSameEmail true if users should be searched for their email attribute
      * @return {@link User}
      */
-    public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail,
-                                 boolean useExistingAccountWithSameEmail) {
+    public User findOrCreateUser(
+            String csAuthor,
+            String csAuthorEmail,
+            boolean createAccountBasedOnEmail,
+            boolean useExistingAccountWithSameEmail) {
         User user;
         if (csAuthor == null) {
             return User.getUnknown();
@@ -456,7 +456,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                     user = getUser(csAuthorEmail, !useExistingAccountWithSameEmail);
                     boolean setUserDetails = true;
                     if (user == null && useExistingAccountWithSameEmail && hasMailerPlugin()) {
-                        for(User existingUser : User.getAll()) {
+                        for (User existingUser : User.getAll()) {
                             if (csAuthorEmail.equalsIgnoreCase(getMail(existingUser))) {
                                 user = existingUser;
                                 setUserDetails = false;
@@ -469,8 +469,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                     }
                     if (user != null && setUserDetails) {
                         user.setFullName(csAuthor);
-                        if (hasMailerPlugin())
-                            setMail(user, csAuthorEmail);
+                        if (hasMailerPlugin()) setMail(user, csAuthorEmail);
                         user.save();
                     }
                 } catch (AuthenticationException authException) {
@@ -578,13 +577,13 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         if (authorOrCommitter) {
             csAuthor = this.author;
             csAuthorEmail = this.authorEmail;
-        }
-        else {
+        } else {
             csAuthor = this.committer;
             csAuthorEmail = this.committerEmail;
         }
 
-        return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail(), isUseExistingAccountWithSameEmail());
+        return findOrCreateUser(
+                csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail(), isUseExistingAccountWithSameEmail());
     }
 
     /**
@@ -622,7 +621,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     /**
      * Gets {@linkplain #getComment() the comment} fully marked up by {@link ChangeLogAnnotator}.
-     @return annotated comment
+     * @return annotated comment
      */
     public String getCommentAnnotated() {
         MarkupText markup = new MarkupText(getComment());
@@ -636,7 +635,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return null;
     }
 
-    @ExportedBean(defaultVisibility=999)
+    @ExportedBean(defaultVisibility = 999)
     public static class Path implements AffectedFile {
 
         private String src;
@@ -661,7 +660,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return dst;
         }
 
-        @Exported(name="file")
+        @Exported(name = "file")
         public String getPath() {
             return path;
         }
@@ -673,12 +672,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         @Exported
         public EditType getEditType() {
             switch (action) {
-            case 'A':
-                return EditType.ADD;
-            case 'D':
-                return EditType.DELETE;
-            default:
-                return EditType.EDIT;
+                case 'A':
+                    return EditType.ADD;
+                case 'D':
+                    return EditType.DELETE;
+                default:
+                    return EditType.EDIT;
             }
         }
     }

@@ -7,9 +7,8 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.DefaultBuildChooser;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.util.List;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Holds {@link BuildChooser}.
@@ -25,8 +24,7 @@ public class BuildChooserSetting extends FakeGitSCMExtension {
     }
 
     public BuildChooser getBuildChooser() {
-        if (buildChooser==null)
-            buildChooser = new DefaultBuildChooser();
+        if (buildChooser == null) buildChooser = new DefaultBuildChooser();
         return buildChooser;
     }
 

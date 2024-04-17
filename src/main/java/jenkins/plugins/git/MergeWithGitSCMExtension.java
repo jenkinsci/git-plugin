@@ -56,6 +56,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 public class MergeWithGitSCMExtension extends GitSCMExtension {
     @NonNull
     private final String baseName;
+
     @CheckForNull
     private final String baseHash;
 
@@ -74,8 +75,9 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
     }
 
     @Override
-    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
-                                     CloneCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateCloneCommand(
+            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd)
+            throws IOException, InterruptedException, GitException {
         // we are doing a merge, so cannot permit a shallow clone
         cmd.shallow(false);
     }
@@ -89,24 +91,25 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
     }
 
     @Override
-    public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
-                                            Revision marked, Revision rev)
+    public Revision decorateRevisionToBuild(
+            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev)
             throws IOException, InterruptedException, GitException {
         ObjectId baseObjectId;
         if (baseHash == null || baseHash.isBlank()) {
             try {
                 baseObjectId = git.revParse(Constants.R_REFS + baseName);
             } catch (GitException e) {
-                listener.getLogger().printf("Unable to determine head revision of %s prior to merge with PR%n",
-                        baseName);
+                listener.getLogger()
+                        .printf("Unable to determine head revision of %s prior to merge with PR%n", baseName);
                 throw e;
             }
         } else {
             baseObjectId = ObjectId.fromString(baseHash);
         }
-        listener.getLogger().printf("Merging %s commit %s into PR head commit %s%n",
-                baseName, baseObjectId.name(), rev.getSha1String()
-        );
+        listener.getLogger()
+                .printf(
+                        "Merging %s commit %s into PR head commit %s%n",
+                        baseName, baseObjectId.name(), rev.getSha1String());
         checkout(scm, build, git, listener, rev);
         try {
             /* could parse out of JenkinsLocationConfiguration.get().getAdminAddress() but seems overkill */

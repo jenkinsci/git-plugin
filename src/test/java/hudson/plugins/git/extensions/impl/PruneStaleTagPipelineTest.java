@@ -24,13 +24,17 @@
  */
 package hudson.plugins.git.extensions.impl;
 
+import hudson.FilePath;
+import hudson.Functions;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.util.GitUtilsTest;
+import hudson.util.LogTaskListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.util.GitUtilsTest;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.util.SystemReader;
@@ -48,16 +52,11 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import hudson.FilePath;
-import hudson.Functions;
-import hudson.model.Result;
-import hudson.model.TaskListener;
-import hudson.util.LogTaskListener;
-
 public class PruneStaleTagPipelineTest {
 
     @Rule
     public TemporaryFolder fileRule = new TemporaryFolder();
+
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
@@ -95,16 +94,18 @@ public class PruneStaleTagPipelineTest {
         FilePath workspace = j.jenkins.getWorkspaceFor(job);
         String remoteURL = "file://" + remoteRepo.toURI().getPath();
 
-        job.setDefinition(new CpsFlowDefinition(""
-                + "  node {\n"
-                + "    checkout([$class: 'GitSCM',\n"
-                + "             branches: [[name: '*/master']],\n"
-                + "             extensions: [pruneTags(true)],\n"
-                + "             userRemoteConfigs: [[url: '" + remoteURL + "']]\n"
-                + "    ])\n"
-                + "    def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
-                + "    echo \"token macro expanded branch is ${tokenBranch}\"\n"
-                + "  }\n", true));
+        job.setDefinition(new CpsFlowDefinition(
+                ""
+                        + "  node {\n"
+                        + "    checkout([$class: 'GitSCM',\n"
+                        + "             branches: [[name: '*/master']],\n"
+                        + "             extensions: [pruneTags(true)],\n"
+                        + "             userRemoteConfigs: [[url: '" + remoteURL + "']]\n"
+                        + "    ])\n"
+                        + "    def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
+                        + "    echo \"token macro expanded branch is ${tokenBranch}\"\n"
+                        + "  }\n",
+                true));
 
         // first run clone the repository
         WorkflowRun r = job.scheduleBuild2(0).waitForStart();
@@ -138,5 +139,4 @@ public class PruneStaleTagPipelineTest {
         remoteClient.commit("initial commit");
         return remoteClient;
     }
-
 }

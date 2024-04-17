@@ -56,15 +56,14 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public BranchDiscoveryTrait() {
-    }
+    public BranchDiscoveryTrait() {}
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        GitSCMSourceContext<?,?> ctx = (GitSCMSourceContext<?, ?>) context;
+        GitSCMSourceContext<?, ?> ctx = (GitSCMSourceContext<?, ?>) context;
         ctx.wantBranches(true);
         ctx.withAuthority(new BranchSCMHeadAuthority());
     }

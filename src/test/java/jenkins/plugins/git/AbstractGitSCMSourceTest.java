@@ -1,5 +1,30 @@
 package jenkins.plugins.git;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -16,13 +41,13 @@ import hudson.model.Actionable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
-import hudson.scm.SCMRevisionState;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.scm.SCMRevisionState;
 import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.util.ArrayList;
@@ -38,18 +63,10 @@ import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.plugins.git.traits.PruneStaleBranchTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
-
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
@@ -73,44 +90,29 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 /**
  * Tests for {@link AbstractGitSCMSource}
  */
 @OrderWith(RandomOrder.class)
 public class AbstractGitSCMSourceTest {
 
-    static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
-    static final String GitBranchSCMHead_DEV_DEV2_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
+    static final String GitBranchSCMHead_DEV_MASTER =
+            "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
+    static final String GitBranchSCMHead_DEV_DEV2_MASTER =
+            "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
 
     @Rule
     public JenkinsRule r = new JenkinsRule();
+
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+
     @Rule
     public GitSampleRepoRule sampleRepo2 = new GitSampleRepoRule();
 
     @ClassRule
     public static Stopwatch stopwatch = new Stopwatch();
+
     @Rule
     public TestName testName = new TestName();
 
@@ -125,7 +127,8 @@ public class AbstractGitSCMSourceTest {
         return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
     }
 
-    // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
+    // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact
+    // retrieve any heads!
     @Issue("JENKINS-37482")
     @Test
     @Deprecated // Tests deprecated GitSCMSource constructor
@@ -233,25 +236,32 @@ public class AbstractGitSCMSourceTest {
                 long fileTimeStampFuzz = isWindows() ? 2000L : 1000L;
                 fileTimeStampFuzz = 12 * fileTimeStampFuzz / 10; // 20% grace for file system noise
                 switch (scmHead.getName()) {
-                    case "lightweight":
-                        {
-                            long timeStampDelta = afterLightweightTag - tagHead.getTimestamp();
-                            assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterLightweightTag - beforeLightweightTag + fileTimeStampFuzz))));
-                            break;
-                        }
-                    case "annotated":
-                        {
-                            long timeStampDelta = afterAnnotatedTag - tagHead.getTimestamp();
-                            assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterAnnotatedTag - beforeAnnotatedTag + fileTimeStampFuzz))));
-                            break;
-                        }
+                    case "lightweight": {
+                        long timeStampDelta = afterLightweightTag - tagHead.getTimestamp();
+                        assertThat(
+                                timeStampDelta,
+                                is(both(greaterThanOrEqualTo(0L))
+                                        .and(lessThanOrEqualTo(
+                                                afterLightweightTag - beforeLightweightTag + fileTimeStampFuzz))));
+                        break;
+                    }
+                    case "annotated": {
+                        long timeStampDelta = afterAnnotatedTag - tagHead.getTimestamp();
+                        assertThat(
+                                timeStampDelta,
+                                is(both(greaterThanOrEqualTo(0L))
+                                        .and(lessThanOrEqualTo(
+                                                afterAnnotatedTag - beforeAnnotatedTag + fileTimeStampFuzz))));
+                        break;
+                    }
                     default:
                         fail("Unexpected tag head '" + scmHead.getName() + "'");
                         break;
                 }
             }
         }
-        String expected = "[SCMHead{'annotated'}, GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, SCMHead{'lightweight'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
+        String expected =
+                "[SCMHead{'annotated'}, GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, SCMHead{'lightweight'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
         assertEquals(expected, scmHeadSet.toString());
         // And reuse cache:
         assertEquals(expected, source.fetch(listener).toString());
@@ -259,7 +269,8 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified again");
         sampleRepo.git("commit", "--all", "--message=dev2");
         // After changing data:
-        expected = "[SCMHead{'annotated'}, GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, SCMHead{'lightweight'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
+        expected =
+                "[SCMHead{'annotated'}, GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, SCMHead{'lightweight'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
         assertEquals(expected, source.fetch(listener).toString());
     }
 
@@ -283,9 +294,13 @@ public class AbstractGitSCMSourceTest {
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
         source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
-        assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
+        assertEquals(
+                "[SCMHead{'annotated'}, SCMHead{'lightweight'}]",
+                source.fetch(listener).toString());
         // And reuse cache:
-        assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
+        assertEquals(
+                "[SCMHead{'annotated'}, SCMHead{'lightweight'}]",
+                source.fetch(listener).toString());
     }
 
     @Issue("JENKINS-45953")
@@ -311,7 +326,8 @@ public class AbstractGitSCMSourceTest {
         source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
         assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("annotated", "lightweight"));
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
+        assertThat(
+                source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
     }
 
     @Issue("JENKINS-64803")
@@ -338,8 +354,8 @@ public class AbstractGitSCMSourceTest {
         }
         assert folderStore != null;
         String fCredentialsId = "fcreds";
-        StandardCredentials fCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-            fCredentialsId, "fcreds", "user", "password");
+        StandardCredentials fCredentials = new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, fCredentialsId, "fcreds", "user", "password");
         folderStore.addCredentials(Domain.global(), fCredentials);
         folderStore.save();
         WorkflowJob p = f.createProject(WorkflowJob.class, "wjob");
@@ -357,7 +373,8 @@ public class AbstractGitSCMSourceTest {
             String className = "jenkins.plugins.git.AbstractGitSCMSourceTest";
             String testName = "retrieveTags_folderScopedCredentials";
             String flag = className + "." + testName + ".enabled";
-            String defaultValue = "The source.fetch() unexpectedly modifies the git remote.origin.url in the working repo";
+            String defaultValue =
+                    "The source.fetch() unexpectedly modifies the git remote.origin.url in the working repo";
             /* If -Djenkins.plugins.git.AbstractGitSCMSourceTest.retrieveTags_folderScopedCredentials.enabled=true */
             if (!System.getProperty(flag, defaultValue).equals(defaultValue)) {
                 /* The source.fetch() unexpectedly modifies the git remote.origin.url in the working repo */
@@ -396,19 +413,19 @@ public class AbstractGitSCMSourceTest {
         listener.getLogger().println("\n=== fetch('master') ===\n");
         SCMRevision rev = source.fetch("master", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         listener.getLogger().println("\n=== fetch('dev') ===\n");
         rev = source.fetch("dev", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
         listener.getLogger().println("\n=== fetch('v1') ===\n");
         rev = source.fetch("v1", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
+        assertThat(((GitTagSCMRevision) rev).getHash(), is(v1Hash));
         listener.getLogger().println("\n=== fetch('v2') ===\n");
         rev = source.fetch("v2", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
+        assertThat(((GitTagSCMRevision) rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
         rev = source.fetch(masterHash, listener, null);
@@ -459,12 +476,9 @@ public class AbstractGitSCMSourceTest {
         rev = source.fetch(v2Tag, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
-
     }
 
-    public static abstract class ActionableSCMSourceOwner extends Actionable implements SCMSourceOwner {
-
-    }
+    public abstract static class ActionableSCMSourceOwner extends Actionable implements SCMSourceOwner {}
 
     @Test
     @Deprecated
@@ -508,17 +522,18 @@ public class AbstractGitSCMSourceTest {
         source.setOwner(owner);
         TaskListener listener = StreamTaskListener.fromStderr();
         Map<String, SCMHead> headByName = new TreeMap<>();
-        for (SCMHead h: source.fetch(listener)) {
+        for (SCMHead h : source.fetch(listener)) {
             headByName.put(h.getName(), h);
         }
         if (duplicatePrimary) {
-            assertThat(headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary", "new-primary-duplicate"));
+            assertThat(
+                    headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary", "new-primary-duplicate"));
         } else {
             assertThat(headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary"));
         }
         List<Action> actions = source.fetchActions(null, listener);
         GitRemoteHeadRefAction refAction = null;
-        for (Action a: actions) {
+        for (Action a : actions) {
             if (a instanceof GitRemoteHeadRefAction) {
                 refAction = (GitRemoteHeadRefAction) a;
                 break;
@@ -536,7 +551,7 @@ public class AbstractGitSCMSourceTest {
         }
 
         PrimaryInstanceMetadataAction primary = null;
-        for (Action a: actions) {
+        for (Action a : actions) {
             if (a instanceof PrimaryInstanceMetadataAction) {
                 primary = (PrimaryInstanceMetadataAction) a;
                 break;
@@ -564,7 +579,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v3");
         sampleRepo.git("commit", "--all", "--message=v3"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -603,7 +618,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -631,7 +646,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -661,12 +676,10 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
-                new BranchDiscoveryTrait(),
-                new TagDiscoveryTrait(),
-                new DiscoverOtherRefsTrait("refs/custom/foo")));
+                new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("refs/custom/foo")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt(v3, run, source, listener));
@@ -692,17 +705,15 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("update-ref", "refs/custom/foo", v3); // now this is an advertised ref so cannot be GC'd
         sampleRepo.git("reset", "--hard", "HEAD~2"); // dev
         String dev = sampleRepo.head();
-        assertNotEquals(dev, v3); //Just verifying the reset nav got correct
+        assertNotEquals(dev, v3); // Just verifying the reset nav got correct
         assertEquals(dev, v2);
         sampleRepo.write("file", "v5");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
-                new BranchDiscoveryTrait(),
-                new TagDiscoveryTrait(),
-                new DiscoverOtherRefsTrait("refs/custom/*")));
+                new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("refs/custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt(v3, run, source, listener));
@@ -728,12 +739,10 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
-                new BranchDiscoveryTrait(),
-                new TagDiscoveryTrait(),
-                new DiscoverOtherRefsTrait("refs/custom/foo")));
+                new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("refs/custom/foo")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt(v3.substring(0, 7), run, source, listener));
@@ -754,14 +763,18 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v3");
         sampleRepo.git("commit", "--all", "--message=v3"); // dev
         String v3 = sampleRepo.head();
-        sampleRepo.git("update-ref", "refs/pull-requests/1/from", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git(
+                "update-ref", "refs/pull-requests/1/from", v3); // now this is an advertised ref so cannot be GC'd
         sampleRepo.git("reset", "--hard", "HEAD^"); // dev
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("pull-requests/*/from")));
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("pull-requests/*/from")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt("pull-requests/1/from", run, source, listener));
@@ -782,15 +795,18 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v3");
         sampleRepo.git("commit", "--all", "--message=v3"); // dev
         String v3 = sampleRepo.head();
-        sampleRepo.git("update-ref", "refs/pull-requests/1/from", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git(
+                "update-ref", "refs/pull-requests/1/from", v3); // now this is an advertised ref so cannot be GC'd
         sampleRepo.git("reset", "--hard", "HEAD^"); // dev
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        //new RefSpecsSCMSourceTrait("+refs/pull-requests/*/from:refs/remotes/@{remote}/pr/*")
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(),
+        // new RefSpecsSCMSourceTrait("+refs/pull-requests/*/from:refs/remotes/@{remote}/pr/*")
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
                 new DiscoverOtherRefsTrait("/pull-requests/*/from", "pr/@{1}")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
@@ -798,13 +814,15 @@ public class AbstractGitSCMSourceTest {
     }
 
     private int wsCount;
-    private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
+
+    private String fileAt(String revision, Run<?, ?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener, null);
         if (rev == null) {
             return null;
         } else {
             FilePath ws = new FilePath(run.getRootDir()).child("ws" + ++wsCount);
-            source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
+            source.build(rev.getHead(), rev)
+                    .checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
             return ws.child("file").readToString();
         }
     }
@@ -829,20 +847,18 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
 
         final SCMHeadObserver.Collector collector =
-        source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
+                source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
 
         final Map<SCMHead, SCMRevision> result = collector.result();
         assertThat(result.entrySet(), hasSize(4));
-        assertThat(result, hasKey(allOf(
-                instanceOf(GitRefSCMHead.class),
-                hasProperty("name", equalTo("custom-1"))
-        )));
+        assertThat(result, hasKey(allOf(instanceOf(GitRefSCMHead.class), hasProperty("name", equalTo("custom-1")))));
     }
 
     @Issue("JENKINS-48061")
@@ -865,20 +881,17 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
 
         final Set<String> revisions = source.fetchRevisions(listener, null);
 
         assertThat(revisions, hasSize(4));
-        assertThat(revisions, containsInAnyOrder(
-                equalTo("custom-1"),
-                equalTo("v1"),
-                equalTo("dev"),
-                equalTo("master")
-        ));
+        assertThat(
+                revisions, containsInAnyOrder(equalTo("custom-1"), equalTo("v1"), equalTo("dev"), equalTo("master")));
     }
 
     @Issue("JENKINS-37727")
@@ -920,7 +933,9 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("branch", "-D", "dev");
 
         /* Fetch and confirm dev branch was pruned */
-        assertEquals("[GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]", source.fetch(listener).toString());
+        assertEquals(
+                "[GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]",
+                source.fetch(listener).toString());
     }
 
     @Test
@@ -942,47 +957,37 @@ public class AbstractGitSCMSourceTest {
         LocalBranch localBranchExtension = new LocalBranch("**");
         extensions.add(localBranchExtension);
         source.setExtensions(extensions);
-        assertThat(source.getExtensions(), contains(
-                allOf(
-                        instanceOf(LocalBranch.class),
-                        hasProperty("localBranch", is("**")
-                        )
-                )
-        ));
+        assertThat(
+                source.getExtensions(),
+                contains(allOf(instanceOf(LocalBranch.class), hasProperty("localBranch", is("**")))));
 
         SCMHead head = new SCMHead("master");
-        SCMRevision revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
+        SCMRevision revision =
+                new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
 
         // because we are ignoring push notifications we also ignore commits
         extensions.add(new IgnoreNotifyCommit());
 
         /* Check that BuildChooserSetting not added to extensions by build() */
         GitSCM scm = (GitSCM) source.build(head);
-        assertThat(scm.getExtensions(), containsInAnyOrder(
-                allOf(
-                        instanceOf(LocalBranch.class),
-                        hasProperty("localBranch", is("**")
-                        )
-                ),
-                // no BuildChooserSetting
-                instanceOf(IgnoreNotifyCommit.class),
-                instanceOf(GitSCMSourceDefaults.class)
-        ));
+        assertThat(
+                scm.getExtensions(),
+                containsInAnyOrder(
+                        allOf(instanceOf(LocalBranch.class), hasProperty("localBranch", is("**"))),
+                        // no BuildChooserSetting
+                        instanceOf(IgnoreNotifyCommit.class),
+                        instanceOf(GitSCMSourceDefaults.class)));
 
         /* Check that BuildChooserSetting has been added to extensions by build() */
         GitSCM scmRevision = (GitSCM) source.build(head, revision);
-        assertThat(scmRevision.getExtensions(), containsInAnyOrder(
-                allOf(
-                        instanceOf(LocalBranch.class),
-                        hasProperty("localBranch", is("**")
-                        )
-                ),
-                instanceOf(BuildChooserSetting.class),
-                instanceOf(IgnoreNotifyCommit.class),
-                instanceOf(GitSCMSourceDefaults.class)
-        ));
+        assertThat(
+                scmRevision.getExtensions(),
+                containsInAnyOrder(
+                        allOf(instanceOf(LocalBranch.class), hasProperty("localBranch", is("**"))),
+                        instanceOf(BuildChooserSetting.class),
+                        instanceOf(IgnoreNotifyCommit.class),
+                        instanceOf(GitSCMSourceDefaults.class)));
     }
-
 
     @Test
     @Deprecated // Tests deprecated GitSCMSource constructor
@@ -1006,7 +1011,15 @@ public class AbstractGitSCMSourceTest {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
 
-        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/*          +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
+        GitSCMSource source = new GitSCMSource(
+                null,
+                sampleRepo.toString(),
+                "",
+                null,
+                "+refs/heads/*:refs/remotes/origin/*          +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*",
+                "*",
+                "",
+                true);
         SCMHead head = new SCMHead("master");
         GitSCM scm = (GitSCM) source.build(head);
         List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
@@ -1015,7 +1028,9 @@ public class AbstractGitSCMSourceTest {
 
         UserRemoteConfig config = configs.get(0);
         assertEquals("origin", config.getName());
-        assertEquals("+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
+        assertEquals(
+                "+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*",
+                config.getRefspec());
     }
 
     /* Return true if git config reports fetch.prune == true, otherwise return false */
@@ -1111,27 +1126,28 @@ public class AbstractGitSCMSourceTest {
         String branchRefLock = "prune/prune";
         sampleRepo.init();
 
-        //Create branch x
+        // Create branch x
         sampleRepo.git("checkout", "-b", branch);
         sampleRepo.git("push", "--set-upstream", source.getRemote(), branch);
 
-        //Ensure source retrieval has fetched branch x
+        // Ensure source retrieval has fetched branch x
         source.fetch("v1.2", listener, null);
 
-        //Remove branch x
+        // Remove branch x
         sampleRepo.git("checkout", "master");
         sampleRepo.git("push", source.getRemote(), "--delete", branch);
 
-        //Create branch x/x (ref lock engaged)
+        // Create branch x/x (ref lock engaged)
         sampleRepo.git("checkout", "-b", branchRefLock);
         sampleRepo.git("push", "--set-upstream", source.getRemote(), branchRefLock);
 
-        //create tag for retrieval
+        // create tag for retrieval
         sampleRepo.git("tag", "v1.2");
         sampleRepo.git("push", source.getRemote(), "v1.2");
     }
 
-    @Test @Issue("JENKINS-50394")
+    @Test
+    @Issue("JENKINS-50394")
     public void when_commits_added_during_discovery_we_do_not_crash() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
@@ -1144,20 +1160,20 @@ public class AbstractGitSCMSourceTest {
             GitSCMSource source = new GitSCMSource(sampleRepo.toString());
             source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
             TaskListener listener = StreamTaskListener.fromStderr();
-            SCMHeadObserver.Collector c = source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
+            SCMHeadObserver.Collector c = source.fetch(
+                    (SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
 
-            assertThat(c.result().keySet(), containsInAnyOrder(
-                    hasProperty("name", equalTo("master")),
-                    hasProperty("name", equalTo("dev"))
-            ));
-        } catch(MissingObjectException me) {
+            assertThat(
+                    c.result().keySet(),
+                    containsInAnyOrder(hasProperty("name", equalTo("master")), hasProperty("name", equalTo("dev"))));
+        } catch (MissingObjectException me) {
             fail("Not supposed to get MissingObjectException");
         } finally {
             System.clearProperty(Git.class.getName() + ".mockClient");
             sharedSampleRepo = null;
         }
     }
-    //Ugly but MockGitClient needs to be static and no good way to pass it on
+    // Ugly but MockGitClient needs to be static and no good way to pass it on
     static GitSampleRepoRule sharedSampleRepo;
 
     public static class MockGitClient extends TestJGitAPIImpl {
@@ -1171,10 +1187,12 @@ public class AbstractGitSCMSourceTest {
         }
 
         @Override
-        public Map<String, ObjectId> getRemoteReferences(String url, String pattern, boolean headsOnly, boolean tagsOnly) throws GitException, InterruptedException {
+        public Map<String, ObjectId> getRemoteReferences(
+                String url, String pattern, boolean headsOnly, boolean tagsOnly)
+                throws GitException, InterruptedException {
             final Map<String, ObjectId> remoteReferences = super.getRemoteReferences(url, pattern, headsOnly, tagsOnly);
             try {
-                //Now update the repo with new commits
+                // Now update the repo with new commits
                 sharedSampleRepo.write("file2", "New");
                 sharedSampleRepo.git("add", "file2");
                 sharedSampleRepo.git("commit", "--all", "--message=inbetween");
@@ -1187,7 +1205,7 @@ public class AbstractGitSCMSourceTest {
         @Override
         public FetchCommand fetch_() {
             final FetchCommand fetchCommand = super.fetch_();
-            //returning something that updates the repo after the fetch is performed
+            // returning something that updates the repo after the fetch is performed
             return new FetchCommand() {
                 @Override
                 public FetchCommand from(URIish urIish, List<RefSpec> list) {
@@ -1236,7 +1254,7 @@ public class AbstractGitSCMSourceTest {
                 public void execute() throws GitException, InterruptedException {
                     fetchCommand.execute();
                     try {
-                        //Now update the repo with new commits
+                        // Now update the repo with new commits
                         sharedSampleRepo.write("file3", "New");
                         sharedSampleRepo.git("add", "file3");
                         sharedSampleRepo.git("commit", "--all", "--message=inbetween");

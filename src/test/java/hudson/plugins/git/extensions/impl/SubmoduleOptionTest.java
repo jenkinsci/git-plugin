@@ -1,29 +1,24 @@
 package hudson.plugins.git.extensions.impl;
 
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThrows;
+
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
-
 import java.io.IOException;
-
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
-
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import org.jvnet.hudson.test.Issue;
 import org.mockito.Mockito;
-
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThrows;
 
 public class SubmoduleOptionTest {
 
@@ -37,7 +32,8 @@ public class SubmoduleOptionTest {
     private static final Integer SUBMODULES_TIMEOUT = null;
 
     private SubmoduleOption newSubmoduleOption() {
-        return new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+        return new SubmoduleOption(
+                DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
                 TRACKING_SUBMODULES_FALSE,
                 SUBMODULES_REFERENCE_REPOSITORY,
@@ -68,7 +64,8 @@ public class SubmoduleOptionTest {
         Mockito.when(client.hasGitModules()).thenReturn(true);
         Mockito.when(client.submoduleUpdate()).thenThrow(new GitException("a git exception"));
 
-        Exception e = assertThrows(IOException.class, () -> submoduleOption.onCheckoutCompleted(scm, build, client, listener));
+        Exception e = assertThrows(
+                IOException.class, () -> submoduleOption.onCheckoutCompleted(scm, build, client, listener));
         assertThat(e.getMessage(), is("Could not perform submodule update"));
     }
 
@@ -92,7 +89,8 @@ public class SubmoduleOptionTest {
 
     @Test
     public void testIsDisableSubmodulesTrue() {
-        submoduleOption = new SubmoduleOption(true,
+        submoduleOption = new SubmoduleOption(
+                true,
                 RECURSIVE_SUBMODULES_FALSE,
                 TRACKING_SUBMODULES_FALSE,
                 SUBMODULES_REFERENCE_REPOSITORY,
@@ -108,7 +106,8 @@ public class SubmoduleOptionTest {
 
     @Test
     public void testIsRecursiveSubmodulesTrue() {
-        submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+        submoduleOption = new SubmoduleOption(
+                DISABLE_SUBMODULES_FALSE,
                 true,
                 TRACKING_SUBMODULES_FALSE,
                 SUBMODULES_REFERENCE_REPOSITORY,
@@ -124,7 +123,8 @@ public class SubmoduleOptionTest {
 
     @Test
     public void testIsTrackingSubmodulesTrue() {
-        submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+        submoduleOption = new SubmoduleOption(
+                DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
                 true,
                 SUBMODULES_REFERENCE_REPOSITORY,
@@ -140,7 +140,8 @@ public class SubmoduleOptionTest {
 
     @Test
     public void testIsParentCredentialsTrue() {
-        submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+        submoduleOption = new SubmoduleOption(
+                DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
                 TRACKING_SUBMODULES_FALSE,
                 SUBMODULES_REFERENCE_REPOSITORY,
@@ -157,7 +158,8 @@ public class SubmoduleOptionTest {
     @Test
     public void testGetReferenceNotNull() {
         final String referenceRepoDirName = "/repo.git";
-        submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+        submoduleOption = new SubmoduleOption(
+                DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
                 TRACKING_SUBMODULES_FALSE,
                 referenceRepoDirName,
@@ -174,7 +176,8 @@ public class SubmoduleOptionTest {
     @Test
     public void testGetTimeoutNotNull() {
         Integer timeout = 3;
-        submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+        submoduleOption = new SubmoduleOption(
+                DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
                 TRACKING_SUBMODULES_FALSE,
                 SUBMODULES_REFERENCE_REPOSITORY,
@@ -229,33 +232,37 @@ public class SubmoduleOptionTest {
 
     @Test
     public void testToString() {
-        assertThat(submoduleOption.toString(), is("SubmoduleOption{"
-                + "disableSubmodules=false"
-                + ", recursiveSubmodules=false"
-                + ", trackingSubmodules=false"
-                + ", reference='null'"
-                + ", parentCredentials=false"
-                + ", timeout=null"
-                + ", shallow=false"
-                + ", depth=null"
-                + ", threads=null"
-                + '}'));
+        assertThat(
+                submoduleOption.toString(),
+                is("SubmoduleOption{"
+                        + "disableSubmodules=false"
+                        + ", recursiveSubmodules=false"
+                        + ", trackingSubmodules=false"
+                        + ", reference='null'"
+                        + ", parentCredentials=false"
+                        + ", timeout=null"
+                        + ", shallow=false"
+                        + ", depth=null"
+                        + ", threads=null"
+                        + '}'));
     }
 
     @Test
     public void testToStringDataBoundConstructor() {
         submoduleOption = new SubmoduleOption();
-        assertThat(submoduleOption.toString(), is("SubmoduleOption{"
-                + "disableSubmodules=false"
-                + ", recursiveSubmodules=false"
-                + ", trackingSubmodules=false"
-                + ", reference='null'"
-                + ", parentCredentials=false"
-                + ", timeout=null"
-                + ", shallow=false"
-                + ", depth=null"
-                + ", threads=null"
-                + '}'));
+        assertThat(
+                submoduleOption.toString(),
+                is("SubmoduleOption{"
+                        + "disableSubmodules=false"
+                        + ", recursiveSubmodules=false"
+                        + ", trackingSubmodules=false"
+                        + ", reference='null'"
+                        + ", parentCredentials=false"
+                        + ", timeout=null"
+                        + ", shallow=false"
+                        + ", depth=null"
+                        + ", threads=null"
+                        + '}'));
     }
 
     @Test
@@ -274,7 +281,8 @@ public class SubmoduleOptionTest {
     public void testDetermineSupportForJGitRecursiveSubmodules() {
         /* JGit was incorrectly used when submodule option was added with only recursive submodule checked. */
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
-        submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+        submoduleOption = new SubmoduleOption(
+                DISABLE_SUBMODULES_FALSE,
                 true,
                 TRACKING_SUBMODULES_FALSE,
                 SUBMODULES_REFERENCE_REPOSITORY,

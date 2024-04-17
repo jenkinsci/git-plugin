@@ -31,10 +31,18 @@ public class GitChangeSetSample {
         gitChangeLog.add("    ");
         gitChangeLog.add("    This reverts commit 92ec0aa543f6c871502b0e6f7793a43a4df84519.");
         gitChangeLog.add("");
-        gitChangeLog.add(":100644 000000 4378b5b0223f0435eb2365a684e6a544c5c537fc 0000000000000000000000000000000000000000 D\t" + deletedFileName);
-        gitChangeLog.add(":100644 100644 c305885ca26ad88b0bf96d3bb81e958cf0535194 56aef71694759b71ea76a9dfe377b0e1f8a8388f M\t" + modifiedFileName);
-        gitChangeLog.add(":000000 120000 0000000000000000000000000000000000000000 fb9953d5d00cb6307954f6d3bf6cb5d2355f62cd A\t" + addedFileName);
-        gitChangeLog.add(":100755 100755 4099f430ffd37d7e5d60aa08f61daffdccb81b2c 4099f430ffd37d7e5d60aa08f61daffdccb81b2c R100	" + renamedFileSrcName + "\t" + renamedFileDstName);
+        gitChangeLog.add(
+                ":100644 000000 4378b5b0223f0435eb2365a684e6a544c5c537fc 0000000000000000000000000000000000000000 D\t"
+                        + deletedFileName);
+        gitChangeLog.add(
+                ":100644 100644 c305885ca26ad88b0bf96d3bb81e958cf0535194 56aef71694759b71ea76a9dfe377b0e1f8a8388f M\t"
+                        + modifiedFileName);
+        gitChangeLog.add(
+                ":000000 120000 0000000000000000000000000000000000000000 fb9953d5d00cb6307954f6d3bf6cb5d2355f62cd A\t"
+                        + addedFileName);
+        gitChangeLog.add(
+                ":100755 100755 4099f430ffd37d7e5d60aa08f61daffdccb81b2c 4099f430ffd37d7e5d60aa08f61daffdccb81b2c R100	"
+                        + renamedFileSrcName + "\t" + renamedFileDstName);
         changeSet = new GitChangeSet(gitChangeLog, useAuthorName);
     }
 }

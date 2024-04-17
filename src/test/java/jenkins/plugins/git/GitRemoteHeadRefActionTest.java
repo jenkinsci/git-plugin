@@ -7,8 +7,6 @@ public class GitRemoteHeadRefActionTest {
 
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(GitRemoteHeadRefAction.class)
-                .usingGetClass()
-                .verify();
+        EqualsVerifier.forClass(GitRemoteHeadRefAction.class).usingGetClass().verify();
     }
 }

@@ -1,25 +1,20 @@
 package hudson.plugins.git;
 
+import hudson.model.TaskListener;
+import hudson.plugins.git.util.GitUtilsTest;
+import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import hudson.plugins.git.util.GitUtilsTest;
-import org.eclipse.jgit.util.SystemReader;
-import org.junit.Before;
-import org.junit.Rule;
-
-import hudson.EnvVars;
-import hudson.model.TaskListener;
-import hudson.util.StreamTaskListener;
-
 import jenkins.plugins.git.GitSampleRepoRule;
-
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.Before;
+import org.junit.Rule;
 
 /**
  * Temporary git repository for use with tests. Tests which need a git
@@ -44,7 +39,9 @@ public abstract class AbstractGitRepository {
         TaskListener listener = StreamTaskListener.fromStderr();
         repo.init();
         testGitDir = repo.getRoot();
-        testGitClient = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(testGitDir).getClient();
+        testGitClient = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars())
+                .in(testGitDir)
+                .getClient();
     }
 
     /**
@@ -81,6 +78,6 @@ public abstract class AbstractGitRepository {
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
-        return File.pathSeparatorChar==';';
+        return File.pathSeparatorChar == ';';
     }
 }

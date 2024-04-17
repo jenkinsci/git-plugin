@@ -1,5 +1,8 @@
 package hudson.plugins.git;
 
+import static hudson.Util.fixEmpty;
+import static hudson.Util.fixEmptyAndTrim;
+
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -12,6 +15,7 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
+import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Queue;
@@ -20,28 +24,23 @@ import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.regex.Pattern;
-import java.util.Objects;
-import java.util.UUID;
-
-import static hudson.Util.fixEmpty;
-import static hudson.Util.fixEmptyAndTrim;
-import hudson.model.FreeStyleProject;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @ExportedBean
@@ -91,16 +90,15 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         return getRefspec() + " => " + getUrl() + " (" + getName() + ")";
     }
 
-    private final static Pattern SCP_LIKE = Pattern.compile("(.*):(.*)");
+    private static final Pattern SCP_LIKE = Pattern.compile("(.*):(.*)");
 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
-                                                     @QueryParameter String url,
-                                                     @QueryParameter String credentialsId) {
-            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
-                project != null && !project.hasPermission(Item.EXTENDED_READ)) {
+        public ListBoxModel doFillCredentialsIdItems(
+                @AncestorInPath Item project, @QueryParameter String url, @QueryParameter String credentialsId) {
+            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    || project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             if (project == null) {
@@ -123,11 +121,10 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                     .includeCurrentValue(credentialsId);
         }
 
-        public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
-                                                   @QueryParameter String url,
-                                                   @QueryParameter String value) {
-            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
-                project != null && !project.hasPermission(Item.EXTENDED_READ)) {
+        public FormValidation doCheckCredentialsId(
+                @AncestorInPath Item project, @QueryParameter String url, @QueryParameter String value) {
+            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    || project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
 
@@ -148,12 +145,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             {
                 return FormValidation.ok();
             }
-            for (ListBoxModel.Option o : CredentialsProvider
-                    .listCredentialsInItem(StandardUsernameCredentials.class, project, project instanceof Queue.Task
-                                    ? Tasks.getAuthenticationOf2((Queue.Task) project)
-                                    : ACL.SYSTEM2,
-                            GitURIRequirementsBuilder.fromUri(url).build(),
-                            GitClient.CREDENTIALS_MATCHER)) {
+            for (ListBoxModel.Option o : CredentialsProvider.listCredentialsInItem(
+                    StandardUsernameCredentials.class,
+                    project,
+                    project instanceof Queue.Task ? Tasks.getAuthenticationOf2((Queue.Task) project) : ACL.SYSTEM2,
+                    GitURIRequirementsBuilder.fromUri(url).build(),
+                    GitClient.CREDENTIALS_MATCHER)) {
                 if (Objects.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
                     // NOTE: we would need to actually lookup the credential to do the check, which may require
@@ -167,20 +164,21 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         }
 
         @RequirePOST
-        public FormValidation doCheckUrl(@AncestorInPath Item item,
-                                         @QueryParameter String credentialsId,
-                                         @QueryParameter String value) throws IOException, InterruptedException {
+        public FormValidation doCheckUrl(
+                @AncestorInPath Item item, @QueryParameter String credentialsId, @QueryParameter String value)
+                throws IOException, InterruptedException {
 
-            // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
-            // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
-            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
-                item != null && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+            // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not
+            // be able to use this check.
+            // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of
+            // JENKINS-31870.)
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    || item != null && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
 
             String url = Util.fixEmptyAndTrim(value);
-            if (url == null)
-                return FormValidation.error(Messages.UserRemoteConfig_CheckUrl_UrlIsNull());
+            if (url == null) return FormValidation.error(Messages.UserRemoteConfig_CheckUrl_UrlIsNull());
 
             if (url.indexOf('$') >= 0)
                 // set by variable, can't validate
@@ -226,18 +224,18 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
          * @return FormValidation.ok() or FormValidation.error()
          * @throws IllegalArgumentException on unexpected argument error
          */
-        public FormValidation doCheckRefspec(@QueryParameter String name,
-                                             @QueryParameter String url,
-                                             @QueryParameter String value) throws IllegalArgumentException {
+        public FormValidation doCheckRefspec(
+                @QueryParameter String name, @QueryParameter String url, @QueryParameter String value)
+                throws IllegalArgumentException {
 
             String refSpec = Util.fixEmptyAndTrim(value);
 
-            if(refSpec == null){
+            if (refSpec == null) {
                 // We fix empty field value with a default refspec, hence we send ok.
                 return FormValidation.ok();
             }
 
-            if(refSpec.contains("$")){
+            if (refSpec.contains("$")) {
                 // set by variable, can't validate
                 return FormValidation.ok();
             }
@@ -247,7 +245,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             repoConfig.setString("remote", name, "url", url);
             repoConfig.setString("remote", name, "fetch", refSpec);
 
-            //Attempt to fetch remote repositories using the repoConfig
+            // Attempt to fetch remote repositories using the repoConfig
             try {
                 RemoteConfig.getAllRemoteConfigs(repoConfig);
             } catch (Exception e) {
@@ -257,11 +255,17 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return FormValidation.ok();
         }
 
-        private static StandardCredentials lookupCredentials(@CheckForNull Item project, String credentialId, String uri) {
-            return (credentialId == null) ? null : CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentialsInItem(StandardCredentials.class, project, ACL.SYSTEM2,
-                                GitURIRequirementsBuilder.fromUri(uri).build()),
-                        CredentialsMatchers.withId(credentialId));
+        private static StandardCredentials lookupCredentials(
+                @CheckForNull Item project, String credentialId, String uri) {
+            return (credentialId == null)
+                    ? null
+                    : CredentialsMatchers.firstOrNull(
+                            CredentialsProvider.lookupCredentialsInItem(
+                                    StandardCredentials.class,
+                                    project,
+                                    ACL.SYSTEM2,
+                                    GitURIRequirementsBuilder.fromUri(uri).build()),
+                            CredentialsMatchers.withId(credentialId));
         }
 
         @Override

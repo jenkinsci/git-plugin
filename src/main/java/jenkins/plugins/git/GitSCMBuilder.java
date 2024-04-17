@@ -115,8 +115,11 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
      *                      the {@link #remote} or {@code null} to let the git client choose between providing its own
      *                      credentials or connecting anonymously.
      */
-    public GitSCMBuilder(@NonNull SCMHead head, @CheckForNull SCMRevision revision, @NonNull String remote,
-                         @CheckForNull String credentialsId) {
+    public GitSCMBuilder(
+            @NonNull SCMHead head,
+            @CheckForNull SCMRevision revision,
+            @NonNull String remote,
+            @CheckForNull String credentialsId) {
         super(GitSCM.class, head, revision);
         this.remote = remote;
         this.credentialsId = credentialsId;
@@ -486,7 +489,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     public GitSCM build() {
         List<GitSCMExtension> extensions = new ArrayList<>(extensions());
         boolean foundClone = false;
-        for (GitSCMExtension e: extensions) {
+        for (GitSCMExtension e : extensions) {
             if (e instanceof CloneOption) {
                 foundClone = true;
                 break;
@@ -512,7 +515,8 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         return new GitSCM(
                 asRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head().getName())),
-                browser(), gitTool(),
+                browser(),
+                gitTool(),
                 extensions);
     }
 
@@ -547,10 +551,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             this.name = name;
             this.url = url;
             this.refSpecs = new ArrayList<>(
-                    refSpecs.isEmpty()
-                            ? Collections.singletonList(AbstractGitSCMSource.REF_SPEC_DEFAULT)
-                            : refSpecs
-            );
+                    refSpecs.isEmpty() ? Collections.singletonList(AbstractGitSCMSource.REF_SPEC_DEFAULT) : refSpecs);
         }
 
         /**
@@ -599,5 +600,4 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             return result;
         }
     }
-
 }

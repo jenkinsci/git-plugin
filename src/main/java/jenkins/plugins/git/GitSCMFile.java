@@ -47,11 +47,13 @@ import org.eclipse.jgit.treewalk.TreeWalk;
  *
  * @since 3.0.2
  */
-@SuppressFBWarnings(value = { "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                              "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE",
-                              "NP_LOAD_OF_KNOWN_NULL_VALUE"
-                            },
-                    justification = "Java 11 generated code causes redundant nullcheck")
+@SuppressFBWarnings(
+        value = {
+            "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+            "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE",
+            "NP_LOAD_OF_KNOWN_NULL_VALUE"
+        },
+        justification = "Java 11 generated code causes redundant nullcheck")
 public class GitSCMFile extends SCMFile {
 
     private final GitSCMFileSystem fs;

@@ -1,5 +1,7 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
@@ -7,21 +9,15 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.net.URL;
+import javax.servlet.ServletException;
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
-
-import java.io.IOException;
-import java.net.URL;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import javax.servlet.ServletException;
-
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Git Browser for GitLab
@@ -143,8 +139,9 @@ public class GitLab extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
+        @SuppressFBWarnings(
+                value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                justification = "Inherited javadoc commits that req is non-null")
         public GitLab newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(GitLab.class, jsonObject);
         }
@@ -172,11 +169,10 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     private String calculatePrefix() {
-        if(getVersionDouble() < 3) {
+        if (getVersionDouble() < 3) {
             return "commits/";
         } else {
             return "commit/";
         }
     }
-
 }

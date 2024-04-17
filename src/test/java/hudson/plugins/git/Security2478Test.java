@@ -1,6 +1,9 @@
 package hudson.plugins.git;
 
+import static org.junit.Assert.assertFalse;
+
 import hudson.model.Result;
+import java.io.File;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -12,10 +15,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.File;
-
-import static org.junit.Assert.assertFalse;
-
 public class Security2478Test {
 
     @Rule
@@ -23,7 +22,6 @@ public class Security2478Test {
 
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
-
 
     @Before
     public void setUpAllowNonRemoteCheckout() {
@@ -45,13 +43,15 @@ public class Security2478Test {
         sampleRepo.git("commit", "--all", "--message=test commit");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "pipeline");
 
-        String script = "node {\n" +
-                "   checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: '" + sampleRepo.fileUrl() + "', credentialsId: '']]])\n" +
-                "}";
+        String script = "node {\n"
+                + "   checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: '"
+                + sampleRepo.fileUrl() + "', credentialsId: '']]])\n" + "}";
         p.setDefinition(new CpsFlowDefinition(script, true));
         WorkflowRun run = r.assertBuildStatus(Result.SUCCESS, p.scheduleBuild2(0));
-        r.assertLogNotContains("aborted because it references a local directory, which may be insecure. " +
-                "You can allow local checkouts anyway by setting the system property 'hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT' to true.", run);
+        r.assertLogNotContains(
+                "aborted because it references a local directory, which may be insecure. "
+                        + "You can allow local checkouts anyway by setting the system property 'hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT' to true.",
+                run);
     }
 
     @Issue("SECURITY-2478")
@@ -63,15 +63,17 @@ public class Security2478Test {
 
         String path = "file://" + workspaceDir + File.separator + "jobName@script" + File.separator + "anyhmachash";
         String escapedPath = path.replace("\\", "\\\\"); // for windows
-        String script = "node {\n" +
-                "   checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[" +
-                "url: '" + escapedPath + "'," +
-                " credentialsId: '']]])\n" +
-                "}";
+        String script = "node {\n"
+                + "   checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [["
+                + "url: '"
+                + escapedPath + "'," + " credentialsId: '']]])\n"
+                + "}";
         p.setDefinition(new CpsFlowDefinition(script, true));
         WorkflowRun run = r.assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0));
-        r.assertLogContains("Checkout of Git remote '" + path + "' " +
-                        "aborted because it references a local directory, which may be insecure. " +
-                        "You can allow local checkouts anyway by setting the system property 'hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT' to true.", run);
+        r.assertLogContains(
+                "Checkout of Git remote '" + path + "' "
+                        + "aborted because it references a local directory, which may be insecure. "
+                        + "You can allow local checkouts anyway by setting the system property 'hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT' to true.",
+                run);
     }
 }

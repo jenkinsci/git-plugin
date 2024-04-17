@@ -61,7 +61,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  * @since 3.6.1
  */
 public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
-    //TODO JENKINS-51134 DiscoverOtherRefsTrait
+    // TODO JENKINS-51134 DiscoverOtherRefsTrait
 
     /**
      * Returns the {@link GitSCMTelescope} to use for the specified {@link GitSCM} or {@code null} if none match.
@@ -140,9 +140,9 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             if (configs.size() == 1) {
                 String remote = configs.get(0).getUrl();
                 return remote != null
-                    && supports(remote)
-                    && branches.size() == 1
-                    && !branches.get(0).getName().contains("*");
+                        && supports(remote)
+                        && branches.size() == 1
+                        && !branches.get(0).getName().contains("*");
             }
         }
         return false;
@@ -153,8 +153,9 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      */
     @Override
     public final boolean supports(@NonNull SCMSource source) {
-        return source instanceof AbstractGitSCMSource && source.getOwner() != null && supports(
-                ((AbstractGitSCMSource) source).getRemote());
+        return source instanceof AbstractGitSCMSource
+                && source.getOwner() != null
+                && supports(((AbstractGitSCMSource) source).getRemote());
     }
 
     /**
@@ -164,8 +165,9 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
     public final SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision rev)
             throws IOException, InterruptedException {
         SCMSourceOwner owner = source.getOwner();
-        if (source instanceof AbstractGitSCMSource && owner != null && supports(
-                ((AbstractGitSCMSource) source).getRemote())) {
+        if (source instanceof AbstractGitSCMSource
+                && owner != null
+                && supports(((AbstractGitSCMSource) source).getRemote())) {
             AbstractGitSCMSource git = (AbstractGitSCMSource) source;
             String remote = git.getRemote();
             StandardUsernameCredentials credentials = git.getCredentials();
@@ -189,21 +191,24 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             if (configs.size() == 1) {
                 UserRemoteConfig config = configs.get(0);
                 String remote = config.getUrl();
-                if (remote != null && supports(remote)
-                    && branches.size() == 1 && !branches.get(0).getName().contains("*")) {
+                if (remote != null
+                        && supports(remote)
+                        && branches.size() == 1
+                        && !branches.get(0).getName().contains("*")) {
                     StandardCredentials credentials;
                     String credentialsId = config.getCredentialsId();
                     if (credentialsId != null) {
-                        List<StandardUsernameCredentials> urlCredentials = CredentialsProvider
-                                .lookupCredentialsInItem(StandardUsernameCredentials.class, owner,
-                                        owner instanceof Queue.Task
-                                                ? Tasks.getAuthenticationOf2((Queue.Task) owner)
-                                                : ACL.SYSTEM2, URIRequirementBuilder.fromUri(remote).build());
+                        List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentialsInItem(
+                                StandardUsernameCredentials.class,
+                                owner,
+                                owner instanceof Queue.Task
+                                        ? Tasks.getAuthenticationOf2((Queue.Task) owner)
+                                        : ACL.SYSTEM2,
+                                URIRequirementBuilder.fromUri(remote).build());
                         credentials = CredentialsMatchers.firstOrNull(
                                 urlCredentials,
-                                CredentialsMatchers
-                                        .allOf(CredentialsMatchers.withId(credentialsId), GitClient.CREDENTIALS_MATCHER)
-                        );
+                                CredentialsMatchers.allOf(
+                                        CredentialsMatchers.withId(credentialsId), GitClient.CREDENTIALS_MATCHER));
                     } else {
                         credentials = null;
                     }
@@ -213,14 +218,13 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                         String name = branches.get(0).getName();
                         if (name.startsWith(Constants.R_TAGS)) {
                             head = new GitTagSCMHead(
-                                    name.substring(Constants.R_TAGS.length()),
-                                    getTimestamp(remote, credentials, name)
-                            );
+                                    name.substring(Constants.R_TAGS.length()), getTimestamp(remote, credentials, name));
                         } else if (name.startsWith(Constants.R_HEADS)) {
                             head = new GitBranchSCMHead(name.substring(Constants.R_HEADS.length()));
                         } else {
                             if (name.startsWith(config.getName() + "/")) {
-                                head = new GitBranchSCMHead(name.substring(config.getName().length() + 1));
+                                head = new GitBranchSCMHead(
+                                        name.substring(config.getName().length() + 1));
                             } else {
                                 head = new GitBranchSCMHead(name);
                             }
@@ -252,8 +256,11 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws InterruptedException if the attempt to create a {@link SCMFileSystem} was interrupted.
      */
     @CheckForNull
-    protected abstract SCMFileSystem build(@NonNull String remote, @CheckForNull StandardCredentials credentials,
-                                           @NonNull SCMHead head, @CheckForNull SCMRevision rev)
+    protected abstract SCMFileSystem build(
+            @NonNull String remote,
+            @CheckForNull StandardCredentials credentials,
+            @NonNull SCMHead head,
+            @CheckForNull SCMRevision rev)
             throws IOException, InterruptedException;
 
     /**
@@ -267,8 +274,9 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
      */
-    public abstract long getTimestamp(@NonNull String remote, @CheckForNull StandardCredentials credentials,
-                                      @NonNull String refOrHash) throws IOException, InterruptedException;
+    public abstract long getTimestamp(
+            @NonNull String remote, @CheckForNull StandardCredentials credentials, @NonNull String refOrHash)
+            throws IOException, InterruptedException;
 
     /**
      * Retrieves the current revision of the specified reference or object hash.
@@ -282,9 +290,8 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws InterruptedException if the operation was interrupted.
      */
     @CheckForNull
-    public abstract SCMRevision getRevision(@NonNull String remote,
-                                            @CheckForNull StandardCredentials credentials,
-                                            @NonNull String refOrHash)
+    public abstract SCMRevision getRevision(
+            @NonNull String remote, @CheckForNull StandardCredentials credentials, @NonNull String refOrHash)
             throws IOException, InterruptedException;
 
     /**
@@ -297,8 +304,9 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
      */
-    public long getTimestamp(@NonNull String remote, @CheckForNull StandardCredentials credentials,
-                             @NonNull SCMHead head) throws IOException, InterruptedException {
+    public long getTimestamp(
+            @NonNull String remote, @CheckForNull StandardCredentials credentials, @NonNull SCMHead head)
+            throws IOException, InterruptedException {
         if ((head instanceof TagSCMHead)) {
             return getTimestamp(remote, credentials, Constants.R_TAGS + head.getName());
         } else {
@@ -317,9 +325,8 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws InterruptedException if the operation was interrupted.
      */
     @CheckForNull
-    public SCMRevision getRevision(@NonNull String remote,
-                                   @CheckForNull StandardCredentials credentials,
-                                   @NonNull SCMHead head)
+    public SCMRevision getRevision(
+            @NonNull String remote, @CheckForNull StandardCredentials credentials, @NonNull SCMHead head)
             throws IOException, InterruptedException {
         if ((head instanceof TagSCMHead)) {
             return getRevision(remote, credentials, Constants.R_TAGS + head.getName());
@@ -337,8 +344,8 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
      */
-    public final Iterable<SCMRevision> getRevisions(@NonNull String remote,
-                                                    @CheckForNull StandardCredentials credentials)
+    public final Iterable<SCMRevision> getRevisions(
+            @NonNull String remote, @CheckForNull StandardCredentials credentials)
             throws IOException, InterruptedException {
         return getRevisions(remote, credentials, EnumSet.allOf(ReferenceType.class));
     }
@@ -353,9 +360,10 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
      */
-    public abstract Iterable<SCMRevision> getRevisions(@NonNull String remote,
-                                                       @CheckForNull StandardCredentials credentials,
-                                                       @NonNull Set<ReferenceType> referenceTypes)
+    public abstract Iterable<SCMRevision> getRevisions(
+            @NonNull String remote,
+            @CheckForNull StandardCredentials credentials,
+            @NonNull Set<ReferenceType> referenceTypes)
             throws IOException, InterruptedException;
 
     /**
@@ -367,8 +375,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
      */
-    public abstract String getDefaultTarget(@NonNull String remote,
-                                            @CheckForNull StandardCredentials credentials)
+    public abstract String getDefaultTarget(@NonNull String remote, @CheckForNull StandardCredentials credentials)
             throws IOException, InterruptedException;
 
     /**

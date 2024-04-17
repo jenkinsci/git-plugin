@@ -1,17 +1,17 @@
 package hudson.plugins.git.util;
 
-import hudson.plugins.git.AbstractGitRepository;
-import hudson.plugins.git.Branch;
-import java.util.Collection;
-import java.util.HashSet;
-
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.Revision;
-import org.eclipse.jgit.lib.ObjectId;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import hudson.plugins.git.AbstractGitRepository;
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Revision;
+import java.util.Collection;
+import java.util.HashSet;
+import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -29,12 +29,14 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
 
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, shaHashCommit1, testGitClient, null, null, null);
+        Collection<Revision> candidateRevisions =
+                buildChooser.getCandidateRevisions(false, shaHashCommit1, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(1));
         assertThat(candidateRevisions.iterator().next().getSha1String(), is(shaHashCommit1));
 
-        candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), testGitClient, null, null, null);
+        candidateRevisions = buildChooser.getCandidateRevisions(
+                false, "aaa" + shaHashCommit1.substring(3), testGitClient, null, null, null);
         assertThat(candidateRevisions, is(empty()));
     }
 
@@ -62,11 +64,12 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
         Collection<Revision> candidateRevisions =
-            buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
+                buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(2));
         Revision firstCandidateRevision = candidateRevisions.iterator().next();
-        Branch firstCandidateBranch = firstCandidateRevision.getBranches().iterator().next();
+        Branch firstCandidateBranch =
+                firstCandidateRevision.getBranches().iterator().next();
         assertThat(firstCandidateBranch.getName(), is(remoteRef));
     }
 
@@ -81,11 +84,12 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
         Collection<Revision> candidateRevisions =
-            buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
+                buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(2));
         Revision firstCandidateRevision = candidateRevisions.iterator().next();
-        Branch firstCandidateBranch = firstCandidateRevision.getBranches().iterator().next();
+        Branch firstCandidateBranch =
+                firstCandidateRevision.getBranches().iterator().next();
         assertThat(firstCandidateBranch.getName(), is(remoteRef));
     }
 
@@ -101,7 +105,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
         Collection<Revision> candidateRevisions =
-            buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
+                buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(1));
     }
@@ -117,8 +121,8 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         createRefsWithPredefinedOrderInHashSet(localRef, remoteRef);
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
-        Collection<Revision> candidateRevisions
-                = buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
+        Collection<Revision> candidateRevisions =
+                buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(1));
     }
@@ -126,7 +130,8 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
     /* was successful also before fix */
     @Issue("JENKINS-37263")
     @Test
-    public void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithRemotesOriginPrefix() throws Exception {
+    public void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithRemotesOriginPrefix()
+            throws Exception {
         String baseBranchName = "feature/42";
         String branchName = "remotes/origin/" + baseBranchName;
         String localRef = "refs/heads/" + baseBranchName;
@@ -135,7 +140,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
         Collection<Revision> candidateRevisions =
-            buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
+                buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(1));
     }
@@ -152,7 +157,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
         Collection<Revision> candidateRevisions =
-            buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
+                buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(1));
     }

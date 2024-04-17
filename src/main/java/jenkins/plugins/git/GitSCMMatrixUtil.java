@@ -5,11 +5,10 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import java.util.Collections;
 import java.util.Set;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Utility methods for integrating with Matrix Project plugin.
@@ -23,8 +22,7 @@ public class GitSCMMatrixUtil {
             BuildData parentBuildData = scm.getBuildData(parentBuild);
             if (parentBuildData != null) {
                 Build lastBuild = parentBuildData.lastBuild;
-                if (lastBuild != null)
-                    return Collections.singleton(lastBuild.getMarked());
+                if (lastBuild != null) return Collections.singleton(lastBuild.getMarked());
             }
         }
         return Collections.emptySet();

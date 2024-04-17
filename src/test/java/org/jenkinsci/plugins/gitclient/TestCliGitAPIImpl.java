@@ -36,5 +36,4 @@ public class TestCliGitAPIImpl extends CliGitAPIImpl {
     public TestCliGitAPIImpl(String gitExe, File workspace, TaskListener listener, EnvVars environment) {
         super(gitExe, workspace, listener, environment);
     }
-
 }

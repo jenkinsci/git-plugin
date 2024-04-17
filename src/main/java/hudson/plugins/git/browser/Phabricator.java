@@ -1,19 +1,18 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Git Browser for Phabricator
@@ -90,8 +89,9 @@ public class Phabricator extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
+        @SuppressFBWarnings(
+                value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                justification = "Inherited javadoc commits that req is non-null")
         public Phabricator newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(Phabricator.class, jsonObject);
         }

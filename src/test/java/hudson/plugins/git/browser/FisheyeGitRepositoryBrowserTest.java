@@ -1,5 +1,7 @@
 package hudson.plugins.git.browser;
 
+import static org.junit.Assert.*;
+
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import java.net.URL;
@@ -7,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -56,7 +57,8 @@ public class FisheyeGitRepositoryBrowserTest {
             URL diffLink = fisheye.getDiffLink(path);
             EditType editType = path.getEditType();
             String slash = repoUrl.endsWith("/") ? "" : "/";
-            URL expectedDiffLink = new URL(repoUrl + slash + path.getPath() + "?r1=" + sample.parent + "&r2=" + sample.id);
+            URL expectedDiffLink =
+                    new URL(repoUrl + slash + path.getPath() + "?r1=" + sample.parent + "&r2=" + sample.id);
             if (editType == EditType.DELETE || editType == EditType.ADD) {
                 expectedDiffLink = null;
             }

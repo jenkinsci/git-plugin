@@ -4,13 +4,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
-import org.eclipse.jgit.lib.ObjectId;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
+import org.eclipse.jgit.lib.ObjectId;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * Remembers which build built which {@link Revision}.
@@ -39,8 +38,7 @@ public class Build implements Serializable, Cloneable {
      * to the same value as {@link #revision}, as we want to be able to build two pull requests rooted at the same
      * commit in the base repository.
      */
-    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
-                        justification = "Preserve API compatibility")
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Preserve API compatibility")
     public Revision marked;
 
     /**
@@ -51,8 +49,8 @@ public class Build implements Serializable, Cloneable {
      */
     public Revision revision;
 
-    public int      hudsonBuildNumber;
-    public Result   hudsonBuildResult;
+    public int hudsonBuildNumber;
+    public Result hudsonBuildResult;
 
     // TODO: We don't currently store the result correctly.
 
@@ -64,7 +62,7 @@ public class Build implements Serializable, Cloneable {
     }
 
     public Build(Revision revision, int buildNumber, Result result) {
-        this(revision,revision,buildNumber,result);
+        this(revision, revision, buildNumber, result);
     }
 
     public ObjectId getSHA1() {
@@ -121,15 +119,12 @@ public class Build implements Serializable, Cloneable {
         Build clone;
         try {
             clone = (Build) super.clone();
-        }
-        catch (CloneNotSupportedException e) {
+        } catch (CloneNotSupportedException e) {
             throw new RuntimeException("Error cloning Build", e);
         }
 
-        if (revision != null)
-            clone.revision = revision.clone();
-        if (marked != null)
-            clone.marked = marked.clone();
+        if (revision != null) clone.revision = revision.clone();
+        if (marked != null) clone.marked = marked.clone();
         return clone;
     }
 
@@ -138,8 +133,8 @@ public class Build implements Serializable, Cloneable {
     }
 
     public Object readResolve() throws IOException {
-        if (marked==null) // this field was introduced later than 'revision'
-            marked = revision;
+        if (marked == null) // this field was introduced later than 'revision'
+        marked = revision;
         return this;
     }
 }

@@ -1,5 +1,9 @@
 package hudson.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertTrue;
+
 import com.cloudbees.plugins.credentials.*;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -20,10 +24,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 public class CredentialsUserRemoteConfigTest {
 
     @Rule
@@ -39,8 +39,8 @@ public class CredentialsUserRemoteConfigTest {
 
     @Before
     public void enableSystemCredentialsProvider() {
-        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
-                Collections.singletonMap(Domain.global(), Collections.emptyList()));
+        SystemCredentialsProvider.getInstance()
+                .setDomainCredentialsMap(Collections.singletonMap(Domain.global(), Collections.emptyList()));
         for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;
@@ -99,7 +99,8 @@ public class CredentialsUserRemoteConfigTest {
                         + randomPipelineCheckoutExtras()
                         + classEpilogue()
                         + "  )"
-                        + "}", true));
+                        + "}",
+                true));
         return p;
     }
 
@@ -112,9 +113,10 @@ public class CredentialsUserRemoteConfigTest {
      */
     private String randomPipelineExtensions() {
         /* Valid extensions to apply to a git checkout */
-        String [] extensions = {
+        String[] extensions = {
             // ancestorCommitSha1 needs to be a SHA-1 that exists in the repository
-            "[$class: 'BuildChooserSetting', buildChooser: [$class: 'AncestryBuildChooser', ancestorCommitSha1: '" + SHA_TO_REPLACE + "', maximumAgeInDays: 23]]",
+            "[$class: 'BuildChooserSetting', buildChooser: [$class: 'AncestryBuildChooser', ancestorCommitSha1: '"
+                    + SHA_TO_REPLACE + "', maximumAgeInDays: 23]]",
             // Inverse build chooser will find nothing to build and fails the test
             // "[$class: 'BuildChooserSetting', buildChooser: [$class: 'InverseBuildChooser']]",
             "[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']]]",
@@ -243,7 +245,12 @@ public class CredentialsUserRemoteConfigTest {
             "phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/')",
             "redmine('https://www.redmine.org/projects/redmine/repository')",
             "rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce')",
-            "viewgit(repoUrl: 'https://repo.or.cz/viewgit.git', projectName: 'viewgit-project-name-value')", // Not likely a viewgit site, but reasonable approximation
+            "viewgit(repoUrl: 'https://repo.or.cz/viewgit.git', projectName: 'viewgit-project-name-value')", // Not
+            // likely a
+            // viewgit
+            // site,
+            // but
+            // reasonable approximation
             //  The Gitea browser is provided by the Gitea plugin, not the git plugin
             // "[$class: 'GiteaBrowser', repoUrl: 'https://try.gitea.io/MarkEWaite/git-plugin']",
         };
@@ -286,10 +293,12 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + classPrologue()
-                        + "      userRemoteConfigs: [[credentialsId: '" + notOtherCredential + "', url: $/" + sampleRepo + "/$]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: '" + notOtherCredential + "', url: $/" + sampleRepo
+                        + "/$]]\n"
                         + classEpilogue()
                         + "  )"
-                        + "}", true));
+                        + "}",
+                true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Warning: CredentialId \"" + notOtherCredential + "\" could not be found", b);
     }
@@ -306,10 +315,12 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + classPrologue()
-                        + "      userRemoteConfigs: [[credentialsId: '" + systemCredential + "', url: $/" + sampleRepo + "/$]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: '" + systemCredential + "', url: $/" + sampleRepo
+                        + "/$]]\n"
                         + classEpilogue()
                         + "  )"
-                        + "}", true));
+                        + "}",
+                true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Warning: CredentialId \"" + systemCredential + "\" could not be found", b);
     }
@@ -322,10 +333,12 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + classPrologue()
-                        + "      userRemoteConfigs: [[credentialsId: '" + credential + "', url: $/" + sampleRepo + "/$]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: '" + credential + "', url: $/" + sampleRepo
+                        + "/$]]\n"
                         + classEpilogue()
                         + "  )"
-                        + "}", true));
+                        + "}",
+                true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Warning: CredentialId \"" + credential + "\" could not be found", b);
     }
@@ -341,7 +354,8 @@ public class CredentialsUserRemoteConfigTest {
                         + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]\n"
                         + classEpilogue()
                         + "  )"
-                        + "}", true));
+                        + "}",
+                true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("No credentials specified", b);
     }

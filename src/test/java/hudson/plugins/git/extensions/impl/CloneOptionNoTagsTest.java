@@ -3,15 +3,13 @@ package hudson.plugins.git.extensions.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
+import hudson.plugins.git.TestGitRepo;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import java.io.IOException;
 import java.util.Set;
-
-import hudson.model.Result;
-import hudson.model.FreeStyleProject;
-import hudson.plugins.git.TestGitRepo;
-import hudson.plugins.git.extensions.GitSCMExtensionTest;
-import hudson.plugins.git.extensions.GitSCMExtension;
-
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
@@ -45,11 +43,15 @@ public class CloneOptionNoTagsTest extends GitSCMExtensionTest {
         repo.commit("repo-init", repo.johnDoe, "repo0 initial commit");
         repo.tag("v0.0.1", "a tag that should never be fetched");
 
-        assertTrue("scm polling should detect a change after initial commit", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling should detect a change after initial commit",
+                project.poll(listener).hasChanges());
 
         build(project, Result.SUCCESS);
 
-        assertTrue("there should no tags have been cloned from remote", allTagsInProjectWorkspace().isEmpty());
+        assertTrue(
+                "there should no tags have been cloned from remote",
+                allTagsInProjectWorkspace().isEmpty());
     }
 
     @Test
@@ -57,17 +59,23 @@ public class CloneOptionNoTagsTest extends GitSCMExtensionTest {
 
         repo.commit("repo-init", repo.johnDoe, "repo0 initial commit");
 
-        assertTrue("scm polling should detect a change after initial commit", project.poll(listener).hasChanges());
+        assertTrue(
+                "scm polling should detect a change after initial commit",
+                project.poll(listener).hasChanges());
 
         build(project, Result.SUCCESS);
 
         repo.tag("v0.0.1", "a tag that should never be fetched");
 
-        assertFalse("scm polling should not detect a change after creating a tag", project.poll(listener).hasChanges());
+        assertFalse(
+                "scm polling should not detect a change after creating a tag",
+                project.poll(listener).hasChanges());
 
         build(project, Result.SUCCESS);
 
-        assertTrue("there should no tags have been fetched from remote", allTagsInProjectWorkspace().isEmpty());
+        assertTrue(
+                "there should no tags have been fetched from remote",
+                allTagsInProjectWorkspace().isEmpty());
     }
 
     private Set<String> allTagsInProjectWorkspace() throws IOException, InterruptedException {

@@ -1,25 +1,26 @@
 package hudson.plugins.git;
 
+import static org.junit.Assert.*;
+
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
-import hudson.model.FreeStyleBuild;
-import hudson.model.Result;
-import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
-import hudson.plugins.git.extensions.impl.EnforceGitClient;
+import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
+import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.SparseCheckoutPath;
@@ -31,13 +32,12 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
 import jenkins.MasterToSlaveFileCallable;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.util.SystemReader;
@@ -46,12 +46,9 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Before;
 import org.junit.Rule;
-import jenkins.plugins.git.GitSampleRepoRule;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
-
-import static org.junit.Assert.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -96,14 +93,15 @@ public abstract class AbstractGitTestCase {
         return testRepo.commit(fileName, committer, message);
     }
 
-    protected String commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
-
+    protected String commit(
+            final String fileName, final String fileContent, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
         return testRepo.commit(fileName, fileContent, committer, message);
     }
 
-    protected String commit(final String fileName, final PersonIdent author, final PersonIdent committer,
-                        final String message) throws GitException, InterruptedException {
+    protected String commit(
+            final String fileName, final PersonIdent author, final PersonIdent committer, final String message)
+            throws GitException, InterruptedException {
         return testRepo.commit(fileName, author, committer, message);
     }
 
@@ -123,83 +121,145 @@ public abstract class AbstractGitTestCase {
         return setupProject(branchString, authorOrCommitter, null);
     }
 
-    protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
-                                          String relativeTargetDir) throws Exception {
+    protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter, String relativeTargetDir)
+            throws Exception {
         return setupProject(branchString, authorOrCommitter, relativeTargetDir, null, null, null);
     }
 
-    protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
-                                          String relativeTargetDir,
-                                          String excludedRegions,
-                                          String excludedUsers,
-                                          String includedRegions) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, false, includedRegions);
+    protected FreeStyleProject setupProject(
+            String branchString,
+            boolean authorOrCommitter,
+            String relativeTargetDir,
+            String excludedRegions,
+            String excludedUsers,
+            String includedRegions)
+            throws Exception {
+        return setupProject(
+                branchString,
+                authorOrCommitter,
+                relativeTargetDir,
+                excludedRegions,
+                excludedUsers,
+                null,
+                false,
+                includedRegions);
     }
 
-    protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
-                                          String relativeTargetDir,
-                                          String excludedRegions,
-                                          String excludedUsers,
-                                          boolean fastRemotePoll,
-                                          String includedRegions) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, fastRemotePoll, includedRegions);
+    protected FreeStyleProject setupProject(
+            String branchString,
+            boolean authorOrCommitter,
+            String relativeTargetDir,
+            String excludedRegions,
+            String excludedUsers,
+            boolean fastRemotePoll,
+            String includedRegions)
+            throws Exception {
+        return setupProject(
+                branchString,
+                authorOrCommitter,
+                relativeTargetDir,
+                excludedRegions,
+                excludedUsers,
+                null,
+                fastRemotePoll,
+                includedRegions);
     }
 
-    protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
-                                          String relativeTargetDir, String excludedRegions,
-                                          String excludedUsers, String localBranch, boolean fastRemotePoll,
-                                          String includedRegions) throws Exception {
-        return setupProject(Collections.singletonList(new BranchSpec(branchString)),
-                            authorOrCommitter, relativeTargetDir, excludedRegions,
-                            excludedUsers, localBranch, fastRemotePoll,
-                            includedRegions);
+    protected FreeStyleProject setupProject(
+            String branchString,
+            boolean authorOrCommitter,
+            String relativeTargetDir,
+            String excludedRegions,
+            String excludedUsers,
+            String localBranch,
+            boolean fastRemotePoll,
+            String includedRegions)
+            throws Exception {
+        return setupProject(
+                Collections.singletonList(new BranchSpec(branchString)),
+                authorOrCommitter,
+                relativeTargetDir,
+                excludedRegions,
+                excludedUsers,
+                localBranch,
+                fastRemotePoll,
+                includedRegions);
     }
 
     protected FreeStyleProject setupProject(String branchString, StandardCredentials credential) throws Exception {
-        return setupProject(Collections.singletonList(new BranchSpec(branchString)),
-                false, null, null,
-                null, null, false,
-                null, null, credential);
+        return setupProject(
+                Collections.singletonList(new BranchSpec(branchString)),
+                false,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                credential);
     }
 
-    protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
-                                            String relativeTargetDir, String excludedRegions,
-                                            String excludedUsers, String localBranch, boolean fastRemotePoll,
-                                            String includedRegions) throws Exception {
-        return setupProject(branches,
-                authorOrCommitter, relativeTargetDir, excludedRegions,
-                excludedUsers, localBranch, fastRemotePoll,
-                includedRegions, null, null);
-    }
-
-    protected FreeStyleProject setupProject(String branchString, List<SparseCheckoutPath> sparseCheckoutPaths) throws Exception {
-        return setupProject(Collections.singletonList(new BranchSpec(branchString)),
-                false, null, null,
-                null, null, false,
-                null, sparseCheckoutPaths, null);
-    }
-
-    protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
-                String relativeTargetDir, String excludedRegions,
-                String excludedUsers, String localBranch, boolean fastRemotePoll,
-                String includedRegions, List<SparseCheckoutPath> sparseCheckoutPaths,
-                StandardCredentials credential) throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
-        GitSCM scm = new GitSCM(
-                createRemoteRepositories(credential),
+    protected FreeStyleProject setupProject(
+            List<BranchSpec> branches,
+            boolean authorOrCommitter,
+            String relativeTargetDir,
+            String excludedRegions,
+            String excludedUsers,
+            String localBranch,
+            boolean fastRemotePoll,
+            String includedRegions)
+            throws Exception {
+        return setupProject(
                 branches,
-                null, null,
-                Collections.emptyList());
+                authorOrCommitter,
+                relativeTargetDir,
+                excludedRegions,
+                excludedUsers,
+                localBranch,
+                fastRemotePoll,
+                includedRegions,
+                null,
+                null);
+    }
+
+    protected FreeStyleProject setupProject(String branchString, List<SparseCheckoutPath> sparseCheckoutPaths)
+            throws Exception {
+        return setupProject(
+                Collections.singletonList(new BranchSpec(branchString)),
+                false,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                sparseCheckoutPaths,
+                null);
+    }
+
+    protected FreeStyleProject setupProject(
+            List<BranchSpec> branches,
+            boolean authorOrCommitter,
+            String relativeTargetDir,
+            String excludedRegions,
+            String excludedUsers,
+            String localBranch,
+            boolean fastRemotePoll,
+            String includedRegions,
+            List<SparseCheckoutPath> sparseCheckoutPaths,
+            StandardCredentials credential)
+            throws Exception {
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(createRemoteRepositories(credential), branches, null, null, Collections.emptyList());
         if (credential != null) {
             project.getBuildersList().add(new HasCredentialBuilder(credential.getId()));
         }
         scm.getExtensions().add(new DisableRemotePoll()); // don't work on a file:// repository
-        if (relativeTargetDir!=null)
-            scm.getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));
-        if (excludedUsers!=null)
-            scm.getExtensions().add(new UserExclusion(excludedUsers));
-        if (excludedRegions!=null || includedRegions!=null)
-            scm.getExtensions().add(new PathRestriction(includedRegions,excludedRegions));
+        if (relativeTargetDir != null) scm.getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));
+        if (excludedUsers != null) scm.getExtensions().add(new UserExclusion(excludedUsers));
+        if (excludedRegions != null || includedRegions != null)
+            scm.getExtensions().add(new PathRestriction(includedRegions, excludedRegions));
 
         scm.getExtensions().add(new SparseCheckoutPaths(sparseCheckoutPaths));
 
@@ -218,95 +278,109 @@ public abstract class AbstractGitTestCase {
      * @return the created project
      * @throws Exception on error
      */
-    protected FreeStyleProject setupProject(List<UserRemoteConfig> repos, List<BranchSpec> branchSpecs,
-                String scmTriggerSpec, boolean disableRemotePoll, EnforceGitClient enforceGitClient) throws Exception {
+    protected FreeStyleProject setupProject(
+            List<UserRemoteConfig> repos,
+            List<BranchSpec> branchSpecs,
+            String scmTriggerSpec,
+            boolean disableRemotePoll,
+            EnforceGitClient enforceGitClient)
+            throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        GitSCM scm = new GitSCM(
-                    repos,
-                    branchSpecs,
-                    null, JGitTool.MAGIC_EXENAME,
-                    Collections.emptyList());
-        if(disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
-        if(enforceGitClient != null) scm.getExtensions().add(enforceGitClient);
+        GitSCM scm = new GitSCM(repos, branchSpecs, null, JGitTool.MAGIC_EXENAME, Collections.emptyList());
+        if (disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
+        if (enforceGitClient != null) scm.getExtensions().add(enforceGitClient);
         project.setScm(scm);
-        if(scmTriggerSpec != null) {
+        if (scmTriggerSpec != null) {
             SCMTrigger trigger = new SCMTrigger(scmTriggerSpec);
             project.addTrigger(trigger);
             trigger.start(project, true);
         }
-        //project.getBuildersList().add(new CaptureEnvironmentBuilder());
+        // project.getBuildersList().add(new CaptureEnvironmentBuilder());
         project.save();
         return project;
     }
-    
+
     protected FreeStyleProject setupSimpleProject(String branchString) throws Exception {
-        return setupProject(branchString,false);
+        return setupProject(branchString, false);
     }
 
-    protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
+    protected FreeStyleBuild build(
+            final FreeStyleProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles)
+            throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
-        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+        for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
+            assertTrue(
+                    expectedNewlyCommittedFile + " file not found in workspace",
+                    build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
-        if(expectedResult != null) {
+        if (expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
 
-    protected FreeStyleBuild build(final FreeStyleProject project, final String parentDir, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
+    protected FreeStyleBuild build(
+            final FreeStyleProject project,
+            final String parentDir,
+            final Result expectedResult,
+            final String... expectedNewlyCommittedFiles)
+            throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
-        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
+        for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
+            assertTrue(build.getWorkspace()
+                    .child(parentDir)
+                    .child(expectedNewlyCommittedFile)
+                    .exists());
         }
-        if(expectedResult != null) {
+        if (expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
-    
-    protected MatrixBuild build(final MatrixProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
+
+    protected MatrixBuild build(
+            final MatrixProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles)
+            throws Exception {
         final MatrixBuild build = project.scheduleBuild2(0).get();
-        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+        for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
+            assertTrue(
+                    expectedNewlyCommittedFile + " file not found in workspace",
+                    build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
-        if(expectedResult != null) {
+        if (expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
-    
 
     protected EnvVars getEnvVars(FreeStyleProject project) {
         for (hudson.tasks.Builder b : project.getBuilders()) {
             if (b instanceof CaptureEnvironmentBuilder) {
-                return ((CaptureEnvironmentBuilder)b).getEnvVars();
+                return ((CaptureEnvironmentBuilder) b).getEnvVars();
             }
         }
         return new EnvVars();
     }
 
     protected void setVariables(Node node, EnvironmentVariablesNodeProperty.Entry... entries) throws IOException {
-        node.getNodeProperties().replaceBy(
-                Collections.singleton(new EnvironmentVariablesNodeProperty(
-                        entries)));
-
+        node.getNodeProperties().replaceBy(Collections.singleton(new EnvironmentVariablesNodeProperty(entries)));
     }
 
-    protected String getHeadRevision(AbstractBuild build, final String branch) throws IOException, InterruptedException {
+    protected String getHeadRevision(AbstractBuild build, final String branch)
+            throws IOException, InterruptedException {
         return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
-                public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-                    try {
-                        @SuppressWarnings("deprecation") // Local repository reference
-                        org.eclipse.jgit.lib.Repository repo = Git.with(null, null).in(f).getClient().getRepository();
-                        ObjectId oid = repo.resolve("refs/heads/" + branch);
-                        return oid.name();
-                    } catch (GitException e) {
-                        throw new RuntimeException(e);
-                    }
+            public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+                try {
+                    @SuppressWarnings("deprecation") // Local repository reference
+                    org.eclipse.jgit.lib.Repository repo =
+                            Git.with(null, null).in(f).getClient().getRepository();
+                    ObjectId oid = repo.resolve("refs/heads/" + branch);
+                    return oid.name();
+                } catch (GitException e) {
+                    throw new RuntimeException(e);
                 }
-
-            });
+            }
+        });
     }
 
     public static class HasCredentialBuilder extends Builder {
@@ -331,7 +405,8 @@ public abstract class AbstractGitTestCase {
                 build.setResult(Result.FAILURE);
                 return false;
             } else {
-                listener.getLogger().printf("Found %s credentials with id %s%n", CredentialsNameProvider.name(credentials), id);
+                listener.getLogger()
+                        .printf("Found %s credentials with id %s%n", CredentialsNameProvider.name(credentials), id);
                 return true;
             }
         }

@@ -29,17 +29,16 @@ import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
+import java.io.IOException;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
-
-import java.io.IOException;
 
 /**
  * {@code GIT_BRANCH} token that expands to the branch(es) that was built.
  *
  * @author Kohsuke Kawaguchi
  */
-@Extension(optional=true)
+@Extension(optional = true)
 public class GitBranchTokenMacro extends DataBoundTokenMacro {
     /**
      * If true, list up all the branches not just the first one.
@@ -59,24 +58,26 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
     }
 
     @Override
-    public String evaluate(AbstractBuild<?, ?> context, TaskListener listener, String macroName) throws MacroEvaluationException, IOException, InterruptedException {
+    public String evaluate(AbstractBuild<?, ?> context, TaskListener listener, String macroName)
+            throws MacroEvaluationException, IOException, InterruptedException {
         return evaluate(context, context.getWorkspace(), listener, macroName);
     }
 
     @Override
-    public String evaluate(Run<?, ?> context, FilePath workspace, TaskListener listener, String macroName) throws MacroEvaluationException, IOException, InterruptedException {
+    public String evaluate(Run<?, ?> context, FilePath workspace, TaskListener listener, String macroName)
+            throws MacroEvaluationException, IOException, InterruptedException {
         BuildData data = context.getAction(BuildData.class);
         if (data == null) {
-            return "";  // shall we report an error more explicitly?
+            return ""; // shall we report an error more explicitly?
         }
 
         Revision lb = data.getLastBuiltRevision();
-        if (lb==null || lb.getBranches().isEmpty())   return "";
+        if (lb == null || lb.getBranches().isEmpty()) return "";
 
         if (all) {
             StringBuilder buf = new StringBuilder();
             for (Branch b : lb.getBranches()) {
-                if (buf.length()>0) buf.append(',');
+                if (buf.length() > 0) buf.append(',');
                 buf.append(format(b));
             }
             return buf.toString();
@@ -87,7 +88,7 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
 
     private String format(Branch b) {
         String n = b.getName();
-        if (fullName)   return n;
-        return n.substring(n.indexOf('/')+1); // trim off '/'
+        if (fullName) return n;
+        return n.substring(n.indexOf('/') + 1); // trim off '/'
     }
 }

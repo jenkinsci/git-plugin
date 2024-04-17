@@ -1,11 +1,10 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,10 +13,9 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A specification of branches to build. Rather like a refspec.
@@ -43,12 +41,9 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     public void setName(String name) {
-    	if(name == null)
-            throw new IllegalArgumentException();
-        else if(name.length() == 0)
-            this.name = "**";
-        else
-            this.name = name.trim();
+        if (name == null) throw new IllegalArgumentException();
+        else if (name.length() == 0) this.name = "**";
+        else this.name = name.trim();
     }
 
     @DataBoundConstructor
@@ -97,7 +92,8 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         }
         Pattern pattern = getPattern(new EnvVars(), repositoryName);
         String branchWithoutRefs = cutRefs(branchName);
-        return pattern.matcher(branchWithoutRefs).matches() || pattern.matcher(join(repositoryName, branchWithoutRefs)).matches();
+        return pattern.matcher(branchWithoutRefs).matches()
+                || pattern.matcher(join(repositoryName, branchWithoutRefs)).matches();
     }
 
     /**
@@ -113,15 +109,14 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
 
     public List<String> filterMatching(Collection<String> branches, EnvVars env) {
         List<String> items = new ArrayList<>();
-        
-        for(String b : branches) {
-            if(matches(b, env))
-                items.add(b);
+
+        for (String b : branches) {
+            if (matches(b, env)) items.add(b);
         }
-        
+
         return items;
     }
-    
+
     public List<Branch> filterMatchingBranches(Collection<Branch> branches) {
         EnvVars env = new EnvVars();
         return filterMatchingBranches(branches, env);
@@ -129,12 +124,11 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
 
     public List<Branch> filterMatchingBranches(Collection<Branch> branches, EnvVars env) {
         List<Branch> items = new ArrayList<>();
-        
-        for(Branch b : branches) {
-            if(matches(b.getName(), env))
-                items.add(b);
+
+        for (Branch b : branches) {
+            if (matches(b.getName(), env)) items.add(b);
         }
-        
+
         return items;
     }
 
@@ -172,7 +166,6 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         // for legacy reasons (sic) we do support various branch spec format to declare remotes / branches
         builder.append("(refs/heads/");
 
-
         // if an unqualified branch was given, consider all remotes (with various possible syntaxes)
         // so it will match branches from  any remote repositories as the user probably intended
         if (!expandedName.contains("**") && !expandedName.contains("/")) {
@@ -190,12 +183,12 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
 
         // was the last token a wildcard?
         boolean foundWildcard = false;
-        
+
         // split the string at the wildcards
         StringTokenizer tokenizer = new StringTokenizer(expandedName, "*", true);
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
-            
+
             // is this token is a wildcard?
             if (token.equals("*")) {
                 // yes, was the previous token a wildcard?
@@ -204,13 +197,11 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
                     // match over any number of characters
                     builder.append(".*");
                     foundWildcard = false;
-                }
-                else {
+                } else {
                     // no, set foundWildcard to true and go on
                     foundWildcard = true;
                 }
-            }
-            else {
+            } else {
                 // no, was the previous token a wildcard?
                 if (foundWildcard) {
                     // yes, we found "*" followed by a non-wildcard
@@ -222,7 +213,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
                 builder.append(Pattern.quote(token));
             }
         }
-        
+
         // if the string ended with a wildcard add it now
         if (foundWildcard) {
             builder.append("[^/]*");

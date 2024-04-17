@@ -11,11 +11,10 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
-import org.jenkinsci.plugins.gitclient.GitClient;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 public interface GitCredentialBindings {
 
@@ -25,7 +24,10 @@ public interface GitCredentialBindings {
      * @param secretValues The values{@link java.util.Map} to be hidden in build logs
      * @param publicValues The values{@link java.util.Map} to be visible in build logs
      **/
-    void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String,String> secretValues, Map<String,String> publicValues);
+    void setCredentialPairBindings(
+            @NonNull StandardCredentials credentials,
+            Map<String, String> secretValues,
+            Map<String, String> publicValues);
 
     /**
      * Set Git specific environment variable
@@ -33,7 +35,9 @@ public interface GitCredentialBindings {
      * @param secretValues The values{@link java.util.Map} to be hidden in build logs
      * @param publicValues The values{@link java.util.Map} to be visible in build logs
      **/
-    void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> secretValues, Map<String,String> publicValues) throws IOException, InterruptedException;
+    void setGitEnvironmentVariables(
+            @NonNull GitClient git, Map<String, String> secretValues, Map<String, String> publicValues)
+            throws IOException, InterruptedException;
 
     /**
      * Use GitClient to perform git operations in a repository. Using Git implementations JGit/JGit Apache/Cli Git
@@ -43,14 +47,14 @@ public interface GitCredentialBindings {
      * @param listener The task listener.
      * @return a GitClient implementation {@link org.jenkinsci.plugins.gitclient.GitClient}
      **/
-    GitClient getGitClientInstance(String gitExe, FilePath repository,
-                                   EnvVars env, TaskListener listener) throws IOException, InterruptedException;
+    GitClient getGitClientInstance(String gitExe, FilePath repository, EnvVars env, TaskListener listener)
+            throws IOException, InterruptedException;
     /**
      * Checks the OS environment of the node/controller
      * @param launcher The launcher.Cannot be null
      * @return false if current node/controller is not running in windows environment
      **/
-    default boolean isCurrentNodeOSUnix(@NonNull Launcher launcher){
+    default boolean isCurrentNodeOSUnix(@NonNull Launcher launcher) {
         return launcher.isUnix();
     }
 
@@ -61,18 +65,20 @@ public interface GitCredentialBindings {
      * @param listener The task listener. Cannot be null.
      * @return A git tool of type GitTool.class {@link hudson.plugins.git.GitTool} or null
      **/
-    default GitTool getCliGitTool(Run<?, ?> run, String gitToolName,
-                              TaskListener listener) throws IOException, InterruptedException {
+    default GitTool getCliGitTool(Run<?, ?> run, String gitToolName, TaskListener listener)
+            throws IOException, InterruptedException {
 
         Executor buildExecutor = run.getExecutor();
         if (buildExecutor != null) {
             Node currentNode = buildExecutor.getOwner().getNode();
-            //Check node is not null
+            // Check node is not null
             if (currentNode != null) {
-                GitTool nameSpecificGitTool = GitUtils.resolveGitTool(gitToolName,currentNode,new EnvVars(),listener);
-                if(nameSpecificGitTool != null){
-                    GitTool typeSpecificGitTool = nameSpecificGitTool.getDescriptor().getInstallation(nameSpecificGitTool.getName());
-                    if(typeSpecificGitTool != null) {
+                GitTool nameSpecificGitTool =
+                        GitUtils.resolveGitTool(gitToolName, currentNode, new EnvVars(), listener);
+                if (nameSpecificGitTool != null) {
+                    GitTool typeSpecificGitTool =
+                            nameSpecificGitTool.getDescriptor().getInstallation(nameSpecificGitTool.getName());
+                    if (typeSpecificGitTool != null) {
                         boolean check = typeSpecificGitTool.getClass().equals(GitTool.class);
                         if (check) {
                             return nameSpecificGitTool;

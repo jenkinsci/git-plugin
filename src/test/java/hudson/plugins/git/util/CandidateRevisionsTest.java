@@ -1,5 +1,7 @@
 package hudson.plugins.git.util;
 
+import static org.junit.Assert.*;
+
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.AbstractGitRepository;
@@ -10,15 +12,14 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import jenkins.plugins.git.GitSampleRepoRule;
 import org.mockito.Mockito;
 
 public class CandidateRevisionsTest extends AbstractGitRepository {
@@ -86,7 +87,8 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
 
         /* This refspec doesn't clone master branch, don't checkout master */
         RefSpec tagsRefSpec = new RefSpec("+refs/tags/tag/*:refs/remotes/origin/tags/tag/*");
-        testGitClient2.clone_()
+        testGitClient2
+                .clone_()
                 .refspecs(Collections.singletonList(tagsRefSpec))
                 .repositoryName("origin")
                 .url(testGitDir.getAbsolutePath())
@@ -98,7 +100,8 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
         assertEquals(commit2, testGitClient2.revParse("tag/b"));
         assertEquals(commit2, testGitClient2.revParse("tag/c"));
 
-        DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM(testGitDir.getAbsolutePath()).getBuildChooser();
+        DefaultBuildChooser buildChooser =
+                (DefaultBuildChooser) new GitSCM(testGitDir.getAbsolutePath()).getBuildChooser();
 
         BuildData buildData = Mockito.mock(BuildData.class);
         Mockito.when(buildData.hasBeenBuilt(testGitClient2.revParse("tag/a"))).thenReturn(true);
@@ -108,9 +111,16 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
         BuildChooserContext context = Mockito.mock(BuildChooserContext.class);
         Mockito.when(context.getEnvironment()).thenReturn(new EnvVars());
 
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "tag/*", testGitClient2, null, buildData, context);
+        Collection<Revision> candidateRevisions =
+                buildChooser.getCandidateRevisions(false, "tag/*", testGitClient2, null, buildData, context);
         assertEquals(1, candidateRevisions.size());
-        String name = candidateRevisions.iterator().next().getBranches().iterator().next().getName();
+        String name = candidateRevisions
+                .iterator()
+                .next()
+                .getBranches()
+                .iterator()
+                .next()
+                .getName();
         assertTrue("Expected .*/tags/b or .*/tags/c, was '" + name + "'", name.matches("(origin|refs)/tags/tag/[bc]"));
     }
 

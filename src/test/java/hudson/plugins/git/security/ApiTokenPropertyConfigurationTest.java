@@ -1,25 +1,24 @@
 package hudson.plugins.git.security;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import hudson.plugins.git.ApiTokenPropertyConfiguration;
+import java.util.Collection;
+import java.util.Collections;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
 import org.htmlunit.util.NameValuePair;
-import hudson.plugins.git.ApiTokenPropertyConfiguration;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
-
-import java.util.Collection;
-import java.util.Collections;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class ApiTokenPropertyConfigurationTest {
 
@@ -40,7 +39,8 @@ public class ApiTokenPropertyConfigurationTest {
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("bob");
             WebRequest req = new WebRequest(
-                    wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/generate"), HttpMethod.POST);
+                    wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/generate"),
+                    HttpMethod.POST);
             req.setRequestBody("{\"apiTokenName\":\"test\"}");
             wc.setThrowExceptionOnFailingStatusCode(false);
 
@@ -55,7 +55,9 @@ public class ApiTokenPropertyConfigurationTest {
     public void adminPermissionsRequiredToRevokeApiTokens() throws Exception {
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("bob");
-            WebRequest req = new WebRequest(wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/revoke"), HttpMethod.POST);
+            WebRequest req = new WebRequest(
+                    wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/revoke"),
+                    HttpMethod.POST);
             wc.setThrowExceptionOnFailingStatusCode(false);
 
             WebResponse res = wc.getPage(req).getWebResponse();
@@ -70,45 +72,41 @@ public class ApiTokenPropertyConfigurationTest {
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("alice");
             WebRequest generateReq = new WebRequest(
-                    wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/generate"), HttpMethod.POST);
+                    wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/generate"),
+                    HttpMethod.POST);
             generateReq.setRequestParameters(Collections.singletonList(new NameValuePair("apiTokenName", "token")));
-            String uuid = JSONObject.fromObject(wc.getPage(generateReq).getWebResponse().getContentAsString()).getJSONObject("data").getString("uuid");
+            String uuid = JSONObject.fromObject(
+                            wc.getPage(generateReq).getWebResponse().getContentAsString())
+                    .getJSONObject("data")
+                    .getString("uuid");
 
             generateReq.setRequestParameters(Collections.singletonList(new NameValuePair("apiTokenName", "nekot")));
-            String uuid2 = JSONObject.fromObject(wc.getPage(generateReq).getWebResponse().getContentAsString()).getJSONObject("data").getString("uuid");
+            String uuid2 = JSONObject.fromObject(
+                            wc.getPage(generateReq).getWebResponse().getContentAsString())
+                    .getJSONObject("data")
+                    .getString("uuid");
 
-            Collection<ApiTokenPropertyConfiguration.HashedApiToken> apiTokens = ApiTokenPropertyConfiguration.get().getApiTokens();
-            assertThat(apiTokens, allOf(
-                    iterableWithSize(2),
-                    hasItem(
-                            allOf(
-                                    hasProperty("name", is("token")),
-                                    hasProperty("uuid", is(uuid))
-                            )
-                    ),
-                    hasItem(
-                            allOf(
-                                    hasProperty("name", is("nekot")),
-                                    hasProperty("uuid", is(uuid2))
-                            )
-                    )
-            ));
+            Collection<ApiTokenPropertyConfiguration.HashedApiToken> apiTokens =
+                    ApiTokenPropertyConfiguration.get().getApiTokens();
+            assertThat(
+                    apiTokens,
+                    allOf(
+                            iterableWithSize(2),
+                            hasItem(allOf(hasProperty("name", is("token")), hasProperty("uuid", is(uuid)))),
+                            hasItem(allOf(hasProperty("name", is("nekot")), hasProperty("uuid", is(uuid2))))));
 
             WebRequest revokeReq = new WebRequest(
-                    wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/revoke"), HttpMethod.POST);
+                    wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/revoke"),
+                    HttpMethod.POST);
             revokeReq.setRequestParameters(Collections.singletonList(new NameValuePair("apiTokenUuid", uuid)));
             wc.getPage(revokeReq);
 
             apiTokens = ApiTokenPropertyConfiguration.get().getApiTokens();
-            assertThat(apiTokens, allOf(
-                    iterableWithSize(1),
-                    hasItem(
-                            allOf(
-                                    hasProperty("name", is("nekot")),
-                                    hasProperty("uuid", is(uuid2))
-                            )
-                    )
-            ));
+            assertThat(
+                    apiTokens,
+                    allOf(
+                            iterableWithSize(1),
+                            hasItem(allOf(hasProperty("name", is("nekot")), hasProperty("uuid", is(uuid2))))));
         }
     }
 
@@ -118,5 +116,4 @@ public class ApiTokenPropertyConfigurationTest {
 
         assertTrue(ApiTokenPropertyConfiguration.get().isValidApiToken(json.getString("value")));
     }
-
 }

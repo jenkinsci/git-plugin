@@ -18,14 +18,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class WipeWorkspace extends GitSCMExtension {
     @DataBoundConstructor
-    public WipeWorkspace() {
-    }
+    public WipeWorkspace() {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
+    public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
+            throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Wiping out workspace first.");
         git.getWorkTree().deleteContents();
     }

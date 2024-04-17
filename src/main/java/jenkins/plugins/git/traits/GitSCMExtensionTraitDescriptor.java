@@ -25,6 +25,7 @@
 
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -37,7 +38,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.trait.SCMBuilder;
@@ -79,21 +79,23 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      * @param clazz     Pass in the type of {@link SCMTrait}
      * @param extension Pass in the type of {@link GitSCMExtension}.
      */
-    protected GitSCMExtensionTraitDescriptor(Class<? extends SCMSourceTrait> clazz,
-                                             Class<? extends GitSCMExtension> extension) {
+    protected GitSCMExtensionTraitDescriptor(
+            Class<? extends SCMSourceTrait> clazz, Class<? extends GitSCMExtension> extension) {
         super(clazz);
         this.extension = extension;
-        if (!Util.isOverridden(GitSCMExtensionTraitDescriptor.class, getClass(), "convertToTrait",
-                GitSCMExtension.class)) {
+        if (!Util.isOverridden(
+                GitSCMExtensionTraitDescriptor.class, getClass(), "convertToTrait", GitSCMExtension.class)) {
             // check that the GitSCMExtensionTrait has a constructor that takes a single argument of the type
             // 'extension' so that our default convertToTrait method implementation can be used
             try {
                 constructor = clazz.getConstructor(extension);
                 noArgConstructor = constructor.getParameterTypes().length == 0;
             } catch (NoSuchMethodException e) {
-                throw new AssertionError("Could not infer how to convert a " + extension + " to a "
-                        + clazz + " as there is no obvious constructor. Either provide a simple constructor or "
-                        + "override convertToTrait(GitSCMExtension)", e);
+                throw new AssertionError(
+                        "Could not infer how to convert a " + extension + " to a "
+                                + clazz + " as there is no obvious constructor. Either provide a simple constructor or "
+                                + "override convertToTrait(GitSCMExtension)",
+                        e);
             }
         } else {
             constructor = null;
@@ -119,11 +121,11 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
                         + "class constructor)");
             }
         } else {
-            throw new AssertionError("Could not infer GitSCMExtension type. Consider using the explicit "
-                    + "class constructor)");
+            throw new AssertionError(
+                    "Could not infer GitSCMExtension type. Consider using the explicit " + "class constructor)");
         }
-        if (!Util.isOverridden(GitSCMExtensionTraitDescriptor.class, getClass(), "convertToTrait",
-                GitSCMExtension.class)) {
+        if (!Util.isOverridden(
+                GitSCMExtensionTraitDescriptor.class, getClass(), "convertToTrait", GitSCMExtension.class)) {
             // check that the GitSCMExtensionTrait has a constructor that takes a single argument of the type
             // 'extension' so that our default convertToTrait method implementation can be used
             Constructor<? extends SCMSourceTrait> constructor = null;
@@ -148,8 +150,8 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
                             + "convertToTrait(GitSCMExtension)");
                 }
             } else {
-                throw new AssertionError("Could not infer how to convert a " + extension + " to a "
-                        + clazz + " as there is no @DataBoundConstructor (which is going to cause other problems)");
+                throw new AssertionError("Could not infer how to convert a " + extension + " to a " + clazz
+                        + " as there is no @DataBoundConstructor (which is going to cause other problems)");
             }
         } else {
             constructor = null;
@@ -211,19 +213,17 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
     @CheckForNull
     public SCMSourceTrait convertToTrait(@NonNull GitSCMExtension extension) {
         if (!this.extension.isInstance(extension)) {
-            throw new IllegalArgumentException(
-                    "Expected a " + this.extension.getName() + " but got a " + extension.getClass().getName()
-            );
+            throw new IllegalArgumentException("Expected a " + this.extension.getName() + " but got a "
+                    + extension.getClass().getName());
         }
         if (constructor == null) {
-            if (!Util.isOverridden(GitSCMExtensionTraitDescriptor.class, getClass(), "convertToTrait",
-                    GitSCMExtension.class)) {
-                throw new IllegalStateException("Should not be able to instantiate a " + getClass().getName()
-                        + " without an inferred constructor for " + this.extension.getName());
+            if (!Util.isOverridden(
+                    GitSCMExtensionTraitDescriptor.class, getClass(), "convertToTrait", GitSCMExtension.class)) {
+                throw new IllegalStateException("Should not be able to instantiate a "
+                        + getClass().getName() + " without an inferred constructor for " + this.extension.getName());
             }
-            throw new UnsupportedOperationException(
-                    getClass().getName() + " should not delegate convertToTrait() to " + GitSCMExtension.class
-                            .getName());
+            throw new UnsupportedOperationException(getClass().getName() + " should not delegate convertToTrait() to "
+                    + GitSCMExtension.class.getName());
         }
         try {
             return noArgConstructor

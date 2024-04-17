@@ -23,14 +23,14 @@
  */
 package hudson.plugins.git;
 
+import static org.junit.Assert.*;
+
 import hudson.model.Cause;
-import hudson.model.FreeStyleProject;
 import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
-
 import java.util.Collections;
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -57,21 +57,25 @@ public class RevisionParameterActionTest extends AbstractGitProject {
         commitNewFile(commitFile2);
 
         // create second build and set revision parameter using r1
-        FreeStyleBuild b2 = p1.scheduleBuild2(0, new Cause.UserIdCause(),
-				Collections.singletonList(new RevisionParameterAction(r1))).get();
+        FreeStyleBuild b2 = p1.scheduleBuild2(
+                        0, new Cause.UserIdCause(), Collections.singletonList(new RevisionParameterAction(r1)))
+                .get();
 
         // Check revision built for b2 matches the r1 revision
-        assertEquals(b2.getAction(BuildData.class)
-                        .getLastBuiltRevision().getSha1String(), r1.getSha1String());
-        assertEquals(b2.getAction(BuildData.class)
-                        .getLastBuiltRevision().getBranches().iterator().next()
-                        .getName(), r1.getBranches().iterator().next().getName());
+        assertEquals(b2.getAction(BuildData.class).getLastBuiltRevision().getSha1String(), r1.getSha1String());
+        assertEquals(
+                b2.getAction(BuildData.class)
+                        .getLastBuiltRevision()
+                        .getBranches()
+                        .iterator()
+                        .next()
+                        .getName(),
+                r1.getBranches().iterator().next().getName());
 
         // create a third build
         FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
 
         // Check revision built for b3 does not match r1 revision
-        assertNotEquals(b3.getAction(BuildData.class)
-                .getLastBuiltRevision().getSha1String(), r1.getSha1String());
+        assertNotEquals(b3.getAction(BuildData.class).getLastBuiltRevision().getSha1String(), r1.getSha1String());
     }
 }

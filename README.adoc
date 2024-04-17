@@ -1220,6 +1220,21 @@ Inverse::
   This is useful, for example, when you have jobs building your master and various release branches and you want a second job which builds all new feature branches.
   For example, branches which do not match these patterns without redundantly building master and the release branches again each time they change.
 
+[#firstBuildBehavior]
+==== First Build Changelog behavior
+
+image:/images/git-extension-for-first-build.png[First Build Changelog behavior]
+
+The Jenkins git plugin provides an option to trigger pipeline build process on the first commit on a branch. By default, no changelog is generated causing any pipeline process to not be triggered but with this option selected changes are found between the new branch and its parent commit.
+
+[source,groovy]
+----
+ checkout scmGit(branches: [[name: 'master']],
+                                extensions: [firstBuildChangelog()],
+                                userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+
+
+----
 [#merge-extensions]
 === Merge Extensions
 
@@ -1423,6 +1438,7 @@ Administrators may want to store those git repositories in another location for 
 For example, they might choose to place the cache directories in `/var/cache/jenkins`.
 
 The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
+
 
 [#git-publisher]
 == Git Publisher

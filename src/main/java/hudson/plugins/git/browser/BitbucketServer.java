@@ -1,19 +1,18 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Git Browser URLs for on-premise Bitbucket Server installation.
@@ -43,13 +42,14 @@ public class BitbucketServer extends GitRepositoryBrowser {
      */
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
-        if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
+        if (path.getEditType() != EditType.EDIT
+                || path.getSrc() == null
+                || path.getDst() == null
                 || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
         return getDiffLinkRegardlessOfEditType(path);
     }
-
 
     private URL getDiffLinkRegardlessOfEditType(GitChangeSet.Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
@@ -71,7 +71,8 @@ public class BitbucketServer extends GitRepositoryBrowser {
         return encodeURL(new URL(url, url.getPath() + "browse/" + pathAsString));
     }
 
-    @Extension @Symbol("bitbucketServer")
+    @Extension
+    @Symbol("bitbucketServer")
     public static class BitbucketServerDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
@@ -79,8 +80,9 @@ public class BitbucketServer extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
+        @SuppressFBWarnings(
+                value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                justification = "Inherited javadoc commits that req is non-null")
         public BitbucketServer newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(BitbucketServer.class, jsonObject);
         }

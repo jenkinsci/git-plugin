@@ -24,13 +24,21 @@
  */
 package hudson.plugins.git.extensions.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import hudson.EnvVars;
+import hudson.Functions;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
+import hudson.util.LogTaskListener;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -40,17 +48,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-
-import hudson.EnvVars;
-import hudson.Functions;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM;
-import hudson.util.LogTaskListener;
 
 public class PruneStaleTagTest {
 
@@ -84,22 +81,31 @@ public class PruneStaleTagTest {
         remoteClient.tag(tagName, tagComment);
 
         // clone remote repository to workspace
-        GitClient localClient =  cloneRepository(remoteRepo);
+        GitClient localClient = cloneRepository(remoteRepo);
         localClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
         localClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
         GitSCM scm = new GitSCM(localClient.getRemoteUrl("origin"));
         PruneStaleTag extension = new PruneStaleTag(true);
 
         // get remote SHA1 for the tag
-        String remoteTagHash = remoteClient.getTags().stream().filter(t -> tagName.equals(t.getName())).findFirst().get().getSHA1String();
+        String remoteTagHash = remoteClient.getTags().stream()
+                .filter(t -> tagName.equals(t.getName()))
+                .findFirst()
+                .get()
+                .getSHA1String();
 
         FileUtils.touch(new File(localClient.getWorkTree().getRemote(), "localTest"));
         localClient.add("localTest");
         localClient.commit("more commits");
         localClient.deleteTag(tagName);
         localClient.tag(tagName, tagComment);
-        String localHashTag = localClient.getTags().stream().filter(t -> tagName.equals(t.getName())).findFirst().get().getSHA1String();
-        Assert.assertNotEquals("pre validation failed, local tag must not be the same than remote", remoteTagHash, localHashTag);
+        String localHashTag = localClient.getTags().stream()
+                .filter(t -> tagName.equals(t.getName()))
+                .findFirst()
+                .get()
+                .getSHA1String();
+        Assert.assertNotEquals(
+                "pre validation failed, local tag must not be the same than remote", remoteTagHash, localHashTag);
 
         extension.decorateFetchCommand(scm, run, localClient, listener, null);
         Assert.assertFalse("local tag differ from remote tag and is not pruned", localClient.tagExists(tagName));
@@ -118,7 +124,7 @@ public class PruneStaleTagTest {
         GitClient remoteClient = initRepository(remoteRepo);
 
         // clone remote repository to workspace
-        GitClient localClient =  cloneRepository(remoteRepo);
+        GitClient localClient = cloneRepository(remoteRepo);
 
         GitSCM scm = new GitSCM(localClient.getRemoteUrl("origin"));
         PruneStaleTag extension = new PruneStaleTag(true);
@@ -147,7 +153,7 @@ public class PruneStaleTagTest {
         remoteClient.tag(tagName, tagComment);
 
         // clone remote repository to workspace
-        GitClient localClient =  cloneRepository(remoteRepo);
+        GitClient localClient = cloneRepository(remoteRepo);
 
         GitSCM scm = new GitSCM(localClient.getRemoteUrl("origin"));
         PruneStaleTag extension = new PruneStaleTag(true);
@@ -172,7 +178,7 @@ public class PruneStaleTagTest {
         remoteClient.tag(tagName, tagComment);
 
         // clone remote repository to workspace
-        GitClient localClient =  cloneRepository(remoteRepo);
+        GitClient localClient = cloneRepository(remoteRepo);
 
         GitSCM scm = new GitSCM(localClient.getRemoteUrl("origin"));
         PruneStaleTag extension = new PruneStaleTag(true);
@@ -191,7 +197,7 @@ public class PruneStaleTagTest {
         initRepository(remoteRepo);
 
         // clone remote repository to workspace
-        GitClient localClient =  cloneRepository(remoteRepo);
+        GitClient localClient = cloneRepository(remoteRepo);
 
         // create a local branch that should not be pruned with tags
         String branchName = "localBranch";
@@ -202,7 +208,9 @@ public class PruneStaleTagTest {
         PruneStaleTag extension = new PruneStaleTag(true);
         extension.decorateFetchCommand(scm, run, localClient, listener, null);
 
-        Assert.assertTrue("Local branches must not be pruned", localClient.getBranches().stream().anyMatch(b -> branchName.equals(b.getName())));
+        Assert.assertTrue(
+                "Local branches must not be pruned",
+                localClient.getBranches().stream().anyMatch(b -> branchName.equals(b.getName())));
     }
 
     private GitClient newGitClient(File localRepo) {

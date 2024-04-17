@@ -1,5 +1,15 @@
 package jenkins.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.extensions.impl.CheckoutOption;
 import hudson.plugins.git.extensions.impl.CloneOption;
@@ -33,152 +43,117 @@ import org.jenkinsci.plugins.workflow.libs.LibraryRetriever;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.core.AllOf.allOf;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 public class GlobalLibraryWithModernJCasCCompatibilityTest extends RoundTripAbstractTest {
     @Override
     protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
-        final LibraryConfiguration library = GlobalLibraries.get().getLibraries().get(0);
+        final LibraryConfiguration library =
+                GlobalLibraries.get().getLibraries().get(0);
         assertEquals("My Git Lib", library.getName());
         assertEquals("1.2.3", library.getDefaultVersion());
         assertTrue(library.isImplicit());
 
         final LibraryRetriever retriever = library.getRetriever();
         assertThat(retriever, instanceOf(SCMSourceRetriever.class));
-        final SCMSource scm =  ((SCMSourceRetriever) retriever).getScm();
+        final SCMSource scm = ((SCMSourceRetriever) retriever).getScm();
         assertThat(scm, instanceOf(GitSCMSource.class));
-        final GitSCMSource gitSCMSource = (GitSCMSource)scm;
+        final GitSCMSource gitSCMSource = (GitSCMSource) scm;
 
         assertEquals("acmeuser-cred-Id", gitSCMSource.getCredentialsId());
         assertEquals("https://git.acmecorp/myGitLib.git", gitSCMSource.getRemote());
 
         assertThat(gitSCMSource.getTraits(), hasSize(20));
-        assertThat(gitSCMSource.getTraits(), containsInAnyOrder(
-                //Discover branches
-                allOf(
-                        new SimpleNameMatcher("BranchDiscoveryTrait")
-                        // TODO after JENKINS-67309 instanceOf(BranchDiscoveryTrait.class)
-                ),
-                // Discover tags
-                allOf(
-                        new SimpleNameMatcher("TagDiscoveryTrait")
-                        // TODO after JENKINS-67309 instanceOf(TagDiscoveryTrait.class)
-                ),
-                // Check out to matching local branch
-                allOf(
-                        instanceOf(LocalBranchTrait.class)
-                ),
-                // Clean after checkout
-                allOf(
-                        instanceOf(CleanAfterCheckoutTrait.class)
-                ),
-                // Clean before checkout
-                allOf(
-                        instanceOf(CleanBeforeCheckoutTrait.class)
-                ),
-                // Git LFS pull after checkout
-                allOf(
-                        instanceOf(GitLFSPullTrait.class)
-                ),
-                // Ignore on push notifications
-                allOf(
-                        instanceOf(IgnoreOnPushNotificationTrait.class)
-                ),
-                // Prune stale remote-tracking branches
-                allOf(
-                        instanceOf(PruneStaleBranchTrait.class)
-                ),
-                // Use commit author in changelog
-                allOf(
-                        instanceOf(AuthorInChangelogTrait.class)
-                ),
-                // Wipe out repository & force clone
-                allOf(
-                        instanceOf(WipeWorkspaceTrait.class)
-                ),
-                // Discover other refs
-                allOf(
-                        instanceOf(DiscoverOtherRefsTrait.class),
-                        hasProperty("nameMapping", equalTo("mapping")),
-                        hasProperty("ref", equalTo("other/refs"))
-                ),
-                // Filter by name (with regular expression)
-                allOf(
-                        instanceOf(RegexSCMHeadFilterTrait.class),
-                        hasProperty("regex", equalTo(".*acme*"))
-                ),
-                // Filter by name (with wildcards)
-                allOf(
-                        instanceOf(WildcardSCMHeadFilterTrait.class),
-                        hasProperty("excludes", equalTo("excluded")),
-                        hasProperty("includes", equalTo("master"))
-                ),
-                // Configure remote name
-                allOf(
-                        instanceOf(RemoteNameSCMSourceTrait.class),
-                        hasProperty("remoteName", equalTo("other_remote"))
-                ),
-                // Advanced checkout behaviours
-                allOf(
-                        instanceOf(CheckoutOptionTrait.class),
-                        hasProperty("extension", instanceOf(CheckoutOption.class)),
-                        hasProperty("extension", hasProperty("timeout", equalTo(1)))
-                ),
-                // Advanced clone behaviours
-                allOf(
-                        instanceOf(CloneOptionTrait.class),
-                        hasProperty("extension", instanceOf(CloneOption.class)),
-                        hasProperty("extension", hasProperty("depth", equalTo(2))),
-                        hasProperty("extension", hasProperty("honorRefspec", equalTo(true))),
-                        hasProperty("extension", hasProperty("noTags", equalTo(false))),
-                        hasProperty("extension", hasProperty("reference", equalTo("/my/path/2"))),
-                        hasProperty("extension", hasProperty("shallow", equalTo(true))),
-                        hasProperty("extension", hasProperty("timeout", equalTo(2)))
-                ),
-                // Advanced sub-modules behaviours
-                allOf(
-                        instanceOf(SubmoduleOptionTrait.class),
-                        hasProperty("extension", instanceOf(SubmoduleOption.class)),
-                        hasProperty("extension", hasProperty("disableSubmodules", equalTo(true))),
-                        hasProperty("extension", hasProperty("parentCredentials", equalTo(true))),
-                        hasProperty("extension", hasProperty("recursiveSubmodules", equalTo(true))),
-                        hasProperty("extension", hasProperty("reference", equalTo("/my/path/3"))),
-                        hasProperty("extension", hasProperty("timeout", equalTo(3))),
-                        hasProperty("extension", hasProperty("trackingSubmodules", equalTo(true)))
-                ),
-                // Configure Repository Browser
-                allOf(
-                        instanceOf(GitBrowserSCMSourceTrait.class),
-                        hasProperty("browser", instanceOf(BitbucketWeb.class)),
-                        hasProperty("browser", hasProperty("repoUrl", equalTo("bitbucketweb.url")))
-                ),
-                // Custom user name/e-mail address
-                allOf(
-                        instanceOf(UserIdentityTrait.class),
-                        hasProperty("extension", instanceOf(UserIdentity.class)),
-                        hasProperty("extension", hasProperty("name", equalTo("my_user"))),
-                        hasProperty("extension", hasProperty("email", equalTo("my@email.com")))
-                ),
-                // Specify ref specs
-                allOf(
-                        instanceOf(RefSpecsSCMSourceTrait.class),
-                        hasProperty("templates", hasSize(1)),
-                        hasProperty("templates", containsInAnyOrder(
-                                allOf(
-                                        instanceOf(RefSpecsSCMSourceTrait.RefSpecTemplate.class),
-                                        hasProperty("value", equalTo("+refs/heads/*:refs/remotes/@{remote}/*"))
-                                )
-                        ))
-                )
-        ));
+        assertThat(
+                gitSCMSource.getTraits(),
+                containsInAnyOrder(
+                        // Discover branches
+                        allOf(
+                                new SimpleNameMatcher("BranchDiscoveryTrait")
+                                // TODO after JENKINS-67309 instanceOf(BranchDiscoveryTrait.class)
+                                ),
+                        // Discover tags
+                        allOf(
+                                new SimpleNameMatcher("TagDiscoveryTrait")
+                                // TODO after JENKINS-67309 instanceOf(TagDiscoveryTrait.class)
+                                ),
+                        // Check out to matching local branch
+                        allOf(instanceOf(LocalBranchTrait.class)),
+                        // Clean after checkout
+                        allOf(instanceOf(CleanAfterCheckoutTrait.class)),
+                        // Clean before checkout
+                        allOf(instanceOf(CleanBeforeCheckoutTrait.class)),
+                        // Git LFS pull after checkout
+                        allOf(instanceOf(GitLFSPullTrait.class)),
+                        // Ignore on push notifications
+                        allOf(instanceOf(IgnoreOnPushNotificationTrait.class)),
+                        // Prune stale remote-tracking branches
+                        allOf(instanceOf(PruneStaleBranchTrait.class)),
+                        // Use commit author in changelog
+                        allOf(instanceOf(AuthorInChangelogTrait.class)),
+                        // Wipe out repository & force clone
+                        allOf(instanceOf(WipeWorkspaceTrait.class)),
+                        // Discover other refs
+                        allOf(
+                                instanceOf(DiscoverOtherRefsTrait.class),
+                                hasProperty("nameMapping", equalTo("mapping")),
+                                hasProperty("ref", equalTo("other/refs"))),
+                        // Filter by name (with regular expression)
+                        allOf(instanceOf(RegexSCMHeadFilterTrait.class), hasProperty("regex", equalTo(".*acme*"))),
+                        // Filter by name (with wildcards)
+                        allOf(
+                                instanceOf(WildcardSCMHeadFilterTrait.class),
+                                hasProperty("excludes", equalTo("excluded")),
+                                hasProperty("includes", equalTo("master"))),
+                        // Configure remote name
+                        allOf(
+                                instanceOf(RemoteNameSCMSourceTrait.class),
+                                hasProperty("remoteName", equalTo("other_remote"))),
+                        // Advanced checkout behaviours
+                        allOf(
+                                instanceOf(CheckoutOptionTrait.class),
+                                hasProperty("extension", instanceOf(CheckoutOption.class)),
+                                hasProperty("extension", hasProperty("timeout", equalTo(1)))),
+                        // Advanced clone behaviours
+                        allOf(
+                                instanceOf(CloneOptionTrait.class),
+                                hasProperty("extension", instanceOf(CloneOption.class)),
+                                hasProperty("extension", hasProperty("depth", equalTo(2))),
+                                hasProperty("extension", hasProperty("honorRefspec", equalTo(true))),
+                                hasProperty("extension", hasProperty("noTags", equalTo(false))),
+                                hasProperty("extension", hasProperty("reference", equalTo("/my/path/2"))),
+                                hasProperty("extension", hasProperty("shallow", equalTo(true))),
+                                hasProperty("extension", hasProperty("timeout", equalTo(2)))),
+                        // Advanced sub-modules behaviours
+                        allOf(
+                                instanceOf(SubmoduleOptionTrait.class),
+                                hasProperty("extension", instanceOf(SubmoduleOption.class)),
+                                hasProperty("extension", hasProperty("disableSubmodules", equalTo(true))),
+                                hasProperty("extension", hasProperty("parentCredentials", equalTo(true))),
+                                hasProperty("extension", hasProperty("recursiveSubmodules", equalTo(true))),
+                                hasProperty("extension", hasProperty("reference", equalTo("/my/path/3"))),
+                                hasProperty("extension", hasProperty("timeout", equalTo(3))),
+                                hasProperty("extension", hasProperty("trackingSubmodules", equalTo(true)))),
+                        // Configure Repository Browser
+                        allOf(
+                                instanceOf(GitBrowserSCMSourceTrait.class),
+                                hasProperty("browser", instanceOf(BitbucketWeb.class)),
+                                hasProperty("browser", hasProperty("repoUrl", equalTo("bitbucketweb.url")))),
+                        // Custom user name/e-mail address
+                        allOf(
+                                instanceOf(UserIdentityTrait.class),
+                                hasProperty("extension", instanceOf(UserIdentity.class)),
+                                hasProperty("extension", hasProperty("name", equalTo("my_user"))),
+                                hasProperty("extension", hasProperty("email", equalTo("my@email.com")))),
+                        // Specify ref specs
+                        allOf(
+                                instanceOf(RefSpecsSCMSourceTrait.class),
+                                hasProperty("templates", hasSize(1)),
+                                hasProperty(
+                                        "templates",
+                                        containsInAnyOrder(allOf(
+                                                instanceOf(RefSpecsSCMSourceTrait.RefSpecTemplate.class),
+                                                hasProperty(
+                                                        "value",
+                                                        equalTo("+refs/heads/*:refs/remotes/@{remote}/*"))))))));
     }
 
     @Override

@@ -4,59 +4,58 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
-import hudson.model.UserProperty;
 import hudson.model.User;
+import hudson.model.UserProperty;
 import hudson.plugins.git.util.GitUtilsTest;
 import hudson.tasks.Mailer;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 public class TestGitRepo {
-	protected String name; // The name of this repository.
-	protected TaskListener listener;
-	
-	/**
+    protected String name; // The name of this repository.
+    protected TaskListener listener;
+
+    /**
      * This is where the commit commands create a Git repository.
      */
-	public File gitDir; // was "workDir"
-	public FilePath gitDirPath; // was "workspace"
-	public GitClient git;
-	
-	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
-	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
-    
-    public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
-		this.name = name;
-		this.listener = listener;
-		
-		EnvVars envVars = GitUtilsTest.getConfigNoSystemEnvsVars();
-		
-		gitDir = tmpDir;
-		User john = User.getOrCreateByIdOrFullName(johnDoe.getName());
-		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
-		john.addProperty(johnsMailerProperty);
-		
-		User jane = User.getOrCreateByIdOrFullName(janeDoe.getName());
-		UserProperty janesMailerProperty = new Mailer.UserProperty(janeDoe.getEmailAddress());
-		jane.addProperty(janesMailerProperty);
+    public File gitDir; // was "workDir"
 
-		// initialize the git interface.
-		gitDirPath = new FilePath(gitDir);
-		git = Git.with(listener, envVars).in(gitDir).getClient();
+    public FilePath gitDirPath; // was "workspace"
+    public GitClient git;
+
+    public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
+    public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
+
+    public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
+        this.name = name;
+        this.listener = listener;
+
+        EnvVars envVars = GitUtilsTest.getConfigNoSystemEnvsVars();
+
+        gitDir = tmpDir;
+        User john = User.getOrCreateByIdOrFullName(johnDoe.getName());
+        UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
+        john.addProperty(johnsMailerProperty);
+
+        User jane = User.getOrCreateByIdOrFullName(janeDoe.getName());
+        UserProperty janesMailerProperty = new Mailer.UserProperty(janeDoe.getEmailAddress());
+        jane.addProperty(janesMailerProperty);
+
+        // initialize the git interface.
+        gitDirPath = new FilePath(gitDir);
+        git = Git.with(listener, envVars).in(gitDir).getClient();
 
         // finally: initialize the repo
-		git.init();
+        git.init();
         git.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
         git.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
-	}
-	
+    }
+
     /**
      * Creates a commit in current repo.
      * @param fileName relative path to the file to be committed with default content
@@ -81,7 +80,8 @@ public class TestGitRepo {
      * @throws GitException on git error
      * @throws InterruptedException when interrupted
      */
-    public String commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message)
+    public String commit(
+            final String fileName, final PersonIdent author, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
         return commit(fileName, fileName, author, committer, message);
     }
@@ -96,7 +96,8 @@ public class TestGitRepo {
      * @throws GitException on git error
      * @throws InterruptedException when interrupted
      */
-    public String commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
+    public String commit(
+            final String fileName, final String fileContent, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
         return commit(fileName, fileContent, committer, committer, message);
     }
@@ -112,8 +113,13 @@ public class TestGitRepo {
      * @throws GitException on git error
      * @throws InterruptedException when interrupted
      */
-    public String commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
-                         final String message) throws GitException, InterruptedException {
+    public String commit(
+            final String fileName,
+            final String fileContent,
+            final PersonIdent author,
+            final PersonIdent committer,
+            final String message)
+            throws GitException, InterruptedException {
         FilePath file = gitDirPath.child(fileName);
         try {
             file.write(fileContent, null);

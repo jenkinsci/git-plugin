@@ -8,6 +8,10 @@ import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
 import hudson.util.MultipartFormDataParser;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import javax.servlet.ServletException;
 import jenkins.model.*;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -16,11 +20,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
-
-import javax.servlet.ServletException;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * @author Nicolas de Loof
@@ -65,8 +64,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     @Override
     public String getIconFileName() {
-        if (!isTagged() && !getACL().hasPermission(getPermission()))
-            return null;
+        if (!isTagged() && !getACL().hasPermission(getPermission())) return null;
         return "save.gif";
     }
 
@@ -76,16 +74,12 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         for (List<String> v : tags.values()) {
             if (!v.isEmpty()) {
                 nonNullTag += v.size();
-                if (nonNullTag > 1)
-                    break;
+                if (nonNullTag > 1) break;
             }
         }
-        if (nonNullTag == 0)
-            return "No Tags";
-        if (nonNullTag == 1)
-            return "One tag";
-        else
-            return "Multiple tags";
+        if (nonNullTag == 0) return "No Tags";
+        if (nonNullTag == 1) return "One tag";
+        else return "Multiple tags";
     }
 
     /**
@@ -101,8 +95,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         List<TagInfo> data = new ArrayList<>();
         for (Map.Entry<String, List<String>> e : tags.entrySet()) {
             String module = e.getKey();
-            for (String tag : e.getValue())
-                data.add(new TagInfo(module, tag));
+            for (String tag : e.getValue()) data.add(new TagInfo(module, tag));
         }
         return data;
     }
@@ -188,16 +181,14 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     public class TagWorkerThread extends TaskThread {
         private final Map<String, String> tagSet;
 
-        public TagWorkerThread(Map<String, String> tagSet,String ignoredComment) {
+        public TagWorkerThread(Map<String, String> tagSet, String ignoredComment) {
             super(GitTagAction.this, ListenerAndText.forMemory(null));
             this.tagSet = tagSet;
         }
 
         protected GitClient getGitClient(TaskListener listener, EnvVars environment, FilePath workspace)
                 throws IOException, InterruptedException {
-            return Git.with(listener, environment)
-                    .in(workspace)
-                    .getClient();
+            return Git.with(listener, environment).in(workspace).getClient();
         }
 
         @Override
@@ -208,9 +199,8 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
             for (Map.Entry<String, String> entry : tagSet.entrySet()) {
                 try {
-                    String buildNum = "jenkins-"
-                                     + getRun().getParent().getName().replace(" ", "_")
-                                     + "-" + entry.getValue();
+                    String buildNum =
+                            "jenkins-" + getRun().getParent().getName().replace(" ", "_") + "-" + entry.getValue();
                     git.tag(entry.getValue(), "Jenkins Build #" + buildNum);
                     lastTagName = entry.getValue();
 
@@ -219,8 +209,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
                     getRun().save();
                     workerThread = null;
-                }
-                catch (GitException ex) {
+                } catch (GitException ex) {
                     lastTagException = ex;
                     ex.printStackTrace(listener.error("Error tagging repo '%s' : %s", entry.getKey(), ex.getMessage()));
                     // Failed. Try the next one
@@ -229,7 +218,6 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             }
         }
     }
-
 
     @Override
     public Permission getPermission() {

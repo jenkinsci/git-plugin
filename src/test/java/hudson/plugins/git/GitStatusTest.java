@@ -1,5 +1,9 @@
 package hudson.plugins.git;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -17,26 +21,19 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
 import java.io.File;
 import java.io.PrintWriter;
-import java.net.URISyntaxException;
 import java.util.*;
-import org.eclipse.jgit.transport.URIish;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.kohsuke.stapler.HttpResponses;
-import org.mockito.Mockito;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import static org.junit.Assert.*;
+import javax.servlet.http.HttpServletRequest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-
-import javax.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.mockito.Mockito;
 
 public class GitStatusTest extends AbstractGitProject {
 
@@ -59,7 +56,8 @@ public class GitStatusTest extends AbstractGitProject {
         this.branch = "**";
         this.sha1 = "7bb68ef21dc90bd4f7b08eca876203b2e049198d";
         if (r.jenkins != null) {
-            this.notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
+            this.notifyCommitApiToken =
+                    ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         }
     }
 
@@ -99,7 +97,8 @@ public class GitStatusTest extends AbstractGitProject {
                 Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
                 r.waitForCompletion(run);
             } catch (InterruptedException ex) {
-                Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
+                Logger.getLogger(GitStatusTest.class.getName())
+                        .log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
             }
         });
     }
@@ -161,7 +160,8 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
         SCMTrigger bFeatureTrigger = setupProjectWithTrigger("b", "feature/def", false);
 
-        this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master,topic,feature/def", null, notifyCommitApiToken);
+        this.gitStatus.doNotifyCommit(
+                requestWithNoParameter, "a", "master,topic,feature/def", null, notifyCommitApiToken);
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(aTopicTrigger).run();
         Mockito.verify(aFeatureTrigger).run();
@@ -256,7 +256,8 @@ public class GitStatusTest extends AbstractGitProject {
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, "does,not,include,param");
     }
 
-    private void doNotifyCommitWithTwoBranchesAndAdditionalParameter(final boolean allowed, String safeParameters) throws Exception {
+    private void doNotifyCommitWithTwoBranchesAndAdditionalParameter(final boolean allowed, String safeParameters)
+            throws Exception {
         if (allowed) {
             GitStatus.setAllowNotifyCommitParameters(true);
         }
@@ -293,7 +294,8 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     public void testDoNotifyCommitBranchWithRegex() throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", ":[^/]*/awesome-feature", false);
-        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
+        this.gitStatus.doNotifyCommit(
+                requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
         Mockito.verify(trigger).run();
     }
@@ -301,25 +303,29 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     public void testDoNotifyCommitBranchWithWildcard() throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", "origin/feature/*", false);
-        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
+        this.gitStatus.doNotifyCommit(
+                requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
         Mockito.verify(trigger).run();
     }
 
     private void assertAdditionalParameters(Collection<? extends Action> actions) {
-        for (Action action: actions) {
+        for (Action action : actions) {
             if (action instanceof ParametersAction) {
                 final List<ParameterValue> parameters = ((ParametersAction) action).getParameters();
                 assertEquals(2, parameters.size());
                 for (ParameterValue value : parameters) {
-                    assertTrue((value.getName().equals("paramKey1") && value.getValue().equals("paramValue1"))
-                            || (value.getName().equals("paramKey2") && value.getValue().equals("paramValue2")));
+                    assertTrue((value.getName().equals("paramKey1")
+                                    && value.getValue().equals("paramValue1"))
+                            || (value.getName().equals("paramKey2")
+                                    && value.getValue().equals("paramValue2")));
                 }
             }
         }
     }
 
-    private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
+    private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit)
+            throws Exception {
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         Mockito.doReturn(ignoreNotifyCommit).when(trigger).isIgnorePostCommitHooks();
         setupProject(url, branchString, trigger);
@@ -331,7 +337,8 @@ public class GitStatusTest extends AbstractGitProject {
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(git);
         if (trigger != null) project.addTrigger(trigger);
@@ -343,7 +350,8 @@ public class GitStatusTest extends AbstractGitProject {
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
                 Collections.singletonList(new BranchSpec(branch)),
-                null, null,
+                null,
+                null,
                 Collections.emptyList());
         project.setScm(git);
         project.addTrigger(new SCMTrigger("")); // Required for GitStatus to see polling request
@@ -369,12 +377,11 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommit() throws Exception { /* No parameters */
+    public void testDoNotifyCommit() throws Exception {
+        /* No parameters */
         setupNotifyProject();
         this.gitStatus.doNotifyCommit(requestWithNoParameter, repoURL, branch, sha1, notifyCommitApiToken);
-        assertEquals("URL: " + repoURL
-                + " SHA1: " + sha1
-                + " Branches: " + branch, this.gitStatus.toString());
+        assertEquals("URL: " + repoURL + " SHA1: " + sha1 + " Branches: " + branch, this.gitStatus.toString());
     }
 
     @Test
@@ -397,7 +404,8 @@ public class GitStatusTest extends AbstractGitProject {
         doNotifyCommitWithExtraParameterAllowed(false, "something,is,not,here");
     }
 
-    private void doNotifyCommitWithExtraParameterAllowed(final boolean allowed, String safeParameters) throws Exception {
+    private void doNotifyCommitWithExtraParameterAllowed(final boolean allowed, String safeParameters)
+            throws Exception {
         if (allowed) {
             GitStatus.setAllowNotifyCommitParameters(true);
         }
@@ -427,9 +435,7 @@ public class GitStatusTest extends AbstractGitProject {
         setupNotifyProject();
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(null));
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1, notifyCommitApiToken);
-        assertEquals("URL: " + repoURL
-                + " SHA1: " + sha1
-                + " Branches: " + branch, this.gitStatus.toString());
+        assertEquals("URL: " + repoURL + " SHA1: " + sha1 + " Branches: " + branch, this.gitStatus.toString());
     }
 
     @Test
@@ -454,7 +460,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithDefaultUnsafeParameterExtra() throws Exception {
-       doNotifyCommitWithDefaultParameter(false, "A,B,C");
+        doNotifyCommitWithDefaultParameter(false, "A,B,C");
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
@@ -480,14 +486,12 @@ public class GitStatusTest extends AbstractGitProject {
         project.addProperty(new ParametersDefinitionProperty(
                 new StringParameterDefinition("A", "aaa"),
                 new StringParameterDefinition("C", "ccc"),
-                new StringParameterDefinition("B", "$A$C")
-        ));
-        final CommandInterpreter script = isWindows()
-                ? new BatchFile("echo %A% %B% %C%")
-                : new Shell("echo $A $B $C");
+                new StringParameterDefinition("B", "$A$C")));
+        final CommandInterpreter script = isWindows() ? new BatchFile("echo %A% %B% %C%") : new Shell("echo $A $B $C");
         project.getBuildersList().add(script);
 
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
+        FreeStyleBuild build =
+                project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 
         r.waitForMessage("aaa aaaccc ccc", build);
 
@@ -514,7 +518,8 @@ public class GitStatusTest extends AbstractGitProject {
         if (jobUrl == null) {
             return true; // Always run tests when not inside a CI environment
         }
-        return !jobUrl.contains("ci.jenkins.io"); // Skip some tests on ci.jenkins.io, windows cleanup is unreliable on those machines
+        return !jobUrl.contains(
+                "ci.jenkins.io"); // Skip some tests on ci.jenkins.io, windows cleanup is unreliable on those machines
     }
 
     /**
@@ -533,7 +538,8 @@ public class GitStatusTest extends AbstractGitProject {
             projectTriggers[i] = setupProjectWithTrigger("a", "master", false);
         }
 
-        HttpResponse rsp = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, notifyCommitApiToken);
+        HttpResponse rsp =
+                this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, notifyCommitApiToken);
 
         // Up to 10 "Triggered" headers + 1 extra warning are returned.
         StaplerRequest sReq = mock(StaplerRequest.class);
@@ -557,12 +563,13 @@ public class GitStatusTest extends AbstractGitProject {
 
         String content = "<img src=onerror=alert(1)>";
 
-        HttpResponse rsp = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", content, notifyCommitApiToken);
+        HttpResponse rsp =
+                this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", content, notifyCommitApiToken);
 
         HttpResponses.HttpResponseException responseException = ((HttpResponses.HttpResponseException) rsp);
-        assertEquals(IllegalArgumentException.class, responseException.getCause().getClass());
+        assertEquals(
+                IllegalArgumentException.class, responseException.getCause().getClass());
         assertEquals("Illegal SHA1", responseException.getCause().getMessage());
-
     }
 
     @Test
@@ -586,7 +593,8 @@ public class GitStatusTest extends AbstractGitProject {
         setupProjectWithTrigger("a", "master", false);
         StaplerResponse res = mock(StaplerResponse.class);
 
-        HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, "invalid");
+        HttpResponse httpResponse =
+                this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, "invalid");
         httpResponse.generateResponse(null, res, null);
 
         Mockito.verify(res).sendError(403, "Invalid access token");
@@ -613,7 +621,10 @@ public class GitStatusTest extends AbstractGitProject {
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, null);
         httpResponse.generateResponse(null, res, null);
 
-        Mockito.verify(res).sendError(401, "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
+        Mockito.verify(res)
+                .sendError(
+                        401,
+                        "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
     }
 
     @Test
@@ -626,7 +637,10 @@ public class GitStatusTest extends AbstractGitProject {
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", sha1, null);
         httpResponse.generateResponse(null, res, null);
 
-        Mockito.verify(res).sendError(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
+        Mockito.verify(res)
+                .sendError(
+                        401,
+                        "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
     }
 
     @Test
@@ -636,7 +650,8 @@ public class GitStatusTest extends AbstractGitProject {
         setupProjectWithTrigger("a", "master", false);
         StaplerResponse res = mock(StaplerResponse.class);
 
-        HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", sha1, "invalid");
+        HttpResponse httpResponse =
+                this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", sha1, "invalid");
         httpResponse.generateResponse(null, res, null);
 
         Mockito.verify(res).sendError(403, "Invalid access token");

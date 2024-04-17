@@ -1,5 +1,7 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -10,23 +12,17 @@ import hudson.plugins.git.Messages;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import javax.servlet.ServletException;
-
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * @author Manolo Carrasco Moñino
@@ -60,7 +56,6 @@ public class Gitiles extends GitRepositoryBrowser {
         return new URL(url + "+/" + changeSet.getId() + "%5E%21");
     }
 
-
     @Extension
     @Symbol("gitiles")
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
@@ -70,18 +65,20 @@ public class Gitiles extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
+        @SuppressFBWarnings(
+                value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                justification = "Inherited javadoc commits that req is non-null")
         public Gitiles newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(Gitiles.class, jsonObject);
         }
 
         @RequirePOST
-        public FormValidation doCheckRepoUrl(@AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
+        public FormValidation doCheckRepoUrl(
+                @AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-            if(initialChecksAndReturnOk(project, cleanUrl)){
+            if (initialChecksAndReturnOk(project, cleanUrl)) {
                 return FormValidation.ok();
             }
             if (!validateUrl(cleanUrl)) {
@@ -90,8 +87,7 @@ public class Gitiles extends GitRepositoryBrowser {
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {
                     String v = cleanUrl;
-                    if (!v.endsWith("/"))
-                        v += '/';
+                    if (!v.endsWith("/")) v += '/';
 
                     try {
                         // gitiles has a line in main page indicating how to clone the project

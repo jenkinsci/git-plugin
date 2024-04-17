@@ -2,9 +2,9 @@ package hudson.plugins.git;
 
 import static org.junit.Assert.*;
 
-import org.eclipse.jgit.transport.URIish;
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.jgit.transport.URIish;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -1,17 +1,16 @@
 package hudson.plugins.git;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
-import org.junit.Test;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
+import org.junit.Test;
 
 public class RevisionParameterActionRemoteUrlTest {
 
@@ -47,7 +46,8 @@ public class RevisionParameterActionRemoteUrlTest {
 
         URIish remoteURL1 = new URIish("https://github.com/jenkinsci/multiple-scms-plugin.git");
         URIish remoteURL2 = new URIish("https://github.com/jenkinsci/git-plugin.git");
-        assertTrue("should return true when any remote matches", target.canOriginateFrom(remotes(remoteURL1, remoteURL2)));
+        assertTrue(
+                "should return true when any remote matches", target.canOriginateFrom(remotes(remoteURL1, remoteURL2)));
     }
 
     private List<RemoteConfig> remotes(URIish... remoteURLs) {

@@ -13,8 +13,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class DisableRemotePoll extends GitSCMExtension {
 
     @DataBoundConstructor
-    public DisableRemotePoll() {
-    }
+    public DisableRemotePoll() {}
 
     @Override
     public boolean requiresWorkspaceForPolling() {

@@ -1,5 +1,8 @@
 package hudson.plugins.git.extensions.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import hudson.EnvVars;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -14,10 +17,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
 import org.jvnet.hudson.test.WithoutJenkins;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-
-public class UserIdentityTest extends GitSCMExtensionTest  {
+public class UserIdentityTest extends GitSCMExtensionTest {
 
     TestGitRepo repo;
     GitClient git;
@@ -35,7 +35,9 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
     @Test
     public void testUserIdentity() throws Exception {
         repo = new TestGitRepo("repo", tmp.newFolder(), listener);
-        git = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(repo.gitDir).getClient();
+        git = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars())
+                .in(repo.gitDir)
+                .getClient();
 
         FreeStyleProject projectWithMaster = setupBasicProject(repo);
         git.commit("First commit");
@@ -48,7 +50,7 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
 
     @Test
     @WithoutJenkins
-    public void testGetNameAndEmail(){
+    public void testGetNameAndEmail() {
         UserIdentity userIdentity = new UserIdentity("Jane Doe", "janeDoe@xyz.com");
 
         assertThat("Jane Doe", is(userIdentity.getName()));
@@ -58,8 +60,6 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
     @Test
     @WithoutJenkins
     public void equalsContract() {
-        EqualsVerifier.forClass(UserIdentity.class)
-                .usingGetClass()
-                .verify();
+        EqualsVerifier.forClass(UserIdentity.class).usingGetClass().verify();
     }
 }

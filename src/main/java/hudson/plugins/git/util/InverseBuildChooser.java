@@ -1,16 +1,15 @@
 package hudson.plugins.git.util;
 
-import hudson.Extension;
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.remoting.VirtualChannel;
+import java.io.IOException;
+import java.util.*;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Git build chooser which will select all branches <strong>except</strong> for those which match the
@@ -33,13 +32,17 @@ public class InverseBuildChooser extends BuildChooser {
     private static final BranchSpec HEAD = new BranchSpec("*/HEAD");
 
     @DataBoundConstructor
-    public InverseBuildChooser() {
-    }
+    public InverseBuildChooser() {}
 
     @Override
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall,
-            String singleBranch, GitClient git, TaskListener listener,
-            BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+    public Collection<Revision> getCandidateRevisions(
+            boolean isPollCall,
+            String singleBranch,
+            GitClient git,
+            TaskListener listener,
+            BuildData buildData,
+            BuildChooserContext context)
+            throws GitException, IOException, InterruptedException {
 
         EnvVars env = context.getEnvironment();
         GitUtils utils = new GitUtils(listener, git);
@@ -104,5 +107,4 @@ public class InverseBuildChooser extends BuildChooser {
     }
 
     private static final long serialVersionUID = 1L;
-
 }

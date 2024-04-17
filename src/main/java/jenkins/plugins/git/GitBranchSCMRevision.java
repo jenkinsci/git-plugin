@@ -24,12 +24,9 @@
  */
 package jenkins.plugins.git;
 
-
 public class GitBranchSCMRevision extends AbstractGitSCMSource.SCMRevisionImpl {
 
     public GitBranchSCMRevision(GitBranchSCMHead head, String hash) {
         super(head, hash);
     }
-
-
 }
