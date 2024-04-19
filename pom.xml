@@ -102,9 +102,15 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-<!--      <version>4.7.1-SNAPSHOT</version>-->
-      <version>4.7.1-rc3538.374a_a_a_b_91b_a_b_</version>
+      <version>4.7.1-SNAPSHOT</version>
+<!--      <version>4.7.1-rc3538.374a_a_a_b_91b_a_b_</version>-->
     </dependency>
+    <!-- this could be optional? -->
+<!--    <dependency>-->
+<!--      <groupId>net.i2p.crypto</groupId>-->
+<!--      <artifactId>eddsa</artifactId>-->
+<!--      <version>0.3.0</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
