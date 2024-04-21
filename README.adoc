@@ -1590,7 +1590,7 @@ for (job in allItems) {
   def counter = 0;
   for (build in job.getBuilds()) {
     // It is possible for a build to have multiple BuildData actions
-    // since we can use the Mulitple SCM plugin.
+    // since we can use the Multiple SCM plugin.
     def gitActions = build.getActions(hudson.plugins.git.util.BuildData.class)
     if (gitActions != null) {
       for (action in gitActions) {
