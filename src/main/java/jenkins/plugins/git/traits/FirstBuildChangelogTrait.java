@@ -36,7 +36,7 @@ public class FirstBuildChangelogTrait extends GitSCMExtensionTrait<FirstBuildCha
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("FirstBuildChangelog")
+    @Symbol("firstBuildChangelog")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}
