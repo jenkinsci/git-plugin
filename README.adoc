@@ -1232,8 +1232,8 @@ The Jenkins git plugin provides an option to trigger pipeline build process on t
  checkout scmGit(branches: [[name: 'master']],
                                 extensions: [firstBuildChangelog()],
                                 userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
-
 ----
+
 [#merge-extensions]
 === Merge Extensions
 
