@@ -1,13 +1,12 @@
 package hudson.plugins.git.browser;
 
-import static org.junit.Assert.*;
-
 import hudson.plugins.git.GitChangeSet;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Test;
+import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -47,8 +46,7 @@ public class GitilesTest {
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = gitiles.getDiffLink(path);
             URL expectedDiffLink = new URL(repoUrl + "+/" + sample.id + "%5E%21");
-            String msg = "Wrong link for path: " + path.getPath() + ", edit type: "
-                    + path.getEditType().getName();
+            String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + path.getEditType().getName();
             assertEquals(msg, expectedDiffLink, diffLink);
         }
     }
@@ -59,8 +57,7 @@ public class GitilesTest {
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL fileLink = gitiles.getFileLink(path);
             URL expectedFileLink = new URL(repoUrl + "+blame/" + sample.id + "/" + path.getPath());
-            String msg = "Wrong link for path: " + path.getPath() + ", edit type: "
-                    + path.getEditType().getName();
+            String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + path.getEditType().getName();
             assertEquals(msg, expectedFileLink, fileLink);
         }
     }

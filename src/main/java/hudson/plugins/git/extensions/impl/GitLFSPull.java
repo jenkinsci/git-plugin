@@ -1,6 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -11,11 +10,12 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.List;
 import org.eclipse.jgit.transport.RemoteConfig;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * git-lfs-pull after the checkout.
@@ -24,15 +24,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class GitLFSPull extends GitSCMExtension {
     @DataBoundConstructor
-    public GitLFSPull() {}
+    public GitLFSPull() {
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void decorateCheckoutCommand(
-            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Enabling Git LFS pull");
         List<RemoteConfig> repos = scm.getParamExpandedRepos(build, listener);
         // repos should never be empty, but check anyway

@@ -44,7 +44,8 @@ public class LogHandler extends Handler {
     }
 
     @Override
-    public void flush() {}
+    public void flush() {
+    }
 
     @Override
     public void close() throws SecurityException {

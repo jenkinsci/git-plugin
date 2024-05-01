@@ -24,16 +24,16 @@
  */
 package jenkins.plugins.git;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.instanceOf;
-
 import hudson.ExtensionList;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ModernScmTest {
 
@@ -43,8 +43,7 @@ public class ModernScmTest {
     @Test
     @Issue("JENKINS-58964")
     public void gitIsModernScm() {
-        SCMSourceRetriever.DescriptorImpl descriptor =
-                ExtensionList.lookupSingleton(SCMSourceRetriever.DescriptorImpl.class);
+        SCMSourceRetriever.DescriptorImpl descriptor = ExtensionList.lookupSingleton(SCMSourceRetriever.DescriptorImpl.class);
         assertThat(descriptor.getSCMDescriptors(), hasItem(instanceOf(GitSCMSource.DescriptorImpl.class)));
     }
 }

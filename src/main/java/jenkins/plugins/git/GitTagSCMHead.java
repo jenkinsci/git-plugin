@@ -58,4 +58,5 @@ public class GitTagSCMHead extends SCMHead implements TagSCMHead {
     public long getTimestamp() {
         return timestamp;
     }
+
 }

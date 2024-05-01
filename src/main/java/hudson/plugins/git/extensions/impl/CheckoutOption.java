@@ -1,6 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -13,11 +12,12 @@ import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.Objects;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Add options to the checkout command.
@@ -41,9 +41,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
      * {@inheritDoc}
      */
     @Override
-    public void decorateCheckoutCommand(
-            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.timeout(timeout);
     }
 
@@ -57,9 +55,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
      */
     @Override
     @Deprecated
-    public void decorateCheckoutCommand(
-            GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateCheckoutCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.timeout(timeout);
     }
 
@@ -93,7 +89,9 @@ public class CheckoutOption extends FakeGitSCMExtension {
      */
     @Override
     public String toString() {
-        return "CheckoutOption{" + "timeout=" + timeout + '}';
+        return "CheckoutOption{" +
+                "timeout=" + timeout +
+                '}';
     }
 
     @Extension
@@ -108,4 +106,5 @@ public class CheckoutOption extends FakeGitSCMExtension {
             return Messages.advanced_checkout_behaviours();
         }
     }
+
 }

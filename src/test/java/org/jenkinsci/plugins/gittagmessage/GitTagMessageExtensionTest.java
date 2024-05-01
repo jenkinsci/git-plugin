@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.gittagmessage;
 
-import static org.jenkinsci.plugins.gittagmessage.GitTagMessageAction.ENV_VAR_NAME_MESSAGE;
-import static org.jenkinsci.plugins.gittagmessage.GitTagMessageAction.ENV_VAR_NAME_TAG;
-
 import hudson.Functions;
 import hudson.Util;
 import hudson.model.FreeStyleBuild;
@@ -13,7 +10,11 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Builder;
 import hudson.tasks.Shell;
+
 import java.util.Collections;
+
+import static org.jenkinsci.plugins.gittagmessage.GitTagMessageAction.ENV_VAR_NAME_MESSAGE;
+import static org.jenkinsci.plugins.gittagmessage.GitTagMessageAction.ENV_VAR_NAME_TAG;
 
 public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTest<FreeStyleProject, FreeStyleBuild> {
 
@@ -23,16 +24,14 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
      * @param useMostRecentTag true to use the most recent tag rather than the exact one.
      * @return A job configured with the test Git repo, given settings, and the Git Tag Message extension.
      */
-    protected FreeStyleProject configureGitTagMessageJob(String refSpec, String branchSpec, boolean useMostRecentTag)
-            throws Exception {
+    protected FreeStyleProject configureGitTagMessageJob(String refSpec, String branchSpec, boolean useMostRecentTag) throws Exception {
         GitTagMessageExtension extension = new GitTagMessageExtension();
         extension.setUseMostRecentTag(useMostRecentTag);
         UserRemoteConfig remote = new UserRemoteConfig(repoDir.getRoot().getAbsolutePath(), "origin", refSpec, null);
         GitSCM scm = new GitSCM(
                 Collections.singletonList(remote),
                 Collections.singletonList(new BranchSpec(branchSpec)),
-                null,
-                null,
+                null, null,
                 Collections.singletonList(extension));
 
         FreeStyleProject job = r.createFreeStyleProject();
@@ -56,4 +55,5 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
         }
         return new Shell(String.format("echo \"%s='${%s}'\"", key, envVarName));
     }
+
 }

@@ -1,14 +1,11 @@
 package org.jenkinsci.plugins.gittagmessage;
 
-import static org.junit.Assert.assertNotNull;
-
 import hudson.model.Job;
 import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtilsTest;
-import java.io.IOException;
 import jenkins.model.ParameterizedJobMixIn;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.util.SystemReader;
@@ -21,14 +18,15 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
-public abstract class AbstractGitTagMessageExtensionTest<
-        J extends Job<J, R> & ParameterizedJobMixIn.ParameterizedJob<J, R>, R extends Run<J, R> & Queue.Executable> {
+import java.io.IOException;
 
-    @Rule
-    public final JenkinsRule r = new JenkinsRule();
+import static org.junit.Assert.assertNotNull;
 
-    @Rule
-    public final TemporaryFolder repoDir = new TemporaryFolder();
+public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & ParameterizedJobMixIn.ParameterizedJob<J, R>, R extends Run<J, R> & Queue.Executable> {
+
+    @Rule public final JenkinsRule r = new JenkinsRule();
+
+    @Rule public final TemporaryFolder repoDir = new TemporaryFolder();
 
     private GitClient repo;
 
@@ -38,8 +36,7 @@ public abstract class AbstractGitTagMessageExtensionTest<
      * @param useMostRecentTag true to use the most recent tag rather than the exact one.
      * @return A job configured with the test Git repo, given settings, and the Git Tag Message extension.
      */
-    protected abstract J configureGitTagMessageJob(String refSpec, String branchSpec, boolean useMostRecentTag)
-            throws Exception;
+    protected abstract J configureGitTagMessageJob(String refSpec, String branchSpec, boolean useMostRecentTag) throws Exception;
 
     /** @return A job configured with the test Git repo, default settings, and the Git Tag Message extension. */
     private J configureGitTagMessageJob() throws Exception {
@@ -53,9 +50,7 @@ public abstract class AbstractGitTagMessageExtensionTest<
     public void setUp() throws IOException, InterruptedException, ConfigInvalidException {
         SystemReader.getInstance().getUserConfig().clear();
         // Set up a temporary git repository for each test case
-        repo = Git.with(r.createTaskListener(), GitUtilsTest.getConfigNoSystemEnvsVars())
-                .in(repoDir.getRoot())
-                .getClient();
+        repo = Git.with(r.createTaskListener(), GitUtilsTest.getConfigNoSystemEnvsVars()).in(repoDir.getRoot()).getClient();
         repo.init();
     }
 
@@ -135,7 +130,8 @@ public abstract class AbstractGitTagMessageExtensionTest<
         repo.tag("gamma/1", "Gamma #1");
 
         // When a build is executed which is configured to only build beta/* tags
-        J job = configureGitTagMessageJob("+refs/tags/beta/*:refs/remotes/origin/tags/beta/*", "*/tags/beta/*", false);
+        J job = configureGitTagMessageJob("+refs/tags/beta/*:refs/remotes/origin/tags/beta/*",
+                "*/tags/beta/*", false);
         R run = buildJobAndAssertSuccess(job);
 
         // Then the selected tag info should be exported, even although it's not the latest tag
@@ -158,8 +154,7 @@ public abstract class AbstractGitTagMessageExtensionTest<
     }
 
     @Test
-    public void commitWithMultipleTagsOnPreviousCommitWithConfigurationOptInShouldExportThatTagMessage()
-            throws Exception {
+    public void commitWithMultipleTagsOnPreviousCommitWithConfigurationOptInShouldExportThatTagMessage() throws Exception {
         // Given a git repo which has been tagged on a previous commit with multiple tags
         repo.commit("commit 1");
         repo.tag("release-candidate-1.0", "This is the first release candidate.");
@@ -185,4 +180,5 @@ public abstract class AbstractGitTagMessageExtensionTest<
         assertNotNull(build.getAction(BuildData.class));
         return build;
     }
+
 }

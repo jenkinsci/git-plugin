@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
@@ -345,13 +346,14 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     public final List<RefSpec> asRefSpecs() {
         List<RefSpec> result = new ArrayList<>(Math.max(refSpecs.size(), 1));
         if (wantOtherRefs() && wantBranches()) {
-            // If wantOtherRefs() there will be a refspec in the list not added manually by a user
-            // So if also wantBranches() we need to add the default respec for branches so we actually fetch them
+            //If wantOtherRefs() there will be a refspec in the list not added manually by a user
+            //So if also wantBranches() we need to add the default respec for branches so we actually fetch them
             result.add(new RefSpec("+" + Constants.R_HEADS + "*:" + Constants.R_REMOTES + remoteName() + "/*"));
         }
         for (String template : refSpecs()) {
             result.add(new RefSpec(
-                    template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName())));
+                    template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName())
+            ));
         }
         return result;
     }
@@ -404,7 +406,8 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
 
             RefNameMapping that = (RefNameMapping) o;
 
-            return Objects.equals(ref, that.ref) && Objects.equals(name, that.name);
+            return Objects.equals(ref, that.ref)
+                    && Objects.equals(name, that.name);
         }
 
         @Override
@@ -420,8 +423,8 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
         public boolean matches(String revision, String remoteName, String remoteRev) {
             final Matcher matcher = refAsPattern().matcher(remoteName);
             if (matcher.matches()) {
-                // TODO support multiple capture groups?
-                if (matcher.groupCount() > 0) { // Group 0 apparently not in this count according to javadoc
+                //TODO support multiple capture groups?
+                if (matcher.groupCount() > 0) { //Group 0 apparently not in this count according to javadoc
                     String resolvedName = name.replace("@{1}", matcher.group(1));
                     return resolvedName.equals(revision);
                 } else {
@@ -439,7 +442,7 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
         public String getName(String remoteName) {
             final Matcher matcher = refAsPattern().matcher(remoteName);
             if (matcher.matches()) {
-                if (matcher.groupCount() > 0) { // Group 0 apparently not in this count according to javadoc
+                if (matcher.groupCount() > 0) { //Group 0 apparently not in this count according to javadoc
                     return name.replace("@{1}", matcher.group(1));
                 } else if (!name.contains("@{1}")) {
                     return name;
@@ -448,4 +451,5 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
             return null;
         }
     }
+
 }

@@ -1,18 +1,5 @@
 package hudson.plugins.git;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Descriptor;
-import hudson.model.FreeStyleProject;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM.DescriptorImpl;
-import hudson.plugins.git.extensions.impl.LocalBranch;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -27,13 +14,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import javax.servlet.ServletException;
-import jenkins.plugins.git.GitSampleRepoRule;
+
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleProject;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
+import hudson.plugins.git.extensions.impl.LocalBranch;
+
 import org.eclipse.jgit.lib.ObjectId;
-import org.htmlunit.html.HtmlForm;
-import org.htmlunit.html.HtmlPage;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+
+import jenkins.plugins.git.GitSampleRepoRule;
+
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -41,6 +47,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+
+import javax.servlet.ServletException;
 
 /**
  * Test git tag action. Low value test that was created as part of
@@ -72,7 +80,8 @@ public class GitTagActionTest {
     @ClassRule
     public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
-    public GitTagActionTest() {}
+    public GitTagActionTest() {
+    }
 
     private static FreeStyleProject p;
     private static GitClient workspaceGitClient = null;
@@ -213,9 +222,7 @@ public class GitTagActionTest {
         assertThat(stringWriter.toString(), containsString(commitMessage));
 
         /* Fail if master branch is not defined in the workspace */
-        assertThat(
-                workspaceGitClient.getRemoteUrl("origin"),
-                is(sampleRepo.fileUrl().replace("file:/", "file:///")));
+        assertThat(workspaceGitClient.getRemoteUrl("origin"), is(sampleRepo.fileUrl().replace("file:/", "file:///")));
         Set<Branch> branches = workspaceGitClient.getBranches();
         if (branches.isEmpty()) {
             /* Should not be required since the LocalBranch extension was enabled */
@@ -281,15 +288,16 @@ public class GitTagActionTest {
             }
 
             @Override
-            protected GitClient getGitClient(TaskListener listener, EnvVars environment, FilePath workspace)
-                    throws IOException, InterruptedException {
+            protected GitClient getGitClient(TaskListener listener, EnvVars environment, FilePath workspace) throws IOException, InterruptedException {
                 GitClient gitClient = super.getGitClient(listener, environment, workspace);
                 gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
                 gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
                 return gitClient;
             }
         }
+
     }
+
 
     private static Set<String> getMatchingTagNames() throws Exception {
         Set<GitObject> tags = workspaceGitClient.getTags();

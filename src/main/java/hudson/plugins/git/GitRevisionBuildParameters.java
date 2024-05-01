@@ -41,50 +41,51 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class GitRevisionBuildParameters extends AbstractBuildParameters {
 
-    private boolean combineQueuedCommits = false;
+	private boolean combineQueuedCommits = false;
 
-    @DataBoundConstructor
-    public GitRevisionBuildParameters(boolean combineQueuedCommits) {
-        this.combineQueuedCommits = combineQueuedCommits;
-    }
+	@DataBoundConstructor
+	public GitRevisionBuildParameters(boolean combineQueuedCommits) {
+		this.combineQueuedCommits = combineQueuedCommits;
+	}
 
-    public GitRevisionBuildParameters() {}
+	public GitRevisionBuildParameters() {
+	}
 
-    @Override
-    public Action getAction(AbstractBuild<?, ?> build, TaskListener listener) {
-        BuildData data = build.getAction(BuildData.class);
-        if (data == null && Jenkins.get().getPlugin("promoted-builds") != null) {
+	@Override
+	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
+		BuildData data = build.getAction(BuildData.class);
+		if (data == null && Jenkins.get().getPlugin("promoted-builds") != null) {
             if (build instanceof hudson.plugins.promoted_builds.Promotion) {
                 // We are running as a build promotion, so have to retrieve the git scm from target job
-                AbstractBuild<?, ?> targetBuild = ((hudson.plugins.promoted_builds.Promotion) build).getTargetBuild();
+                AbstractBuild<?,?> targetBuild = ((hudson.plugins.promoted_builds.Promotion) build).getTargetBuild();
                 if (targetBuild != null) {
                     data = targetBuild.getAction(BuildData.class);
                 }
             }
         }
         if (data == null) {
-            listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
-            return null;
-        }
+			listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
+			return null;
+		}
 
-        Revision lastBuiltRevision = data.getLastBuiltRevision();
-        if (lastBuiltRevision == null) {
-            listener.getLogger().println("Missing build information. Can't pass the revision to downstream");
-            return null;
-        }
+		Revision lastBuiltRevision = data.getLastBuiltRevision();
+		if (lastBuiltRevision == null) {
+			listener.getLogger().println("Missing build information. Can't pass the revision to downstream");
+			return null;
+		}
 
-        return new RevisionParameterAction(lastBuiltRevision, getCombineQueuedCommits());
-    }
+		return new RevisionParameterAction(lastBuiltRevision, getCombineQueuedCommits());
+	}
 
-    public boolean getCombineQueuedCommits() {
-        return combineQueuedCommits;
-    }
+	public boolean getCombineQueuedCommits() {
+		return combineQueuedCommits;
+	}
 
-    @Extension(optional = true)
-    public static class DescriptorImpl extends Descriptor<AbstractBuildParameters> {
-        @Override
-        public String getDisplayName() {
-            return "Pass-through Git Commit that was built";
-        }
-    }
+	@Extension(optional=true)
+	public static class DescriptorImpl extends Descriptor<AbstractBuildParameters> {
+		@Override
+		public String getDisplayName() {
+			return "Pass-through Git Commit that was built";
+		}
+	}
 }

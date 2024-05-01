@@ -111,8 +111,7 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
          */
         @Restricted(NoExternalUse.class) // stapler
         public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
-            GitSCM.DescriptorImpl descriptor =
-                    (GitSCM.DescriptorImpl) Jenkins.get().getDescriptor(GitSCM.class);
+            GitSCM.DescriptorImpl descriptor = (GitSCM.DescriptorImpl) Jenkins.get().getDescriptor(GitSCM.class);
             if (descriptor == null) {
                 return java.util.Collections.emptyList(); // Should be unreachable
             }

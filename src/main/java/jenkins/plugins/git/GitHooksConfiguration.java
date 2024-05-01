@@ -29,8 +29,6 @@ import hudson.Extension;
 import hudson.Functions;
 import hudson.model.PersistentDescriptor;
 import hudson.remoting.Channel;
-import java.io.IOException;
-import java.util.logging.Logger;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
 import org.eclipse.jgit.lib.Repository;
@@ -40,9 +38,12 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-@Extension
-@Symbol("gitHooks")
-@Restricted(NoExternalUse.class)
+import java.io.IOException;
+import java.util.logging.Logger;
+
+
+
+@Extension @Symbol("gitHooks") @Restricted(NoExternalUse.class)
 public class GitHooksConfiguration extends GlobalConfiguration implements PersistentDescriptor {
 
     public static final String DISABLED_WIN = "NUL:";
@@ -56,8 +57,7 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
     public static GitHooksConfiguration get() {
         final GitHooksConfiguration configuration = GlobalConfiguration.all().get(GitHooksConfiguration.class);
         if (configuration == null) {
-            throw new IllegalStateException(
-                    "[BUG] No configuration registered, make sure not running on an agent or that Jenkins has started properly.");
+            throw new IllegalStateException("[BUG] No configuration registered, make sure not running on an agent or that Jenkins has started properly.");
         }
         return configuration;
     }
@@ -80,8 +80,7 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
         save();
     }
 
-    @Override
-    @NonNull
+    @Override @NonNull
     public GlobalConfigurationCategory getCategory() {
         return GlobalConfigurationCategory.get(GlobalConfigurationCategory.Security.class);
     }
@@ -91,20 +90,18 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
         configure(client, configuration.isAllowedOnController(), configuration.isAllowedOnAgents());
     }
 
-    public static void configure(GitClient client, final boolean allowedOnController, final boolean allowedOnAgents)
-            throws IOException, InterruptedException {
+    public static void configure(GitClient client, final boolean allowedOnController, final boolean allowedOnAgents) throws IOException, InterruptedException {
         if (Channel.current() == null) {
-            // Running on controller
-            try (Repository ignored = client.getRepository()) {
-                // That went well, so the code runs on the controller and the repo is local
+            //Running on controller
+            try (Repository ignored = client.getRepository()){
+                //That went well, so the code runs on the controller and the repo is local
                 configure(client, allowedOnController);
             } catch (UnsupportedOperationException e) {
-                // Client represents a remote repository, so this code runs on the controller but the repo is on an
-                // agent
+                // Client represents a remote repository, so this code runs on the controller but the repo is on an agent
                 configure(client, allowedOnAgents);
             }
         } else {
-            // Running on agent
+            //Running on agent
             configure(client, allowedOnAgents);
         }
     }
@@ -127,8 +124,7 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
         final StoredConfig repoConfig = repo.getConfig();
         final String val = repoConfig.getString("core", null, "hooksPath");
         if (val != null && !val.isEmpty() && !DISABLED_NIX.equals(val) && !DISABLED_WIN.equals(val)) {
-            LOGGER.warning(() -> String.format(
-                    "core.hooksPath explicitly set to %s and will be left intact on %s.", val, repo.getDirectory()));
+            LOGGER.warning(() -> String.format("core.hooksPath explicitly set to %s and will be left intact on %s.", val, repo.getDirectory()));
         } else {
             repoConfig.unset("core", null, "hooksPath");
             repoConfig.save();

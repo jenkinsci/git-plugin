@@ -23,18 +23,18 @@
  */
 package hudson.plugins.git;
 
+import hudson.model.Run;
+import hudson.scm.RepositoryBrowser;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.junit.Test;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import hudson.model.Run;
-import hudson.scm.RepositoryBrowser;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import org.junit.Before;
-import org.junit.Test;
 
 public class GitChangeSetListTest {
 

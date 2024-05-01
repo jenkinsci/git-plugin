@@ -1,8 +1,6 @@
 package hudson.plugins.git.util;
 
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -16,13 +14,6 @@ import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -31,12 +22,21 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
-public class GitUtils implements Serializable {
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
-    @SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "known non-serializable field")
+public class GitUtils implements Serializable {
+    
+    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
     @NonNull
     GitClient git;
-
     @NonNull
     TaskListener listener;
 
@@ -56,16 +56,13 @@ public class GitUtils implements Serializable {
      * @since 4.0.0
      */
     @CheckForNull
-    public static GitTool resolveGitTool(
-            @CheckForNull String gitTool,
-            @CheckForNull Node builtOn,
-            @CheckForNull EnvVars env,
-            @NonNull TaskListener listener) {
+    public static GitTool resolveGitTool(@CheckForNull String gitTool,
+                                         @CheckForNull Node builtOn,
+                                         @CheckForNull EnvVars env,
+                                         @NonNull TaskListener listener) {
         GitTool git = gitTool == null
                 ? GitTool.getDefaultInstallation()
-                : Jenkins.get()
-                        .getDescriptorByType(GitTool.DescriptorImpl.class)
-                        .getInstallation(gitTool);
+                : Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
         if (git == null) {
             listener.getLogger().println("Selected Git installation does not exist. Using Default");
             git = GitTool.getDefaultInstallation();
@@ -152,11 +149,10 @@ public class GitUtils implements Serializable {
      * @throws GitException on git error
      * @throws InterruptedException when interrupted
      */
-    public Revision getRevisionContainingBranch(String branchName)
-            throws GitException, IOException, InterruptedException {
-        for (Revision revision : getAllBranchRevisions()) {
-            for (Branch b : revision.getBranches()) {
-                if (b.getName().equals(branchName)) {
+    public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException, InterruptedException {
+        for(Revision revision : getAllBranchRevisions()) {
+            for(Branch b : revision.getBranches()) {
+                if(b.getName().equals(branchName)) {
                     return revision;
                 }
             }
@@ -165,8 +161,9 @@ public class GitUtils implements Serializable {
     }
 
     public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
-        for (Revision revision : getAllBranchRevisions()) {
-            if (revision.getSha1().equals(sha1)) return revision;
+        for(Revision revision : getAllBranchRevisions()) {
+            if(revision.getSha1().equals(sha1))
+                return revision;
         }
         return new Revision(sha1);
     }
@@ -177,12 +174,11 @@ public class GitUtils implements Serializable {
     }
 
     public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder, EnvVars env) {
-        ArrayList<Branch> orderedBranches =
-                new ArrayList<>(revision.getBranches().size());
+        ArrayList<Branch> orderedBranches = new ArrayList<>(revision.getBranches().size());
         ArrayList<Branch> revisionBranches = new ArrayList<>(revision.getBranches());
 
-        for (BranchSpec branchSpec : branchOrder) {
-            for (Iterator<Branch> i = revisionBranches.iterator(); i.hasNext(); ) {
+        for(BranchSpec branchSpec : branchOrder) {
+            for (Iterator<Branch> i = revisionBranches.iterator(); i.hasNext();) {
                 Branch b = i.next();
                 if (branchSpec.matches(b.getName(), env)) {
                     i.remove();
@@ -212,7 +208,8 @@ public class GitUtils implements Serializable {
         final List<Revision> l = new ArrayList<>(revisions);
 
         // Bypass any rev walks if only one branch or less
-        if (l.size() <= 1) return l;
+        if (l.size() <= 1)
+            return l;
 
         try {
             return git.withRepository((Repository repo, VirtualChannel channel) -> {
@@ -227,7 +224,9 @@ public class GitUtils implements Serializable {
 
                 final boolean log = LOGGER.isLoggable(Level.FINE);
 
-                if (log) LOGGER.fine(MessageFormat.format("Computing merge base of {0}  branches", l.size()));
+                if (log)
+                    LOGGER.fine(MessageFormat.format(
+                            "Computing merge base of {0}  branches", l.size()));
 
                 try (RevWalk walk = new RevWalk(repo)) {
                     walk.setRetainBody(false);
@@ -260,8 +259,8 @@ public class GitUtils implements Serializable {
 
                 if (log)
                     LOGGER.fine(MessageFormat.format(
-                            "Computed merge bases in {0} commit steps and {1} ms",
-                            calls, (System.currentTimeMillis() - start)));
+                            "Computed merge bases in {0} commit steps and {1} ms", calls,
+                            (System.currentTimeMillis() - start)));
 
                 return new ArrayList<>(tipCandidates.values());
             });
@@ -271,9 +270,10 @@ public class GitUtils implements Serializable {
     }
 
     public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         return getPollEnvironment(p, ws, launcher, listener, true);
     }
+
 
     /**
      * An attempt to generate at least semi-useful EnvVars for polling calls, based on previous build.
@@ -287,19 +287,18 @@ public class GitUtils implements Serializable {
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */
-    public static EnvVars getPollEnvironment(
-            AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
-            throws IOException, InterruptedException {
+    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
+        throws IOException,InterruptedException {
         EnvVars env = null;
-        StreamBuildListener buildListener = new StreamBuildListener((OutputStream) listener.getLogger());
+        StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = p.getLastBuild();
 
         if (b == null) {
             // If there is no last build, we need to trigger a new build anyway, and
             // GitSCM.compareRemoteRevisionWithImpl() will short-circuit and never call this code
             // ("No previous build, so forcing an initial build.").
-            throw new IllegalArgumentException("Last build must not be null. If there really is no last build, "
-                    + "a new build should be triggered without polling the SCM.");
+            throw new IllegalArgumentException("Last build must not be null. If there really is no last build, " +
+                    "a new build should be triggered without polling the SCM.");
         }
 
         if (reuseLastBuildEnv) {
@@ -321,7 +320,7 @@ public class GitUtils implements Serializable {
                 env = p.getEnvironment(workspaceToNode(ws), listener);
             }
 
-            p.getScm().buildEnvironment(b, env);
+            p.getScm().buildEnvironment(b,env);
         } else {
             env = p.getEnvironment(workspaceToNode(ws), listener);
         }
@@ -331,22 +330,23 @@ public class GitUtils implements Serializable {
             throw new IllegalArgumentException("Jenkins instance is null");
         }
         String rootUrl = jenkinsInstance.getRootUrl();
-        if (rootUrl != null) {
+        if(rootUrl!=null) {
             env.put("HUDSON_URL", rootUrl); // Legacy.
             env.put("JENKINS_URL", rootUrl);
-            env.put("BUILD_URL", rootUrl + b.getUrl());
-            env.put("JOB_URL", rootUrl + p.getUrl());
+            env.put("BUILD_URL", rootUrl+b.getUrl());
+            env.put("JOB_URL", rootUrl+p.getUrl());
         }
 
-        if (!env.containsKey("HUDSON_HOME")) // Legacy
-        env.put("HUDSON_HOME", jenkinsInstance.getRootDir().getPath());
+        if(!env.containsKey("HUDSON_HOME")) // Legacy
+            env.put("HUDSON_HOME", jenkinsInstance.getRootDir().getPath() );
 
-        if (!env.containsKey("JENKINS_HOME"))
-            env.put("JENKINS_HOME", jenkinsInstance.getRootDir().getPath());
+        if(!env.containsKey("JENKINS_HOME"))
+            env.put("JENKINS_HOME", jenkinsInstance.getRootDir().getPath() );
 
-        if (ws != null) env.put("WORKSPACE", ws.getRemote());
+        if (ws != null)
+            env.put("WORKSPACE", ws.getRemote());
 
-        for (NodeProperty nodeProperty : jenkinsInstance.getGlobalNodeProperties()) {
+        for (NodeProperty nodeProperty: jenkinsInstance.getGlobalNodeProperties()) {
             Environment environment = nodeProperty.setUp(b, launcher, buildListener);
             if (environment != null) {
                 environment.buildEnvVars(env);
@@ -372,14 +372,13 @@ public class GitUtils implements Serializable {
         }
 
         // Use the default parameter values (if any) instead of the ones from the last build
-        ParametersDefinitionProperty paramDefProp =
-                (ParametersDefinitionProperty) b.getProject().getProperty(ParametersDefinitionProperty.class);
+        ParametersDefinitionProperty paramDefProp = (ParametersDefinitionProperty) b.getProject().getProperty(ParametersDefinitionProperty.class);
         if (paramDefProp != null) {
-            for (ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions()) {
-                ParameterValue defaultValue = paramDefinition.getDefaultParameterValue();
-                if (defaultValue != null) {
-                    defaultValue.buildEnvironment(b, env);
-                }
+            for(ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions()) {
+               ParameterValue defaultValue  = paramDefinition.getDefaultParameterValue();
+               if (defaultValue != null) {
+                   defaultValue.buildEnvironment(b, env);
+               }
             }
         }
     }
@@ -388,22 +387,23 @@ public class GitUtils implements Serializable {
         String[] returnNames = new String[urls.length];
         Set<String> usedNames = new HashSet<>();
 
-        for (int i = 0; i < urls.length; i++) {
+        for(int i=0; i<urls.length; i++) {
             String name = names[i];
 
-            if (name == null || name.trim().length() == 0) {
+            if(name == null || name.trim().length() == 0) {
                 name = "origin";
             }
 
             String baseName = name;
-            int j = 1;
-            while (usedNames.contains(name)) {
+            int j=1;
+            while(usedNames.contains(name)) {
                 name = baseName + (j++);
             }
 
             usedNames.add(name);
             returnNames[i] = name;
         }
+
 
         return returnNames;
     }

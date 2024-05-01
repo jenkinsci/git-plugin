@@ -61,8 +61,7 @@ public class GitSCMSourceRequest extends SCMSourceRequest {
      * @param context  the context.
      * @param listener the (optional) {@link TaskListener}.
      */
-    public GitSCMSourceRequest(
-            @NonNull SCMSource source, @NonNull GitSCMSourceContext<?, ?> context, TaskListener listener) {
+    public GitSCMSourceRequest(@NonNull SCMSource source, @NonNull GitSCMSourceContext<?, ?> context, TaskListener listener) {
         super(source, context, listener);
         remoteName = context.remoteName();
         gitTool = context.gitTool();
@@ -88,6 +87,7 @@ public class GitSCMSourceRequest extends SCMSourceRequest {
     public final String remoteName() {
         return remoteName;
     }
+
 
     /**
      * Returns the list of {@link RefSpec} instances to use.

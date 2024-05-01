@@ -12,12 +12,15 @@ import hudson.plugins.git.extensions.impl.EnforceGitClient;
 public class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest {
 
     @Override
-    protected EnforceGitClient getGitClient() {
+    protected EnforceGitClient getGitClient()
+    {
         return new EnforceGitClient().set(GitClientType.GITCLI);
     }
 
     @Override
-    protected boolean isDisableRemotePoll() {
+    protected boolean isDisableRemotePoll()
+    {
         return false;
     }
+
 }

@@ -14,7 +14,6 @@ public class GitRemoteHeadRefAction extends InvisibleAction implements Serializa
 
     @NonNull
     private final String remote;
-
     @NonNull
     private final String name;
 
@@ -44,7 +43,8 @@ public class GitRemoteHeadRefAction extends InvisibleAction implements Serializa
 
         GitRemoteHeadRefAction that = (GitRemoteHeadRefAction) o;
 
-        return Objects.equals(remote, that.remote) && Objects.equals(name, that.name);
+        return Objects.equals(remote, that.remote)
+                && Objects.equals(name, that.name);
     }
 
     @Override
@@ -54,6 +54,11 @@ public class GitRemoteHeadRefAction extends InvisibleAction implements Serializa
 
     @Override
     public String toString() {
-        return "GitRemoteHeadRefAction{" + "remote='" + remote + '\'' + ", name='" + name + '\'' + '}';
+        return "GitRemoteHeadRefAction{" +
+                "remote='" + remote + '\'' +
+                ", name='" + name + '\'' +
+                '}';
     }
+
+
 }

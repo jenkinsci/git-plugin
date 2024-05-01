@@ -25,11 +25,12 @@
 
 package jenkins.plugins.git.traits;
 
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.PruneStaleTag;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Exposes {@link PruneStaleTag} as a {@link SCMSourceTrait}.

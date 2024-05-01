@@ -23,8 +23,6 @@
  */
 package jenkins.plugins.git.traits;
 
-import static jenkins.plugins.git.AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.plugins.git.GitSCMBuilder;
@@ -42,6 +40,8 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import static jenkins.plugins.git.AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR;
+
 public class DiscoverOtherRefsTrait extends SCMSourceTrait {
 
     private final String ref;
@@ -56,7 +56,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
         setDefaultNameMapping();
     }
 
-    // for easier testing
+    //for easier testing
     public DiscoverOtherRefsTrait(String ref, String nameMapping) {
         this(ref);
         setNameMapping(nameMapping);
@@ -67,8 +67,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
     }
 
     String getFullRefSpec() {
-        return "+" + Constants.R_REFS + ref + ':' + Constants.R_REMOTES + REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR + '/'
-                + ref;
+        return "+" + Constants.R_REFS + ref + ':' + Constants.R_REMOTES + REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR + '/' + ref;
     }
 
     public String getNameMapping() {
@@ -88,8 +87,8 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
         this.nameMapping = null;
         String[] paths = ref.split("/");
         for (int i = 0; i < paths.length; i++) {
-            if ("*".equals(paths[i]) && i > 0) {
-                this.nameMapping = paths[i - 1] + "-@{1}";
+            if("*".equals(paths[i]) && i > 0) {
+                this.nameMapping = paths[i-1] + "-@{1}";
                 break;
             }
         }
@@ -112,7 +111,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
-    @Symbol(value = {"discoverOtherRefs", "discoverOtherRefsTrait"}) // Avoid JCasC warning about obsolete symbol
+    @Symbol(value={"discoverOtherRefs","discoverOtherRefsTrait"}) // Avoid JCasC warning about obsolete symbol
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {

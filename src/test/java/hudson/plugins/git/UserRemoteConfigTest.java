@@ -1,12 +1,8 @@
 package hudson.plugins.git;
 
-import static org.junit.Assert.*;
-
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.model.User;
@@ -15,9 +11,12 @@ import hudson.util.ListBoxModel;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.Jenkins;
-import org.junit.Rule;
 import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.Rule;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
@@ -30,24 +29,15 @@ public class UserRemoteConfigTest {
     @Issue("JENKINS-38048")
     @Test
     public void credentialsDropdown() throws Exception {
-        SystemCredentialsProvider.getInstance()
-                .getCredentials()
-                .add(new UsernamePasswordCredentialsImpl(
-                        CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+        SystemCredentialsProvider.getInstance().getCredentials().add(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
         SystemCredentialsProvider.getInstance().save();
         FreeStyleProject p1 = r.createFreeStyleProject("p1");
         FreeStyleProject p2 = r.createFreeStyleProject("p2");
         r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
-        r.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
-                .grant(Jenkins.ADMINISTER)
-                .everywhere()
-                .to("admin")
-                .grant(Jenkins.READ, Item.READ)
-                .everywhere()
-                .to("dev")
-                .grant(Item.EXTENDED_READ)
-                .onItems(p1)
-                .to("dev"));
+        r.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy().
+            grant(Jenkins.ADMINISTER).everywhere().to("admin").
+            grant(Jenkins.READ, Item.READ).everywhere().to("dev").
+            grant(Item.EXTENDED_READ).onItems(p1).to("dev"));
         assertCredentials(p1, null, "dev", "", "mycreds");
         assertCredentials(p2, null, "dev", "");
         assertCredentials(p1, null, "admin", "", "mycreds");
@@ -59,24 +49,16 @@ public class UserRemoteConfigTest {
     }
 
     @Deprecated
-    private void assertCredentials(
-            @CheckForNull final Item project,
-            @CheckForNull final String currentCredentialsId,
-            @NonNull String user,
-            @NonNull String... expectedCredentialsIds) {
-        final Set<String> actual =
-                new TreeSet<>(); // for purposes of this test we do not care about order (though StandardListBoxModel
-        // does define some)
+    private void assertCredentials(@CheckForNull final Item project, @CheckForNull final String currentCredentialsId, @NonNull String user, @NonNull String... expectedCredentialsIds) {
+        final Set<String> actual = new TreeSet<>(); // for purposes of this test we do not care about order (though StandardListBoxModel does define some)
         ACL.impersonate(User.get(user).impersonate(), () -> {
-            for (ListBoxModel.Option option : r.jenkins
-                    .getDescriptorByType(UserRemoteConfig.DescriptorImpl.class)
-                    .doFillCredentialsIdItems(project, "http://wherever.jenkins.io/", currentCredentialsId)) {
+            for (ListBoxModel.Option option : r.jenkins.getDescriptorByType(UserRemoteConfig.DescriptorImpl.class).
+                    doFillCredentialsIdItems(project, "http://wherever.jenkins.io/", currentCredentialsId)) {
                 actual.add(option.value);
             }
         });
-        assertEquals(
-                "expected completions on " + project + " as " + user + " starting with " + currentCredentialsId,
-                new TreeSet<>(Arrays.asList(expectedCredentialsIds)),
-                actual);
+        assertEquals("expected completions on " + project + " as " + user + " starting with " + currentCredentialsId,
+                new TreeSet<>(Arrays.asList(expectedCredentialsIds)), actual);
     }
+
 }

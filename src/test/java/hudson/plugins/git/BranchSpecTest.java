@@ -1,11 +1,11 @@
 package hudson.plugins.git;
 
-import static org.junit.Assert.*;
-
 import hudson.EnvVars;
 import java.util.HashMap;
+import static org.junit.Assert.*;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+
 
 public class BranchSpecTest {
     @Test
@@ -16,44 +16,45 @@ public class BranchSpecTest {
         assertFalse(l.matches("origin/something/master"));
         assertTrue(l.matches("master"));
         assertFalse(l.matches("dev"));
-
+        
+        
         BranchSpec est = new BranchSpec("origin/*/dev");
-
+        
         assertFalse(est.matches("origintestdev"));
         assertTrue(est.matches("origin/test/dev"));
         assertFalse(est.matches("origin/test/release"));
         assertFalse(est.matches("origin/test/something/release"));
-
+        
         BranchSpec s = new BranchSpec("origin/*");
-
+        
         assertTrue(s.matches("origin/master"));
-
+      
         BranchSpec m = new BranchSpec("**/magnayn/*");
-
+        
         assertTrue(m.matches("origin/magnayn/b1"));
         assertTrue(m.matches("remote/origin/magnayn/b1"));
         assertTrue(m.matches("remotes/origin/magnayn/b1"));
-
+      
         BranchSpec n = new BranchSpec("*/my.branch/*");
-
+        
         assertTrue(n.matches("origin/my.branch/b1"));
         assertFalse(n.matches("origin/my-branch/b1"));
         assertFalse(n.matches("remote/origin/my.branch/b1"));
         assertTrue(n.matches("remotes/origin/my.branch/b1"));
-
+      
         BranchSpec o = new BranchSpec("**");
-
+        
         assertTrue(o.matches("origin/my.branch/b1"));
         assertTrue(o.matches("origin/my-branch/b1"));
         assertTrue(o.matches("remote/origin/my.branch/b1"));
         assertTrue(o.matches("remotes/origin/my.branch/b1"));
-
+      
         BranchSpec p = new BranchSpec("*");
 
         assertTrue(p.matches("origin/x"));
         assertFalse(p.matches("origin/my-branch/b1"));
     }
-
+    
     @Test
     public void testMatchEnv() {
         HashMap<String, String> envMap = new HashMap<>();
@@ -72,6 +73,7 @@ public class BranchSpecTest {
         assertFalse(l.matches("origin/something/master", env));
         assertTrue(l.matches("master", env));
         assertFalse(l.matches("dev", env));
+
 
         BranchSpec est = new BranchSpec("${origin}/*/${dev}");
 
@@ -115,55 +117,55 @@ public class BranchSpecTest {
 
     @Test
     public void testEmptyName() {
-        BranchSpec branchSpec = new BranchSpec("");
-        assertEquals("**", branchSpec.getName());
+    	BranchSpec branchSpec = new BranchSpec("");
+    	assertEquals("**",branchSpec.getName());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullName() {
         BranchSpec branchSpec = new BranchSpec(null);
     }
-
+    
     @Test
     public void testNameTrimming() {
-        BranchSpec branchSpec = new BranchSpec(" master ");
-        assertEquals("master", branchSpec.getName());
-        branchSpec.setName(" other ");
-        assertEquals("other", branchSpec.getName());
+    	BranchSpec branchSpec = new BranchSpec(" master ");
+    	assertEquals("master",branchSpec.getName());
+    	branchSpec.setName(" other ");
+    	assertEquals("other",branchSpec.getName());
     }
-
+    
     @Test
     public void testUsesRefsHeads() {
-        BranchSpec m = new BranchSpec("refs/heads/j*n*");
-        assertTrue(m.matches("refs/heads/jenkins"));
-        assertTrue(m.matches("refs/heads/jane"));
-        assertTrue(m.matches("refs/heads/jones"));
+    	BranchSpec m = new BranchSpec("refs/heads/j*n*");
+    	assertTrue(m.matches("refs/heads/jenkins"));
+    	assertTrue(m.matches("refs/heads/jane"));
+    	assertTrue(m.matches("refs/heads/jones"));
 
-        assertFalse(m.matches("origin/jenkins"));
-        assertFalse(m.matches("remote/origin/jane"));
+    	assertFalse(m.matches("origin/jenkins"));
+    	assertFalse(m.matches("remote/origin/jane"));
     }
-
+    
     @Test
     public void testUsesJavaPatternDirectlyIfPrefixedWithColon() {
-        BranchSpec m = new BranchSpec(":^(?!(origin/prefix)).*");
-        assertTrue(m.matches("origin"));
-        assertTrue(m.matches("origin/master"));
-        assertTrue(m.matches("origin/feature"));
+    	BranchSpec m = new BranchSpec(":^(?!(origin/prefix)).*");
+    	assertTrue(m.matches("origin"));
+    	assertTrue(m.matches("origin/master"));
+    	assertTrue(m.matches("origin/feature"));
 
-        assertFalse(m.matches("origin/prefix_123"));
-        assertFalse(m.matches("origin/prefix"));
-        assertFalse(m.matches("origin/prefix-abc"));
+    	assertFalse(m.matches("origin/prefix_123"));
+    	assertFalse(m.matches("origin/prefix"));
+    	assertFalse(m.matches("origin/prefix-abc"));
     }
 
     @Test
     @Issue("JENKINS-26842")
     public void testUsesJavaPatternWithRepetition() {
-        // match pattern from JENKINS-26842
-        BranchSpec m = new BranchSpec(":origin/release-\\d{8}");
-        assertTrue(m.matches("origin/release-20150101"));
-        assertFalse(m.matches("origin/release-2015010"));
-        assertFalse(m.matches("origin/release-201501011"));
-        assertFalse(m.matches("origin/release-20150101-something"));
+    	// match pattern from JENKINS-26842
+    	BranchSpec m = new BranchSpec(":origin/release-\\d{8}");
+    	assertTrue(m.matches("origin/release-20150101"));
+    	assertFalse(m.matches("origin/release-2015010"));
+    	assertFalse(m.matches("origin/release-201501011"));
+    	assertFalse(m.matches("origin/release-20150101-something"));
     }
 
     @Test

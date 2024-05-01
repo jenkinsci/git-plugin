@@ -1,21 +1,22 @@
 package jenkins.plugins.git;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.eclipse.jgit.transport.RefSpec;
-import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
+import org.junit.Before;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
 
 public class AbstractGitSCMSourceTrivialTest {
 
@@ -208,4 +209,5 @@ public class AbstractGitSCMSourceTrivialTest {
             throw new UnsupportedOperationException("Intentionally unimplemented");
         }
     }
+
 }

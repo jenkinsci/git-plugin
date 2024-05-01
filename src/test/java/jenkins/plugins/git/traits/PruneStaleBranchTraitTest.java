@@ -1,8 +1,5 @@
 package jenkins.plugins.git.traits;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
 import hudson.model.TaskListener;
 import jenkins.plugins.git.GitSCMSourceContext;
 import jenkins.scm.api.SCMHeadObserver;
@@ -10,6 +7,9 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
+
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -21,7 +21,8 @@ import org.jvnet.hudson.test.Issue;
  */
 public class PruneStaleBranchTraitTest {
 
-    public PruneStaleBranchTraitTest() {}
+    public PruneStaleBranchTraitTest() {
+    }
 
     @Test
     public void testDecorateContextWithGitSCMSourceContent() {

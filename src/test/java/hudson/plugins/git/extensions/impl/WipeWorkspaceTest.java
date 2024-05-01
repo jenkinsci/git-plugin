@@ -1,8 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-
 import hudson.EnvVars;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -16,6 +13,9 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
 import org.jvnet.hudson.test.WithoutJenkins;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 
 public class WipeWorkspaceTest extends GitSCMExtensionTest {
 
@@ -51,6 +51,8 @@ public class WipeWorkspaceTest extends GitSCMExtensionTest {
     @Test
     @WithoutJenkins
     public void equalsContract() {
-        EqualsVerifier.forClass(WipeWorkspace.class).usingGetClass().verify();
+        EqualsVerifier.forClass(WipeWorkspace.class)
+                .usingGetClass()
+                .verify();
     }
 }

@@ -1,23 +1,24 @@
 package hudson.plugins.git.browser;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
-import java.io.IOException;
-import java.net.URL;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
+import java.net.URL;
+
 /**
  * Git Browser for <a href="http://www.redmine.org/">Redmine</a>.
- *
+ * 
  * @author mfriedenhagen
  */
 public class RedmineWeb extends GitRepositoryBrowser {
@@ -37,13 +38,13 @@ public class RedmineWeb extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file diff.
-     *
+     * 
      * https://SERVER/PATH/projects/PROJECT/repository/revisions/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diff/pom.xml
-     *
+     * 
      * Returns a diff link for {@link EditType#DELETE} and {@link EditType#EDIT}, for {@link EditType#ADD} returns an
      * {@link #getFileLink}.
-     *
-     *
+     * 
+     * 
      * @param path
      *            affected file path
      * @return diff link
@@ -67,7 +68,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
      * Creates a link to the file.
      * https://SERVER/PATH/projects/PROJECT/repository/revisions/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/entry/pom.xml
      * For deleted files just returns a diff link, which will have /dev/null as target file.
-     *
+     * 
      * @param path affected file path
      * @return file link
      * @throws IOException on input or output error
@@ -92,11 +93,11 @@ public class RedmineWeb extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(
-                value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                justification = "Inherited javadoc commits that req is non-null")
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
         public RedmineWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(RedmineWeb.class, jsonObject);
         }
     }
+
 }

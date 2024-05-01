@@ -5,6 +5,7 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
+
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -18,15 +19,14 @@ import java.io.Serializable;
  * @author Kohsuke Kawaguchi
  */
 public interface BuildChooserContext {
-    <T> T actOnBuild(ContextCallable<Run<?, ?>, T> callable) throws IOException, InterruptedException;
+    <T> T actOnBuild(ContextCallable<Run<?,?>,T> callable) throws IOException,InterruptedException;
+    <T> T actOnProject(ContextCallable<Job<?,?>,T> callable) throws IOException,InterruptedException;
 
-    <T> T actOnProject(ContextCallable<Job<?, ?>, T> callable) throws IOException, InterruptedException;
-
-    Run<?, ?> getBuild();
+    Run<?,?> getBuild();
 
     EnvVars getEnvironment();
 
-    public static interface ContextCallable<P, T> extends Serializable {
+    public static interface ContextCallable<P,T> extends Serializable {
         /**
          * Performs the computational task on the node where the data is located.
          *

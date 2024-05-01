@@ -4,13 +4,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.PrintStream;
+
 import hudson.EnvVars;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
-import java.io.PrintStream;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.junit.Before;
@@ -38,7 +39,7 @@ public class SubmoduleOptionDepthTest {
 
     @Parameterized.Parameters(name = "depth: configured={0}, used={1}")
     public static Object[][] depthCombinations() {
-        return new Object[][] {{0, 1}, {1, 1}, {2, 2}};
+        return new Object[][] { { 0, 1 }, { 1, 1 }, { 2, 2 } };
     }
 
     @Before

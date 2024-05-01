@@ -1,19 +1,19 @@
 package hudson.plugins.git;
 
-import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
 import java.io.Serializable;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
 
 /**
  * Options for the {@link hudson.plugins.git.extensions.impl.ChangelogToBranch} extension.
  *
  * @author <a href="mailto:dirk.reske@t-systems.com">Dirk Reske (dirk.reske@t-systems.com)</a>
  */
-public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogToBranchOptions>
-        implements Serializable {
+public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogToBranchOptions> implements Serializable {
     private String compareRemote;
     private String compareTarget;
 

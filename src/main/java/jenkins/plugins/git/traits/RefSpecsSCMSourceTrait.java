@@ -178,6 +178,7 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
         public Class<? extends SCMSourceContext> getContextClass() {
             return GitSCMSourceContext.class;
         }
+
     }
 
     /**
@@ -243,7 +244,8 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
                     if (!value.startsWith("+")) {
                         return FormValidation.warningWithMarkup(
                                 "It is recommended to ensure references are always updated by prefixing with "
-                                        + "<code>+</code>");
+                                        + "<code>+</code>"
+                        );
                     }
                     return FormValidation.ok();
                 } catch (IllegalArgumentException e) {

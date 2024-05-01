@@ -7,6 +7,8 @@ public class IgnoreNotifyCommitTest {
 
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(IgnoreNotifyCommit.class).usingGetClass().verify();
+        EqualsVerifier.forClass(IgnoreNotifyCommit.class)
+                .usingGetClass()
+                .verify();
     }
 }

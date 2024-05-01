@@ -1,7 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import static hudson.Util.fixEmptyAndTrim;
-
 import hudson.Extension;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
@@ -12,6 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import static hudson.Util.fixEmptyAndTrim;
 
 /**
  * {@link GitSCMExtension} that sets a different name and/or e-mail address for commits.
@@ -43,11 +43,11 @@ public class UserIdentity extends GitSCMExtension {
     @Override
     public void populateEnvironmentVariables(GitSCM scm, Map<String, String> env) {
         // for backward compatibility, in case the user's shell script invokes Git inside
-        if (name != null) {
+        if (name!=null) {
             env.put("GIT_COMMITTER_NAME", name);
             env.put("GIT_AUTHOR_NAME", name);
         }
-        if (email != null) {
+        if (email!=null) {
             env.put("GIT_COMMITTER_EMAIL", email);
             env.put("GIT_AUTHOR_EMAIL", email);
         }
@@ -67,7 +67,8 @@ public class UserIdentity extends GitSCMExtension {
 
         UserIdentity that = (UserIdentity) o;
 
-        return Objects.equals(name, that.name) && Objects.equals(email, that.email);
+        return Objects.equals(name, that.name)
+                && Objects.equals(email, that.email);
     }
 
     /**
@@ -83,7 +84,10 @@ public class UserIdentity extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "UserIdentity{" + "name='" + name + '\'' + ", email='" + email + '\'' + '}';
+        return "UserIdentity{" +
+                "name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                '}';
     }
 
     /**
@@ -94,13 +98,13 @@ public class UserIdentity extends GitSCMExtension {
         GitSCM.DescriptorImpl d = scm.getDescriptor();
 
         String n = d.getGlobalConfigName();
-        if (name != null) n = name;
+        if (name!=null) n = name;
 
         String e = d.getGlobalConfigEmail();
-        if (email != null) e = email;
+        if (email!=null) e = email;
 
-        git.setAuthor(n, e);
-        git.setCommitter(n, e);
+        git.setAuthor(n,e);
+        git.setCommitter(n,e);
 
         return git;
     }

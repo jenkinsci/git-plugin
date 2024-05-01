@@ -10,9 +10,10 @@ import io.jenkins.plugins.casc.Configurator;
 import io.jenkins.plugins.casc.ConfiguratorException;
 import io.jenkins.plugins.casc.model.CNode;
 import io.jenkins.plugins.casc.model.Mapping;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Collections;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 
 @Extension(optional = true)
 public class GitLabConfigurator extends BaseConfigurator<GitLab> {
@@ -57,4 +58,5 @@ public class GitLabConfigurator extends BaseConfigurator<GitLab> {
     public List<Configurator<GitLab>> getConfigurators(ConfigurationContext context) {
         return Collections.singletonList(this);
     }
+
 }

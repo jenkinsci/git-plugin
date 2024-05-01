@@ -23,9 +23,6 @@
  */
 package hudson.plugins.git;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -33,6 +30,9 @@ import hudson.plugins.git.browser.GithubWeb;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -44,7 +44,9 @@ public class GitSCMBrowserTest {
     private final Class<? extends GitRepositoryBrowser> expectedClass;
     private final String expectedURI;
 
-    public GitSCMBrowserTest(String gitURI, Class<? extends GitRepositoryBrowser> expectedClass, String expectedURI) {
+    public GitSCMBrowserTest(String gitURI,
+            Class<? extends GitRepositoryBrowser> expectedClass,
+            String expectedURI) {
         this.gitURI = gitURI;
         this.expectedClass = expectedClass;
         this.expectedURI = expectedURI;
@@ -76,6 +78,7 @@ public class GitSCMBrowserTest {
             return "https://github.com/" + REPO_PATH + "/";
         }
         return null;
+
     }
 
     @Parameterized.Parameters(name = "{0}")

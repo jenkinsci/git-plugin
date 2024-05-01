@@ -7,10 +7,11 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import java.io.IOException;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.IOException;
 
 /**
  * Tags every build.
@@ -19,11 +20,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class PerBuildTag extends GitSCMExtension {
     @DataBoundConstructor
-    public PerBuildTag() {}
+    public PerBuildTag() {
+    }
 
     @Override
-    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
-            throws IOException, InterruptedException, GitException {
+    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         int buildNumber = build.getNumber();
         String buildnumber = "jenkins-" + build.getParent().getName().replace(" ", "_") + "-" + buildNumber;
 

@@ -107,18 +107,15 @@ public class GitSCMFileSystem extends SCMFileSystem {
      * @throws IOException on I/O error
      * @throws InterruptedException on thread interruption
      */
-    protected GitSCMFileSystem(
-            GitClient client, String remote, final String head, @CheckForNull AbstractGitSCMSource.SCMRevisionImpl rev)
-            throws IOException, InterruptedException {
+    protected GitSCMFileSystem(GitClient client, String remote, final String head, @CheckForNull
+            AbstractGitSCMSource.SCMRevisionImpl rev) throws IOException, InterruptedException {
         super(rev);
         this.remote = remote;
         this.head = head;
         cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
         listener = new LogTaskListener(LOGGER, Level.FINER);
         this.client = client;
-        commitId = rev == null
-                ? invoke((Repository repository) -> repository.findRef(head).getObjectId())
-                : ObjectId.fromString(rev.getHash());
+        commitId = rev == null ? invoke((Repository repository) -> repository.findRef(head).getObjectId()) : ObjectId.fromString(rev.getHash());
     }
 
     @Override
@@ -185,8 +182,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (cacheDir == null || !cacheDir.isDirectory()) {
                 throw new IOException("Closed");
             }
-            return client.withRepository(
-                    (Repository repository, VirtualChannel virtualChannel) -> function.invoke(repository));
+            return client.withRepository((Repository repository, VirtualChannel virtualChannel) -> function.invoke(repository));
         } finally {
             cacheLock.unlock();
         }
@@ -263,16 +259,14 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     && ((GitSCM) source).getUserRemoteConfigs().size() == 1
                     && ((GitSCM) source).getBranches().size() == 1
                     && !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
-                    && (((GitSCM) source)
-                                    .getBranches()
-                                    .get(0)
-                                    .getName()
-                                    .matches("^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$")
-                            || ((GitSCM) source)
-                                    .getBranches()
-                                    .get(0)
-                                    .getName()
-                                    .matches("^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"));
+                    && (
+                        ((GitSCM) source).getBranches().get(0).getName().matches(
+                            "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+                        )
+                        || ((GitSCM) source).getBranches().get(0).getName().matches(
+                            "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+                        )
+                    );
             // we only support where the branch spec is obvious and not a wildcard
         }
 
@@ -300,8 +294,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 this.prefix = prefix;
             }
 
-            static HeadNameResult calculate(
-                    @NonNull BranchSpec branchSpec, @CheckForNull SCMRevision rev, @CheckForNull EnvVars env) {
+            static HeadNameResult calculate(@NonNull BranchSpec branchSpec,
+                                            @CheckForNull SCMRevision rev,
+                                            @CheckForNull EnvVars env) {
                 String branchSpecExpandedName = branchSpec.getName();
                 if (env != null) {
                     branchSpecExpandedName = env.expand(branchSpecExpandedName);
@@ -335,8 +330,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
-        public SCMFileSystem build(
-                @NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev, @CheckForNull Run<?, ?> _build)
+        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev,
+                                   @CheckForNull Run<?,?> _build)
                 throws IOException, InterruptedException {
             if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
                 return null;
@@ -374,12 +369,16 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 if (credentialsId != null) {
                     StandardCredentials credential = CredentialsMatchers.firstOrNull(
                             CredentialsProvider.lookupCredentialsInItem(
-                                    StandardUsernameCredentials.class,
-                                    owner,
-                                    ACL.SYSTEM2,
-                                    URIRequirementBuilder.fromUri(remote).build()),
+                                StandardUsernameCredentials.class,
+                                owner,
+                                ACL.SYSTEM2,
+                                URIRequirementBuilder.fromUri(remote).build()
+                            ),
                             CredentialsMatchers.allOf(
-                                    CredentialsMatchers.withId(credentialsId), GitClient.CREDENTIALS_MATCHER));
+                                CredentialsMatchers.withId(credentialsId),
+                                GitClient.CREDENTIALS_MATCHER
+                            )
+                        );
                     client.addDefaultCredentials(credential);
                     CredentialsProvider.track(owner, credential);
                 }
@@ -388,8 +387,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
-                GitHooksConfiguration.configure(
-                        client, GitHooksConfiguration.get().isAllowedOnController());
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = StringUtils.defaultIfBlank(config.getName(), Constants.DEFAULT_REMOTE_NAME);
                 listener.getLogger().println("Setting " + remoteName + " to " + remote);
                 client.setRemoteUrl(remoteName, remote);
@@ -403,21 +401,12 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
                 HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, env);
 
-                client.fetch_()
-                        .prune(true)
-                        .from(
-                                remoteURI,
-                                Collections.singletonList(
-                                        new RefSpec("+" + headNameResult.prefix + headNameResult.headName + ":"
-                                                + Constants.R_REMOTES + remoteName + "/" + headNameResult.headName)))
-                        .execute();
+                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
+                        "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                                + headNameResult.headName))).execute();
 
                 listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(
-                        client,
-                        remote,
-                        Constants.R_REMOTES + remoteName + "/" + headNameResult.headName,
-                        (AbstractGitSCMSource.SCMRevisionImpl) rev);
+                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
                 cacheLock.unlock();
             }
@@ -448,8 +437,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
-                GitHooksConfiguration.configure(
-                        client, GitHooksConfiguration.get().isAllowedOnController());
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = builder.remoteName();
                 listener.getLogger().println("Setting " + remoteName + " to " + gitSCMSource.getRemote());
                 client.setRemoteUrl(remoteName, gitSCMSource.getRemote());
@@ -460,15 +448,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                client.fetch_()
-                        .prune(true)
-                        .from(remoteURI, builder.asRefSpecs())
-                        .execute();
+                client.fetch_().prune(true).from(remoteURI, builder.asRefSpecs()).execute();
                 listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(
-                        client,
-                        gitSCMSource.getRemote(),
-                        Constants.R_REMOTES + remoteName + "/" + head.getName(),
+                return new GitSCMFileSystem(client, gitSCMSource.getRemote(), Constants.R_REMOTES+remoteName+"/"+head.getName(),
                         (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
                 cacheLock.unlock();

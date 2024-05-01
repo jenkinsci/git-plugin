@@ -1,7 +1,5 @@
 package hudson.plugins.git;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,8 +9,9 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
-import org.junit.ClassRule;
 import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.Issue;
@@ -32,9 +31,11 @@ public class UserMergeOptionsTest {
     private final MergeCommand.GitPluginFastForwardMode expectedFastForwardMode;
 
     @Deprecated
-    private UserMergeOptions defineDeprecatedOptions(
-            String mergeRemote, String mergeTarget, MergeCommand.Strategy mergeStrategy) {
-        return new UserMergeOptions(mergeRemote, mergeTarget, mergeStrategy == null ? null : mergeStrategy.toString());
+    private UserMergeOptions defineDeprecatedOptions(String mergeRemote, String mergeTarget, MergeCommand.Strategy mergeStrategy) {
+        return new UserMergeOptions(
+                mergeRemote,
+                mergeTarget,
+                mergeStrategy == null ? null : mergeStrategy.toString());
     }
 
     public UserMergeOptionsTest(
@@ -47,16 +48,19 @@ public class UserMergeOptionsTest {
         this.expectedMergeStrategy = mergeStrategy;
         this.expectedFastForwardMode = fastForwardMode;
         options = new UserMergeOptions(
-                mergeRemote, mergeTarget, mergeStrategy == null ? null : mergeStrategy.toString(), fastForwardMode);
+                mergeRemote,
+                mergeTarget,
+                mergeStrategy == null ? null : mergeStrategy.toString(),
+                fastForwardMode);
         deprecatedOptions = defineDeprecatedOptions(mergeRemote, mergeTarget, mergeStrategy);
     }
 
     @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}")
     public static Collection mergeOptionVariants() {
         List<Object[]> mergeOptions = new ArrayList<>();
-        String[] remotes = new String[] {null, "src_remote"};
-        String[] targets = new String[] {null, "dst_remote"};
-        MergeCommand.Strategy[] mergeStrategies = new MergeCommand.Strategy[] {
+        String[] remotes = new String[]{null, "src_remote"};
+        String[] targets = new String[]{null, "dst_remote"};
+        MergeCommand.Strategy[] mergeStrategies = new MergeCommand.Strategy[]{
             null,
             MergeCommand.Strategy.DEFAULT,
             MergeCommand.Strategy.OCTOPUS,
@@ -65,7 +69,7 @@ public class UserMergeOptionsTest {
             MergeCommand.Strategy.RESOLVE,
             MergeCommand.Strategy.SUBTREE
         };
-        MergeCommand.GitPluginFastForwardMode[] fastForwardModes = new MergeCommand.GitPluginFastForwardMode[] {
+        MergeCommand.GitPluginFastForwardMode[] fastForwardModes = new MergeCommand.GitPluginFastForwardMode[]{
             null,
             MergeCommand.GitPluginFastForwardMode.FF,
             MergeCommand.GitPluginFastForwardMode.FF_ONLY,
@@ -101,16 +105,12 @@ public class UserMergeOptionsTest {
 
     @Test
     public void testGetMergeStrategy() {
-        assertEquals(
-                expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy,
-                options.getMergeStrategy());
+        assertEquals(expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy, options.getMergeStrategy());
     }
 
     @Test
     public void testGetFastForwardMode() {
-        assertEquals(
-                expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode,
-                options.getFastForwardMode());
+        assertEquals(expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode, options.getFastForwardMode());
     }
 
     @Test
@@ -118,12 +118,8 @@ public class UserMergeOptionsTest {
         final String expected = "UserMergeOptions{"
                 + "mergeRemote='" + expectedMergeRemote + "', "
                 + "mergeTarget='" + expectedMergeTarget + "', "
-                + "mergeStrategy='"
-                + (expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy).name() + "', "
-                + "fastForwardMode='"
-                + (expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode)
-                        .name()
-                + "'"
+                + "mergeStrategy='" + (expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy).name() + "', "
+                + "fastForwardMode='" + (expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode).name() + "'"
                 + '}';
         assertEquals(expected, options.toString());
     }
@@ -238,4 +234,5 @@ public class UserMergeOptionsTest {
             assertEquals(options, new DescribableModel<>(UserMergeOptions.class).instantiate(args));
         }
     }
+
 }

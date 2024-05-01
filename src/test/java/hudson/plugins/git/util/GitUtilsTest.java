@@ -23,11 +23,6 @@
  */
 package hudson.plugins.git.util;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.model.TaskListener;
@@ -44,8 +39,12 @@ import java.util.Random;
 import java.util.Set;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.lib.ObjectId;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -60,7 +59,12 @@ public class GitUtilsTest {
     @ClassRule
     public static TemporaryFolder repoParentFolder = new TemporaryFolder();
 
-    private static final String[] HEAD_BRANCH_NAMES = {"master", "sally-2", "baker-1", "able-4"};
+    private static final String[] HEAD_BRANCH_NAMES = {
+        "master",
+        "sally-2",
+        "baker-1",
+        "able-4"
+    };
     private static final String OLDER_BRANCH_NAME = "older-branch";
 
     private static ObjectId headId = null;
@@ -77,7 +81,11 @@ public class GitUtilsTest {
     private static final String HEAD_TAG_NAME_1 = "head-tag-1";
     private static final String HEAD_TAG_NAME_2 = "head-tag-2-annotated";
     private final String[] tagNames = {
-        PRIOR_TAG_NAME_1, PRIOR_TAG_NAME_2, HEAD_TAG_NAME_0, HEAD_TAG_NAME_1, HEAD_TAG_NAME_2
+        PRIOR_TAG_NAME_1,
+        PRIOR_TAG_NAME_2,
+        HEAD_TAG_NAME_0,
+        HEAD_TAG_NAME_1,
+        HEAD_TAG_NAME_2
     };
 
     private static List<BranchSpec> branchSpecList = null;

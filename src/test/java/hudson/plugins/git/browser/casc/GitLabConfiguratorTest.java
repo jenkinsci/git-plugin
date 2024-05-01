@@ -1,15 +1,15 @@
 package hudson.plugins.git.browser.casc;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import hudson.plugins.git.browser.GitLab;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.model.Mapping;
 import org.junit.Test;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class GitLabConfiguratorTest {
 
@@ -50,8 +50,7 @@ public class GitLabConfiguratorTest {
         expectedMapping.put("version", "1.1");
         final GitLab configuration = new GitLab("http://fake", "1.1");
 
-        final Mapping described =
-                configurator.describe(configuration, NULL_CONFIGURATION_CONTEXT).asMapping();
+        final Mapping described = configurator.describe(configuration, NULL_CONFIGURATION_CONTEXT).asMapping();
         assertEquals(expectedMapping.getScalarValue("repoUrl"), described.getScalarValue("repoUrl"));
         assertEquals(expectedMapping.getScalarValue("version"), described.getScalarValue("version"));
     }
@@ -80,6 +79,7 @@ public class GitLabConfiguratorTest {
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
         assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
+
     }
 
     @Test
@@ -93,6 +93,7 @@ public class GitLabConfiguratorTest {
         assertThat(instance.getRepoUrl(), isEmptyString());
         assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
     }
+
 
     @Test
     @Deprecated
@@ -144,4 +145,5 @@ public class GitLabConfiguratorTest {
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
         assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
     }
+
 }

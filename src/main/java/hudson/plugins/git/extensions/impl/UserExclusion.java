@@ -3,18 +3,19 @@ package hudson.plugins.git.extensions.impl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
+import hudson.Util;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * {@link GitSCMExtension} that ignores commits that are made by specific users.
@@ -55,17 +56,13 @@ public class UserExclusion extends GitSCMExtension {
     }
 
     @Override
-    @SuppressFBWarnings(
-            value = "NP_BOOLEAN_RETURN_NULL",
-            justification = "null used to indicate other extensions should decide")
+    @SuppressFBWarnings(value="NP_BOOLEAN_RETURN_NULL", justification="null used to indicate other extensions should decide")
     @CheckForNull
-    public Boolean isRevExcluded(
-            GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
+    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
         String author = commit.getAuthorName();
         if (getExcludedUsersNormalized().contains(author)) {
             // If the author is an excluded user, don't count this entry as a change
-            listener.getLogger()
-                    .println("Ignored commit " + commit.getCommitId() + ": Found excluded author: " + author);
+            listener.getLogger().println("Ignored commit " + commit.getCommitId() + ": Found excluded author: " + author);
             return true;
         }
 

@@ -1,11 +1,13 @@
 package hudson.plugins.git;
 
-import static org.junit.Assert.*;
+import java.util.ArrayList;
 
 import hudson.model.User;
-import java.util.ArrayList;
-import org.junit.Rule;
+
 import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.Rule;
+
 import org.jvnet.hudson.test.JenkinsRule;
 
 public class GitChangeSetBadArgsTest {
@@ -59,8 +61,7 @@ public class GitChangeSetBadArgsTest {
     public void testFindOrCreateUserCommitterBadEmail() {
         String committerName = "Bad Committer Test 2";
         GitChangeSet changeSet = createCommitterChangeSet(committerName, DEGENERATE_EMAIL_ADDRESS);
-        assertEquals(
-                User.getUnknown(), changeSet.findOrCreateUser(committerName, DEGENERATE_EMAIL_ADDRESS, false, false));
+        assertEquals(User.getUnknown(), changeSet.findOrCreateUser(committerName, DEGENERATE_EMAIL_ADDRESS, false, false));
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser(null, DEGENERATE_EMAIL_ADDRESS, false, false));
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser("", DEGENERATE_EMAIL_ADDRESS, false, false));
     }
@@ -70,8 +71,7 @@ public class GitChangeSetBadArgsTest {
         String emptyAuthorName = "";
         String incompleteAuthorEmail = "@test3.example.com";
         GitChangeSet changeSet = createAuthorChangeSet(emptyAuthorName, incompleteAuthorEmail);
-        assertEquals(
-                User.getUnknown(), changeSet.findOrCreateUser(emptyAuthorName, incompleteAuthorEmail, false, false));
+        assertEquals(User.getUnknown(), changeSet.findOrCreateUser(emptyAuthorName, incompleteAuthorEmail, false, false));
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser(null, incompleteAuthorEmail, false, false));
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser("", incompleteAuthorEmail, false, false));
     }
@@ -81,9 +81,7 @@ public class GitChangeSetBadArgsTest {
         String emptyCommitterName = "";
         String incompleteCommitterEmail = "@test4.example.com";
         GitChangeSet changeSet = createCommitterChangeSet(emptyCommitterName, incompleteCommitterEmail);
-        assertEquals(
-                User.getUnknown(),
-                changeSet.findOrCreateUser(emptyCommitterName, incompleteCommitterEmail, false, false));
+        assertEquals(User.getUnknown(), changeSet.findOrCreateUser(emptyCommitterName, incompleteCommitterEmail, false, false));
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser(null, incompleteCommitterEmail, false, false));
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser("", incompleteCommitterEmail, false, false));
     }

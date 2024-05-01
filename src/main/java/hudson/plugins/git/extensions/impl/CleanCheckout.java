@@ -9,6 +9,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.Objects;
+
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -23,7 +24,8 @@ public class CleanCheckout extends GitSCMExtension {
     private boolean deleteUntrackedNestedRepositories;
 
     @DataBoundConstructor
-    public CleanCheckout() {}
+    public CleanCheckout() {
+    }
 
     public boolean isDeleteUntrackedNestedRepositories() {
         return deleteUntrackedNestedRepositories;
@@ -38,8 +40,7 @@ public class CleanCheckout extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
-    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
-            throws IOException, InterruptedException, GitException {
+    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Cleaning workspace");
         git.clean(deleteUntrackedNestedRepositories);
         // TODO: revisit how to hand off to SubmoduleOption
@@ -76,7 +77,9 @@ public class CleanCheckout extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "CleanCheckout{" + "deleteUntrackedNestedRepositories=" + deleteUntrackedNestedRepositories + '}';
+        return "CleanCheckout{" +
+                "deleteUntrackedNestedRepositories=" + deleteUntrackedNestedRepositories +
+                '}';
     }
 
     @Extension

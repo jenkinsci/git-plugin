@@ -1,7 +1,5 @@
 package jenkins.plugins.git;
 
-import static org.junit.Assert.*;
-
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -13,6 +11,8 @@ import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.Constants;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
 
@@ -32,8 +32,8 @@ public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
         project = setupBasicProject(repo);
         // create integration branch
         repo.git.branch("integration");
-    }
 
+    }
     @Test
     public void testBasicMergeWithSCMExtension() throws Exception {
         FreeStyleBuild baseBuild = build(project, Result.SUCCESS);
@@ -43,7 +43,7 @@ public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
     public void testFailedMergeWithSCMExtension() throws Exception {
         FreeStyleBuild firstBuild = build(project, Result.SUCCESS);
         assertEquals(GitSCM.class, project.getScm().getClass());
-        GitSCM gitSCM = (GitSCM) project.getScm();
+        GitSCM gitSCM = (GitSCM)project.getScm();
         BuildData buildData = gitSCM.getBuildData(firstBuild);
         assertNotNull("Build data not found", buildData);
         assertEquals(firstBuild.getNumber(), buildData.lastBuild.getBuildNumber());
@@ -61,35 +61,26 @@ public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
         repo.git.checkout().ref("master").execute();
 
         // as baseName and baseHash don't change in master branch, this commit should  merge !
-        assertFalse(
-                "SCM polling should not detect any more changes after build",
-                project.poll(listener).hasChanges());
-        String conflictSha1 = repo.commit(
-                MASTER_FILE, "new John Doe content will conflict", repo.johnDoe, repo.johnDoe, "Commit success!");
+        assertFalse("SCM polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        String conflictSha1= repo.commit(MASTER_FILE, "new John Doe content will conflict", repo.johnDoe, repo.johnDoe, "Commit success!");
         assertTrue("SCM polling should detect changes", project.poll(listener).hasChanges());
 
+
         FreeStyleBuild secondBuild = build(project, Result.SUCCESS);
-        assertEquals(
-                secondBuild.getNumber(),
-                gitSCM.getBuildData(secondBuild).lastBuild.getBuildNumber());
+        assertEquals(secondBuild.getNumber(), gitSCM.getBuildData(secondBuild).lastBuild.getBuildNumber());
         // buildData should mark this as built
-        assertEquals(
-                conflictSha1,
-                gitSCM.getBuildData(secondBuild).lastBuild.getMarked().getSha1String());
-        assertEquals(
-                conflictSha1,
-                gitSCM.getBuildData(secondBuild).lastBuild.getRevision().getSha1String());
+        assertEquals(conflictSha1, gitSCM.getBuildData(secondBuild).lastBuild.getMarked().getSha1String());
+        assertEquals(conflictSha1, gitSCM.getBuildData(secondBuild).lastBuild.getRevision().getSha1String());
 
         // Check to see that build data is not corrupted (JENKINS-44037)
-        assertEquals(
-                firstBuild.getNumber(),
-                gitSCM.getBuildData(firstBuild).lastBuild.getBuildNumber());
+        assertEquals(firstBuild.getNumber(), gitSCM.getBuildData(firstBuild).lastBuild.getBuildNumber());
         assertEquals(firstMarked, gitSCM.getBuildData(firstBuild).lastBuild.getMarked());
         assertEquals(firstRevision, gitSCM.getBuildData(firstBuild).lastBuild.getRevision());
     }
 
     @Override
     protected GitSCMExtension getExtension() {
-        return new MergeWithGitSCMExtension(baseName, baseHash);
+        return new MergeWithGitSCMExtension(baseName,baseHash);
     }
+
 }

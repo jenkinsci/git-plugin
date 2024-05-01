@@ -1,7 +1,5 @@
 package hudson.plugins.git.browser;
 
-import static org.junit.Assert.*;
-
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import java.net.URL;
@@ -9,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Test;
+import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -50,11 +49,9 @@ public class StashTest {
             EditType editType = path.getEditType();
             URL expectedDiffLink = null;
             if (editType == EditType.ADD || editType == EditType.EDIT) {
-                expectedDiffLink =
-                        new URL(repoUrl + "diff/" + path.getPath() + "?at=" + sample.id + "&until=" + sample.id);
+                expectedDiffLink = new URL(repoUrl + "diff/" + path.getPath() + "?at=" + sample.id + "&until=" + sample.id);
             } else if (editType == EditType.DELETE) {
-                expectedDiffLink =
-                        new URL(repoUrl + "diff/" + path.getPath() + "?at=" + sample.parent + "&until=" + sample.id);
+                expectedDiffLink = new URL(repoUrl + "diff/" + path.getPath() + "?at=" + sample.parent + "&until=" + sample.id);
             } else {
                 fail("Unexpected edit type " + editType.getName());
             }

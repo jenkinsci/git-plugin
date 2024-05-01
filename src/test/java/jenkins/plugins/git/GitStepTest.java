@@ -24,10 +24,6 @@
 
 package jenkins.plugins.git;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
-
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
@@ -48,6 +44,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -57,6 +55,7 @@ import org.junit.rules.TestName;
 import org.junit.runner.OrderWith;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -66,10 +65,8 @@ public class GitStepTest {
 
     @Rule
     public JenkinsRule r = new JenkinsRule();
-
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
-
     @Rule
     public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
 
@@ -81,7 +78,6 @@ public class GitStepTest {
 
     @ClassRule
     public static Stopwatch stopwatch = new Stopwatch();
-
     @Rule
     public TestName testName = new TestName();
 
@@ -108,7 +104,8 @@ public class GitStepTest {
     public void roundtrip_withcredentials() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         IdCredentials c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "user", "pass");
-        CredentialsProvider.lookupStores(r.jenkins).iterator().next().addCredentials(Domain.global(), c);
+        CredentialsProvider.lookupStores(r.jenkins).iterator().next()
+                .addCredentials(Domain.global(), c);
         GitStep step = new GitStep("git@github.com:jenkinsci/workflow-plugin.git");
         step.setCredentialsId(c.getId());
         Step roundtrip = new StepConfigTester(r).configRoundTrip(step);
@@ -122,12 +119,12 @@ public class GitStepTest {
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         r.createOnlineSlave(Label.get("remote"));
         p.setDefinition(new CpsFlowDefinition(
-                "node('remote') {\n" + "    ws {\n"
-                        + "        git(url: $/"
-                        + sampleRepo + "/$, poll: false, changelog: false)\n" + "        archive '**'\n"
-                        + "    }\n"
-                        + "}",
-                true));
+            "node('remote') {\n" +
+            "    ws {\n" +
+            "        git(url: $/" + sampleRepo + "/$, poll: false, changelog: false)\n" +
+            "        archive '**'\n" +
+            "    }\n" +
+            "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Cloning the remote Git repository", b); // GitSCM.retrieveChanges
         assertTrue(b.getArtifactManager().root().child("file").isFile());
@@ -147,13 +144,13 @@ public class GitStepTest {
         p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
         r.createOnlineSlave(Label.get("remote"));
         p.setDefinition(new CpsFlowDefinition(
-                "node('remote') {\n" + "    ws {\n"
-                        + "        git($/"
-                        + sampleRepo + "/$)\n" + "        def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
-                        + "        echo \"token macro expanded branch is ${tokenBranch}\"\n"
-                        + "    }\n"
-                        + "}",
-                true));
+            "node('remote') {\n" +
+            "    ws {\n" +
+            "        git($/" + sampleRepo + "/$)\n" +
+            "        def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n" +
+            "        echo \"token macro expanded branch is ${tokenBranch}\"\n" +
+            "    }\n" +
+            "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("token macro expanded branch is remotes/origin/master", b); // Unexpected but current behavior
         sampleRepo.write("nextfile", "");
@@ -188,17 +185,17 @@ public class GitStepTest {
         p.addTrigger(new SCMTrigger(""));
         p.setQuietPeriod(3); // so it only does one build
         p.setDefinition(new CpsFlowDefinition(
-                "node {\n" + "    ws {\n"
-                        + "        dir('main') {\n"
-                        + "            git($/"
-                        + sampleRepo + "/$)\n" + "        }\n"
-                        + "        dir('other') {\n"
-                        + "            git($/"
-                        + otherRepo + "/$)\n" + "        }\n"
-                        + "        archive '**'\n"
-                        + "    }\n"
-                        + "}",
-                true));
+            "node {\n" +
+            "    ws {\n" +
+            "        dir('main') {\n" +
+            "            git($/" + sampleRepo + "/$)\n" +
+            "        }\n" +
+            "        dir('other') {\n" +
+            "            git($/" + otherRepo + "/$)\n" +
+            "        }\n" +
+            "        archive '**'\n" +
+            "    }\n" +
+            "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         VirtualFile artifacts = b.getArtifactManager().root();
         assertTrue(artifacts.child("main/file").isFile());
@@ -218,13 +215,9 @@ public class GitStepTest {
         assertTrue(artifacts.child("other/otherfile2").isFile());
         Iterator<? extends SCM> scms = p.getSCMs().iterator();
         assertTrue(scms.hasNext());
-        assertEquals(
-                sampleRepo.toString(),
-                ((GitSCM) scms.next()).getRepositories().get(0).getURIs().get(0).toString());
+        assertEquals(sampleRepo.toString(), ((GitSCM) scms.next()).getRepositories().get(0).getURIs().get(0).toString());
         assertTrue(scms.hasNext());
-        assertEquals(
-                otherRepo.toString(),
-                ((GitSCM) scms.next()).getRepositories().get(0).getURIs().get(0).toString());
+        assertEquals(otherRepo.toString(), ((GitSCM) scms.next()).getRepositories().get(0).getURIs().get(0).toString());
         assertFalse(scms.hasNext());
         List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = b.getChangeSets();
         assertEquals(2, changeSets.size());
@@ -255,14 +248,14 @@ public class GitStepTest {
         otherRepo.git("commit", "--message=init");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         p.setDefinition(new CpsFlowDefinition(
-                "node {\n" + "    dir('main') {\n"
-                        + "        git($/"
-                        + otherRepo + "/$)\n" + "    }\n"
-                        + "    dir('other') {\n"
-                        + "        git($/"
-                        + otherRepo + "/$)\n" + "    }\n"
-                        + "}",
-                true));
+            "node {\n" +
+            "    dir('main') {\n" +
+            "        git($/" + otherRepo + "/$)\n" +
+            "    }\n" +
+            "    dir('other') {\n" +
+            "        git($/" + otherRepo + "/$)\n" +
+            "    }\n" +
+            "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         assertEquals(1, b.getActions(BuildData.class).size());
         assertEquals(0, b.getActions(GitTagAction.class).size());
@@ -286,17 +279,17 @@ public class GitStepTest {
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
-                "def rungit(cmd) {def gitcmd = \"git ${cmd}\"; if (isUnix()) {sh gitcmd} else {bat gitcmd}}\n"
-                        + "node {\n"
-                        + "  git url: $/"
-                        + sampleRepo + "/$\n" + "  writeFile file: 'file', text: 'edited by build'\n"
-                        + "  rungit 'config --local commit.gpgsign false'\n"
-                        + "  rungit 'config --local tag.gpgSign false'\n"
-                        + "  rungit 'commit --all --message=edits'\n"
-                        + "  rungit 'show master'\n"
-                        + "}",
-                true));
+            "def rungit(cmd) {def gitcmd = \"git ${cmd}\"; if (isUnix()) {sh gitcmd} else {bat gitcmd}}\n" +
+            "node {\n" +
+            "  git url: $/" + sampleRepo + "/$\n" +
+            "  writeFile file: 'file', text: 'edited by build'\n" +
+            "  rungit 'config --local commit.gpgsign false'\n" +
+            "  rungit 'config --local tag.gpgSign false'\n" +
+            "  rungit 'commit --all --message=edits'\n" +
+            "  rungit 'show master'\n" +
+            "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("+edited by build", b);
     }
+
 }

@@ -1,9 +1,11 @@
 package hudson.plugins.git;
 
-import java.util.Collection;
-import java.util.Collections;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Deprecated data class used in a submodule configuration experiment.
@@ -16,30 +18,34 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class SubmoduleConfig implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     private static final String[] EMPTY_ARRAY = new String[0];
-    String submoduleName = null;
+    String   submoduleName = null;
     String[] branches = EMPTY_ARRAY;
 
     public SubmoduleConfig() {
         this(null, Collections.emptySet());
     }
 
-    public SubmoduleConfig(String submoduleName, String[] branches) {}
+    public SubmoduleConfig(String submoduleName, String[] branches) {
+    }
 
     @DataBoundConstructor
-    public SubmoduleConfig(String submoduleName, Collection<String> branches) {}
+    public SubmoduleConfig(String submoduleName, Collection<String> branches) {
+    }
 
     @Whitelisted
     public String getSubmoduleName() {
         return submoduleName;
     }
 
-    public void setSubmoduleName(String submoduleName) {}
+    public void setSubmoduleName(String submoduleName) {
+    }
 
     public String[] getBranches() {
         return EMPTY_ARRAY;
     }
 
-    public void setBranches(String[] branches) {}
+    public void setBranches(String[] branches) {
+    }
 
     public boolean revisionMatchesInterest(Revision r) {
         return false;

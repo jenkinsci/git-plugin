@@ -1,29 +1,26 @@
 package hudson.plugins.git;
 
-import static hudson.init.InitMilestone.JOB_LOADED;
-import static hudson.init.InitMilestone.PLUGINS_STARTED;
-import static hudson.scm.PollingResult.*;
-
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.init.Initializer;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.plugins.git.browser.BitbucketWeb;
-import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
@@ -32,14 +29,13 @@ import hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.FirstBuildChangelog;
-import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
-import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.plugins.git.extensions.impl.ScmName;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-import hudson.plugins.git.util.*;
 import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
 import hudson.scm.AbstractScmTagAction;
 import hudson.scm.ChangeLogParser;
@@ -54,7 +50,30 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.util.LogTaskListener;
+import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitHooksConfiguration;
+import jenkins.plugins.git.GitSCMMatrixUtil;
+import jenkins.plugins.git.GitToolChooser;
+import jenkins.util.SystemProperties;
+import net.sf.json.JSONObject;
+
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.plugins.gitclient.*;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.export.Exported;
+
+import javax.servlet.ServletException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -76,33 +95,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static hudson.init.InitMilestone.JOB_LOADED;
+import static hudson.init.InitMilestone.PLUGINS_STARTED;
+import hudson.plugins.git.browser.BitbucketWeb;
+import hudson.plugins.git.browser.GitLab;
+import hudson.plugins.git.browser.GithubWeb;
+import static hudson.scm.PollingResult.*;
+import hudson.Util;
+import hudson.plugins.git.extensions.impl.ScmName;
+import hudson.util.LogTaskListener;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.servlet.ServletException;
-import jenkins.model.Jenkins;
-import jenkins.plugins.git.GitHooksConfiguration;
-import jenkins.plugins.git.GitSCMMatrixUtil;
-import jenkins.plugins.git.GitToolChooser;
-import jenkins.util.SystemProperties;
-import net.sf.json.JSONObject;
-import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.lib.Config;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.gitclient.*;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.export.Exported;
 
 /**
  * Git SCM.
@@ -116,7 +124,6 @@ import org.kohsuke.stapler.export.Exported;
 public class GitSCM extends GitSCMBackwardCompatibility {
 
     static final String ALLOW_LOCAL_CHECKOUT_PROPERTY = GitSCM.class.getName() + ".ALLOW_LOCAL_CHECKOUT";
-
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL")
     public static /* not final */ boolean ALLOW_LOCAL_CHECKOUT =
             SystemProperties.getBoolean(ALLOW_LOCAL_CHECKOUT_PROPERTY);
@@ -130,21 +137,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * All the remote repositories that we know about.
      */
     private List<UserRemoteConfig> userRemoteConfigs;
-
     private transient List<RemoteConfig> remoteRepositories;
     /**
      * All the branches that we wish to care about building.
      */
     private List<BranchSpec> branches;
-
     private boolean doGenerateSubmoduleConfigurations = false;
 
     @CheckForNull
     public String gitTool;
-
     @CheckForNull
     private GitRepositoryBrowser browser;
-
     private Collection<SubmoduleConfig> submoduleCfg = Collections.emptyList();
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
@@ -157,8 +160,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * All the configured extensions attached to this.
      */
-    @SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "Known non-serializable field")
-    private DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> extensions;
+    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="Known non-serializable field")
+    private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
     @Whitelisted
     @Deprecated
@@ -167,7 +170,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @DataBoundSetter
-    public void setSubmoduleCfg(Collection<SubmoduleConfig> submoduleCfg) {}
+    public void setSubmoduleCfg(Collection<SubmoduleConfig> submoduleCfg) {
+    }
 
     public static List<UserRemoteConfig> createRepoList(String url, String credentialsId) {
         List<UserRemoteConfig> repoList = new ArrayList<>();
@@ -185,9 +189,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this(
                 createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
-                null,
-                null,
-                Collections.emptyList());
+                null, null, Collections.emptyList());
     }
 
     @Deprecated
@@ -226,7 +228,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.configVersion = 2L;
         this.gitTool = gitTool;
 
-        this.extensions = new DescribableList<>(Saveable.NOOP, Util.fixNull(extensions));
+        this.extensions = new DescribableList<>(Saveable.NOOP,Util.fixNull(extensions));
 
         getBuildChooser(); // set the gitSCM field.
     }
@@ -289,6 +291,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
+
         if (configVersion < 1 && branches != null) {
             // Migrate the branch specs from
             // single * wildcard, to ** wildcard.
@@ -301,7 +304,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (remoteRepositories != null && userRemoteConfigs == null) {
             userRemoteConfigs = new ArrayList<>();
-            for (RemoteConfig cfg : remoteRepositories) {
+            for(RemoteConfig cfg : remoteRepositories) {
                 // converted as in config.jelly
                 String url = "";
                 if (cfg.getURIs().size() > 0 && cfg.getURIs().get(0) != null)
@@ -326,11 +329,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        if (extensions == null) extensions = new DescribableList<>(Saveable.NOOP);
+        if (extensions==null)
+            extensions = new DescribableList<>(Saveable.NOOP);
 
         readBackExtensionsFromLegacy();
 
-        if (choosingStrategy != null && getBuildChooser().getClass() == DefaultBuildChooser.class) {
+        if (choosingStrategy != null && getBuildChooser().getClass()==DefaultBuildChooser.class) {
             for (BuildChooserDescriptor d : BuildChooser.all()) {
                 if (choosingStrategy.equals(d.getLegacyId())) {
                     try {
@@ -357,33 +361,36 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.browser = browser;
     }
 
-    private static final String HOSTNAME_MATCH = "([\\w\\d[-.]]+)" // hostname
+    private static final String HOSTNAME_MATCH
+            = "([\\w\\d[-.]]+)" // hostname
             ;
-    private static final String REPOSITORY_PATH_MATCH = "/*" // Zero or more slashes as start of repository path
-                    + "(.+?)" // repository path without leading slashes
-                    + "(?:[.]git)?" // optional '.git' suffix
-                    + "/*" // optional trailing '/'
+    private static final String REPOSITORY_PATH_MATCH
+            = "/*" // Zero or more slashes as start of repository path
+            + "(.+?)" // repository path without leading slashes
+            + "(?:[.]git)?" // optional '.git' suffix
+            + "/*" // optional trailing '/'
             ;
 
     private static final Pattern[] URL_PATTERNS = {
         /* URL style - like https://github.com/jenkinsci/git-plugin */
         Pattern.compile(
-                "(?:\\w+://)" // protocol (scheme)
-                        + "(?:.+@)?" // optional username/password
-                        + HOSTNAME_MATCH
-                        + "(?:[:][\\d]+)?" // optional port number (only honored by git for ssh:// scheme)
-                        + "/" // separator between hostname and repository path - '/'
-                        + REPOSITORY_PATH_MATCH),
+        "(?:\\w+://)" // protocol (scheme)
+        + "(?:.+@)?" // optional username/password
+        + HOSTNAME_MATCH
+        + "(?:[:][\\d]+)?" // optional port number (only honored by git for ssh:// scheme)
+        + "/" // separator between hostname and repository path - '/'
+        + REPOSITORY_PATH_MATCH
+        ),
         /* Alternate ssh style - like git@github.com:jenkinsci/git-plugin */
         Pattern.compile(
-                "(?:git@)" // required username (only optional if local username is 'git')
-                        + HOSTNAME_MATCH
-                        + ":" // separator between hostname and repository path - ':'
-                        + REPOSITORY_PATH_MATCH)
+        "(?:git@)" // required username (only optional if local username is 'git')
+        + HOSTNAME_MATCH
+        + ":" // separator between hostname and repository path - ':'
+        + REPOSITORY_PATH_MATCH
+        )
     };
 
-    @Override
-    public RepositoryBrowser<?> guessBrowser() {
+    @Override public RepositoryBrowser<?> guessBrowser() {
         Set<String> webUrls = new HashSet<>();
         if (remoteRepositories != null) {
             for (RemoteConfig config : remoteRepositories) {
@@ -453,14 +460,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildChooser bc;
 
         BuildChooserSetting bcs = getExtensions().get(BuildChooserSetting.class);
-        if (bcs != null) bc = bcs.getBuildChooser();
-        else bc = new DefaultBuildChooser();
+        if (bcs!=null)  bc = bcs.getBuildChooser();
+        else            bc = new DefaultBuildChooser();
         bc.gitSCM = this;
         return bc;
     }
 
     public void setBuildChooser(BuildChooser buildChooser) throws IOException {
-        if (buildChooser.getClass() == DefaultBuildChooser.class) {
+        if (buildChooser.getClass()==DefaultBuildChooser.class) {
             getExtensions().remove(BuildChooserSetting.class);
         } else {
             getExtensions().replace(new BuildChooserSetting(buildChooser));
@@ -483,8 +490,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String getParamLocalBranch(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
         LocalBranch localBranch = getExtensions().get(LocalBranch.class);
         // substitute build parameters if available
-        return getParameterString(
-                localBranch == null ? null : localBranch.getLocalBranch(), build.getEnvironment(listener));
+        return getParameterString(localBranch == null ? null : localBranch.getLocalBranch(), build.getEnvironment(listener));
     }
 
     @Deprecated
@@ -502,8 +508,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      * @return can be empty but never null.
      */
-    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build, TaskListener listener)
-            throws IOException, InterruptedException {
+    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
         List<RemoteConfig> expandedRepos = new ArrayList<>();
 
         EnvVars env = build.getEnvironment(listener);
@@ -523,7 +528,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public RemoteConfig getParamExpandedRepo(EnvVars env, RemoteConfig remoteRepository) {
         List<RefSpec> refSpecs = getRefSpecs(remoteRepository, env);
-        return newRemoteConfig(
+    	return newRemoteConfig(
                 getParameterString(remoteRepository.getName(), env),
                 getParameterString(remoteRepository.getURIs().get(0).toPrivateString(), env),
                 refSpecs.toArray(new RefSpec[0]));
@@ -551,8 +556,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Whitelisted
     public List<RemoteConfig> getRepositories() {
-        // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML
-        // element
+        // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
             return new ArrayList<>();
         }
@@ -629,15 +633,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         String repository = null;
 
         if (getRepositories().size() != 1) {
-            for (RemoteConfig repo : getRepositories()) {
-                if (branch.startsWith(repo.getName() + "/")) {
-                    repository = repo.getName();
-                    break;
-                }
-            }
+        	for (RemoteConfig repo : getRepositories()) {
+        		if (branch.startsWith(repo.getName() + "/")) {
+        			repository = repo.getName();
+        			break;
+        		}
+        	}
         } else {
-            repository = getRepositories().get(0).getName();
+        	repository = getRepositories().get(0).getName();
         }
+
 
         // replace repository wildcard with repository name
         if (branch.startsWith("*/") && repository != null) {
@@ -662,9 +667,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public SCMRevisionState calcRevisionsFromBuild(
-            Run<?, ?> abstractBuild, FilePath workspace, Launcher launcher, TaskListener taskListener)
-            throws IOException, InterruptedException {
+    public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> abstractBuild, FilePath workspace, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
         return SCMRevisionState.NONE;
     }
 
@@ -683,25 +686,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public PollingResult compareRemoteRevisionWith(
-            Job<?, ?> project,
-            Launcher launcher,
-            FilePath workspace,
-            final TaskListener listener,
-            SCMRevisionState baseline)
-            throws IOException, InterruptedException {
+    public PollingResult compareRemoteRevisionWith(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         try {
-            return compareRemoteRevisionWithImpl(project, launcher, workspace, listener);
-        } catch (GitException e) {
+            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener);
+        } catch (GitException e){
             throw new IOException(e);
         }
     }
 
     public static final Pattern GIT_REF = Pattern.compile("^(refs/[^/]+)/(.+)");
 
-    private PollingResult compareRemoteRevisionWithImpl(
-            Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener)
-            throws IOException, InterruptedException {
+    private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Jenkins ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
@@ -718,17 +713,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final EnvVars pollEnv = project instanceof AbstractProject
-                ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false)
-                : lastBuild.getEnvironment(listener);
+        final EnvVars pollEnv = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(pollEnv);
 
         if (!requiresWorkspaceForPolling(pollEnv)) {
 
-            final EnvVars environment = project instanceof AbstractProject
-                    ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false)
-                    : new EnvVars();
+            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
             GitClient git = createClient(listener, environment, lastBuild, Jenkins.get(), null);
 
@@ -739,12 +730,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 for (URIish urIish : remoteConfig.getURIs()) {
                     String gitRepo = urIish.toString();
                     Map<String, ObjectId> heads = git.getHeadRev(gitRepo);
-                    if (heads == null || heads.isEmpty()) {
+                    if (heads==null || heads.isEmpty()) {
                         listener.getLogger().println("[poll] Couldn't get remote head revision");
                         return BUILD_NOW;
                     }
 
-                    listener.getLogger().println("Found " + heads.size() + " remote heads on " + urIish);
+                    listener.getLogger().println("Found "+ heads.size() +" remote heads on " + urIish);
 
                     Iterator<Entry<String, ObjectId>> it = heads.entrySet().iterator();
                     while (it.hasNext()) {
@@ -757,9 +748,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             }
                         }
                         if (!match) {
-                            listener.getLogger()
-                                    .println(
-                                            "Ignoring " + head + " as it doesn't match any of the configured refspecs");
+                            listener.getLogger().println("Ignoring " + head + " as it doesn't match any of the configured refspecs");
                             it.remove();
                         }
                     }
@@ -772,13 +761,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             // first, check the a canonical git reference is configured
                             if (!branchSpec.matches(head, environment)) {
 
-                                // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation
-                                // `remote/branch`
+                                // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
                                 String name;
                                 Matcher matcher = GIT_REF.matcher(head);
-                                if (matcher.matches())
-                                    name = remote
-                                            + head.substring(matcher.group(1).length());
+                                if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
                                 else name = remote + "/" + head;
 
                                 if (!branchSpec.matches(name, environment)) continue;
@@ -787,15 +773,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             final ObjectId sha1 = entry.getValue();
                             Build built = buildData.getLastBuild(sha1);
                             if (built != null) {
-                                listener.getLogger()
-                                        .println("[poll] Latest remote head revision on " + head + " is: "
-                                                + sha1.getName() + " - already built by " + built.getBuildNumber());
+                                listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
                                 continue;
                             }
 
-                            listener.getLogger()
-                                    .println(
-                                            "[poll] Latest remote head revision on " + head + " is: " + sha1.getName());
+                            listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName());
                             return BUILD_NOW;
                         }
                     }
@@ -805,11 +787,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final Node node = GitUtils.workspaceToNode(workspace);
-        final EnvVars environment = project instanceof AbstractProject
-                ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener)
-                : project.getEnvironment(node, listener);
+        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : project.getEnvironment(node, listener);
 
-        FilePath workingDirectory = workingDirectory(project, workspace, environment, listener);
+        FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
         // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {
@@ -831,14 +811,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             listener.getLogger().println("Polling for changes in");
 
-            Collection<Revision> candidates = getBuildChooser()
-                    .getCandidateRevisions(
-                            true,
-                            singleBranch,
-                            git,
-                            listener,
-                            buildData,
-                            new BuildChooserContextImpl(project, null, environment));
+            Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
+                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
 
             for (Revision c : candidates) {
                 if (!isRevExcluded(git, c, listener, buildData)) {
@@ -865,15 +839,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(
-            TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, FilePath workspace)
-            throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener, environment, build, GitUtils.workspaceToNode(workspace), ws, null);
+        return createClient(listener,environment, build, GitUtils.workspaceToNode(workspace), ws, null);
     }
 
     /**
@@ -890,38 +862,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(
-            TaskListener listener,
-            EnvVars environment,
-            @NonNull Run<?, ?> build,
-            FilePath workspace,
-            UnsupportedCommand postBuildUnsupportedCommand)
-            throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(
-                listener, environment, build, GitUtils.workspaceToNode(workspace), ws, postBuildUnsupportedCommand);
+        return createClient(listener,environment, build, GitUtils.workspaceToNode(workspace), ws, postBuildUnsupportedCommand);
+
     }
 
     @NonNull
-    private GitClient createClient(
-            TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws)
-            throws IOException, InterruptedException {
+    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws) throws IOException, InterruptedException {
         return createClient(listener, environment, build, n, ws, null);
     }
 
     @NonNull
-    private GitClient createClient(
-            TaskListener listener,
-            EnvVars environment,
-            @NonNull Run<?, ?> build,
-            Node n,
-            FilePath ws,
-            UnsupportedCommand postBuildUnsupportedCommand)
-            throws IOException, InterruptedException {
+    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
 
         if (postBuildUnsupportedCommand == null) {
             /* UnsupportedCommand supports JGit by default */
@@ -943,20 +900,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 String url = getParameterString(uc.getUrl(), environment);
                 /* If any of the extensions do not support JGit, it should not be suggested */
                 /* If the post build action does not support JGit, it should not be suggested */
-                chooser = new GitToolChooser(
-                        url,
-                        build.getParent(),
-                        ucCredentialsId,
-                        gitTool,
-                        n,
-                        listener,
-                        unsupportedCommand.determineSupportForJGit()
-                                && postBuildUnsupportedCommand.determineSupportForJGit());
+                chooser = new GitToolChooser(url, build.getParent(), ucCredentialsId, gitTool, n, listener,
+                                             unsupportedCommand.determineSupportForJGit() && postBuildUnsupportedCommand.determineSupportForJGit());
             }
             if (chooser != null) {
                 listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
                 String updatedGitExe = chooser.getGitTool();
-
+                
                 if (!updatedGitExe.equals("NONE")) {
                     gitExe = updatedGitExe;
                 }
@@ -966,7 +916,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         GitClient c = git.getClient();
         for (GitSCMExtension ext : extensions) {
-            c = ext.decorate(this, c);
+            c = ext.decorate(this,c);
         }
 
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
@@ -978,15 +928,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 StandardUsernameCredentials credentials = lookupScanCredentials(build, url, ucCredentialsId);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
-                    if (!isHideCredentials()) {
+                    if(!isHideCredentials()) {
                         listener.getLogger().printf("using credential %s%n", credentials.getId());
                     }
-                    CredentialsProvider.track(
-                            build, credentials); // TODO unclear if findCredentialById was meant to do this in all cases
+                    CredentialsProvider.track(build, credentials); // TODO unclear if findCredentialById was meant to do this in all cases
                 } else {
-                    if (!isHideCredentials()) {
-                        listener.getLogger()
-                                .printf("Warning: CredentialId \"%s\" could not be found.%n", ucCredentialsId);
+                    if(!isHideCredentials()) {
+                        listener.getLogger().printf("Warning: CredentialId \"%s\" could not be found.%n", ucCredentialsId);
                     }
                 }
             }
@@ -996,8 +944,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return c;
     }
 
-    private static StandardUsernameCredentials lookupScanCredentials(
-            @NonNull Run<?, ?> build, @CheckForNull String url, @CheckForNull String ucCredentialsId) {
+    private static StandardUsernameCredentials lookupScanCredentials(@NonNull Run<?, ?> build,
+                                                              @CheckForNull String url,
+                                                              @CheckForNull String ucCredentialsId) {
         if (Util.fixEmpty(ucCredentialsId) == null) {
             return null;
         } else {
@@ -1027,9 +976,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      * @throws IOException on input or output error
      */
-    private void fetchFrom(
-            GitClient git, @CheckForNull Run<?, ?> run, TaskListener listener, RemoteConfig remoteRepository)
-            throws InterruptedException, IOException {
+    private void fetchFrom(GitClient git,
+            @CheckForNull Run<?, ?> run,
+            TaskListener listener,
+            RemoteConfig remoteRepository) throws InterruptedException, IOException {
 
         boolean first = true;
         for (URIish url : remoteRepository.getURIs()) {
@@ -1047,7 +997,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
                 fetch.execute();
             } catch (GitException ex) {
-                throw new GitException("Failed to fetch from " + url.toString(), ex);
+                throw new GitException("Failed to fetch from "+url.toString(), ex);
             }
         }
     }
@@ -1060,7 +1010,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             repoConfig.setString("remote", name, "url", refUrl);
             List<String> str = new ArrayList<>();
-            if (refSpec != null && refSpec.length > 0) for (RefSpec rs : refSpec) str.add(rs.toString());
+            if(refSpec != null && refSpec.length > 0)
+                for (RefSpec rs: refSpec)
+                    str.add(rs.toString());
             repoConfig.setStringList("remote", name, "fetch", str);
 
             return RemoteConfig.getAllRemoteConfigs(repoConfig).get(0);
@@ -1087,7 +1039,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public String getGitExe(Node builtOn, EnvVars env, TaskListener listener) {
         GitTool tool = GitUtils.resolveGitTool(gitTool, builtOn, env, listener);
-        if (tool == null) {
+        if(tool == null) {
             return null;
         }
         return tool.getGitExe();
@@ -1099,12 +1051,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
-        @SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "known non-serializable field")
+        @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
         final Job project;
-
-        @SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "known non-serializable field")
+        @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
         final Run build;
-
         final EnvVars environment;
 
         BuildChooserContextImpl(Job project, Run build, EnvVars environment) {
@@ -1113,13 +1063,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             this.environment = environment;
         }
 
-        public <T> T actOnBuild(@NonNull ContextCallable<Run<?, ?>, T> callable)
-                throws IOException, InterruptedException {
+        public <T> T actOnBuild(@NonNull ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(build, FilePath.localChannel);
         }
 
-        public <T> T actOnProject(@NonNull ContextCallable<Job<?, ?>, T> callable)
-                throws IOException, InterruptedException {
+        public <T> T actOnProject(@NonNull ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(project, FilePath.localChannel);
         }
 
@@ -1136,15 +1084,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (currentChannel == null) {
                 return null;
             }
-            return currentChannel.export(BuildChooserContext.class, new BuildChooserContext() {
-                public <T> T actOnBuild(@NonNull ContextCallable<Run<?, ?>, T> callable)
-                        throws IOException, InterruptedException {
-                    return callable.invoke(build, Channel.current());
+            return currentChannel.export(BuildChooserContext.class,new BuildChooserContext() {
+                public <T> T actOnBuild(@NonNull ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
+                    return callable.invoke(build,Channel.current());
                 }
 
-                public <T> T actOnProject(@NonNull ContextCallable<Job<?, ?>, T> callable)
-                        throws IOException, InterruptedException {
-                    return callable.invoke(project, Channel.current());
+                public <T> T actOnProject(@NonNull ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
+                    return callable.invoke(project,Channel.current());
                 }
 
                 public Run<?, ?> getBuild() {
@@ -1168,13 +1114,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * messed up (such as HEAD pointing to a random branch.) It is expected that this method brings it back
      * to the predictable clean state by the time this method returns.
      */
-    private @NonNull Build determineRevisionToBuild(
-            final Run build,
-            final @NonNull BuildData buildData,
-            final EnvVars environment,
-            final @NonNull GitClient git,
-            final @NonNull TaskListener listener)
-            throws IOException, InterruptedException {
+    private @NonNull Build determineRevisionToBuild(final Run build,
+                                              final @NonNull BuildData buildData,
+                                              final EnvVars environment,
+                                              final @NonNull GitClient git,
+                                              final @NonNull TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
         Collection<Revision> candidates = Collections.emptyList();
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
@@ -1185,7 +1129,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         // parameter forcing the commit ID to build
-        if (candidates.isEmpty()) {
+        if (candidates.isEmpty() ) {
             final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
             if (rpa != null) {
                 // in case the checkout is due to a commit notification on a
@@ -1194,38 +1138,35 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (rpa.canOriginateFrom(this.getRepositories())) {
                     candidates = Collections.singleton(rpa.toRevision(git));
                 } else {
-                    log.println("skipping resolution of commit " + rpa.commit
-                            + ", since it originates from another repository");
+                    log.println("skipping resolution of commit " + rpa.commit + ", since it originates from another repository");
                 }
             }
         }
 
-        if (candidates.isEmpty()) {
-            final String singleBranch = environment.expand(getSingleBranch(environment));
+        if (candidates.isEmpty() ) {
+            final String singleBranch = environment.expand( getSingleBranch(environment) );
 
-            candidates =
-                    getBuildChooser().getCandidateRevisions(false, singleBranch, git, listener, buildData, context);
+            candidates = getBuildChooser().getCandidateRevisions(
+                    false, singleBranch, git, listener, buildData, context);
         }
 
         if (candidates.isEmpty()) {
             // getBuildCandidates should make the last item the last build, so a re-build
             // will build the last built thing.
-            throw new AbortException(
-                    "Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
+            throw new AbortException("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
         }
 
         Revision marked = candidates.iterator().next();
         Revision rev = marked;
         // Modify the revision based on extensions
         for (GitSCMExtension ext : extensions) {
-            rev = ext.decorateRevisionToBuild(this, build, git, listener, marked, rev);
+            rev = ext.decorateRevisionToBuild(this,build,git,listener,marked,rev);
         }
         Build revToBuild = new Build(marked, rev, build.getNumber(), null);
         buildData.saveBuild(revToBuild);
 
         if (buildData.getBuildsByBranchName().size() >= 100) {
-            log.println(
-                    "JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://plugins.jenkins.io/git/#remove-git-plugin-buildsbybranch-builddata-script");
+            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://plugins.jenkins.io/git/#remove-git-plugin-buildsbybranch-builddata-script");
         }
         boolean checkForMultipleRevisions = true;
         BuildSingleRevisionOnly ext = extensions.get(BuildSingleRevisionOnly.class);
@@ -1241,12 +1182,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     AbstractProject project = (AbstractProject) job;
                     if (!project.isDisabled()) {
                         log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
-                        if (!project.scheduleBuild(
-                                0,
-                                new SCMTrigger.SCMTriggerCause("This build was triggered by build " + build.getNumber()
-                                        + " because more than one build candidate was found."))) {
-                            log.println("WARNING: multiple candidate revisions, but unable to schedule build of "
-                                    + project.getFullDisplayName());
+                        if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause("This build was triggered by build "
+                                + build.getNumber() + " because more than one build candidate was found."))) {
+                            log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
                         }
                     }
                 }
@@ -1260,25 +1198,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * By the end of this method, remote refs are updated to include all the commits found in the remote servers.
      */
-    private void retrieveChanges(Run build, GitClient git, TaskListener listener)
-            throws IOException, InterruptedException {
+    private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
         boolean removeSecondFetch = false;
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
-        if (repos.isEmpty()) return; // defensive check even though this is an invalid configuration
+        if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
 
         if (git.hasGitRepo(false)) {
             // It's an update
-            if (repos.size() == 1) log.println("Fetching changes from the remote Git repository");
-            else log.println(MessageFormat.format("Fetching changes from {0} remote Git repositories", repos.size()));
+            if (repos.size() == 1)
+                log.println("Fetching changes from the remote Git repository");
+            else
+                log.println(MessageFormat.format("Fetching changes from {0} remote Git repositories", repos.size()));
         } else {
             log.println("Cloning the remote Git repository");
 
             RemoteConfig rc = repos.get(0);
             try {
-                CloneCommand cmd =
-                        git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
+                CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                 for (GitSCMExtension ext : extensions) {
                     ext.decorateCloneCommand(this, build, git, listener, cmd);
                 }
@@ -1296,7 +1234,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         GitHooksConfiguration.configure(git);
 
         for (RemoteConfig remoteRepository : repos) {
-            if (remoteRepository.equals(repos.get(0)) && removeSecondFetch) {
+            if (remoteRepository.equals(repos.get(0)) && removeSecondFetch){
                 log.println("Avoid second fetch");
                 continue;
             }
@@ -1336,13 +1274,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public void checkout(
-            Run<?, ?> build,
-            Launcher launcher,
-            FilePath workspace,
-            TaskListener listener,
-            File changelogFile,
-            SCMRevisionState baseline)
+    public void checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline)
             throws IOException, InterruptedException {
 
         if (!ALLOW_LOCAL_CHECKOUT && !workspace.isRemote()) {
@@ -1350,10 +1282,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         if (VERBOSE)
-            listener.getLogger()
-                    .println("Using checkout strategy: " + getBuildChooser().getDisplayName());
+            listener.getLogger().println("Using checkout strategy: " + getBuildChooser().getDisplayName());
 
-        BuildData previousBuildData = getBuildData(build.getPreviousBuild()); // read only
+        BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
 
         if (VERBOSE && buildData.lastBuild != null) {
@@ -1364,12 +1295,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         GitClient git = createClient(listener, environment, build, workspace);
 
         if (launcher instanceof Launcher.DecoratedLauncher) {
-            // We cannot check for git instanceof CliGitAPIImpl vs. JGitAPIImpl here since (when running on an agent) we
-            // will actually have a RemoteGitImpl which is opaque.
-            listener.getLogger()
-                    .println(
-                            "Warning: JENKINS-30600: special launcher " + launcher
-                                    + " will be ignored (a typical symptom is the Git executable not being run inside a designated container)");
+            // We cannot check for git instanceof CliGitAPIImpl vs. JGitAPIImpl here since (when running on an agent) we will actually have a RemoteGitImpl which is opaque.
+            listener.getLogger().println("Warning: JENKINS-30600: special launcher " + launcher + " will be ignored (a typical symptom is the Git executable not being run inside a designated container)");
         }
 
         for (GitSCMExtension ext : extensions) {
@@ -1383,14 +1310,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // revision info for this build etc. The default assumption is that it's a duplicate.
         boolean buildDataAlreadyPresent = false;
         List<BuildData> actions = build.getActions(BuildData.class);
-        for (BuildData d : actions) {
+        for (BuildData d: actions)  {
             if (d.similarTo(buildData)) {
                 buildDataAlreadyPresent = true;
                 break;
             }
         }
         if (!actions.isEmpty()) {
-            buildData.setIndex(actions.size() + 1);
+            buildData.setIndex(actions.size()+1);
         }
 
         // If the BuildData is not already attached to this build, add it to the build and mark that
@@ -1401,7 +1328,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
-        Branch localBranch = Iterables.getFirst(revToBuild.revision.getBranches(), null);
+        Branch localBranch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         String localBranchName = getParamLocalBranch(build, listener);
         if (localBranch != null && localBranch.getName() != null) { // null for a detached HEAD
             String remoteBranchName = getBranchName(localBranch);
@@ -1411,25 +1338,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (lb != null) {
                 String lbn = lb.getLocalBranch();
                 if (lbn == null || lbn.equals("**")) {
-                    // local branch is configured with empty value or "**" so use remote branch name for checkout
-                    localBranchName = deriveLocalBranchName(remoteBranchName);
-                }
-                environment.put(GIT_LOCAL_BRANCH, localBranchName);
+                  // local branch is configured with empty value or "**" so use remote branch name for checkout
+                  localBranchName = deriveLocalBranchName(remoteBranchName);
+               }
+               environment.put(GIT_LOCAL_BRANCH, localBranchName);
             }
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
-        CheckoutCommand checkoutCommand = git.checkout()
-                .branch(localBranchName)
-                .ref(revToBuild.revision.getSha1String())
-                .deleteBranchIfExist(true);
+        CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
         }
 
         try {
-            checkoutCommand.execute();
+          checkoutCommand.execute();
         } catch (GitLockFailedException e) {
             // Rethrow IOException so the retry will be able to catch it
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
@@ -1458,31 +1382,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (changelogFile != null) {
-                computeChangeLog(
-                        git,
-                        revToBuild.revision,
-                        listener,
-                        previousBuildData,
-                        new FilePath(changelogFile),
+                computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
                         new BuildChooserContextImpl(build.getParent(), build, environment));
             }
         }
 
         for (GitSCMExtension ext : extensions) {
-            ext.onCheckoutCompleted(this, build, git, listener);
+            ext.onCheckoutCompleted(this, build, git,listener);
         }
     }
 
     /* Package protected for test access */
     void abortIfSourceIsLocal() throws AbortException {
-        for (UserRemoteConfig userRemoteConfig : getUserRemoteConfigs()) {
+        for (UserRemoteConfig userRemoteConfig: getUserRemoteConfigs()) {
             String remoteUrl = userRemoteConfig.getUrl();
             if (!isRemoteUrlValid(remoteUrl)) {
-                throw new AbortException(
-                        "Checkout of Git remote '" + remoteUrl + "' aborted because it references a local directory, "
-                                + "which may be insecure. You can allow local checkouts anyway by setting the system property '"
-                                + ALLOW_LOCAL_CHECKOUT_PROPERTY
-                                + "' to true.");
+                throw new AbortException("Checkout of Git remote '" + remoteUrl + "' aborted because it references a local directory, " +
+                        "which may be insecure. You can allow local checkouts anyway by setting the system property '" +
+                        ALLOW_LOCAL_CHECKOUT_PROPERTY + "' to true.");
             }
         }
     }
@@ -1555,14 +1472,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private void computeChangeLog(
-            GitClient git,
-            Revision revToBuild,
-            TaskListener listener,
-            BuildData previousBuildData,
-            FilePath changelogFile,
-            BuildChooserContext context)
-            throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
@@ -1575,8 +1485,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 exclusion = true;
             } else {
                 for (Branch b : revToBuild.getBranches()) {
-                    Build lastRevWas =
-                            getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
+                    Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
                     if (lastRevWas != null && lastRevWas.revision != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
                         changelog.excludes(lastRevWas.getSHA1());
                         exclusion = true;
@@ -1586,7 +1495,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             if (!exclusion) {
                 FirstBuildChangelog firstBuildChangelog = getExtensions().get(FirstBuildChangelog.class);
-                if (firstBuildChangelog != null && firstBuildChangelog.isMakeChangelog()) {
+                if (firstBuildChangelog!=null&&firstBuildChangelog.isMakeChangelog()) {
                     changelog.to(out).max(1).execute();
                     executed = true;
                     listener.getLogger().println("First time build. Latest changes added to changelog.");
@@ -1617,30 +1526,30 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public void buildEnvironment(Run<?, ?> build, java.util.Map<String, String> env) {
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
-        if (rev != null) {
+        if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
-            if (branch != null && branch.getName() != null) {
-                String remoteBranchName = getBranchName(branch);
+            if (branch!=null && branch.getName()!=null) {
+               String remoteBranchName = getBranchName(branch);
                 env.put(GIT_BRANCH, remoteBranchName);
 
                 // TODO this is unmodular; should rather override LocalBranch.populateEnvironmentVariables
                 LocalBranch lb = getExtensions().get(LocalBranch.class);
                 if (lb != null) {
-                    // Set GIT_LOCAL_BRANCH variable from the LocalBranch extension
-                    String localBranchName = lb.getLocalBranch();
-                    if (localBranchName == null || localBranchName.equals("**")) {
-                        // local branch is configured with empty value or "**" so use remote branch name for checkout
-                        localBranchName = deriveLocalBranchName(remoteBranchName);
-                    }
-                    env.put(GIT_LOCAL_BRANCH, localBranchName);
+                   // Set GIT_LOCAL_BRANCH variable from the LocalBranch extension
+                   String localBranchName = lb.getLocalBranch();
+                   if (localBranchName == null || localBranchName.equals("**")) {
+                      // local branch is configured with empty value or "**" so use remote branch name for checkout
+                      localBranchName = deriveLocalBranchName(remoteBranchName);
+                   }
+                   env.put(GIT_LOCAL_BRANCH, localBranchName);
                 }
                 RelativeTargetDirectory rtd = getExtensions().get(RelativeTargetDirectory.class);
                 if (rtd != null) {
-                    String localRelativeTargetDir = rtd.getRelativeTargetDir();
-                    if (localRelativeTargetDir == null) {
-                        localRelativeTargetDir = "";
-                    }
-                    env.put(GIT_CHECKOUT_DIR, localRelativeTargetDir);
+                   String localRelativeTargetDir = rtd.getRelativeTargetDir();
+                   if ( localRelativeTargetDir == null ){
+                       localRelativeTargetDir = "";
+                   }
+                   env.put(GIT_CHECKOUT_DIR, localRelativeTargetDir);
                 }
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
@@ -1664,21 +1573,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         /* JENKINS-38608 reports an unhelpful error message when a repository URL is empty */
         /* Throws an IllegalArgumentException because that exception is thrown by env.put() on a null argument */
         int repoCount = 1;
-        for (UserRemoteConfig config : userRemoteConfigs) {
+        for (UserRemoteConfig config:userRemoteConfigs) {
             if (config.getUrl() == null) {
-                throw new IllegalArgumentException("Git repository URL " + repoCount
-                        + " is an empty string in job definition. Checkout requires a valid repository URL");
+                throw new IllegalArgumentException("Git repository URL " + repoCount + " is an empty string in job definition. Checkout requires a valid repository URL");
             }
             repoCount++;
         }
 
-        if (userRemoteConfigs.size() > 0) {
+        if (userRemoteConfigs.size()>0) {
             env.put(GIT_URL, userRemoteConfigs.get(0).getUrl());
         }
-        if (userRemoteConfigs.size() > 1) {
-            int count = 1;
-            for (UserRemoteConfig config : userRemoteConfigs) {
-                env.put(GIT_URL + "_" + count, config.getUrl());
+        if (userRemoteConfigs.size()>1) {
+            int count=1;
+            for (UserRemoteConfig config:userRemoteConfigs) {
+                env.put(GIT_URL+"_"+count, config.getUrl());
                 count++;
             }
         }
@@ -1689,10 +1597,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private String getBranchName(Branch branch) {
+    private String getBranchName(Branch branch)
+    {
         String name = branch.getName();
-        if (name.startsWith("refs/remotes/")) {
-            // Restore expected previous behaviour
+        if(name.startsWith("refs/remotes/")) {
+            //Restore expected previous behaviour
             name = name.substring("refs/remotes/".length());
         }
         return name;
@@ -1701,8 +1610,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String getLastBuiltCommitOfBranch(Run<?, ?> build, Branch branch) {
         String prevCommit = null;
         if (build.getPreviousBuiltBuild() != null) {
-            final Build lastBuildOfBranch =
-                    fixNull(getBuildData(build.getPreviousBuiltBuild())).getLastBuildOfBranch(branch.getName());
+            final Build lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild())).getLastBuildOfBranch(branch.getName());
             if (lastBuildOfBranch != null) {
                 Revision previousRev = lastBuildOfBranch.getRevision();
                 if (previousRev != null) {
@@ -1716,8 +1624,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String getLastSuccessfulBuiltCommitOfBranch(Run<?, ?> build, Branch branch) {
         String prevCommit = null;
         if (build.getPreviousSuccessfulBuild() != null) {
-            final Build lastSuccessfulBuildOfBranch =
-                    fixNull(getBuildData(build.getPreviousSuccessfulBuild())).getLastBuildOfBranch(branch.getName());
+            final Build lastSuccessfulBuildOfBranch = fixNull(getBuildData(build.getPreviousSuccessfulBuild())).getLastBuildOfBranch(branch.getName());
             if (lastSuccessfulBuildOfBranch != null) {
                 Revision previousRev = lastSuccessfulBuildOfBranch.getRevision();
                 if (previousRev != null) {
@@ -1732,16 +1639,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public ChangeLogParser createChangeLogParser() {
         try {
-            GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars())
-                    .in(new File("."))
-                    .using(gitTool)
-                    .getClient();
+            GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(gitTool).getClient();
             return new GitChangeLogParser(gitClient, getExtensions().get(AuthorInChangelog.class) != null);
         } catch (IOException | InterruptedException e) {
-            LOGGER.log(
-                    Level.WARNING,
-                    "Git client using '" + gitTool + "' changelog parser failed, using deprecated changelog parser",
-                    e);
+            LOGGER.log(Level.WARNING, "Git client using '" + gitTool + "' changelog parser failed, using deprecated changelog parser", e);
         }
         return new GitChangeLogParser(null, getExtensions().get(AuthorInChangelog.class) != null);
     }
@@ -1750,14 +1651,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Symbol({"scmGit", "gitSCM"}) // Cannot use "git" because there is already a `git` pipeline step
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
-        @SuppressFBWarnings(value = "UUF_UNUSED_FIELD", justification = "Do not risk compatibility")
+        @SuppressFBWarnings(value="UUF_UNUSED_FIELD", justification="Do not risk compatibility")
         private String gitExe;
-
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
         private boolean useExistingAccountWithSameEmail;
-        //        private GitClientType defaultClientType = GitClientType.GITCLI;
+//        private GitClientType defaultClientType = GitClientType.GITCLI;
         private boolean showEntireCommitSummaryInChanges;
         private boolean hideCredentials;
         private boolean allowSecondFetch;
@@ -1794,9 +1694,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return showEntireCommitSummaryInChanges;
         }
 
-        public boolean isHideCredentials() {
-            return hideCredentials;
-        }
+        public boolean isHideCredentials() { return hideCredentials; }
 
         public void setHideCredentials(boolean hideCredentials) {
             this.hideCredentials = hideCredentials;
@@ -1810,8 +1708,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return "Git";
         }
 
-        @Override
-        public boolean isApplicable(Job project) {
+        @Override public boolean isApplicable(Job project) {
             return true;
         }
 
@@ -1820,11 +1717,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         public boolean showGitToolOptions() {
-            return Jenkins.get()
-                            .getDescriptorByType(GitTool.DescriptorImpl.class)
-                            .getInstallations()
-                            .length
-                    > 1;
+            return Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
         }
 
         /**
@@ -1832,9 +1725,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return  list of available git tools
          */
         public List<GitTool> getGitTools() {
-            GitTool[] gitToolInstallations = Jenkins.get()
-                    .getDescriptorByType(GitTool.DescriptorImpl.class)
-                    .getInstallations();
+            GitTool[] gitToolInstallations = Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
             return Arrays.asList(gitToolInstallations);
         }
 
@@ -1905,29 +1796,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             this.useExistingAccountWithSameEmail = useExistingAccountWithSameEmail;
         }
 
-        public boolean isAllowSecondFetch() {
-            return allowSecondFetch;
-        }
+        public boolean isAllowSecondFetch() { return allowSecondFetch; }
 
         public void setAllowSecondFetch(boolean allowSecondFetch) {
             this.allowSecondFetch = allowSecondFetch;
         }
 
-        public boolean isDisableGitToolChooser() {
-            return disableGitToolChooser;
-        }
+        public boolean isDisableGitToolChooser() { return disableGitToolChooser; }
 
-        public void setDisableGitToolChooser(boolean disableGitToolChooser) {
-            this.disableGitToolChooser = disableGitToolChooser;
-        }
+        public void setDisableGitToolChooser(boolean disableGitToolChooser) { this.disableGitToolChooser = disableGitToolChooser; }
 
-        public boolean isAddGitTagAction() {
-            return addGitTagAction;
-        }
+        public boolean isAddGitTagAction() { return addGitTagAction; }
 
-        public void setAddGitTagAction(boolean addGitTagAction) {
-            this.addGitTagAction = addGitTagAction;
-        }
+        public void setAddGitTagAction(boolean addGitTagAction) { this.addGitTagAction = addGitTagAction; }
 
         /**
          * Old configuration of git executable - exposed so that we can
@@ -1938,8 +1819,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return null;
         }
 
-        public static List<RemoteConfig> createRepositoryConfigurations(
-                String[] urls, String[] repoNames, String[] refs) throws IOException {
+        public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,
+                String[] repoNames,
+                String[] refs) throws IOException {
 
             List<RemoteConfig> remoteRepositories;
             Config repoConfig = new Config();
@@ -1962,8 +1844,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
 
                 repoConfig.setString("remote", name, "url", url);
-                repoConfig.setStringList(
-                        "remote", name, "fetch", new ArrayList<>(Arrays.asList(refs[i].split("\\s+"))));
+                repoConfig.setStringList("remote", name, "fetch", new ArrayList<>(Arrays.asList(refs[i].split("\\s+"))));
             }
 
             try {
@@ -1974,8 +1855,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return remoteRepositories;
         }
 
-        public static PreBuildMergeOptions createMergeOptions(
-                UserMergeOptions mergeOptionsBean, List<RemoteConfig> remoteRepositories) throws FormException {
+        public static PreBuildMergeOptions createMergeOptions(UserMergeOptions mergeOptionsBean,
+                List<RemoteConfig> remoteRepositories)
+                throws FormException {
             PreBuildMergeOptions mergeOptions = new PreBuildMergeOptions();
             if (mergeOptionsBean != null) {
                 RemoteConfig mergeRemote = null;
@@ -1991,8 +1873,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     }
                 }
                 if (mergeRemote == null) {
-                    throw new FormException(
-                            "No remote repository configured with name '" + mergeRemoteName + "'", "git.mergeRemote");
+                    throw new FormException("No remote repository configured with name '" + mergeRemoteName + "'", "git.mergeRemote");
                 }
                 mergeOptions.setMergeRemote(mergeRemote);
                 mergeOptions.setMergeTarget(mergeOptionsBean.getMergeTarget());
@@ -2003,7 +1884,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return mergeOptions;
         }
 
-        public FormValidation doGitRemoteNameCheck(StaplerRequest req) throws IOException, ServletException {
+        public FormValidation doGitRemoteNameCheck(StaplerRequest req)
+                throws IOException, ServletException {
             String mergeRemoteName = req.getParameter("value");
             boolean isMerge = req.getParameter("isMerge") != null;
 
@@ -2016,7 +1898,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String[] names = req.getParameterValues("repo.name");
             if (urls != null && names != null)
                 for (String name : GitUtils.fixupNames(names, urls))
-                    if (name.equals(mergeRemoteName)) return FormValidation.ok();
+                    if (name.equals(mergeRemoteName))
+                        return FormValidation.ok();
 
             return FormValidation.error("No remote repository configured with name '" + mergeRemoteName + "'");
         }
@@ -2032,26 +1915,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * Fill in the environment variables for launching git
          * @param env base environment variables
          */
-        public void populateEnvironmentVariables(Map<String, String> env) {
+        public void populateEnvironmentVariables(Map<String,String> env) {
             String name = getGlobalConfigName();
-            if (name != null) {
+            if (name!=null) {
                 env.put("GIT_COMMITTER_NAME", name);
                 env.put("GIT_AUTHOR_NAME", name);
             }
             String email = getGlobalConfigEmail();
-            if (email != null) {
+            if (email!=null) {
                 env.put("GIT_COMMITTER_EMAIL", email);
                 env.put("GIT_AUTHOR_EMAIL", email);
             }
         }
 
-        //        public GitClientType getDefaultClientType() {
-        //            return defaultClientType;
-        //        }
-        //
-        //        public void setDefaultClientType(String defaultClientType) {
-        //            this.defaultClientType = GitClientType.valueOf(defaultClientType);
-        //        }
+//        public GitClientType getDefaultClientType() {
+//            return defaultClientType;
+//        }
+//
+//        public void setDefaultClientType(String defaultClientType) {
+//            this.defaultClientType = GitClientType.valueOf(defaultClientType);
+//        }
     }
 
     private static final long serialVersionUID = 1L;
@@ -2068,8 +1951,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return branches;
     }
 
-    @Override
-    public String getKey() {
+    @Override public String getKey() {
         ScmName scmName = getExtensions().get(ScmName.class);
         if (scmName != null) {
             return scmName.getName();
@@ -2095,8 +1977,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     private boolean isRelevantBuildData(BuildData bd) {
-        for (UserRemoteConfig c : getUserRemoteConfigs()) {
-            if (bd.hasBeenReferenced(c.getUrl())) {
+        for(UserRemoteConfig c : getUserRemoteConfigs()) {
+            if(bd.hasBeenReferenced(c.getUrl())) {
                 return true;
             }
         }
@@ -2124,11 +2006,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData base = getBuildData(build);
         ScmName sn = getExtensions().get(ScmName.class);
         String scmName = sn == null ? null : sn.getName();
-        if (base == null) return new BuildData(scmName, getUserRemoteConfigs());
+        if (base==null)
+            return new BuildData(scmName, getUserRemoteConfigs());
         else {
-            BuildData buildData = base.clone();
-            buildData.setScmName(scmName);
-            return buildData;
+           BuildData buildData = base.clone();
+           buildData.setScmName(scmName);
+           return buildData;
         }
     }
 
@@ -2193,9 +2076,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */
-    protected FilePath workingDirectory(
-            Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener)
-            throws IOException, InterruptedException {
+    protected FilePath workingDirectory(Job<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException {
         // JENKINS-10880: workspace can be null
         if (workspace == null) {
             return null;
@@ -2203,7 +2084,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         for (GitSCMExtension ext : extensions) {
             FilePath r = ext.getWorkingDirectory(this, context, workspace, environment, listener);
-            if (r != null) return r;
+            if (r!=null)    return r;
         }
         return workspace;
     }
@@ -2216,52 +2097,48 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param listener build log
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData)
-            throws IOException, InterruptedException {
+    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws IOException, InterruptedException {
         try {
             List<String> revShow;
             if (buildData != null && buildData.lastBuild != null) {
                 if (getExtensions().get(PathRestriction.class) != null) {
-                    revShow = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
+                    revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
                 } else {
-                    revShow = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1(), false);
+                    revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1(), false);
                 }
             } else {
-                revShow = git.showRevision(r.getSha1());
+                revShow  = git.showRevision(r.getSha1());
             }
 
             revShow.add("commit "); // sentinel value
 
-            int start = 0, idx = 0;
+            int start=0, idx=0;
             for (String line : revShow) {
-                if (line.startsWith("commit ") && idx != 0) {
-                    boolean showEntireCommitSummary =
-                            GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
-                    GitChangeSet change = new GitChangeSet(
-                            revShow.subList(start, idx),
-                            getExtensions().get(AuthorInChangelog.class) != null,
-                            showEntireCommitSummary);
+                if (line.startsWith("commit ") && idx!=0) {
+                    boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
+                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null, showEntireCommitSummary);
 
-                    Boolean excludeThisCommit = null;
+                    Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
                         excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
-                        if (excludeThisCommit != null) break;
+                        if (excludeThisCommit!=null)
+                            break;
                     }
-                    if (excludeThisCommit == null || !excludeThisCommit)
-                        return false; // this sequence of commits have one commit that we want to build
+                    if (excludeThisCommit==null || !excludeThisCommit)
+                        return false;    // this sequence of commits have one commit that we want to build
                     start = idx;
                 }
 
                 idx++;
             }
 
-            assert start == revShow.size() - 1;
+            assert start==revShow.size()-1;
 
             // every commit got excluded
             return true;
         } catch (GitException e) {
             e.printStackTrace(listener.error("Failed to determine if we want to exclude " + r.getSha1String()));
-            return false; // for historical reason this is not considered a fatal error.
+            return false;   // for historical reason this is not considered a fatal error.
         }
     }
 
@@ -2276,7 +2153,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * generation is no longer supported
      */
     @DataBoundSetter
-    public void setDoGenerateSubmoduleConfigurations(boolean ignoredValue) {}
+    public void setDoGenerateSubmoduleConfigurations(boolean ignoredValue) {
+    }
 
     /**
      * Returns false, the constant value of doGenerateSubmoduleConfigurations.
@@ -2287,7 +2165,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return doGenerateSubmoduleConfigurations;
     }
 
-    @Initializer(after = PLUGINS_STARTED)
+    @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
         Jenkins jenkins = Jenkins.get();
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
@@ -2298,12 +2176,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (exe.equals(defaultGit)) {
                 return;
             }
-            System.err.println(
-                    "[WARNING] you're using deprecated gitexe attribute to configure git plugin. Use Git installations");
+            System.err.println("[WARNING] you're using deprecated gitexe attribute to configure git plugin. Use Git installations");
         }
     }
 
-    @Initializer(before = JOB_LOADED)
+    @Initializer(before=JOB_LOADED)
     public static void configureXtream() {
         Run.XSTREAM.registerConverter(new ObjectIdConverter());
         Items.XSTREAM.registerConverter(new RemoteConfigConverter(Items.XSTREAM));
@@ -2316,11 +2193,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Set to true to enable more logging to build's {@link TaskListener}.
      * Used by various classes in this package.
      */
-    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "Not final so users can adjust log verbosity")
+    @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="Not final so users can adjust log verbosity")
     public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
 
     /**
      * To avoid pointlessly large changelog, we'll limit the number of changes up to this.
      */
-    public static final int MAX_CHANGELOG = Integer.getInteger(GitSCM.class.getName() + ".maxChangelog", 1024);
+    public static final int MAX_CHANGELOG = Integer.getInteger(GitSCM.class.getName()+".maxChangelog",1024);
 }

@@ -23,12 +23,6 @@
  */
 package jenkins.plugins.git;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import java.io.File;
@@ -43,6 +37,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 public class GitHooksConfigurationTest {
 
     @Rule
@@ -54,7 +54,8 @@ public class GitHooksConfigurationTest {
     private final Random random = new Random();
     private static final String NULL_HOOKS_PATH = isWindows() ? "NUL:" : "/dev/null";
 
-    public GitHooksConfigurationTest() {}
+    public GitHooksConfigurationTest() {
+    }
 
     @Before
     public void setUp() throws IOException, InterruptedException {

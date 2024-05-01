@@ -1,21 +1,22 @@
 package hudson.plugins.git.browser;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import hudson.model.*;
 import hudson.plugins.git.*;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TFS2013GitRepositoryBrowserTest {
 
@@ -27,8 +28,7 @@ public class TFS2013GitRepositoryBrowserTest {
         GitSCM scm = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
                 new ArrayList<>(),
-                null,
-                JGitTool.MAGIC_EXENAME,
+                null, JGitTool.MAGIC_EXENAME,
                 Collections.emptyList());
 
         AbstractProject project = mock(AbstractProject.class);
@@ -71,8 +71,7 @@ public class TFS2013GitRepositoryBrowserTest {
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = browser.getDiffLink(path);
             EditType editType = path.getEditType();
-            URL expectedDiffLink = new URL(
-                    "http://tfs/tfs/project/_git/repo/commit/" + sample.id + "#path=" + path.getPath() + "&_a=compare");
+            URL expectedDiffLink = new URL("http://tfs/tfs/project/_git/repo/commit/" + sample.id + "#path=" + path.getPath() + "&_a=compare");
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
             assertEquals(msg, expectedDiffLink, diffLink);
         }
@@ -84,8 +83,7 @@ public class TFS2013GitRepositoryBrowserTest {
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL fileLink = browser.getFileLink(path);
             EditType editType = path.getEditType();
-            URL expectedFileLink = new URL(
-                    "http://tfs/tfs/project/_git/repo/commit/" + sample.id + "#path=" + path.getPath() + "&_a=history");
+            URL expectedFileLink = new URL("http://tfs/tfs/project/_git/repo/commit/" + sample.id + "#path=" + path.getPath() + "&_a=history");
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
             assertEquals(msg, expectedFileLink, fileLink);
         }

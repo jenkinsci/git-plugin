@@ -46,7 +46,8 @@ public class IgnoreOnPushNotificationTrait extends SCMSourceTrait {
      * Stapler constructor.
      */
     @DataBoundConstructor
-    public IgnoreOnPushNotificationTrait() {}
+    public IgnoreOnPushNotificationTrait() {
+    }
 
     /**
      * {@inheritDoc}
@@ -80,6 +81,7 @@ public class IgnoreOnPushNotificationTrait extends SCMSourceTrait {
             return "Ignore on push notifications";
         }
 
+
         /**
          * {@inheritDoc}
          */
@@ -111,5 +113,6 @@ public class IgnoreOnPushNotificationTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitSCMSource.class;
         }
+
     }
 }

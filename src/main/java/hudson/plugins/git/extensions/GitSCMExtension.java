@@ -25,6 +25,7 @@ import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+
 import org.jenkinsci.plugins.gitclient.*;
 
 /**
@@ -61,13 +62,9 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    @SuppressFBWarnings(
-            value = "NP_BOOLEAN_RETURN_NULL",
-            justification = "null used to indicate other extensions should decide")
+    @SuppressFBWarnings(value="NP_BOOLEAN_RETURN_NULL", justification="null used to indicate other extensions should decide")
     @CheckForNull
-    public Boolean isRevExcluded(
-            GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData)
-            throws IOException, InterruptedException, GitException {
+    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
         return null;
     }
 
@@ -84,9 +81,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public FilePath getWorkingDirectory(
-            GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener)
-            throws IOException, InterruptedException, GitException {
+    public FilePath getWorkingDirectory(GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (context instanceof AbstractProject) {
             return getWorkingDirectory(scm, (AbstractProject) context, workspace, environment, listener);
         }
@@ -94,18 +89,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     }
 
     @Deprecated
-    public FilePath getWorkingDirectory(
-            GitSCM scm, AbstractProject<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener)
-            throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(
-                GitSCMExtension.class,
-                getClass(),
-                "getWorkingDirectory",
-                GitSCM.class,
-                Job.class,
-                FilePath.class,
-                EnvVars.class,
-                TaskListener.class)) {
+    public FilePath getWorkingDirectory(GitSCM scm, AbstractProject<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "getWorkingDirectory", GitSCM.class, Job.class, FilePath.class, EnvVars.class, TaskListener.class)) {
             return getWorkingDirectory(scm, (Job) context, workspace, environment, listener);
         }
         return null;
@@ -150,30 +135,17 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public Revision decorateRevisionToBuild(
-            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev)
-            throws IOException, InterruptedException, GitException {
+    public Revision decorateRevisionToBuild(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener, Revision marked, Revision rev) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
             return decorateRevisionToBuild(scm, (AbstractBuild) build, git, (BuildListener) listener, marked, rev);
         } else {
             return rev;
         }
     }
-
+    
     @Deprecated
-    public Revision decorateRevisionToBuild(
-            GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, Revision marked, Revision rev)
-            throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(
-                GitSCMExtension.class,
-                getClass(),
-                "decorateRevisionToBuild",
-                GitSCM.class,
-                Run.class,
-                GitClient.class,
-                TaskListener.class,
-                Revision.class,
-                Revision.class)) {
+    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener, Revision marked, Revision rev) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateRevisionToBuild", GitSCM.class, Run.class, GitClient.class, TaskListener.class, Revision.class, Revision.class)) {
             return decorateRevisionToBuild(scm, (Run) build, git, listener, marked, rev);
         } else {
             return rev;
@@ -190,24 +162,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
-            throws IOException, InterruptedException, GitException {
+    public void beforeCheckout(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
             beforeCheckout(scm, (AbstractBuild) build, git, (BuildListener) listener);
         }
     }
 
     @Deprecated
-    public void beforeCheckout(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener)
-            throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(
-                GitSCMExtension.class,
-                getClass(),
-                "beforeCheckout",
-                GitSCM.class,
-                Run.class,
-                GitClient.class,
-                TaskListener.class)) {
+    public void beforeCheckout(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "beforeCheckout", GitSCM.class, Run.class, GitClient.class, TaskListener.class)) {
             beforeCheckout(scm, (Run) build, git, listener);
         }
     }
@@ -228,24 +191,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
-            throws IOException, InterruptedException, GitException {
+    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
             onCheckoutCompleted(scm, (AbstractBuild) build, git, (BuildListener) listener);
         }
     }
 
     @Deprecated
-    public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener)
-            throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(
-                GitSCMExtension.class,
-                getClass(),
-                "onCheckoutCompleted",
-                GitSCM.class,
-                Run.class,
-                GitClient.class,
-                TaskListener.class)) {
+    public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "onCheckoutCompleted", GitSCM.class, Run.class, GitClient.class, TaskListener.class)) {
             onCheckoutCompleted(scm, (Run) build, git, listener);
         }
     }
@@ -260,7 +214,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {}
+    public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
+    }
 
     /**
      * Called when {@link GitClient} is created to decorate its behaviour.
@@ -281,7 +236,9 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @param scm GitSCM object
      * @param unsupportedCommand UnsupportedCommand object
      */
-    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand unsupportedCommand) {}
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand unsupportedCommand) {
+
+    }
 
     /**
      * Called before a {@link CloneCommand} is executed to allow extensions to alter its behaviour.
@@ -294,27 +251,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void decorateCloneCommand(
-            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
             decorateCloneCommand(scm, (AbstractBuild) build, git, (BuildListener) listener, cmd);
         }
     }
 
     @Deprecated
-    public void decorateCloneCommand(
-            GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd)
-            throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(
-                GitSCMExtension.class,
-                getClass(),
-                "decorateCloneCommand",
-                GitSCM.class,
-                Run.class,
-                GitClient.class,
-                TaskListener.class,
-                CloneCommand.class)) {
+    public void decorateCloneCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateCloneCommand", GitSCM.class, Run.class, GitClient.class, TaskListener.class, CloneCommand.class)) {
             decorateCloneCommand(scm, (Run) build, git, listener, cmd);
         }
     }
@@ -331,8 +276,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @deprecated use {@link #decorateCheckoutCommand(GitSCM, Run, GitClient, TaskListener, CheckoutCommand)}
      */
     @Deprecated
-    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd)
-            throws IOException, InterruptedException, GitException {}
+    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
+    }
 
     /**
      * Called before a {@link FetchCommand} is executed to allow extensions to alter its behaviour.
@@ -345,8 +290,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void decorateFetchCommand(
-            GitSCM scm, @CheckForNull Run<?, ?> run, GitClient git, TaskListener listener, FetchCommand cmd)
+    public void decorateFetchCommand(GitSCM scm, @CheckForNull Run<?,?> run, GitClient git, TaskListener listener, FetchCommand cmd)
             throws IOException, InterruptedException, GitException {
         decorateFetchCommand(scm, git, listener, cmd);
     }
@@ -362,27 +306,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void decorateMergeCommand(
-            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, MergeCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateMergeCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
             decorateMergeCommand(scm, (AbstractBuild) build, git, (BuildListener) listener, cmd);
         }
     }
 
     @Deprecated
-    public void decorateMergeCommand(
-            GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, MergeCommand cmd)
-            throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(
-                GitSCMExtension.class,
-                getClass(),
-                "decorateMergeCommand",
-                GitSCM.class,
-                Run.class,
-                GitClient.class,
-                TaskListener.class,
-                MergeCommand.class)) {
+    public void decorateMergeCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateMergeCommand", GitSCM.class, Run.class, GitClient.class, TaskListener.class, MergeCommand.class)) {
             decorateMergeCommand(scm, (Run) build, git, listener, cmd);
         }
     }
@@ -398,27 +330,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void decorateCheckoutCommand(
-            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
             decorateCheckoutCommand(scm, (AbstractBuild) build, git, (BuildListener) listener, cmd);
         }
     }
 
     @Deprecated
-    public void decorateCheckoutCommand(
-            GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd)
-            throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(
-                GitSCMExtension.class,
-                getClass(),
-                "decorateCheckoutCommand",
-                GitSCM.class,
-                Run.class,
-                GitClient.class,
-                TaskListener.class,
-                CheckoutCommand.class)) {
+    public void decorateCheckoutCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateCheckoutCommand", GitSCM.class, Run.class, GitClient.class, TaskListener.class, CheckoutCommand.class)) {
             decorateCheckoutCommand(scm, (Run) build, git, listener, cmd);
         }
     }
@@ -428,7 +348,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @param scm GitSCM used as reference
      * @param env environment variables to be added
      */
-    public void populateEnvironmentVariables(GitSCM scm, Map<String, String> env) {}
+    public void populateEnvironmentVariables(GitSCM scm, Map <String, String> env) {}
 
     /**
      * Let extension declare required GitClient implementation. git-plugin will then detect conflicts, and fallback to

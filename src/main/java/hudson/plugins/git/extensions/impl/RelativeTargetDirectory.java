@@ -10,8 +10,9 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import java.io.IOException;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.IOException;
 
 /**
  * Instead of checking out to the top of the workspace, check out somewhere else.
@@ -33,9 +34,7 @@ public class RelativeTargetDirectory extends GitSCMExtension {
     }
 
     @Override
-    public FilePath getWorkingDirectory(
-            GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener)
-            throws IOException, InterruptedException, GitException {
+    public FilePath getWorkingDirectory(GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
             return workspace;
         }

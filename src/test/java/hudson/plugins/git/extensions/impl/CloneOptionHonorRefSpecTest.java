@@ -1,8 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
@@ -15,18 +12,21 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Builder;
 import hudson.tasks.Shell;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.Issue;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 @RunWith(Parameterized.class)
 public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
@@ -46,9 +46,9 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         List<Object[]> values = new ArrayList<>();
 
         String[] keys = {
-            "JOB_NAME", // Variable set by Jenkins
-            (isWindows() ? "USERNAME" : "USER"), // Variable set by the operating system
-            "USER_SELECTED_BRANCH_NAME" // Parametrised build param
+                "JOB_NAME", // Variable set by Jenkins
+                (isWindows() ? "USERNAME" : "USER"), // Variable set by the operating system
+                "USER_SELECTED_BRANCH_NAME" // Parametrised build param
         };
 
         for (String refSpecName : keys) {
@@ -74,7 +74,8 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         // Setup job beforehand to get expected value of the environment variable
         project = createFreeStyleProject();
         project.addProperty(new ParametersDefinitionProperty(
-                new StringParameterDefinition("USER_SELECTED_BRANCH_NAME", "user_branch")));
+                new StringParameterDefinition("USER_SELECTED_BRANCH_NAME", "user_branch")
+        ));
         project.getBuildersList().add(createEnvEchoBuilder(refSpecName));
 
         final FreeStyleBuild b = r.buildAndAssertSuccess(project);
@@ -103,9 +104,8 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     public void testRefSpecWithExpandedVariables() throws Exception {
         if (refSpecExpectedValue == null || refSpecExpectedValue.isEmpty()) {
             /* Test does not support an empty or null expected value.
-            Skip the test if the expected value is empty or null */
-            System.out.println(
-                    "*** testRefSpecWithExpandedVariables empty expected value for '" + refSpecName + "' ***");
+               Skip the test if the expected value is empty or null */
+            System.out.println("*** testRefSpecWithExpandedVariables empty expected value for '" + refSpecName + "' ***");
             return;
         }
         // Create initial commit
@@ -122,8 +122,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         repos.add(new UserRemoteConfig(
                 testRepo.gitDir.getAbsolutePath(),
                 "origin",
-                "+refs/heads/${" + refSpecName + "}:refs/remotes/origin/${" + refSpecName + "}",
-                null));
+                "+refs/heads/${" + refSpecName + "}:refs/remotes/origin/${" + refSpecName + "}", null));
 
         /* Use the variable or its value as the branch name.
          * Same result expected in either case.
@@ -132,10 +131,8 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 repos,
                 Collections.singletonList(new BranchSpec(branchName)),
-                false,
-                Collections.emptyList(),
-                null,
-                random.nextBoolean() ? JGitTool.MAGIC_EXENAME : null,
+                false, Collections.emptyList(),
+                null, random.nextBoolean() ? JGitTool.MAGIC_EXENAME : null,
                 Collections.emptyList());
         project.setScm(scm);
 

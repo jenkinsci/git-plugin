@@ -1,16 +1,16 @@
 package hudson.plugins.git;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class GitChangeSetEmptyTest {
 
     private GitChangeSet changeSet = null;
 
-    public GitChangeSetEmptyTest() {}
+    public GitChangeSetEmptyTest() {
+    }
 
     @Before
     public void createEmptyChangeSet() {
@@ -98,4 +98,5 @@ public class GitChangeSetEmptyTest {
         assertEquals(changeSet, changeSet);
         assertNotEquals(changeSet, GitChangeSetUtil.genChangeSet(true, true));
     }
+
 }

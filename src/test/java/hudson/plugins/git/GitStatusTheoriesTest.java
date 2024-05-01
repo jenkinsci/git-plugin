@@ -1,8 +1,5 @@
 package hudson.plugins.git;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.model.View;
@@ -12,7 +9,10 @@ import java.io.File;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.http.HttpServletRequest;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.mock;
+
+import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.experimental.theories.DataPoints;
@@ -20,7 +20,8 @@ import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+
+import javax.servlet.http.HttpServletRequest;
 
 @RunWith(Theories.class)
 public class GitStatusTheoriesTest extends AbstractGitProject {
@@ -44,8 +45,7 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
         this.branch = "**";
         this.sha1 = "7bb68ef21dc90bd4f7b08eca876203b2e049198d";
         if (r.jenkins != null) {
-            this.notifyCommitApiToken =
-                    ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
+            this.notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         }
     }
 
@@ -88,29 +88,30 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
                 Logger.getLogger(GitStatusTheoriesTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
                 r.waitForCompletion(run);
             } catch (InterruptedException ex) {
-                Logger.getLogger(GitStatusTheoriesTest.class.getName())
-                        .log(Level.SEVERE, "Interrupted waiting for GitStatusTheoriesTest job", ex);
+                Logger.getLogger(GitStatusTheoriesTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTheoriesTest job", ex);
             }
         });
     }
 
     @DataPoints("branchSpecPrefixes")
-    public static final String[] BRANCH_SPEC_PREFIXES =
-            new String[] {"", "refs/remotes/", "refs/heads/", "origin/", "remotes/origin/"};
+    public static final String[] BRANCH_SPEC_PREFIXES = new String[] {
+            "",
+            "refs/remotes/",
+            "refs/heads/",
+            "origin/",
+            "remotes/origin/"
+    };
 
     @Theory
-    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix)
-            throws Exception {
+    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "feature/awesome-feature", false);
-        this.gitStatus.doNotifyCommit(
-                requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
         Mockito.verify(trigger).run();
     }
 
     @Theory
-    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix)
-            throws Exception {
+    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null, notifyCommitApiToken);
 
@@ -118,17 +119,14 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
     }
 
     @Theory
-    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix)
-            throws Exception {
+    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
-        this.gitStatus.doNotifyCommit(
-                requestWithNoParameter, "remote", "refs/heads/awesome-feature", null, notifyCommitApiToken);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null, notifyCommitApiToken);
 
         Mockito.verify(trigger).run();
     }
 
-    private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit)
-            throws Exception {
+    private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         Mockito.doReturn(ignoreNotifyCommit).when(trigger).isIgnorePostCommitHooks();
         setupProject(url, branchString, trigger);
@@ -140,8 +138,7 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
-                null,
-                null,
+                null, null,
                 Collections.emptyList());
         project.setScm(git);
         if (trigger != null) project.addTrigger(trigger);

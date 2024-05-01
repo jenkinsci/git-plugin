@@ -83,7 +83,7 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((GitSCMSourceContext<?, ?>) context).withGitTool(gitTool);
+        ((GitSCMSourceContext<?,?>)context).withGitTool(gitTool);
     }
 
     /**
@@ -130,8 +130,7 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToBuilder(@NonNull Class<? extends SCMBuilder> builderClass) {
-            return super.isApplicableToBuilder(builderClass)
-                    && getSCMDescriptor().showGitToolOptions();
+            return super.isApplicableToBuilder(builderClass) && getSCMDescriptor().showGitToolOptions();
         }
 
         /**
@@ -139,8 +138,7 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToContext(@NonNull Class<? extends SCMSourceContext> contextClass) {
-            return super.isApplicableToContext(contextClass)
-                    && getSCMDescriptor().showGitToolOptions();
+            return super.isApplicableToContext(contextClass) && getSCMDescriptor().showGitToolOptions();
         }
 
         /**
@@ -169,5 +167,6 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
         public ListBoxModel doFillGitToolItems() {
             return getSCMDescriptor().doFillGitToolItems();
         }
+
     }
 }

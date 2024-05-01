@@ -1,10 +1,5 @@
 package hudson.plugins.git;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
-import hudson.model.TaskListener;
-import hudson.plugins.git.util.GitUtilsTest;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -17,13 +12,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import jenkins.plugins.git.CliGitCommand;
-import jenkins.plugins.git.GitSampleRepoRule;
+
+import hudson.plugins.git.util.GitUtilsTest;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+
+import hudson.model.TaskListener;
+import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -57,8 +59,8 @@ public class GitChangeSetTruncateTest {
 
     private static class TestData {
 
-        public final String testDataCommitSummary;
-        public final String testDataTruncatedSummary;
+        final public String testDataCommitSummary;
+        final public String testDataTruncatedSummary;
 
         TestData(String commitSummary, String truncatedSummary) {
             this.testDataCommitSummary = commitSummary;
@@ -68,29 +70,25 @@ public class GitChangeSetTruncateTest {
 
     //                                                    1         2         3         4         5         6         7
     //                                           1234567890123456789012345678901234567890123456789012345678901234567890
-    private static final String SEVENTY_CHARS =
-            "[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0";
-    private static final String EIGHTY_CHARS =
-            "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+    private final static String SEVENTY_CHARS = "[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0";
+    private final static String EIGHTY_CHARS  = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
 
-    private static final TestData[] TEST_DATA = {
-        new TestData(EIGHTY_CHARS, EIGHTY_CHARS), // surprising that longer than 72 is returned
-        new TestData(EIGHTY_CHARS + " A B C", EIGHTY_CHARS), // surprising that longer than 72 is returned
-        new TestData(SEVENTY_CHARS, SEVENTY_CHARS),
-        new TestData(SEVENTY_CHARS + " 2", SEVENTY_CHARS + " 2"),
-        new TestData(SEVENTY_CHARS + " 2 4", SEVENTY_CHARS + " 2"),
-        new TestData(SEVENTY_CHARS + " 23", SEVENTY_CHARS),
-        new TestData(SEVENTY_CHARS + " 2&4", SEVENTY_CHARS),
-        new TestData(SEVENTY_CHARS + "1", SEVENTY_CHARS + "1"),
-        new TestData(SEVENTY_CHARS + "1 3", SEVENTY_CHARS + "1"),
-        new TestData(SEVENTY_CHARS + "1 <4", SEVENTY_CHARS + "1"),
-        new TestData(SEVENTY_CHARS + "1 3 5", SEVENTY_CHARS + "1"),
-        new TestData(SEVENTY_CHARS + "1;", SEVENTY_CHARS + "1;"),
-        new TestData(SEVENTY_CHARS + "1; 4", SEVENTY_CHARS + "1;"),
-        new TestData(SEVENTY_CHARS + " " + SEVENTY_CHARS, SEVENTY_CHARS),
-        new TestData(
-                SEVENTY_CHARS + "  " + SEVENTY_CHARS,
-                SEVENTY_CHARS + " ") // surprising that trailing space is preserved
+    private final static TestData[] TEST_DATA = {
+        new TestData(EIGHTY_CHARS,                         EIGHTY_CHARS), // surprising that longer than 72 is returned
+        new TestData(EIGHTY_CHARS + " A B C",              EIGHTY_CHARS), // surprising that longer than 72 is returned
+        new TestData(SEVENTY_CHARS,                        SEVENTY_CHARS),
+        new TestData(SEVENTY_CHARS + " 2",                 SEVENTY_CHARS + " 2"),
+        new TestData(SEVENTY_CHARS + " 2 4",               SEVENTY_CHARS + " 2"),
+        new TestData(SEVENTY_CHARS + " 23",                SEVENTY_CHARS),
+        new TestData(SEVENTY_CHARS + " 2&4",               SEVENTY_CHARS),
+        new TestData(SEVENTY_CHARS + "1",                  SEVENTY_CHARS + "1"),
+        new TestData(SEVENTY_CHARS + "1 3",                SEVENTY_CHARS + "1"),
+        new TestData(SEVENTY_CHARS + "1 <4",               SEVENTY_CHARS + "1"),
+        new TestData(SEVENTY_CHARS + "1 3 5",              SEVENTY_CHARS + "1"),
+        new TestData(SEVENTY_CHARS + "1;",                 SEVENTY_CHARS + "1;"),
+        new TestData(SEVENTY_CHARS + "1; 4",               SEVENTY_CHARS + "1;"),
+        new TestData(SEVENTY_CHARS + " " + SEVENTY_CHARS,  SEVENTY_CHARS),
+        new TestData(SEVENTY_CHARS + "  " + SEVENTY_CHARS, SEVENTY_CHARS + " ") // surprising that trailing space is preserved
     };
 
     public GitChangeSetTruncateTest(String gitImpl, String commitSummary, String truncatedSummary) throws Exception {
@@ -98,14 +96,11 @@ public class GitChangeSetTruncateTest {
         this.commitSummary = commitSummary;
         this.truncatedSummary = truncatedSummary;
         GitClient gitClient = Git.with(TaskListener.NULL, GitUtilsTest.getConfigNoSystemEnvsVars())
-                .in(repoRoot)
-                .using(gitImpl)
-                .getClient();
+                .in(repoRoot).using(gitImpl).getClient();
         final ObjectId head = commitOneFile(gitClient, commitSummary);
         StringWriter changelogStringWriter = new StringWriter();
         gitClient.changelog().includes(head).to(changelogStringWriter).execute();
-        List<String> changeLogList =
-                Arrays.asList(changelogStringWriter.toString().split("\n"));
+        List<String> changeLogList = Arrays.asList(changelogStringWriter.toString().split("\n"));
         changeSet = new GitChangeSet(changeLogList, random.nextBoolean());
         changeSetFullSummary = new GitChangeSet(changeLogList, random.nextBoolean(), true);
         changeSetTruncatedSummary = new GitChangeSet(changeLogList, random.nextBoolean(), false);
@@ -132,9 +127,7 @@ public class GitChangeSetTruncateTest {
         String initialImpl = random.nextBoolean() ? "git" : "jgit";
 
         GitClient gitClient = Git.with(TaskListener.NULL, GitUtilsTest.getConfigNoSystemEnvsVars())
-                .in(repoRoot)
-                .using(initialImpl)
-                .getClient();
+                .in(repoRoot).using(initialImpl).getClient();
         gitClient.init_().workspace(repoRoot.getAbsolutePath()).execute();
         String[] expectedResult = {""};
         CliGitCommand gitCmd = new CliGitCommand(gitClient, "config", "user.name", "ChangeSet Truncation Test");
@@ -151,8 +144,7 @@ public class GitChangeSetTruncateTest {
         String path = "One-File.txt";
         String content = String.format("A random UUID: %s\n", UUID.randomUUID());
         /* randomize whether commit message is single line or multi-line */
-        String commitMessageBody =
-                random.nextBoolean() ? "\n\n" + "committing " + path + " with content:\n\n" + content : "";
+        String commitMessageBody = random.nextBoolean() ? "\n\n" + "committing " + path + " with content:\n\n" + content : "";
         String commitMessage = commitSummary + commitMessageBody;
         gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
         gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");

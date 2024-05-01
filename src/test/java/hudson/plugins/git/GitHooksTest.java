@@ -1,26 +1,9 @@
 package hudson.plugins.git;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsIterableContaining.hasItem;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import hudson.FilePath;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
 import hudson.tools.ToolProperty;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitHooksConfiguration;
 import org.eclipse.jgit.util.SystemReader;
@@ -38,16 +21,34 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.LoggerRule;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsIterableContaining.hasItem;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 public class GitHooksTest extends AbstractGitTestCase {
 
     @Rule
     public LoggerRule lr = new LoggerRule();
-
     @ClassRule
     public static BuildWatcher watcher = new BuildWatcher();
 
-    private static final String JENKINS_URL =
-            System.getenv("JENKINS_URL") != null ? System.getenv("JENKINS_URL") : "http://localhost:8080/";
+    private static final String JENKINS_URL = System.getenv("JENKINS_URL") != null
+            ? System.getenv("JENKINS_URL")
+            : "http://localhost:8080/";
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
@@ -61,10 +62,10 @@ public class GitHooksTest extends AbstractGitTestCase {
         lr.record(GitHooksConfiguration.class.getName(), Level.ALL).capture(1024);
         GitTool tool = new GitTool("my-git", "git", Collections.<ToolProperty<?>>emptyList());
         r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
-        // Jenkins 2.308 changes the default label to "built-in" causing test failures when testing with newer core
+        //Jenkins 2.308 changes the default label to "built-in" causing test failures when testing with newer core
         // e.g. java 17 testing
         r.jenkins.setLabelString("master");
-        r.jenkins.setNumExecutors(3); // In case this changes in the future as well.
+        r.jenkins.setNumExecutors(3); //In case this changes in the future as well.
     }
 
     @After
@@ -87,15 +88,19 @@ public class GitHooksTest extends AbstractGitTestCase {
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         final DumbSlave agent = r.createOnlineSlave(Label.get("somewhere"));
         commit("test.txt", "Test", johnDoe, "First");
-        String jenkinsfile = lines("node('somewhere') {", "  checkout scm", "  echo 'Hello Pipeline'", "}");
+        String jenkinsfile = lines(
+                "node('somewhere') {",
+                "  checkout scm",
+                "  echo 'Hello Pipeline'",
+                "}"
+        );
         commit("Jenkinsfile", jenkinsfile, johnDoe, "Jenkinsfile");
         final WorkflowJob job = r.createProject(WorkflowJob.class);
         final GitSCM scm = new GitSCM(
                 this.createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("master")),
-                null,
-                "my-git",
-                Collections.emptyList());
+                null, "my-git", Collections.emptyList()
+        );
         CpsScmFlowDefinition definition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
         definition.setLightweight(false);
         job.setDefinition(definition);
@@ -110,7 +115,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         final File postCheckoutOutput1 = new File(tf.newFolder(), "svn-git-fun-post-checkout-1");
         final File postCheckoutOutput2 = new File(tf.newFolder(), "svn-git-fun-post-checkout-2");
 
-        // Add hook on agent workspace
+        //Add hook on agent workspace
         FilePath hook = jobWorkspace.child(".git/hooks/post-checkout");
         createHookScriptAt(postCheckoutOutput1, hook);
 
@@ -121,7 +126,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         commit("test.txt", "Second", johnDoe, "Second");
         commit("Jenkinsfile", "/*2*/\n" + jenkinsfile, johnDoe, "Jenkinsfile");
 
-        // Allowed
+        //Allowed
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         Instant before = Instant.now().minus(2, ChronoUnit.SECONDS);
         run = r.buildAndAssertSuccess(job);
@@ -136,7 +141,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
         commit("test.txt", "Third", johnDoe, "Third");
         commit("Jenkinsfile", "/*3*/\n" + jenkinsfile, johnDoe, "Jenkinsfile");
-        // Denied
+        //Denied
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         run = r.buildAndAssertSuccess(job);
@@ -151,7 +156,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
         commit("test.txt", "Four", johnDoe, "Four");
         commit("Jenkinsfile", "/*4*/\n" + jenkinsfile, johnDoe, "Jenkinsfile");
-        // Allowed On Agent
+        //Allowed On Agent
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -166,7 +171,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
         commit("test.txt", "Five", johnDoe, "Five");
         commit("Jenkinsfile", "/*5*/\n" + jenkinsfile, johnDoe, "Jenkinsfile");
-        // Denied
+        //Denied
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         run = r.buildAndAssertSuccess(job);
@@ -175,26 +180,19 @@ public class GitHooksTest extends AbstractGitTestCase {
         assertFalse(postCheckoutOutput2.exists());
     }
 
-    private void createHookScriptAt(final File postCheckoutOutput, final FilePath hook)
-            throws IOException, InterruptedException {
+    private void createHookScriptAt(final File postCheckoutOutput, final FilePath hook) throws IOException, InterruptedException {
         final String nl = System.lineSeparator();
         StringBuilder scriptContent = new StringBuilder("#!/bin/sh -v").append(nl);
-        scriptContent
-                .append("date +%s > \"")
-                .append(postCheckoutOutput
-                        .getAbsolutePath()
-                        .replace("\\", "\\\\")) // Git shell processes escapes, needs extra escapes
-                .append('"')
-                .append(nl);
+        scriptContent.append("date +%s > \"")
+                .append(postCheckoutOutput.getAbsolutePath().replace("\\", "\\\\")) // Git shell processes escapes, needs extra escapes
+                .append('"').append(nl);
         hook.write(scriptContent.toString(), Charset.defaultCharset().name());
         hook.chmod(0777);
     }
 
-    private void checkFileOutput(final File postCheckoutOutput, final Instant before, final Instant after)
-            throws IOException {
+    private void checkFileOutput(final File postCheckoutOutput, final Instant before, final Instant after) throws IOException {
         assertTrue("Output file should exist", postCheckoutOutput.exists());
-        final String s = Files.readString(postCheckoutOutput.toPath(), Charset.defaultCharset())
-                .trim();
+        final String s = Files.readString(postCheckoutOutput.toPath(), Charset.defaultCharset()).trim();
         final Instant when = Instant.ofEpochSecond(Integer.parseInt(s));
         assertTrue("Sometime else", when.isAfter(before) && when.isBefore(after));
         Files.delete(postCheckoutOutput.toPath());
@@ -269,25 +267,23 @@ public class GitHooksTest extends AbstractGitTestCase {
 
         final WorkflowJob job = r.createProject(WorkflowJob.class);
         final String uri = testRepo.gitDir.getAbsolutePath().replace("\\", "/");
-        job.setDefinition(new CpsFlowDefinition(
-                lines(
-                        "node('" + node + "') {",
-                        "  checkout([$class: 'GitSCM', branches: [[name: '*/master']], userRemoteConfigs: [[url: '"
-                                + uri + "']]])",
-                        "  if (!fileExists('.git/hooks/post-checkout')) {",
-                        "    writeFile file: '.git/hooks/post-checkout', text: \"#!/bin/sh\\necho h4xor3d\"",
-                        "    if (isUnix()) {",
-                        "      sh 'chmod +x .git/hooks/post-checkout'",
-                        "    }",
-                        "  } else {",
-                        "    if (isUnix()) {",
-                        "      sh 'git checkout -B test origin/master'",
-                        "    } else {",
-                        "      bat 'git.exe checkout -B test origin/master'",
-                        "    }",
-                        "  }",
-                        "}"),
-                true));
+        job.setDefinition(new CpsFlowDefinition(lines(
+                "node('" + node + "') {",
+                "  checkout([$class: 'GitSCM', branches: [[name: '*/master']], userRemoteConfigs: [[url: '" + uri + "']]])",
+                "  if (!fileExists('.git/hooks/post-checkout')) {",
+                "    writeFile file: '.git/hooks/post-checkout', text: \"#!/bin/sh\\necho h4xor3d\"",
+                "    if (isUnix()) {",
+                "      sh 'chmod +x .git/hooks/post-checkout'",
+                "    }",
+                "  } else {",
+                "    if (isUnix()) {",
+                "      sh 'git checkout -B test origin/master'",
+                "    } else {",
+                "      bat 'git.exe checkout -B test origin/master'",
+                "    }",
+                "  }",
+                "}")
+                , true));
         WorkflowRun run = r.buildAndAssertSuccess(job);
         r.assertLogNotContains("h4xor3d", run);
         final String commitFile2 = "commitFile2";
@@ -313,6 +309,6 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
-        return java.io.File.pathSeparatorChar == ';';
+        return java.io.File.pathSeparatorChar==';';
     }
 }

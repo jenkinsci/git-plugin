@@ -55,14 +55,15 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public TagDiscoveryTrait() {}
+    public TagDiscoveryTrait() {
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        GitSCMSourceContext<?, ?> ctx = (GitSCMSourceContext<?, ?>) context;
+        GitSCMSourceContext<?,?> ctx = (GitSCMSourceContext<?, ?>) context;
         ctx.wantTags(true);
         ctx.withAuthority(new TagSCMHeadAuthority());
     }
@@ -119,8 +120,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
     /**
      * Trusts tags from the repository.
      */
-    public static class TagSCMHeadAuthority
-            extends SCMHeadAuthority<SCMSourceRequest, GitTagSCMHead, GitTagSCMRevision> {
+    public static class TagSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, GitTagSCMHead, GitTagSCMRevision> {
         /**
          * {@inheritDoc}
          */

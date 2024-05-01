@@ -1,14 +1,14 @@
 package hudson.plugins.git.util;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
 import hudson.model.Result;
 import hudson.plugins.git.Revision;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Test;
+
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 public class BuildTest {
 

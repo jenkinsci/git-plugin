@@ -29,14 +29,17 @@ import hudson.model.InvisibleAction;
 import hudson.model.Queue;
 import hudson.model.Queue.QueueAction;
 import hudson.model.queue.FoldableAction;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
+
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
 
 /**
  * Used as a build parameter to specify the revision to be built.
@@ -44,12 +47,11 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  * @author Kohsuke Kawaguchi
  * @author Chris Johnson
  */
-public class RevisionParameterAction extends InvisibleAction implements Serializable, QueueAction, FoldableAction {
+public class RevisionParameterAction extends InvisibleAction implements Serializable,QueueAction,FoldableAction {
     /**
      * SHA1, ref name, etc. that can be "git rev-parse"d into a specific commit.
      */
     public final String commit;
-
     public final boolean combineCommits;
     public final Revision revision;
     private final URIish repoURL;
@@ -72,17 +74,17 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         this.revision = null;
         this.repoURL = repoURL;
     }
-
+    
     public RevisionParameterAction(Revision revision) {
         this(revision, false);
-    }
+    }   
 
     public RevisionParameterAction(Revision revision, boolean combineCommits) {
-        this.revision = revision;
-        this.commit = revision.getSha1String();
-        this.combineCommits = combineCommits;
+    	this.revision = revision;
+    	this.commit = revision.getSha1String();
+    	this.combineCommits = combineCommits;
         this.repoURL = null;
-    }
+    }   
 
     @Deprecated
     public Revision toRevision(IGitAPI git) throws InterruptedException {
@@ -90,15 +92,16 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     }
 
     public Revision toRevision(GitClient git) throws InterruptedException {
-        if (revision != null) {
-            return revision;
-        }
+    	if (revision != null) {
+    		return revision;
+    	}
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
         // Here we do not have any local branches, containing the commit. So...
         // we are to get all the remote branches, and show them to users, as
         // they are local
-        final List<Branch> branches = normalizeBranches(git.getBranchesContaining(ObjectId.toString(sha1), true));
+        final List<Branch> branches = normalizeBranches(git.getBranchesContaining(
+                ObjectId.toString(sha1), true));
         revision.getBranches().addAll(branches);
         return revision;
     }
@@ -152,30 +155,32 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
 
     @Override
     public String toString() {
-        return super.toString() + "[commit=" + commit + "]";
+        return super.toString()+"[commit="+commit+"]";
     }
 
     /**
-     * Returns whether the new item should be scheduled.
+     * Returns whether the new item should be scheduled. 
      * An action should return true if the associated task is 'different enough' to warrant a separate execution.
      * from {@link QueueAction}
-     */
+      */
     public boolean shouldSchedule(List<Action> actions) {
-        /* Called in two cases
-        1. On the action attached to an existing queued item
+        /* Called in two cases 
+        1. On the action attached to an existing queued item 
         2. On the action attached to the new item to add.
-        Behaviour
+        Behaviour 
         If actions contain a RevisionParameterAction with a matching commit to this one, we do not need to schedule
         in all other cases we do.
         */
-        List<RevisionParameterAction> otherActions = Util.filter(actions, RevisionParameterAction.class);
-        if (combineCommits) {
+        List<RevisionParameterAction> otherActions = Util.filter(actions,RevisionParameterAction.class);
+        if(combineCommits) {
             // we are combining commits so we never need to schedule another run.
             // unless other job does not have a RevisionParameterAction (manual build)
-            if (otherActions.size() != 0) return false;
+            if(otherActions.size() != 0)
+                return false;
         } else {
-            for (RevisionParameterAction action : otherActions) {
-                if (this.commit.equals(action.commit)) return false;
+            for (RevisionParameterAction action: otherActions) {
+                if(this.commit.equals(action.commit))
+                    return false;
             }
         }
         // if we get to this point there were no matching actions so a new build is required
@@ -188,8 +193,8 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
      */
     public void foldIntoExisting(Queue.Item item, Queue.Task owner, List<Action> otherActions) {
         // only do this if we are asked to.
-        if (combineCommits) {
-            // because we cannot modify the commit in the existing action remove it and add self
+        if(combineCommits) {
+            //because we cannot modify the commit in the existing action remove it and add self
             // or no CauseAction found, so add a copy of this one
             item.replaceAction(this);
         }

@@ -1,7 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Computer;
@@ -21,14 +19,16 @@ import java.util.List;
 import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -131,9 +131,7 @@ public class CloneOption extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
-    public void decorateCloneCommand(
-            GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {
             int usedDepth = 1;
@@ -170,7 +168,7 @@ public class CloneOption extends GitSCMExtension {
         if (comp != null) {
             env.putAll(comp.getEnvironment());
         }
-        for (NodeProperty nodeProperty : node.getNodeProperties()) {
+        for (NodeProperty nodeProperty: node.getNodeProperties()) {
             nodeProperty.buildEnvVars(env, listener);
         }
         cmd.reference(env.expand(reference));
@@ -193,8 +191,7 @@ public class CloneOption extends GitSCMExtension {
      */
     @Override
     @Deprecated // Deprecate because the super implementation is deprecated
-    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd)
-            throws IOException, InterruptedException, GitException {
+    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {
             int usedDepth = 1;
@@ -227,6 +224,7 @@ public class CloneOption extends GitSCMExtension {
     public GitClientType getRequiredClient() {
         return GitClientType.GITCLI;
     }
+
 
     /**
      * {@inheritDoc}
@@ -263,13 +261,14 @@ public class CloneOption extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "CloneOption{" + "shallow="
-                + shallow + ", noTags="
-                + noTags + ", reference='"
-                + reference + '\'' + ", timeout="
-                + timeout + ", depth="
-                + depth + ", honorRefspec="
-                + honorRefspec + '}';
+        return "CloneOption{" +
+                "shallow=" + shallow +
+                ", noTags=" + noTags +
+                ", reference='" + reference + '\'' +
+                ", timeout=" + timeout +
+                ", depth=" + depth +
+                ", honorRefspec=" + honorRefspec +
+                '}';
     }
 
     @Extension
@@ -283,4 +282,5 @@ public class CloneOption extends GitSCMExtension {
             return Messages.Advanced_clone_behaviours();
         }
     }
+
 }

@@ -55,8 +55,7 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
 
     @Restricted(NoExternalUse.class)
     @Extension
-    public static class SCMHeadMigrationImpl
-            extends SCMHeadMigration<GitSCMSource, SCMHead, AbstractGitSCMSource.SCMRevisionImpl> {
+    public static class SCMHeadMigrationImpl extends SCMHeadMigration<GitSCMSource, SCMHead, AbstractGitSCMSource.SCMRevisionImpl> {
 
         public SCMHeadMigrationImpl() {
             super(GitSCMSource.class, SCMHead.class, AbstractGitSCMSource.SCMRevisionImpl.class);
@@ -68,8 +67,7 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
         }
 
         @Override
-        public SCMRevision migrate(
-                @NonNull GitSCMSource source, @NonNull AbstractGitSCMSource.SCMRevisionImpl revision) {
+        public SCMRevision migrate(@NonNull GitSCMSource source, @NonNull AbstractGitSCMSource.SCMRevisionImpl revision) {
             if (revision.getHead().getClass() == SCMHead.class) {
                 SCMHead revisionHead = revision.getHead();
                 SCMHead branchHead = migrate(source, revisionHead);
@@ -81,5 +79,6 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
             }
             return null;
         }
+
     }
 }

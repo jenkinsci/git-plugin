@@ -1,13 +1,13 @@
 package hudson.plugins.git;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import static hudson.plugins.git.GitChangeSet.TRUNCATE_LIMIT;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-
-import java.util.ArrayList;
-import java.util.Collections;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class GitChangeSetBasicTest {
@@ -22,9 +22,8 @@ public class GitChangeSetBasicTest {
 
     @Test
     public void testLegacyChangeSet() {
-        GitChangeSet gitChangeSet =
-                GitChangeSetUtil.genChangeSet(false, true, false, GitChangeSetUtil.COMMIT_TITLE, false);
-        GitChangeSetUtil.assertChangeSet(gitChangeSet);
+        GitChangeSet gitChangeSet = GitChangeSetUtil.genChangeSet(false, true, false, GitChangeSetUtil.COMMIT_TITLE ,false);
+        GitChangeSetUtil.assertChangeSet( gitChangeSet );
     }
 
     @Test
@@ -42,8 +41,7 @@ public class GitChangeSetBasicTest {
     @Test
     public void testCommitter() {
         assertEquals(GitChangeSetUtil.COMMITTER_NAME, genChangeSet(false, false).getAuthorName());
-        assertEquals(
-                GitChangeSetUtil.COMMITTER_EMAIL, genChangeSet(false, false).getAuthorEmail());
+        assertEquals(GitChangeSetUtil.COMMITTER_EMAIL, genChangeSet(false, false).getAuthorEmail());
     }
 
     @Test
@@ -65,8 +63,7 @@ public class GitChangeSetBasicTest {
     @Test
     public void testInvalidDate() {
         final String badDateString = "2015-03-03x09:22:42 -0700";
-        GitChangeSet c = new GitChangeSet(
-                Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> " + badDateString), true);
+        GitChangeSet c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> " + badDateString), true);
         assertEquals(badDateString, c.getDate());
         assertEquals(-1L, c.getTimestamp());
     }
@@ -74,18 +71,15 @@ public class GitChangeSetBasicTest {
     @Test
     public void testIsoDate() {
 
-        GitChangeSet c = new GitChangeSet(
-                Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-0700"), true);
+        GitChangeSet c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-0700"), true);
         assertEquals("2015-03-03T09:22:42-0700", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
-        c = new GitChangeSet(
-                Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-07:00"), true);
+        c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-07:00"), true);
         assertEquals("2015-03-03T09:22:42-07:00", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
-        c = new GitChangeSet(
-                Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T16:22:42Z"), true);
+        c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T16:22:42Z"), true);
         assertEquals("2015-03-03T16:22:42Z", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
@@ -93,8 +87,7 @@ public class GitChangeSetBasicTest {
         assertEquals("2015-03-03T16:22:42Z", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
-        c = new GitChangeSet(
-                Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 1425374562 -0700"), true);
+        c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 1425374562 -0700"), true);
         assertEquals("2015-03-03T09:22:42-0700", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
     }
@@ -120,7 +113,7 @@ public class GitChangeSetBasicTest {
         lines.add("    Tested-by: Jenkins <jenkins@no-mail.com>");
         lines.add("    Reviewed-by: Mister Another <mister.another@ericsson.com>");
         lines.add("");
-        // above lines all on purpose vs specific troublesome case @ericsson.
+        //above lines all on purpose vs specific troublesome case @ericsson.
         return new GitChangeSet(lines, authorOrCommitter);
     }
 
@@ -145,20 +138,19 @@ public class GitChangeSetBasicTest {
     }
 
     @Test
-    public void testChangeLogTruncationWithShortMessage() {
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true, "Lorem ipsum dolor sit amet.", false);
+    public void testChangeLogTruncationWithShortMessage(){
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
+                "Lorem ipsum dolor sit amet.",
+                false);
         String msg = changeSet.getMsg();
-        assertThat("Title is correct ", msg, containsString("Lorem ipsum dolor sit amet."));
+        assertThat("Title is correct ", msg, containsString("Lorem ipsum dolor sit amet.") );
         assertThat("Title length is correct ", msg.length(), lessThanOrEqualTo(TRUNCATE_LIMIT));
     }
 
     @Test
-    public void testChangeLogTruncationWithNewLine() {
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(
-                true,
-                false,
-                true,
-                "Lorem ipsum dolor sit amet, " + System.lineSeparator() + "consectetur adipiscing elit.",
+    public void testChangeLogTruncationWithNewLine(){
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
+                "Lorem ipsum dolor sit amet, "+System.lineSeparator()+"consectetur adipiscing elit.",
                 false);
         String msg = changeSet.getMsg();
         assertThat(msg, is("Lorem ipsum dolor sit amet,"));
@@ -166,88 +158,72 @@ public class GitChangeSetBasicTest {
     }
 
     @Test
-    public void testChangeLogRetainSummaryWithoutNewLine() {
-        String originalCommitMessage =
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true, originalCommitMessage, true);
+    public void testChangeLogRetainSummaryWithoutNewLine(){
+        String originalCommitMessage = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
+                originalCommitMessage,
+                true);
         assertThat(changeSet.getMsg(), is(originalCommitMessage));
     }
 
     @Test
-    public void testChangeLogDoNotRetainSummaryWithoutNewLine() {
-        String msg =
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true, msg, false);
+    public void testChangeLogDoNotRetainSummaryWithoutNewLine(){
+        String msg = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
+                msg,
+                false);
         assertThat(changeSet.getMsg(), is("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus"));
     }
 
     @Test
-    public void testChangeLogNoTruncationWithNewLine() {
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(
-                true,
-                false,
-                true,
-                "Lorem ipsum dolor sit amet, consectetur " + System.lineSeparator()
-                        + " adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+    public void testChangeLogNoTruncationWithNewLine(){
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
+                "Lorem ipsum dolor sit amet, consectetur "+System.lineSeparator()+" adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit",
                 true);
         String msg = changeSet.getMsg();
-        assertThat("Title is correct ", msg, is("Lorem ipsum dolor sit amet, consectetur"));
+        assertThat("Title is correct ", msg, is("Lorem ipsum dolor sit amet, consectetur") );
     }
 
     @Test
-    public void testChangeLogEdgeCaseNotTruncating() {
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(
-                true,
-                false,
-                true,
+    public void testChangeLogEdgeCaseNotTruncating(){
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
                 "[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2 4 5",
                 false);
         String msg = changeSet.getMsg();
-        assertThat(msg.length(), lessThanOrEqualTo(TRUNCATE_LIMIT));
-        assertThat(msg, is("[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2"));
+        assertThat( msg.length(), lessThanOrEqualTo( TRUNCATE_LIMIT ));
+        assertThat( msg, is("[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2") );
     }
 
     @Test
-    public void testChangeLogEdgeCaseTruncating() {
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(
-                true,
-                false,
-                true,
+    public void testChangeLogEdgeCaseTruncating(){
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
                 "[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2 4 5",
                 true);
         String msg = changeSet.getMsg();
-        assertThat(msg, is("[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2 4 5"));
+        assertThat( msg, is("[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2 4 5") );
     }
 
     @Test
-    public void testChangeLogEdgeCaseTruncatingAndNewLine() {
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(
-                true,
-                false,
-                true,
-                "[JENKINS-012345] 8901 34567 " + System.lineSeparator()
-                        + "90 23456 8901 34567 9012 4567890 2345678 0 2 4 5",
+    public void testChangeLogEdgeCaseTruncatingAndNewLine(){
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
+                "[JENKINS-012345] 8901 34567 " + System.lineSeparator() + "90 23456 8901 34567 9012 4567890 2345678 0 2 4 5",
                 true);
         String msg = changeSet.getMsg();
-        assertThat(msg, is("[JENKINS-012345] 8901 34567"));
+        assertThat( msg, is("[JENKINS-012345] 8901 34567") );
     }
 
     @Test
-    public void testLongString() {
-        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(
-                true,
-                false,
-                true,
+    public void testLongString(){
+        GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
                 "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
                 false);
         String msg = changeSet.getMsg();
-        assertThat(msg, is("12345678901234567890123456789012345678901234567890123456789012345678901234567890"));
+        assertThat( msg, is("12345678901234567890123456789012345678901234567890123456789012345678901234567890") );
     }
 
     @Test
-    public void stringSplitter() {
-        String msg =
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+    public void stringSplitter(){
+        String msg = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
         assertThat(GitChangeSet.splitString(msg, 15), is("Lorem ipsum"));
         assertThat(GitChangeSet.splitString(msg, 16), is("Lorem ipsum"));
         assertThat(GitChangeSet.splitString(msg, 17), is("Lorem ipsum dolor"));
@@ -257,27 +233,23 @@ public class GitChangeSetBasicTest {
         assertThat(GitChangeSet.splitString(msg, 21), is("Lorem ipsum dolor sit"));
         assertThat(GitChangeSet.splitString(msg, 22), is("Lorem ipsum dolor sit"));
 
-        msg =
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum.";
-        assertThat(
-                GitChangeSet.splitString(msg, TRUNCATE_LIMIT),
+        msg = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum.";
+        assertThat(GitChangeSet.splitString(msg, TRUNCATE_LIMIT),
                 is("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus"));
     }
 
     @Test
-    public void splitingWithBrackets() {
-        assertThat(
-                GitChangeSet.splitString("[task] Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 25),
-                is("[task] Lorem ipsum dolor"));
+    public void splitingWithBrackets(){
+        assertThat(GitChangeSet.splitString("[task] Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 25), is("[task] Lorem ipsum dolor"));
     }
 
     @Test
-    public void splitingEmptyString() {
+    public void splitingEmptyString(){
         assertThat(GitChangeSet.splitString("", 25), is(""));
     }
 
     @Test
-    public void splitingNullString() {
+    public void splitingNullString(){
         assertThat(GitChangeSet.splitString(null, 25), is(""));
     }
 }

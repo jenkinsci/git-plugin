@@ -5,15 +5,16 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.structs.describable.CustomDescribableModel;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
@@ -21,7 +22,7 @@ import org.kohsuke.stapler.DataBoundSetter;
  * merging (to the commit being built.)
  *
  */
-public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> implements Serializable {
+public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions>  implements Serializable {
 
     private String mergeRemote;
     private final String mergeTarget;
@@ -45,10 +46,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeStrategy merge strategy
      * @param fastForwardMode fast forward mode
      */
-    public UserMergeOptions(
-            String mergeRemote,
-            String mergeTarget,
-            String mergeStrategy,
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
             MergeCommand.GitPluginFastForwardMode fastForwardMode) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
@@ -66,11 +64,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param pbm pre-build merge options used to construct UserMergeOptions
      */
     public UserMergeOptions(PreBuildMergeOptions pbm) {
-        this(
-                pbm.getRemoteBranchName(),
-                pbm.getMergeTarget(),
-                pbm.getMergeStrategy().toString(),
-                pbm.getFastForwardMode());
+        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
     }
 
     /**
@@ -107,20 +101,21 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     }
 
     public MergeCommand.Strategy getMergeStrategy() {
-        for (MergeCommand.Strategy strategy : MergeCommand.Strategy.values())
-            if (strategy.toString().equals(mergeStrategy)) return strategy;
+        for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
+            if (strategy.toString().equals(mergeStrategy))
+                return strategy;
         return MergeCommand.Strategy.DEFAULT;
     }
 
     @DataBoundSetter
     public void setMergeStrategy(MergeCommand.Strategy mergeStrategy) {
-        this.mergeStrategy =
-                mergeStrategy.toString(); // not .name() as you might expect! TODO in Turkey this will be e.g. recursıve
+        this.mergeStrategy = mergeStrategy.toString(); // not .name() as you might expect! TODO in Turkey this will be e.g. recursıve
     }
 
     public MergeCommand.GitPluginFastForwardMode getFastForwardMode() {
         for (MergeCommand.GitPluginFastForwardMode ffMode : MergeCommand.GitPluginFastForwardMode.values())
-            if (ffMode.equals(fastForwardMode)) return ffMode;
+            if (ffMode.equals(fastForwardMode))
+                return ffMode;
         return MergeCommand.GitPluginFastForwardMode.FF;
     }
 
@@ -131,11 +126,12 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     @Override
     public String toString() {
-        return "UserMergeOptions{" + "mergeRemote='"
-                + mergeRemote + '\'' + ", mergeTarget='"
-                + mergeTarget + '\'' + ", mergeStrategy='"
-                + getMergeStrategy().name() + '\'' + ", fastForwardMode='"
-                + getFastForwardMode().name() + '\'' + '}';
+        return "UserMergeOptions{" +
+                "mergeRemote='" + mergeRemote + '\'' +
+                ", mergeTarget='" + mergeTarget + '\'' +
+                ", mergeStrategy='" + getMergeStrategy().name() + '\'' +
+                ", fastForwardMode='" + getFastForwardMode().name() + '\'' +
+                '}';
     }
 
     @Override
@@ -177,5 +173,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
             }
             return r;
         }
+
     }
+
 }
