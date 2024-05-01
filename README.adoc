@@ -1220,12 +1220,14 @@ Inverse::
   This is useful, for example, when you have jobs building your master and various release branches and you want a second job which builds all new feature branches.
   For example, branches which do not match these patterns without redundantly building master and the release branches again each time they change.
 
-[#firstBuildBehavior]
-==== First Build Changelog behavior
+[#first-build-changelog]
+==== First build changelog
 
-image:/images/git-extension-for-first-build.png[First Build Changelog behavior]
+image:/images/git-extension-for-first-build.png[First build changelog]
 
-The Jenkins git plugin provides an option to trigger pipeline build process on the first commit on a branch. By default, no changelog is generated causing any pipeline process to not be triggered but with this option selected changes are found between the new branch and its parent commit.
+The Jenkins git plugin provides an option to trigger a Pipeline build on the first commit on a branch.
+By default, no changelog is generated for the first commit on a branch.
+When the first build changelog option is enabled, the most recent commit on the branch will be used as the changelog of the first build of the branch.
 
 [source,groovy]
 ----
