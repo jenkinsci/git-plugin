@@ -2156,7 +2156,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /**
-     * Test a pipeline getting the value from several checkout steps gets the latest data everytime.
+     * Test a pipeline getting the value from several checkout steps gets the latest data every time.
      * @throws Exception If anything wrong happens
      */
     @Issue("JENKINS-53346")
