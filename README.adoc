@@ -1231,9 +1231,10 @@ When the first build changelog option is enabled, the most recent commit on the 
 
 [source,groovy]
 ----
- checkout scmGit(branches: [[name: 'master']],
-                                extensions: [firstBuildChangelog()],
-                                userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [ firstBuildChangelog() ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
 ----
 
 [#merge-extensions]
