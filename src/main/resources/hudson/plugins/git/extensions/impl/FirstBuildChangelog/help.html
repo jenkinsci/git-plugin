@@ -1,3 +1,5 @@
 <div>
-  First builds will populate the changelog with the latest commit, if any, to allow for pipelines to consistently check and test for file changes.
+  First builds will populate the changelog with the latest commit, if any, to allow Pipelines to check and test for file changes.
+  By default, no changelog is generated for the first build because the first build has no predecessor build for comparison.
+  When the first build changelog option is enabled, the most recent commit on the branch will be used as the changelog of the first build.
 </div>

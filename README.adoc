@@ -1226,8 +1226,8 @@ Inverse::
 image:/images/git-extension-for-first-build.png[First build changelog]
 
 The Jenkins git plugin provides an option to trigger a Pipeline build on the first commit on a branch.
-By default, no changelog is generated for the first commit on a branch.
-When the first build changelog option is enabled, the most recent commit on the branch will be used as the changelog of the first build of the branch.
+By default, no changelog is generated for the first build because the first build has no predecessor build for comparison.
+When the first build changelog option is enabled, the most recent commit will be used as the changelog of the first build.
 
 [source,groovy]
 ----
