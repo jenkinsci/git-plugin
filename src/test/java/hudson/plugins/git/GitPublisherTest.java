@@ -79,7 +79,7 @@ import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link GitPublisher}
- * 
+ *
  * @author Kohsuke Kawaguchi
  */
 public class GitPublisherTest extends AbstractGitProject {
@@ -681,7 +681,6 @@ public class GitPublisherTest extends AbstractGitProject {
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-
       project.getPublishersList().add(new TestGitPublisher(
           Collections.emptyList(),
           Collections.singletonList(new BranchToPush("origin", "integration")),
@@ -741,7 +740,6 @@ public class GitPublisherTest extends AbstractGitProject {
         // * 64e71e7 (origin/master) Added a file named commitFile1
         // * b2578eb init
 
-
         // as we have set "rebaseBeforePush" to true we expect all files to be present after the build.
         FreeStyleBuild build = build(project, Result.SUCCESS, "commitFile1", "commitFile2");
     }
@@ -755,7 +753,7 @@ public class GitPublisherTest extends AbstractGitProject {
         FreeStyleProject project = setupSimpleProject("master");
 
         /*
-         * JOB_NAME seemed like the more obvious choice, but when run from a 
+         * JOB_NAME seemed like the more obvious choice, but when run from a
          * multi-configuration job, the value of JOB_NAME includes an equals
          * sign.  That makes log parsing and general use of the variable more
          * difficult.  JENKINS_SERVER_COOKIE is a characteristic env var which
@@ -886,8 +884,8 @@ public class GitPublisherTest extends AbstractGitProject {
             gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
             return gitClient;
         }
-    }    
-    
+    }
+
     private boolean existsTag(String tag) throws InterruptedException {
         return existsTagInRepo(testGitClient, tag);
     }
@@ -942,7 +940,5 @@ class LongRunningCommit extends Builder {
 
         return true;
     }
-    
-    
-    
+
 }
