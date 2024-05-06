@@ -740,6 +740,7 @@ public class GitPublisherTest extends AbstractGitProject {
         // * 64e71e7 (origin/master) Added a file named commitFile1
         // * b2578eb init
 
+
         // as we have set "rebaseBeforePush" to true we expect all files to be present after the build.
         FreeStyleBuild build = build(project, Result.SUCCESS, "commitFile1", "commitFile2");
     }
