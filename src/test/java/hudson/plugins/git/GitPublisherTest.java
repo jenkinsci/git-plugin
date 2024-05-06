@@ -940,5 +940,4 @@ class LongRunningCommit extends Builder {
 
         return true;
     }
-
 }
