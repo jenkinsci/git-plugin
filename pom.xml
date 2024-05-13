@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.80</version>
+    <version>4.82</version>
     <relativePath />
   </parent>
 
@@ -69,10 +69,10 @@
   </scm>
 
   <properties>
-    <revision>5.2.2</revision>
+    <revision>5.2.3</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.414.3</jenkins.version>
+    <jenkins.version>2.426.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
@@ -87,8 +87,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.414.x</artifactId>
-        <version>2961.v1f472390972e</version>
+        <artifactId>bom-2.426.x</artifactId>
+        <version>3041.ve87ce2cdf223</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -183,7 +183,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>3.11</version>
+      <version>892.vd6219fc0a_efb</version>
       <optional>true</optional>
     </dependency>
     <dependency>
