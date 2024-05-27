@@ -19,6 +19,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -149,7 +150,8 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
             return (revwalk != null) && (ancestor != null);
         }
     }
-    
+
+    @Symbol("ancestry")
     @Extension
     public static final class DescriptorImpl extends BuildChooserDescriptor {
         @Override

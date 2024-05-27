@@ -167,6 +167,14 @@ public class CredentialsUserRemoteConfigTest {
             "submodule(depth: 1, shallow: true)",
             "submodule(parentCredentials: true, recursiveSubmodules: true, threads: 13)",
             "submodule(depth: 17, disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '/cache/git1.git', shallow: true, threads: 13, timeout: 11, trackingSubmodules: true)",
+            "buildChooser(ancestry(ancestorCommitSha1: 'feedbeefbeadcededeedabed', maximumAgeInDays: 23))",
+            "forceWorkspacePolling()",
+            "ignoreNotifyCommit()",
+            "mergeBeforeBuild([mergeRemote: 'origin', mergeTarget: 'master'])",
+            "sparseCheckoutPaths([[path: 'src'], [path: 'Makefile']])",
+            "wipeWorkspace()",
+            "userIdentity(email: 'custom.user.email@example.com', name: 'Custom User Name')",
+
         };
         List<String> extensionList = Arrays.asList(extensions);
         if (sampleRepo.hasGitLFS()) {

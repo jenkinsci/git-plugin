@@ -3,6 +3,7 @@ package hudson.plugins.git.extensions.impl;
 import hudson.Extension;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -45,6 +46,7 @@ public class IgnoreNotifyCommit extends FakeGitSCMExtension {
         return "IgnoreNotifyCommit{}";
     }
 
+    @Symbol("ignoreNotifyCommit")
     @Extension
     // No @Symbol annotation, because ignore notifyCommit should be defined at a higher level in Pipeline
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {

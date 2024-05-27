@@ -11,6 +11,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import hudson.util.FormValidation;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -56,7 +57,8 @@ public class MessageExclusion extends GitSCMExtension {
 		return null;
 	}
 
-	@Extension
+	@Symbol("excludeMessages")
+    @Extension
         // No @Symbol annotation because message exclusion is done using a trait in Pipeline
 	public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 

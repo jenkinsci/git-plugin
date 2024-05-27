@@ -8,6 +8,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -60,6 +61,7 @@ public class WipeWorkspace extends GitSCMExtension {
         return "WipeWorkspace{}";
     }
 
+    @Symbol("wipeWorkspace")
     @Extension
     /* No @Symbol because Pipeline users should use deleteDir() */
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {

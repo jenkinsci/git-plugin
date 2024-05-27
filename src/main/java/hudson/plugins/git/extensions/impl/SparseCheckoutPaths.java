@@ -8,6 +8,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -51,6 +52,7 @@ public class SparseCheckoutPaths extends GitSCMExtension {
         cmd.sparseCheckoutPaths(Lists.transform(sparseCheckoutPaths, SparseCheckoutPath.SPARSE_CHECKOUT_PATH_TO_PATH));
     }
 
+    @Symbol("sparseCheckoutPaths")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override

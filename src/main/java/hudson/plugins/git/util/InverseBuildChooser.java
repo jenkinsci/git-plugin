@@ -6,6 +6,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.remoting.VirtualChannel;
 import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -95,6 +96,7 @@ public class InverseBuildChooser extends BuildChooser {
         });
     }
 
+    @Symbol("inverse")
     @Extension
     public static final class DescriptorImpl extends BuildChooserDescriptor {
         @Override

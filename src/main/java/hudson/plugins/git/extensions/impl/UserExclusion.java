@@ -10,6 +10,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import hudson.Util;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -69,6 +70,7 @@ public class UserExclusion extends GitSCMExtension {
         return null;
     }
 
+    @Symbol("excludeUsers")
     @Extension
     // No @Symbol because ignoring commits from Pipeline users is done with a trait
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {

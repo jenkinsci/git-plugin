@@ -8,6 +8,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -109,6 +110,7 @@ public class UserIdentity extends GitSCMExtension {
         return git;
     }
 
+    @Symbol("userIdentity")
     @Extension
     // No @Symbol because Pipeline users should configure this in other ways
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {

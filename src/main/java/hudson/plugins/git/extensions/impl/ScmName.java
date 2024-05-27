@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -23,6 +24,7 @@ public class ScmName extends FakeGitSCMExtension {
         return name;
     }
 
+    @Symbol("scmName")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override

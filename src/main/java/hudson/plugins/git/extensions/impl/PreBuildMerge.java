@@ -15,6 +15,7 @@ import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
 import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
@@ -172,6 +173,7 @@ public class PreBuildMerge extends GitSCMExtension {
                 '}';
     }
 
+    @Symbol("mergeBeforeBuild")
     @Extension
     // No @Symbol because merge before build requires credentials with git large file support.
     // Users that need merge before build in Pipeline can script the merge themselves with sh commands.

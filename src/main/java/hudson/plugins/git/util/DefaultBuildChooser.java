@@ -8,6 +8,7 @@ import hudson.remoting.VirtualChannel;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -262,6 +263,7 @@ public class DefaultBuildChooser extends BuildChooser {
             listener.getLogger().println(MessageFormat.format(format,args));
     }
 
+    @Symbol("default")
     @Extension
     public static final class DescriptorImpl extends BuildChooserDescriptor {
         @Override

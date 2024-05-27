@@ -3,6 +3,7 @@ package hudson.plugins.git.extensions.impl;
 import hudson.Extension;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -21,6 +22,7 @@ public class DisableRemotePoll extends GitSCMExtension {
         return true;
     }
 
+    @Symbol("forceWorkspacePolling")
     @Extension
     // No @Symbol annotation, because force polling using workspace should not be used in Pipeline
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {

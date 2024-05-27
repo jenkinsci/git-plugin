@@ -10,6 +10,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -41,6 +42,7 @@ public class RelativeTargetDirectory extends GitSCMExtension {
         return workspace.child(environment.expand(relativeTargetDir));
     }
 
+    @Symbol("checkoutToDir")
     @Extension
     // No @Symbol annotation because relative target directory is done in Pipeline with the `dir` step
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {

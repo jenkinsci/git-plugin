@@ -7,6 +7,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.DefaultBuildChooser;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class BuildChooserSetting extends FakeGitSCMExtension {
         return buildChooser;
     }
 
+    @Symbol("buildChooser")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
