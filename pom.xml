@@ -81,6 +81,8 @@
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
+    <!-- https://github.com/jenkinsci/mina-sshd-api-plugin/pull/98 -->
+    <mina.api.version>2.12.1-110.v314128fb_2a_5d</mina.api.version>
   </properties>
 
   <dependencyManagement>
@@ -91,6 +93,18 @@
         <version>3120.v4d898e1e9fc4</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <!-- Use mina api common plugin rather than JGit transitive dependency inclusion of Apache Mina sshd common -->
+        <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+        <artifactId>mina-sshd-api-common</artifactId>
+        <version>${mina.api.version}</version>
+      </dependency>
+      <dependency>
+        <!-- Use mina api core plugin rather than JGit transitive dependency inclusion of Apache Mina sshd core -->
+        <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+        <artifactId>mina-sshd-api-core</artifactId>
+        <version>${mina.api.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -110,11 +124,13 @@
       <groupId>net.i2p.crypto</groupId>
       <artifactId>eddsa</artifactId>
       <version>0.3.0</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
       <version>1.77</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

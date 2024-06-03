@@ -200,7 +200,6 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                     .using(GitTool.getDefaultInstallation().getGitExe())
                     .getClient();
             StandardCredentials credential = lookupCredentials(item, credentialsId, url);
-
             git.addDefaultCredentials(credential);
 
             // Should not track credentials use in any checkURL method, rather should track
