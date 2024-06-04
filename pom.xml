@@ -81,8 +81,7 @@
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
-    <!-- https://github.com/jenkinsci/mina-sshd-api-plugin/pull/98 -->
-    <mina.api.version>2.12.1-110.v314128fb_2a_5d</mina.api.version>
+    <mina.api.version>2.12.1-111.v06de17b_e0ed5</mina.api.version>
   </properties>
 
   <dependencyManagement>
