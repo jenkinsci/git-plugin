@@ -108,7 +108,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 			final String finalValue = value;
 			return new URLCheck() {
 				@Override
-				protected FormValidation check() throws IOException, ServletException {
+				protected FormValidation check() throws IOException {
 					try {
 						if (findText(open(new URL(finalValue)), "FishEye")) {
 							return FormValidation.ok();
