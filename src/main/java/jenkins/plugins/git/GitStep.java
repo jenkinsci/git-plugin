@@ -50,7 +50,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 public final class GitStep extends SCMStep {
 
     private final String url;
-    private String branch = "master";
+    private String branch = "main";
     private String credentialsId;
 
     @DataBoundConstructor
