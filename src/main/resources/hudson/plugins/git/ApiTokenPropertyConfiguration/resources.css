@@ -2,17 +2,9 @@
     display: flex;
     align-items: center;
     max-width: 700px;
-}
-.api-token-list .api-token-list-item-row.api-token-list-existing-api-token {
-    justify-content: space-between;
+    gap: 10px;
 }
 .api-token-list .api-token-list-item .hidden, .api-token-list .api-token-list-empty-item.hidden {
     display: none;
 }
 
-.api-token-list .api-token-revoke-button, .api-token-list .new-api-token-value {
-    padding: 0 0.5rem;
-}
-.api-token-list .api-token-warning-message, .api-token-list .api-token-save-button {
-    margin: 0.5rem 0;
-}

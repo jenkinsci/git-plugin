@@ -19,7 +19,7 @@ function revokeApiToken(anchorRevoke) {
     const inputUuid = repeatedChunk.querySelector('.api-token-uuid-input');
     const apiTokenUuid = inputUuid.value;
 
-    if (confirm(confirmMessage)) {
+    dialog.confirm(confirmMessage).then( () => {
         fetch(targetUrl, {
             headers: crumb.wrap({
               "Content-Type": "application/x-www-form-urlencoded",
@@ -32,7 +32,7 @@ function revokeApiToken(anchorRevoke) {
                 adjustEmptyListMessage(apiTokenList);
             }
         });
-    }
+    });
 
     return false;
 }
@@ -40,13 +40,12 @@ function revokeApiToken(anchorRevoke) {
 /**
 * Registering the onclick handler on all the "Generate" buttons for API Token.
 */
-Behaviour.specify(".api-token-save-button", 'ApiTokenPropertyConfiguration', 0, function(buttonContainer) {
+Behaviour.specify(".api-token-save-button", 'ApiTokenPropertyConfiguration', 0, function(button) {
     // DEV MEMO:
     // While un-inlining the onclick handler, we are trying to avoid modifying the existing source code and functions.
     // In order to keep consistency with the existing code, we add our onclick handler on the button element which is contained in the
     // api-token-save-button that we identify. While this could be refactored to directly identify the button, this would need to be done in an other
     // contribution.
-    const button = buttonContainer.getElementsByTagName('button')[0];
     button.onclick = (_) => saveApiToken(button);
 })
 
