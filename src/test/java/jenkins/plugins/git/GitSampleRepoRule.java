@@ -80,7 +80,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
 	if (gitVersionAtLeast(2, 30)) {
 	    // Force branch name to master even if system default is not master
-	    // Fails on git 2.25, 2.20, 2.17, and 1.8
+	    // Fails on git 2.25, 2.20, and 2.17
 	    // Works on git 2.30 and later
             git("branch", "-m", "master");
 	}
