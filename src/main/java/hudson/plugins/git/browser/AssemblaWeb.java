@@ -116,7 +116,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {
-                protected FormValidation check() throws IOException, ServletException {
+                protected FormValidation check() throws IOException {
                     String v = cleanUrl;
                     if (!v.endsWith("/")) {
                         v += '/';

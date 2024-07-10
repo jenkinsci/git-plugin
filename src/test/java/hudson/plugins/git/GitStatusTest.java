@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerResponse2;
 
 public class GitStatusTest extends AbstractGitProject {
 
@@ -584,7 +585,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
         setupProjectWithTrigger("a", "master", false);
-        StaplerResponse res = mock(StaplerResponse.class);
+        StaplerResponse2 res = mock(StaplerResponse2.class);
 
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, "invalid");
         httpResponse.generateResponse(null, res, null);
@@ -608,7 +609,7 @@ public class GitStatusTest extends AbstractGitProject {
     public void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "random";
         setupProjectWithTrigger("a", "master", false);
-        StaplerResponse res = mock(StaplerResponse.class);
+        StaplerResponse2 res = mock(StaplerResponse2.class);
 
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, null);
         httpResponse.generateResponse(null, res, null);
@@ -621,7 +622,7 @@ public class GitStatusTest extends AbstractGitProject {
     public void testDoNotifyCommitWithSha1AndAllowModePoll() throws Exception {
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         setupProjectWithTrigger("a", "master", false);
-        StaplerResponse res = mock(StaplerResponse.class);
+        StaplerResponse2 res = mock(StaplerResponse2.class);
 
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", sha1, null);
         httpResponse.generateResponse(null, res, null);
@@ -634,7 +635,7 @@ public class GitStatusTest extends AbstractGitProject {
     public void testDoNotifyCommitWithSha1AndAllowModePollWithInvalidToken() throws Exception {
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         setupProjectWithTrigger("a", "master", false);
-        StaplerResponse res = mock(StaplerResponse.class);
+        StaplerResponse2 res = mock(StaplerResponse2.class);
 
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", sha1, "invalid");
         httpResponse.generateResponse(null, res, null);

@@ -140,7 +140,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
             final String finalValue = value;
             return new FormValidation.URLCheck() {
                 @Override
-                protected FormValidation check() throws IOException, ServletException {
+                protected FormValidation check() throws IOException {
                     try {
                         if (findText(open(new URL(finalValue)), "icrosoft")) {
                             return FormValidation.ok();
