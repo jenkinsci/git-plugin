@@ -579,16 +579,31 @@ public class GitPublisher extends Recorder implements Serializable {
         private String noteNamespace;
         private boolean noteReplace;
 
-        public String getNoteMsg() {
+        @Deprecated
+        public String getnoteMsg() {
             return noteMsg;
         }
         
-        public String getNoteNamespace() {
+        @Deprecated
+        public String getnoteNamespace() {
         	return noteNamespace;
         }
         
-        public boolean getNoteReplace() {
+        @Deprecated
+        public boolean getnoteReplace() {
         	return noteReplace;
+        }
+
+        public String getNoteMsg() {
+            return noteMsg;
+        }
+
+        public String getNoteNamespace() {
+            return noteNamespace;
+        }
+
+        public boolean getNoteReplace() {
+            return noteReplace;
         }
 
         @DataBoundConstructor
