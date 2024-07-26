@@ -21,6 +21,8 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.security.FIPS140;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -170,6 +172,10 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
+
+            if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(credentialsId) && StringUtils.startsWith(value, "http:")) {
+                return FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
+            }
 
             // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
             // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
