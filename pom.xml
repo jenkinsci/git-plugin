@@ -72,7 +72,7 @@
     <revision>5.2.3</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.baseline>2.426</jenkins.baseline>
+    <jenkins.baseline>2.440</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
