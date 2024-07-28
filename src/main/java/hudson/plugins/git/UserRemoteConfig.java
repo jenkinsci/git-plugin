@@ -60,6 +60,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         this.name = fixEmpty(name);
         this.refspec = fixEmpty(refspec);
         this.credentialsId = fixEmpty(credentialsId);
+        if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(this.credentialsId) && StringUtils.startsWith(this.url, "http:")) {
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
     }
 
     @Exported

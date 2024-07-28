@@ -10,19 +10,28 @@ import com.github.sparsick.testcontainers.gitserver.plain.GitServerContainer;
 import com.github.sparsick.testcontainers.gitserver.plain.SshIdentity;
 import hudson.ExtensionList;
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.util.FormValidation;
 import jenkins.branch.MultiBranchProject;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.jetbrains.annotations.NotNull;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,6 +44,9 @@ public class FIPSModeUrlCheckTest {
     public static final FlagRule<String> FIPS_FLAG = FlagRule.systemProperty(FIPS140.class.getName() + ".COMPLIANCE", "true");
 
     @Rule public JenkinsRule r = new JenkinsRule();
+
+    @Rule
+    public TemporaryFolder directory = new TemporaryFolder();
 
     @Test
     public void testGitSCMSourceCheck() throws Throwable {
@@ -100,7 +112,7 @@ public class FIPSModeUrlCheckTest {
                 SshIdentity sshIdentity = containerUnderTest.getSshClientIdentity();
                 BasicSSHUserPrivateKey sshUserPrivateKey = getBasicSSHUserPrivateKey(sshIdentity);
                 SystemCredentialsProvider.getInstance().getCredentials().add(sshUserPrivateKey);
-                String repoUrl = ((GitServerContainer) containerUnderTest)
+                String repoUrl = containerUnderTest
                         .getGitRepoURIAsSSH()
                         .toString();
                 // ssh://git@localhost:33011/srv/git/someRepo.git
@@ -140,6 +152,53 @@ public class FIPSModeUrlCheckTest {
                 privateKeySource,
                 new String(sshIdentity.getPassphrase()),
                 "description");
+    }
+
+    @Test
+    public void gitStepTLSCheck() throws Throwable {
+        WorkflowJob p = r.createProject(WorkflowJob.class, "some project");
+        {
+            // http with creds rejected
+            p.setDefinition(new CpsFlowDefinition(
+                    "node {\n" +
+                            "    dir('foo') {\n" +
+                            "        git url: 'http://foo.com/beer.git', credentialsId: 'yup'\n" +
+                            "    }\n" +
+                            "}", true));
+            WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, p);
+            r.assertLogContains(Messages.git_fips_url_notsecured(), b);
+        }
+
+        {
+            // http without creds not rejected
+            try (GitHttpServerContainer containerUnderTest =
+                         new GitHttpServerContainer(GitServerVersions.V2_43.getDockerImageName())){
+                containerUnderTest.start();
+                // need to have at least on revision to avoid build failure
+                File tmp = directory.newFolder();
+                Git git = Git.cloneRepository()
+                        .setURI(containerUnderTest.getGitRepoURIAsHttp().toString())
+                        .setDirectory(tmp)
+                        .call();
+                StoredConfig storedConfig =  git.getRepository().getConfig();
+                storedConfig.setBoolean("commit", null,"gpgsign", false);
+                storedConfig.setBoolean("tag", null, "gpgSign", false);
+                storedConfig.save();
+                Files.writeString(new File(tmp, "foo.txt").toPath(), "nothing too see here");
+                git.add().addFilepattern("foo.txt").call();
+                git.commit().setMessage("add foo").call();
+                git.push().call();
+
+                // http with creds rejected
+                p.setDefinition(new CpsFlowDefinition(
+                        "node {\n" +
+                                "    dir('foo') {\n" +
+                                "        git url: '" + containerUnderTest.getGitRepoURIAsHttp() + "', changelog: false\n" +
+                                "    }\n" +
+                                "}", true));
+                WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, p);
+            }
+        }
     }
 
 }
