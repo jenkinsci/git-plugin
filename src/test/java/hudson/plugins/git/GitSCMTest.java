@@ -1955,7 +1955,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
                 Collections.emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        scm.getExtensions().add(new GitSCMSlowTest.TestPreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
@@ -2138,7 +2138,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /**
-     * Test a pipeline getting the value from several checkout steps gets the latest data everytime.
+     * Test a pipeline getting the value from several checkout steps gets the latest data every time.
      * @throws Exception If anything wrong happens
      */
     @Issue("JENKINS-53346")

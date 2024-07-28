@@ -50,12 +50,14 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     private static final Logger LOGGER = Logger.getLogger(GitSampleRepoRule.class.getName());
 
-    protected void before() throws Throwable {
+    @Override
+    public void before() throws Throwable {
         super.before();
         GitSCM.ALLOW_LOCAL_CHECKOUT = true;
     }
 
-    protected void after() {
+    @Override
+    public void after() {
         super.after();
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
@@ -78,7 +80,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
 	if (gitVersionAtLeast(2, 30)) {
 	    // Force branch name to master even if system default is not master
-	    // Fails on git 2.25, 2.20, 2.17, and 1.8
+	    // Fails on git 2.25, 2.20, and 2.17
 	    // Works on git 2.30 and later
             git("branch", "-m", "master");
 	}
@@ -88,6 +90,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         git("config", "user.email", "gits@mplereporule");
         git("config", "init.defaultbranch", "master");
         git("config", "commit.gpgsign", "false");
+        git("config", "tag.gpgSign", "false");
         git("commit", "--message=init");
     }
 

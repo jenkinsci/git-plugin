@@ -53,6 +53,8 @@ public class TestGitRepo {
 
         // finally: initialize the repo
 		git.init();
+        git.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+        git.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
 	}
 	
     /**
