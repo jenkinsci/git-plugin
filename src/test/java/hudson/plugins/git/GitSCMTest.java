@@ -1189,6 +1189,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertThat("Cleaning should happen before fetch", cleaningLogLine, is(lessThan(fetchingLogLine)));
     }
 
+    @Test
+    public void testFirstBuiltChangelog() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
+        FirstBuildChangelog fbc = new FirstBuildChangelog();
+        ((GitSCM) p.getScm()).getExtensions().add(fbc);
+
+        /* First build should should generate a changelog */
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        final FreeStyleBuild firstBuild = build(p, Result.SUCCESS, commitFile1);
+        assertThat(firstBuild.getLog(50), hasItem("First time build. Latest changes added to changelog."));
+        /* Second build should have normal behavior */
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
+        final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
+        assertThat(secondBuild.getLog(50), not(hasItem("First time build. Latest changes added to changelog.")));
+    }
+
     @Issue("JENKINS-8342")
     @Test
     public void testExcludedRegionMultiCommit() throws Exception {
