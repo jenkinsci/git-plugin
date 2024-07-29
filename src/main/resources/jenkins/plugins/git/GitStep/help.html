@@ -19,8 +19,8 @@
     <p>
     The <code>git</code> step is a simplified shorthand for a subset of the more powerful <code>checkout</code> step:
 <pre>
-checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-    userRemoteConfigs: [[url: 'https://git-server/user/repository.git']]])
+checkout scmGit(branches: [[name: 'main]],
+    userRemoteConfigs: [[url: 'https://git-server/user/repository.git']])
 </pre>
     </p>
 
