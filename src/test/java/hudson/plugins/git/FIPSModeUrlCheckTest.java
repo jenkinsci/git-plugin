@@ -59,6 +59,8 @@ public class FIPSModeUrlCheckTest {
         assertThat(GitSCMSource.isFIPSLtsCompliant("beer", "https://github.com/cheese/wine"), is(true));
         assertThat(GitSCMSource.isFIPSLtsCompliant(null, "git@github.com:cheese/wine.git"), is(true));
         assertThat(GitSCMSource.isFIPSLtsCompliant("beer", "git@github.com:cheese/wine.git"), is(true));
+        assertThat(GitSCMSource.isFIPSLtsCompliant(null, "git://github.com/cheese/wine"), is(true));
+        assertThat(GitSCMSource.isFIPSLtsCompliant("beer", "git://github.com/cheese/wine"), is(false));
     }
 
     @Test
