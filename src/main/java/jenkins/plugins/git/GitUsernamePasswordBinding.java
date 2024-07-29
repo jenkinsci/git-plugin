@@ -193,7 +193,8 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             if (filename.contains("\"")) {
                 filename = filename.replace("\"", "^\"");
             }
-            return "\"" + filename + "\"";
+            /* Ensure backslashes since cmd doesn't work with slashes as path separators */
+            return "\"" + filename.replace("/", "\\") + "\"";
         }
     }
 

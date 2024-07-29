@@ -136,6 +136,7 @@ public class GitChangeSetTruncateTest {
         assertThat(gitCmd.run(), is(expectedResult));
         // we have to setup the repo as commitOneFile doesn't to use the env vars
         gitCmd = new CliGitCommand(gitClient, "config", "commit.gpgsign", "false");
+        gitCmd = new CliGitCommand(gitClient, "config", "tag.gpgSign", "false");
         assertThat(gitCmd.run(), is(expectedResult));
     }
 
@@ -145,6 +146,8 @@ public class GitChangeSetTruncateTest {
         /* randomize whether commit message is single line or multi-line */
         String commitMessageBody = random.nextBoolean() ? "\n\n" + "committing " + path + " with content:\n\n" + content : "";
         String commitMessage = commitSummary + commitMessageBody;
+        gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+        gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
         createFile(path, content);
         gitClient.add(path);
         gitClient.commit(commitMessage);
