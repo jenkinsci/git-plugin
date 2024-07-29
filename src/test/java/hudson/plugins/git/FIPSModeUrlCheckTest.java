@@ -85,7 +85,6 @@ public class FIPSModeUrlCheckTest {
             assertThat(validation.kind, is(FormValidation.Kind.OK));
         }
 
-
         {
             // http without creds ok
             FormValidation validation = descriptor.doCheckRemote(mbp, null, "http://github.com/foo/cheese");
@@ -106,12 +105,12 @@ public class FIPSModeUrlCheckTest {
             assertThat(validation.kind, is(FormValidation.Kind.ERROR));
             assertThat(validation.getMessage(), containsString(Messages.git_fips_url_notsecured()));
         }
+        
         {
             // https without credentials all good
             FormValidation validation = descriptor.doCheckUrl(p, null, "https://github.com/jenkinsci/git-plugin");
             assertThat(validation.kind, is(FormValidation.Kind.OK));
         }
-
 
         {
             // ssh with credentials all good
