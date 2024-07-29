@@ -23,12 +23,14 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assume;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
 
 import java.io.File;
@@ -105,12 +107,14 @@ public class FIPSModeUrlCheckTest {
             assertThat(validation.kind, is(FormValidation.Kind.ERROR));
             assertThat(validation.getMessage(), containsString(Messages.git_fips_url_notsecured()));
         }
-        
+
         {
             // https without credentials all good
             FormValidation validation = descriptor.doCheckUrl(p, null, "https://github.com/jenkinsci/git-plugin");
             assertThat(validation.kind, is(FormValidation.Kind.OK));
         }
+
+        Assume.assumeTrue(DockerClientFactory.instance().isDockerAvailable());
 
         {
             // ssh with credentials all good
@@ -185,6 +189,8 @@ public class FIPSModeUrlCheckTest {
             r.assertLogContains(Messages.git_fips_url_notsecured(), b);
         }
 
+        Assume.assumeTrue(DockerClientFactory.instance().isDockerAvailable());
+
         {
             // http without creds not rejected
             try (GitHttpServerContainer containerUnderTest =
@@ -233,6 +239,8 @@ public class FIPSModeUrlCheckTest {
             WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, p);
             r.assertLogContains(Messages.git_fips_url_notsecured(), b);
         }
+
+        Assume.assumeTrue(DockerClientFactory.instance().isDockerAvailable());
 
         {
             // http without creds not rejected
