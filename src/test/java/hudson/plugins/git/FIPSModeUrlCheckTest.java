@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.testcontainers.containers.BindMode;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -106,11 +107,17 @@ public class FIPSModeUrlCheckTest {
             // ssh with credentials all good
             try (GitServerContainer containerUnderTest = new GitServerContainer(
                     GitServerVersions.V2_45.getDockerImageName())
-                    .withGitRepo("someRepo")
-                    .withSshKeyAuth()) {
+                    .withGitRepo("someRepo")) {
+                containerUnderTest.withClasspathResourceMapping("ssh-keys/id_rsa.pub", "/home/git/.ssh/authorized_keys", BindMode.READ_ONLY);
+                containerUnderTest.withClasspathResourceMapping("sshd_config", "/etc/ssh/sshd_config", BindMode.READ_ONLY);
+
                 containerUnderTest.start();
-                SshIdentity sshIdentity = containerUnderTest.getSshClientIdentity();
-                BasicSSHUserPrivateKey sshUserPrivateKey = getBasicSSHUserPrivateKey(sshIdentity);
+
+                SshIdentity sshClientIdentity = new SshIdentity(
+                        this.getClass().getClassLoader().getResourceAsStream("ssh-keys/id_rsa").readAllBytes(),
+                        this.getClass().getClassLoader().getResourceAsStream("ssh-keys/id_rsa.pub").readAllBytes(),
+                        new byte[0]);
+                BasicSSHUserPrivateKey sshUserPrivateKey = getBasicSSHUserPrivateKey(sshClientIdentity);
                 SystemCredentialsProvider.getInstance().getCredentials().add(sshUserPrivateKey);
                 String repoUrl = containerUnderTest
                         .getGitRepoURIAsSSH()
