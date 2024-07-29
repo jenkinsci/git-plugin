@@ -177,7 +177,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
-            if (!GitSCMSource.isFIPSLts(credentialsId, value)) {
+            if (!GitSCMSource.isFIPSLtsCompliant(credentialsId, value)) {
                 return FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
             }
 

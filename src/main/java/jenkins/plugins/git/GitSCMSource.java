@@ -415,7 +415,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
      * @param remoteUrl the git remote url
      * @return will return {@code false} if using any credentials with a non TLS protocol with FIPS mode activated @see {@link FIPS140#useCompliantAlgorithms()}
      */
-    public static boolean isFIPSLts(String credentialsId, String remoteUrl) {
+    public static boolean isFIPSLtsCompliant(String credentialsId, String remoteUrl) {
         return !FIPS140.useCompliantAlgorithms() || !StringUtils.isNotEmpty(credentialsId) || !StringUtils.startsWith(remoteUrl, "http:");
     }
 
@@ -451,7 +451,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String remote) throws IOException, InterruptedException {
             Jenkins.get().checkPermission(Jenkins.MANAGE);
-            return isFIPSLts(credentialsId, remote) ? FormValidation.ok() : FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
+            return isFIPSLtsCompliant(credentialsId, remote) ? FormValidation.ok() : FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
         }
 
         @RequirePOST

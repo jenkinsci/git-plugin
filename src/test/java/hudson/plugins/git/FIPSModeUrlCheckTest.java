@@ -53,12 +53,12 @@ public class FIPSModeUrlCheckTest {
 
     @Test
     public void testFIPSLtsMethod() {
-        assertThat(GitSCMSource.isFIPSLts(null, "http://github.com/cheese/wine"), is(true));
-        assertThat(GitSCMSource.isFIPSLts("beer", "http://github.com/cheese/wine"), is(false));
-        assertThat(GitSCMSource.isFIPSLts(null, "https://github.com/cheese/wine"), is(true));
-        assertThat(GitSCMSource.isFIPSLts("beer", "https://github.com/cheese/wine"), is(true));
-        assertThat(GitSCMSource.isFIPSLts(null, "git@github.com:cheese/wine.git"), is(true));
-        assertThat(GitSCMSource.isFIPSLts("beer", "git@github.com:cheese/wine.git"), is(true));
+        assertThat(GitSCMSource.isFIPSLtsCompliant(null, "http://github.com/cheese/wine"), is(true));
+        assertThat(GitSCMSource.isFIPSLtsCompliant("beer", "http://github.com/cheese/wine"), is(false));
+        assertThat(GitSCMSource.isFIPSLtsCompliant(null, "https://github.com/cheese/wine"), is(true));
+        assertThat(GitSCMSource.isFIPSLtsCompliant("beer", "https://github.com/cheese/wine"), is(true));
+        assertThat(GitSCMSource.isFIPSLtsCompliant(null, "git@github.com:cheese/wine.git"), is(true));
+        assertThat(GitSCMSource.isFIPSLtsCompliant("beer", "git@github.com:cheese/wine.git"), is(true));
     }
 
     @Test
