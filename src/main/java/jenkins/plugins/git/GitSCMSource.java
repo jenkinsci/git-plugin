@@ -409,6 +409,13 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return traits;
     }
 
+    public static boolean isFIPSLts(String credentialsId, String remoteUrl) {
+        if(FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(credentialsId) && StringUtils.startsWith(remoteUrl, "http:")) {
+            return false;
+        }
+        return true;
+    }
+
     @Symbol("git")
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor {
@@ -441,10 +448,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String remote) throws IOException, InterruptedException {
             Jenkins.get().checkPermission(Jenkins.MANAGE);
-            if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(credentialsId) && StringUtils.startsWith(remote, "http:")) {
-                return FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
-            }
-            return FormValidation.ok();
+            return isFIPSLts(credentialsId, remote) ? FormValidation.ok() : FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
         }
 
         @RequirePOST

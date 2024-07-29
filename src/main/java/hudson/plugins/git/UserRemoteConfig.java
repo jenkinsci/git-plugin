@@ -21,6 +21,7 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Config;
@@ -176,7 +177,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
-            if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(credentialsId) && StringUtils.startsWith(value, "http:")) {
+            if (!GitSCMSource.isFIPSLts(credentialsId, value)) {
                 return FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
             }
 
