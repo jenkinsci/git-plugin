@@ -196,11 +196,61 @@ public class FIPSModeUrlCheckTest {
                 git.commit().setMessage("add foo").call();
                 git.push().call();
 
-                // http with creds rejected
                 p.setDefinition(new CpsFlowDefinition(
                         "node {\n" +
                                 "    dir('foo') {\n" +
                                 "        git url: '" + containerUnderTest.getGitRepoURIAsHttp() + "', changelog: false\n" +
+                                "    }\n" +
+                                "}", true));
+                WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, p);
+            }
+        }
+    }
+
+
+    @Test
+    public void checkoutStepTLSCheck() throws Throwable {
+        WorkflowJob p = r.createProject(WorkflowJob.class, "some project");
+        {
+            // http with creds rejected
+            p.setDefinition(new CpsFlowDefinition(
+                    "node {\n" +
+                            "    dir('foo') {\n" +
+                            "        checkout([$class: 'GitSCM', \n" +
+                            "                  branches: [[name: '*/master']], \n" +
+                            "                  userRemoteConfigs: [[credentialsId: 'foocreds', url: 'http://github.com/foo/beer.git']]]) \n" +
+                            "    }\n" +
+                            "}", true));
+            WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, p);
+            r.assertLogContains(Messages.git_fips_url_notsecured(), b);
+        }
+
+        {
+            // http without creds not rejected
+            try (GitHttpServerContainer containerUnderTest =
+                         new GitHttpServerContainer(GitServerVersions.V2_43.getDockerImageName())){
+                containerUnderTest.start();
+                // need to have at least on revision to avoid build failure
+                File tmp = directory.newFolder();
+                Git git = Git.cloneRepository()
+                        .setURI(containerUnderTest.getGitRepoURIAsHttp().toString())
+                        .setDirectory(tmp)
+                        .call();
+                StoredConfig storedConfig =  git.getRepository().getConfig();
+                storedConfig.setBoolean("commit", null,"gpgsign", false);
+                storedConfig.setBoolean("tag", null, "gpgSign", false);
+                storedConfig.save();
+                Files.writeString(new File(tmp, "foo.txt").toPath(), "nothing too see here");
+                git.add().addFilepattern("foo.txt").call();
+                git.commit().setMessage("add foo").call();
+                git.push().call();
+
+                p.setDefinition(new CpsFlowDefinition(
+                        "node {\n" +
+                                "    dir('foo') {\n" +
+                                "        checkout([$class: 'GitSCM', \n" +
+                                "                  branches: [[name: '*/master']], \n" +
+                                "                  userRemoteConfigs: [[url: '" + containerUnderTest.getGitRepoURIAsHttp() + "']]]) \n" +
                                 "    }\n" +
                                 "}", true));
                 WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, p);
