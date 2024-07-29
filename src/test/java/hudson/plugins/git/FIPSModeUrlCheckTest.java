@@ -50,6 +50,16 @@ public class FIPSModeUrlCheckTest {
     public TemporaryFolder directory = new TemporaryFolder();
 
     @Test
+    public void testFIPSLtsMethod() {
+        assertThat(GitSCMSource.isFIPSLts(null, "http://github.com/cheese/wine"), is(true));
+        assertThat(GitSCMSource.isFIPSLts("beer", "http://github.com/cheese/wine"), is(false));
+        assertThat(GitSCMSource.isFIPSLts(null, "https://github.com/cheese/wine"), is(true));
+        assertThat(GitSCMSource.isFIPSLts("beer", "https://github.com/cheese/wine"), is(true));
+        assertThat(GitSCMSource.isFIPSLts(null, "git@github.com:cheese/wine.git"), is(true));
+        assertThat(GitSCMSource.isFIPSLts("beer", "git@github.com:cheese/wine.git"), is(true));
+    }
+
+    @Test
     public void testGitSCMSourceCheck() throws Throwable {
         SystemCredentialsProvider.getInstance().getCredentials().add(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
         SystemCredentialsProvider.getInstance().save();

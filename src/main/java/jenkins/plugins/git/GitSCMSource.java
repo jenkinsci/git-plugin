@@ -409,11 +409,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return traits;
     }
 
+    /**
+     *
+     * @param credentialsId any credentials (can be {@code null}
+     * @param remoteUrl the git remote url
+     * @return will return {@code false} if using any credentials with a non TLS protocol with FIPS mode activated @see {@link FIPS140#useCompliantAlgorithms()}
+     */
     public static boolean isFIPSLts(String credentialsId, String remoteUrl) {
-        if(FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(credentialsId) && StringUtils.startsWith(remoteUrl, "http:")) {
-            return false;
-        }
-        return true;
+        return !FIPS140.useCompliantAlgorithms() || !StringUtils.isNotEmpty(credentialsId) || !StringUtils.startsWith(remoteUrl, "http:");
     }
 
     @Symbol("git")
