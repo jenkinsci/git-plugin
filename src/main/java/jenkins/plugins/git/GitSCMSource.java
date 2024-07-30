@@ -49,6 +49,8 @@ import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
@@ -92,6 +94,8 @@ import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
+import jenkins.security.FIPS140;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.Symbol;
@@ -105,6 +109,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * A {@link SCMSource} that discovers branches in a git repository.
@@ -404,6 +409,17 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return traits;
     }
 
+    /**
+     * Returns false if a non-TLS protocol is used when FIPS mode is enabled.
+     * @param credentialsId any credentials (can be {@code null})
+     * @param remoteUrl the git remote url
+     * @return {@code false} if using any credentials with a non TLS protocol with FIPS mode activated
+     * @see FIPS140#useCompliantAlgorithms()
+     */
+    public static boolean isFIPSCompliantTLS(String credentialsId, String remoteUrl) {
+        return !FIPS140.useCompliantAlgorithms() || !StringUtils.isNotEmpty(credentialsId) || (!StringUtils.startsWith(remoteUrl, "http:") && !StringUtils.startsWith(remoteUrl, "git:"));
+    }
+
     @Symbol("git")
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor {
@@ -431,6 +447,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     .includeCurrentValue(credentialsId);
         }
 
+        @RequirePOST
+        public FormValidation doCheckRemote(@AncestorInPath Item item,
+                                         @QueryParameter String credentialsId,
+                                         @QueryParameter String remote) throws IOException, InterruptedException {
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
+            return isFIPSCompliantTLS(credentialsId, remote) ? FormValidation.ok() : FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
+        }
+
+        @RequirePOST
         public FormValidation doCheckCredentialsId(@AncestorInPath Item context,
                                                    @QueryParameter String remote,
                                                    @QueryParameter String value) {
