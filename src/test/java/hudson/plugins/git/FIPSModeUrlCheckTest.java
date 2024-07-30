@@ -149,7 +149,7 @@ public class FIPSModeUrlCheckTest {
         {
             // http without credentials all good
             try (GitHttpServerContainer containerUnderTest =
-                         new GitHttpServerContainer(GitServerVersions.V2_43.getDockerImageName())) {
+                         new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())) {
                 containerUnderTest.start();
                 // no TLS is fine without credentials
                 FormValidation validation = descriptor.doCheckUrl(p, null, containerUnderTest.getGitRepoURIAsHttp().toString());
@@ -196,7 +196,7 @@ public class FIPSModeUrlCheckTest {
         {
             // http without creds not rejected
             try (GitHttpServerContainer containerUnderTest =
-                         new GitHttpServerContainer(GitServerVersions.V2_43.getDockerImageName())){
+                         new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())){
                 containerUnderTest.start();
                 // need to have at least on revision to avoid build failure
                 File tmp = directory.newFolder();
@@ -247,7 +247,7 @@ public class FIPSModeUrlCheckTest {
         {
             // http without creds not rejected
             try (GitHttpServerContainer containerUnderTest =
-                         new GitHttpServerContainer(GitServerVersions.V2_43.getDockerImageName())){
+                         new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())){
                 containerUnderTest.start();
                 // need to have at least on revision to avoid build failure
                 File tmp = directory.newFolder();
