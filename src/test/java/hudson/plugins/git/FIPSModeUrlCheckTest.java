@@ -183,10 +183,10 @@ public class FIPSModeUrlCheckTest {
             // http with creds rejected
             p.setDefinition(new CpsFlowDefinition(
                     "node {\n" +
-                            "    dir('foo') {\n" +
-                            "        git url: 'http://foo.com/beer.git', credentialsId: 'yup'\n" +
-                            "    }\n" +
-                            "}", true));
+                    "    dir('foo') {\n" +
+                    "        git url: 'http://foo.com/beer.git', credentialsId: 'yup'\n" +
+                    "    }\n" +
+                    "}", true));
             WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, p);
             r.assertLogContains(Messages.git_fips_url_notsecured(), b);
         }
@@ -215,10 +215,10 @@ public class FIPSModeUrlCheckTest {
 
                 p.setDefinition(new CpsFlowDefinition(
                         "node {\n" +
-                                "    dir('foo') {\n" +
-                                "        git url: '" + containerUnderTest.getGitRepoURIAsHttp() + "', changelog: false\n" +
-                                "    }\n" +
-                                "}", true));
+                        "    dir('foo') {\n" +
+                        "        git url: '" + containerUnderTest.getGitRepoURIAsHttp() + "', changelog: false\n" +
+                        "    }\n" +
+                        "}", true));
                 WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, p);
             }
         }
@@ -267,12 +267,12 @@ public class FIPSModeUrlCheckTest {
                 // Intentionally using old syntax to check compatibility
                 p.setDefinition(new CpsFlowDefinition(
                         "node {\n" +
-                                "    dir('foo') {\n" +
-                                "        checkout([$class: 'GitSCM',\n" +
-                                "                  branches: [[name: '*/master']],\n" +
-                                "                  userRemoteConfigs: [[url: '" + containerUnderTest.getGitRepoURIAsHttp() + "']]])\n" +
-                                "    }\n" +
-                                "}", true));
+                        "    dir('foo') {\n" +
+                        "        checkout([$class: 'GitSCM',\n" +
+                        "                  branches: [[name: '*/master']],\n" +
+                        "                  userRemoteConfigs: [[url: '" + containerUnderTest.getGitRepoURIAsHttp() + "']]])\n" +
+                        "    }\n" +
+                        "}", true));
                 WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, p);
             }
         }
