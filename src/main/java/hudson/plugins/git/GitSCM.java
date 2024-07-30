@@ -768,7 +768,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                 else name = remote + "/" + head;
 
                                 // Use pollEnv here to include Parameters from lastBuild.
-                                // Record which branches in the spec we have found a match for so we can alter users when branches are ignored.
+                                // Record which branches in the spec we have found a match for so we can alert users when branches are ignored.
                                 if (branchSpec.matches(name, pollEnv)){
                                     headMatches.put(branchSpec, name);
                                 } else {
