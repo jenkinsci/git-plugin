@@ -230,14 +230,14 @@ public class FIPSModeUrlCheckTest {
         WorkflowJob p = r.createProject(WorkflowJob.class, "some project");
         {
             // http with creds rejected
+            // Intentionally using modern syntax to check compatibility
             p.setDefinition(new CpsFlowDefinition(
                     "node {\n" +
-                            "    dir('foo') {\n" +
-                            "        checkout([$class: 'GitSCM', \n" +
-                            "                  branches: [[name: '*/master']], \n" +
-                            "                  userRemoteConfigs: [[credentialsId: 'foocreds', url: 'http://github.com/foo/beer.git']]]) \n" +
-                            "    }\n" +
-                            "}", true));
+                    "    dir('foo') {\n" +
+                    "        checkout scmGit(branches: [[name: 'master']],\n" +
+                    "                        userRemoteConfigs: [[credentialsId: 'foocreds', url: 'http://github.com/foo/beer.git']])\n" +
+                    "    }\n" +
+                    "}", true));
             WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, p);
             r.assertLogContains(Messages.git_fips_url_notsecured(), b);
         }
@@ -264,12 +264,13 @@ public class FIPSModeUrlCheckTest {
                 git.commit().setMessage("add foo").call();
                 git.push().call();
 
+                // Intentionally using old syntax to check compatibility
                 p.setDefinition(new CpsFlowDefinition(
                         "node {\n" +
                                 "    dir('foo') {\n" +
-                                "        checkout([$class: 'GitSCM', \n" +
-                                "                  branches: [[name: '*/master']], \n" +
-                                "                  userRemoteConfigs: [[url: '" + containerUnderTest.getGitRepoURIAsHttp() + "']]]) \n" +
+                                "        checkout([$class: 'GitSCM',\n" +
+                                "                  branches: [[name: '*/master']],\n" +
+                                "                  userRemoteConfigs: [[url: '" + containerUnderTest.getGitRepoURIAsHttp() + "']]])\n" +
                                 "    }\n" +
                                 "}", true));
                 WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, p);
