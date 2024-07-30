@@ -1,5 +1,9 @@
 package hudson.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
@@ -12,6 +16,9 @@ import hudson.ExtensionList;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.FormValidation;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.List;
 import jenkins.branch.MultiBranchProject;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
@@ -33,20 +40,14 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-
 public class FIPSModeUrlCheckTest {
 
     @ClassRule
-    public static final FlagRule<String> FIPS_FLAG = FlagRule.systemProperty(FIPS140.class.getName() + ".COMPLIANCE", "true");
+    public static final FlagRule<String> FIPS_FLAG =
+            FlagRule.systemProperty(FIPS140.class.getName() + ".COMPLIANCE", "true");
 
-    @Rule public JenkinsRule r = new JenkinsRule();
+    @Rule
+    public JenkinsRule r = new JenkinsRule();
 
     @Rule
     public TemporaryFolder directory = new TemporaryFolder();
@@ -65,9 +66,12 @@ public class FIPSModeUrlCheckTest {
 
     @Test
     public void testGitSCMSourceCheck() throws Throwable {
-        SystemCredentialsProvider.getInstance().getCredentials().add(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+        SystemCredentialsProvider.getInstance()
+                .getCredentials()
+                .add(new UsernamePasswordCredentialsImpl(
+                        CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
         SystemCredentialsProvider.getInstance().save();
-        MultiBranchProject<?,?> mbp = r.createProject(WorkflowMultiBranchProject.class, "mbp");
+        MultiBranchProject<?, ?> mbp = r.createProject(WorkflowMultiBranchProject.class, "mbp");
         GitSCMSource.DescriptorImpl descriptor = ExtensionList.lookupSingleton(GitSCMSource.DescriptorImpl.class);
 
         {
@@ -98,10 +102,14 @@ public class FIPSModeUrlCheckTest {
 
     @Test
     public void testUserRemoteConfigCheck() throws Throwable {
-        SystemCredentialsProvider.getInstance().getCredentials().add(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+        SystemCredentialsProvider.getInstance()
+                .getCredentials()
+                .add(new UsernamePasswordCredentialsImpl(
+                        CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
         SystemCredentialsProvider.getInstance().save();
         FreeStyleProject p = r.createProject(FreeStyleProject.class, "mbp");
-        UserRemoteConfig.DescriptorImpl descriptor = ExtensionList.lookupSingleton(UserRemoteConfig.DescriptorImpl.class);
+        UserRemoteConfig.DescriptorImpl descriptor =
+                ExtensionList.lookupSingleton(UserRemoteConfig.DescriptorImpl.class);
 
         {
             // http with credentials rejected
@@ -120,23 +128,28 @@ public class FIPSModeUrlCheckTest {
 
         {
             // ssh with credentials all good
-            try (GitServerContainer containerUnderTest = new GitServerContainer(
-                    GitServerVersions.V2_45.getDockerImageName())
-                    .withGitRepo("someRepo")) {
-                containerUnderTest.withClasspathResourceMapping("ssh-keys/id_rsa.pub", "/home/git/.ssh/authorized_keys", BindMode.READ_ONLY);
-                containerUnderTest.withClasspathResourceMapping("sshd_config", "/etc/ssh/sshd_config", BindMode.READ_ONLY);
+            try (GitServerContainer containerUnderTest =
+                    new GitServerContainer(GitServerVersions.V2_45.getDockerImageName()).withGitRepo("someRepo")) {
+                containerUnderTest.withClasspathResourceMapping(
+                        "ssh-keys/id_rsa.pub", "/home/git/.ssh/authorized_keys", BindMode.READ_ONLY);
+                containerUnderTest.withClasspathResourceMapping(
+                        "sshd_config", "/etc/ssh/sshd_config", BindMode.READ_ONLY);
 
                 containerUnderTest.start();
 
                 SshIdentity sshClientIdentity = new SshIdentity(
-                        this.getClass().getClassLoader().getResourceAsStream("ssh-keys/id_rsa").readAllBytes(),
-                        this.getClass().getClassLoader().getResourceAsStream("ssh-keys/id_rsa.pub").readAllBytes(),
+                        this.getClass()
+                                .getClassLoader()
+                                .getResourceAsStream("ssh-keys/id_rsa")
+                                .readAllBytes(),
+                        this.getClass()
+                                .getClassLoader()
+                                .getResourceAsStream("ssh-keys/id_rsa.pub")
+                                .readAllBytes(),
                         new byte[0]);
                 BasicSSHUserPrivateKey sshUserPrivateKey = getBasicSSHUserPrivateKey(sshClientIdentity);
                 SystemCredentialsProvider.getInstance().getCredentials().add(sshUserPrivateKey);
-                String repoUrl = containerUnderTest
-                        .getGitRepoURIAsSSH()
-                        .toString();
+                String repoUrl = containerUnderTest.getGitRepoURIAsSSH().toString();
                 // ssh://git@localhost:33011/srv/git/someRepo.git
                 // we don't want the user part of the uri or jgit will use this user
                 // and we want to be sure to test our implementation with dynamic user
@@ -149,15 +162,15 @@ public class FIPSModeUrlCheckTest {
         {
             // http without credentials all good
             try (GitHttpServerContainer containerUnderTest =
-                         new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())) {
+                    new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())) {
                 containerUnderTest.start();
                 // no TLS is fine without credentials
-                FormValidation validation = descriptor.doCheckUrl(p, null, containerUnderTest.getGitRepoURIAsHttp().toString());
+                FormValidation validation = descriptor.doCheckUrl(
+                        p, null, containerUnderTest.getGitRepoURIAsHttp().toString());
                 assertThat(validation.kind, is(FormValidation.Kind.OK));
             }
         }
     }
-
 
     private static BasicSSHUserPrivateKey getBasicSSHUserPrivateKey(SshIdentity sshIdentity) {
         BasicSSHUserPrivateKey.PrivateKeySource privateKeySource = new BasicSSHUserPrivateKey.PrivateKeySource() {
@@ -196,7 +209,7 @@ public class FIPSModeUrlCheckTest {
         {
             // http without creds not rejected
             try (GitHttpServerContainer containerUnderTest =
-                         new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())){
+                    new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())) {
                 containerUnderTest.start();
                 // need to have at least on revision to avoid build failure
                 File tmp = directory.newFolder();
@@ -204,8 +217,8 @@ public class FIPSModeUrlCheckTest {
                         .setURI(containerUnderTest.getGitRepoURIAsHttp().toString())
                         .setDirectory(tmp)
                         .call();
-                StoredConfig storedConfig =  git.getRepository().getConfig();
-                storedConfig.setBoolean("commit", null,"gpgsign", false);
+                StoredConfig storedConfig = git.getRepository().getConfig();
+                storedConfig.setBoolean("commit", null, "gpgsign", false);
                 storedConfig.setBoolean("tag", null, "gpgSign", false);
                 storedConfig.save();
                 Files.writeString(new File(tmp, "foo.txt").toPath(), "nothing too see here");
@@ -223,7 +236,6 @@ public class FIPSModeUrlCheckTest {
             }
         }
     }
-
 
     @Test
     public void checkoutStepTLSCheck() throws Throwable {
@@ -247,7 +259,7 @@ public class FIPSModeUrlCheckTest {
         {
             // http without creds not rejected
             try (GitHttpServerContainer containerUnderTest =
-                         new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())){
+                    new GitHttpServerContainer(GitServerVersions.V2_45.getDockerImageName())) {
                 containerUnderTest.start();
                 // need to have at least on revision to avoid build failure
                 File tmp = directory.newFolder();
@@ -255,8 +267,8 @@ public class FIPSModeUrlCheckTest {
                         .setURI(containerUnderTest.getGitRepoURIAsHttp().toString())
                         .setDirectory(tmp)
                         .call();
-                StoredConfig storedConfig =  git.getRepository().getConfig();
-                storedConfig.setBoolean("commit", null,"gpgsign", false);
+                StoredConfig storedConfig = git.getRepository().getConfig();
+                storedConfig.setBoolean("commit", null, "gpgsign", false);
                 storedConfig.setBoolean("tag", null, "gpgSign", false);
                 storedConfig.save();
                 Files.writeString(new File(tmp, "foo.txt").toPath(), "nothing too see here");
@@ -277,5 +289,4 @@ public class FIPSModeUrlCheckTest {
             }
         }
     }
-
 }
