@@ -1144,6 +1144,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (!isFIPSCompliantTLS(this.getCredentialsId(), this.getRemote())) {
+            listener.fatalError(Messages.git_fips_url_notsecured());
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
         if (telescope != null) {
             final String remote = getRemote();
             final StandardUsernameCredentials credentials = getCredentials();

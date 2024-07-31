@@ -166,6 +166,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     public void setCredentialsId(@CheckForNull String credentialsId) {
         if (!isFIPSCompliantTLS(credentialsId, this.remote)) {
             LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
         }
         this.credentialsId = credentialsId;
     }
