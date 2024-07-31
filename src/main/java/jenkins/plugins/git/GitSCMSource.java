@@ -164,6 +164,9 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @DataBoundSetter
     public void setCredentialsId(@CheckForNull String credentialsId) {
+        if (!isFIPSCompliantTLS(credentialsId, this.remote)) {
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+        }
         this.credentialsId = credentialsId;
     }
 
@@ -407,17 +410,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @Override
     public List<SCMSourceTrait> getTraits() {
         return traits;
-    }
-
-    /**
-     * Returns false if a non-TLS protocol is used when FIPS mode is enabled.
-     * @param credentialsId any credentials (can be {@code null})
-     * @param remoteUrl the git remote url
-     * @return {@code false} if using any credentials with a non TLS protocol with FIPS mode activated
-     * @see FIPS140#useCompliantAlgorithms()
-     */
-    public static boolean isFIPSCompliantTLS(String credentialsId, String remoteUrl) {
-        return !FIPS140.useCompliantAlgorithms() || !StringUtils.isNotEmpty(credentialsId) || (!StringUtils.startsWith(remoteUrl, "http:") && !StringUtils.startsWith(remoteUrl, "git:"));
     }
 
     @Symbol("git")
