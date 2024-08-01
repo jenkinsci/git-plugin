@@ -101,6 +101,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
+import jenkins.security.FIPS140;
 import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang.StringUtils;
@@ -351,6 +352,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return doRetrieve(retriever, context, listener, prune, getOwner(), delayFetch);
     }
 
+    /**
+     * Returns false if a non-TLS protocol is used when FIPS mode is enabled.
+     * @param credentialsId any credentials (can be {@code null})
+     * @param remoteUrl the git remote url
+     * @return {@code false} if using any credentials with a non TLS protocol with FIPS mode activated
+     * @see FIPS140#useCompliantAlgorithms()
+     */
+    public static boolean isFIPSCompliantTLS(String credentialsId, String remoteUrl) {
+        return !FIPS140.useCompliantAlgorithms() || StringUtils.isEmpty(credentialsId) || (!StringUtils.startsWith(remoteUrl, "http:") && !StringUtils.startsWith(remoteUrl, "git:"));
+    }
+
     @NonNull
     private <T, C extends GitSCMSourceContext<C, R>, R extends GitSCMSourceRequest> T doRetrieve(Retriever<T> retriever,
                                                                                                  @NonNull C context,
@@ -359,6 +371,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                                                                                  @CheckForNull Item retrieveContext,
                                                                                                  boolean delayFetch)
             throws IOException, InterruptedException {
+        if (!isFIPSCompliantTLS(this.getCredentialsId(), this.getRemote())) {
+            listener.fatalError(Messages.git_fips_url_notsecured());
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
+
         String cacheEntry = getCacheEntry();
         Lock cacheLock = getCacheLock(cacheEntry);
         cacheLock.lock();
@@ -1126,6 +1144,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (!isFIPSCompliantTLS(this.getCredentialsId(), this.getRemote())) {
+            listener.fatalError(Messages.git_fips_url_notsecured());
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
         if (telescope != null) {
             final String remote = getRemote();
             final StandardUsernameCredentials credentials = getCredentials();
