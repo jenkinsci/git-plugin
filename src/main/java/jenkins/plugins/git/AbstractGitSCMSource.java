@@ -360,7 +360,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * @see FIPS140#useCompliantAlgorithms()
      */
     public static boolean isFIPSCompliantTLS(String credentialsId, String remoteUrl) {
-        return !FIPS140.useCompliantAlgorithms() || !StringUtils.isNotEmpty(credentialsId) || (!StringUtils.startsWith(remoteUrl, "http:") && !StringUtils.startsWith(remoteUrl, "git:"));
+        return !FIPS140.useCompliantAlgorithms() || StringUtils.isEmpty(credentialsId) || (!StringUtils.startsWith(remoteUrl, "http:") && !StringUtils.startsWith(remoteUrl, "git:"));
     }
 
     @NonNull
