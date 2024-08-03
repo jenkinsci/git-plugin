@@ -24,6 +24,7 @@
 
 package jenkins.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import org.htmlunit.WebResponse;
 import org.htmlunit.util.NameValuePair;
 import hudson.Launcher;
@@ -105,11 +106,21 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         return notifyCommit(r, notifyCommitToken);
     }
 
-    public String notifyCommit(JenkinsRule r, String notifyCommitToken) throws Exception {
-        /* If the caller expects an error and does not want an
-         * exception thrown by the web response, the notifyCommitToken
-         * must contain the invalid notifyCommit token string */
-        boolean expectError = notifyCommitToken.contains(INVALID_NOTIFY_COMMIT_TOKEN);
+    /**
+     * Use WebClient to call notifyCommit on the current repository.
+     *
+     * If the caller expects an error and does not want an
+     * exception thrown by the web response, the notifyCommitToken
+     * must contain the invalid notifyCommit token string.
+     *
+     * If the caller wants to pass no access token, the
+     * notifyCommitToken needs to be null
+     *
+     * @param r JenkinsRule to receive the commit notification
+     * @param notifyCommitToken token used for notifyCommit authentication
+     **/
+    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken) throws Exception {
+        boolean expectError = notifyCommitToken == null || notifyCommitToken.contains(INVALID_NOTIFY_COMMIT_TOKEN);
         synchronousPolling(r);
         JenkinsRule.WebClient webClient = r.createWebClient();
         if (expectError) {
@@ -119,8 +130,9 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
             webClient.getOptions().setPrintContentOnFailingStatusCode(false);
         }
         String responseFormat = expectError ? "text/html" : "text/plain";
+        String tokenArgument = notifyCommitToken != null ? "&token=" + notifyCommitToken : "";
 
-        WebResponse webResponse = webClient.goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, responseFormat).getWebResponse();
+        WebResponse webResponse = webClient.goTo("git/notifyCommit?url=" + bareUrl() + tokenArgument, responseFormat).getWebResponse();
         StringBuilder sb = new StringBuilder(webResponse.getContentAsString());
         if (!expectError) {
             LOGGER.log(Level.FINE, sb.toString());
