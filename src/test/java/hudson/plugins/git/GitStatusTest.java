@@ -583,13 +583,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
-        setupProjectWithTrigger("a", "master", false);
-        StaplerResponse res = mock(StaplerResponse.class);
-
-        HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, "invalid");
-        httpResponse.generateResponse(null, res, null);
-
-        Mockito.verify(res).sendError(403, "Invalid access token");
+        // Test moved to GitStepTest#testDoNotifyCommitWithInvalidApiToken()
     }
 
     @Test
