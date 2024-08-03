@@ -44,7 +44,12 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeTrue;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -290,6 +295,21 @@ public class GitStepTest {
             "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("+edited by build", b);
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
+        p.setDefinition(new CpsFlowDefinition(
+            "node {\n" +
+            "    error('this echo should never be called')\n" +
+            "}", true));
+        String response = sampleRepo.notifyCommit(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN);
+        assertThat(response, containsString("Invalid access token"));
     }
 
 }
