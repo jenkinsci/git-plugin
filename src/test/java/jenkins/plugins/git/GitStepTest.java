@@ -142,21 +142,6 @@ public class GitStepTest {
     }
 
     @Test
-    @Issue("SECURITY-284")
-    public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        sampleRepo.init();
-        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
-        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
-        p.setDefinition(new CpsFlowDefinition(
-            "node {\n" +
-            "    error('this echo should never be called')\n" +
-            "}", true));
-        String response = sampleRepo.notifyCommit(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN);
-        assertThat(response, containsString("Invalid access token"));
-    }
-
-    @Test
     public void changelogAndPolling() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         sampleRepo.init();
@@ -310,6 +295,21 @@ public class GitStepTest {
             "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("+edited by build", b);
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
+        p.setDefinition(new CpsFlowDefinition(
+            "node {\n" +
+            "    error('this echo should never be called')\n" +
+            "}", true));
+        String response = sampleRepo.notifyCommit(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN);
+        assertThat(response, containsString("Invalid access token"));
     }
 
 }
