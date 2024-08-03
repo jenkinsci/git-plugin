@@ -103,7 +103,11 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     public String notifyCommit(JenkinsRule r) throws Exception {
         String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
-        return notifyCommit(r, notifyCommitToken);
+        return notifyCommit(r, notifyCommitToken, null);
+    }
+
+    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken) throws Exception {
+        return notifyCommit(r, notifyCommitToken, null);
     }
 
     /**
@@ -119,7 +123,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
      * @param r JenkinsRule to receive the commit notification
      * @param notifyCommitToken token used for notifyCommit authentication
      **/
-    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken) throws Exception {
+    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken, @CheckForNull String sha1) throws Exception {
         boolean expectError = notifyCommitToken == null || notifyCommitToken.contains(INVALID_NOTIFY_COMMIT_TOKEN);
         synchronousPolling(r);
         JenkinsRule.WebClient webClient = r.createWebClient();
@@ -131,8 +135,9 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         }
         String responseFormat = expectError ? "text/html" : "text/plain";
         String tokenArgument = notifyCommitToken != null ? "&token=" + notifyCommitToken : "";
+        String sha1Argument = sha1 != null ? "&sha1=" + sha1 : "";
 
-        WebResponse webResponse = webClient.goTo("git/notifyCommit?url=" + bareUrl() + tokenArgument, responseFormat).getWebResponse();
+        WebResponse webResponse = webClient.goTo("git/notifyCommit?url=" + bareUrl() + tokenArgument + sha1Argument, responseFormat).getWebResponse();
         StringBuilder sb = new StringBuilder(webResponse.getContentAsString());
         if (!expectError) {
             LOGGER.log(Level.FINE, sb.toString());
