@@ -312,4 +312,19 @@ public class GitStepTest {
         assertThat(response, containsString("Invalid access token"));
     }
 
+    @Test
+    @Issue("SECURITY-284")
+    public void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
+        p.setDefinition(new CpsFlowDefinition(
+            "node {\n" +
+            "    error('this echo should never be called')\n" +
+            "}", true));
+        String response = sampleRepo.notifyCommit(r, null);
+        assertThat(response, containsString("An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details."));
+    }
+
 }
