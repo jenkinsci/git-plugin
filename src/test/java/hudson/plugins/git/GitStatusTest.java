@@ -582,12 +582,6 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     @Issue("SECURITY-284")
-    public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
-        // Test moved to GitStepTest#testDoNotifyCommitWithInvalidApiToken()
-    }
-
-    @Test
-    @Issue("SECURITY-284")
     public void testDoNotifyCommitWithUnauthenticatedPollingAllowed() throws Exception {
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         SCMTrigger trigger = setupProjectWithTrigger("a", "master", false);
@@ -595,12 +589,6 @@ public class GitStatusTest extends AbstractGitProject {
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, null);
 
         Mockito.verify(trigger).run();
-    }
-
-    @Test
-    @Issue("SECURITY-284")
-    public void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
-        // Test moved to GitStepTest#testDoNotifyCommitWithAllowModeRandomValue()
     }
 
     @Test
@@ -614,19 +602,6 @@ public class GitStatusTest extends AbstractGitProject {
         httpResponse.generateResponse(null, res, null);
 
         Mockito.verify(res).sendError(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
-    }
-
-    @Test
-    @Issue("SECURITY-284")
-    public void testDoNotifyCommitWithSha1AndAllowModePollWithInvalidToken() throws Exception {
-        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
-        setupProjectWithTrigger("a", "master", false);
-        StaplerResponse res = mock(StaplerResponse.class);
-
-        HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", sha1, "invalid");
-        httpResponse.generateResponse(null, res, null);
-
-        Mockito.verify(res).sendError(403, "Invalid access token");
     }
 
     @Test
