@@ -120,8 +120,11 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
      * If the caller wants to pass no access token, the
      * notifyCommitToken needs to be null
      *
+     * If the caller wants to pass no SHA-1, the sha1 parameter needs to be null.
+     *
      * @param r JenkinsRule to receive the commit notification
      * @param notifyCommitToken token used for notifyCommit authentication
+     * @param sha1 SHA-1 hash to included in notifyCommit
      **/
     public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken, @CheckForNull String sha1) throws Exception {
         boolean expectError = notifyCommitToken == null || notifyCommitToken.contains(INVALID_NOTIFY_COMMIT_TOKEN);
