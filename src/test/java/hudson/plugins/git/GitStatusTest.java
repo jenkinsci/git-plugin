@@ -600,14 +600,7 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("SECURITY-284")
     public void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
-        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "random";
-        setupProjectWithTrigger("a", "master", false);
-        StaplerResponse res = mock(StaplerResponse.class);
-
-        HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, null);
-        httpResponse.generateResponse(null, res, null);
-
-        Mockito.verify(res).sendError(401, "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
+        // Test moved to GitStepTest#testDoNotifyCommitWithAllowModeRandomValue()
     }
 
     @Test
