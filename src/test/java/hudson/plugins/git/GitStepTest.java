@@ -347,10 +347,10 @@ public class GitStepTest {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         createJob();
-        /* sha1 is ignored because no access token is provided */
+        /* sha1 is ignored because invalid access token is provided */
         String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
-        String response = sampleRepo.notifyCommit(r, null, sha1);
-        assertThat(response, containsString("An access token is required when using the sha1 parameter"));
+        String response = sampleRepo.notifyCommit(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN, sha1);
+        assertThat(response, containsString("Invalid access token"));
     }
 
     @Test
@@ -359,10 +359,10 @@ public class GitStepTest {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         createJob();
-        /* sha1 is ignored because invalid access token is provided */
+        /* sha1 is ignored because no access token is provided */
         String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
-        String response = sampleRepo.notifyCommit(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN, sha1);
-        assertThat(response, containsString("Invalid access token"));
+        String response = sampleRepo.notifyCommit(r, null, sha1);
+        assertThat(response, containsString("An access token is required when using the sha1 parameter"));
     }
 
 }
