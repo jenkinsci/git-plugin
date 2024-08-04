@@ -7,6 +7,6 @@ buildPlugin(
   // we use Docker for containerized tests
   useContainerAgent: false,
   configurations: [
-    [platform: 'linux', jdk: 21],
+    [platform: 'linux', jdk: 21, jenkins: '2.462'],
     [platform: 'windows', jdk: 17],
 ])
