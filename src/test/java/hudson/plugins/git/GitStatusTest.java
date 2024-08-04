@@ -37,7 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.StaplerResponse2;
 
 public class GitStatusTest extends AbstractGitProject {
 
