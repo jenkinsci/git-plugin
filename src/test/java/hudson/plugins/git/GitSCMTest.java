@@ -1188,6 +1188,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertThat("Cleaning should happen before fetch", cleaningLogLine, is(lessThan(fetchingLogLine)));
     }
 
+    @Test
+    public void testFirstBuiltChangelog() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
+        FirstBuildChangelog fbc = new FirstBuildChangelog();
+        ((GitSCM) p.getScm()).getExtensions().add(fbc);
+
+        /* First build should should generate a changelog */
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        final FreeStyleBuild firstBuild = build(p, Result.SUCCESS, commitFile1);
+        assertThat(firstBuild.getLog(50), hasItem("First time build. Latest changes added to changelog."));
+        /* Second build should have normal behavior */
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
+        final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
+        assertThat(secondBuild.getLog(50), not(hasItem("First time build. Latest changes added to changelog.")));
+    }
+
     @Issue("JENKINS-8342")
     @Test
     public void testExcludedRegionMultiCommit() throws Exception {
@@ -2622,36 +2641,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertNotSame("Environment path should not be broken path", environment.get("PATH"), brokenPath);
     }
 
-    /**
-     * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
-     * and tests for custom SCM name build data consistency.
-     * @param project project to build
-     * @param commit commit to build
-     * @param expectedScmName Expected SCM name for commit.
-     * @param ordinal number of commit to log into errors, if any
-     * @param git git SCM
-     * @throws Exception on error
-     */
-    private int notifyAndCheckScmName(FreeStyleProject project, ObjectId commit,
-            String expectedScmName, int ordinal, GitSCM git, ObjectId... priorCommits) throws Exception {
-        StringBuilder priorCommitIDs = new StringBuilder();
-        for (ObjectId priorCommit : priorCommits) {
-            priorCommitIDs.append(" ").append(priorCommit);
-        }
-        assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
-
-        final Build build = project.getLastBuild();
-        final BuildData buildData = git.getBuildData(build);
-        assertEquals("Expected SHA1 != built SHA1 for commit " + ordinal + " priors:" + priorCommitIDs, commit, buildData
-                .getLastBuiltRevision().getSha1());
-        assertEquals("Expected SHA1 != retrieved SHA1 for commit " + ordinal + " priors:" + priorCommitIDs, commit, buildData.getLastBuild(commit).getSHA1());
-        assertTrue("Commit " + ordinal + " not marked as built", buildData.hasBeenBuilt(commit));
-
-        assertEquals("Wrong SCM Name for commit " + ordinal, expectedScmName, buildData.getScmName());
-
-        return build.getNumber();
-    }
-
     private void checkNumberedBuildScmName(FreeStyleProject project, int buildNumber,
             String expectedScmName, GitSCM git) throws Exception {
 
@@ -2924,67 +2913,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject p = setupSimpleProject("master");
         Run<?,?> run = r.buildAndAssertSuccess(p);
         r.waitForMessage("Commit message: \"test commit\"", run);
-    }
-
-    /**
-     * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
-     * and tests for build data consistency.
-     * @param project project to build
-     * @param commit commit to build
-     * @param expectedBranch branch, that is expected to be built
-     * @param ordinal number of commit to log into errors, if any
-     * @param git git SCM
-     * @throws Exception on error
-     */
-    private void notifyAndCheckBranch(FreeStyleProject project, ObjectId commit,
-            String expectedBranch, int ordinal, GitSCM git) throws Exception {
-        assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
-        final BuildData buildData = git.getBuildData(project.getLastBuild());
-        final Collection<Branch> builtBranches = buildData.lastBuild.getRevision().getBranches();
-        assertEquals("Commit " + ordinal + " should be built", commit, buildData
-                .getLastBuiltRevision().getSha1());
-
-        final String expectedBranchString = "origin/" + expectedBranch;
-        assertFalse("Branches should be detected for the build", builtBranches.isEmpty());
-        assertEquals(expectedBranch + " branch should be detected", expectedBranchString,
-                     builtBranches.iterator().next().getName());
-        assertEquals(expectedBranchString, getEnvVars(project).get(GitSCM.GIT_BRANCH));
-    }
-
-    /**
-     * Method performs commit notification for the last committed SHA1 using
-     * notifyCommit URL.
-     * @param project project to trigger
-     * @return whether the new build has been triggered (<code>true</code>) or
-     *         not (<code>false</code>).
-     * @throws Exception on error
-     */
-    private boolean notifyCommit(FreeStyleProject project, ObjectId commitId) throws Exception {
-        final int initialBuildNumber = project.getLastBuild().getNumber();
-        final String commit1 = ObjectId.toString(commitId);
-
-        final String notificationPath = r.getURL().toExternalForm()
-                + "git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
-        final URL notifyUrl = new URL(notificationPath);
-        String notifyContent;
-        try (final InputStream is = notifyUrl.openStream()) {
-            notifyContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        }
-        assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
-
-        if ((project.getLastBuild().getNumber() == initialBuildNumber)
-                && (r.jenkins.getQueue().isEmpty())) {
-            return false;
-        } else {
-            while (!r.jenkins.getQueue().isEmpty()) {
-                Thread.sleep(100);
-            }
-            final FreeStyleBuild build = project.getLastBuild();
-            while (build.isBuilding()) {
-                Thread.sleep(100);
-            }
-            return true;
-        }
     }
 
     private void setupJGit(GitSCM git) {

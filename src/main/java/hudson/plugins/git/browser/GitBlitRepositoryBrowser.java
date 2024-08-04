@@ -115,7 +115,11 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it doesn't look like Gitblit");
                         }
                     } catch (IOException e) {
-                        return handleIOException(v, e);
+                        if (e.getMessage().equals(v)) {
+                            return FormValidation.error("Unable to connect " + v, e);
+                        } else {
+                            return FormValidation.error(e.getMessage(), e);
+                        }
                     }
                 }
             }.check();

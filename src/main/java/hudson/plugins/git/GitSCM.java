@@ -1,10 +1,7 @@
 package hudson.plugins.git;
 
-import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
 
@@ -28,6 +25,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.CloneOption;
+import hudson.plugins.git.extensions.impl.FirstBuildChangelog;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
@@ -1493,9 +1491,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (!exclusion) {
-                // this is the first time we are building this branch, so there's no base line to compare against.
-                // if we force the changelog, it'll contain all the changes in the repo, which is not what we want.
-                listener.getLogger().println("First time build. Skipping changelog.");
+                FirstBuildChangelog firstBuildChangelog = getExtensions().get(FirstBuildChangelog.class);
+                if (firstBuildChangelog != null && firstBuildChangelog.isMakeChangelog()) {
+                    changelog.to(out).max(1).execute();
+                    executed = true;
+                    listener.getLogger().println("First time build. Latest changes added to changelog.");
+                } else {
+                    listener.getLogger().println("First time build. Skipping changelog.");
+                }
             } else {
                 changelog.to(out).max(MAX_CHANGELOG).execute();
                 executed = true;

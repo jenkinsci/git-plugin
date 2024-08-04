@@ -24,6 +24,7 @@
 
 package jenkins.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import org.htmlunit.WebResponse;
 import org.htmlunit.util.NameValuePair;
 import hudson.Launcher;
@@ -49,6 +50,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     private static boolean initialized = false;
 
     private static final Logger LOGGER = Logger.getLogger(GitSampleRepoRule.class.getName());
+
+    public static final String INVALID_NOTIFY_COMMIT_TOKEN = "invalid-notifyCommit-token";
 
     @Override
     public void before() throws Throwable {
@@ -98,18 +101,63 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         return new File(this.sampleRepo, rel).mkdirs();
     }
 
-    public void notifyCommit(JenkinsRule r) throws Exception {
-        synchronousPolling(r);
+    public String notifyCommit(JenkinsRule r) throws Exception {
         String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
-        WebResponse webResponse = r.createWebClient()
-                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain").getWebResponse();
-        LOGGER.log(Level.FINE, webResponse.getContentAsString());
+        return notifyCommit(r, notifyCommitToken, null);
+    }
+
+    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken) throws Exception {
+        return notifyCommit(r, notifyCommitToken, null);
+    }
+
+    /**
+     * Use WebClient to call notifyCommit on the current repository.
+     *
+     * If the caller expects an error and does not want an
+     * exception thrown by the web response, the notifyCommitToken
+     * must contain the invalid notifyCommit token string.
+     *
+     * If the caller wants to pass no access token, the
+     * notifyCommitToken needs to be null
+     *
+     * If the caller wants to pass no SHA-1, the sha1 parameter needs to be null.
+     *
+     * @param r JenkinsRule to receive the commit notification
+     * @param notifyCommitToken token used for notifyCommit authentication
+     * @param sha1 SHA-1 hash to included in notifyCommit
+     **/
+    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken, @CheckForNull String sha1) throws Exception {
+        boolean expectError = notifyCommitToken == null || notifyCommitToken.contains(INVALID_NOTIFY_COMMIT_TOKEN);
+        synchronousPolling(r);
+        JenkinsRule.WebClient webClient = r.createWebClient();
+        if (expectError) {
+            /* Return without exception on failing status code */
+            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            /* Do not clutter output with failures that are expected and checked by the caller */
+            webClient.getOptions().setPrintContentOnFailingStatusCode(false);
+        }
+        String responseFormat = expectError ? "text/html" : "text/plain";
+        String tokenArgument = notifyCommitToken != null ? "&token=" + notifyCommitToken : "";
+        String sha1Argument = sha1 != null ? "&sha1=" + sha1 : "";
+
+        WebResponse webResponse = webClient.goTo("git/notifyCommit?url=" + bareUrl() + tokenArgument + sha1Argument, responseFormat).getWebResponse();
+        StringBuilder sb = new StringBuilder(webResponse.getContentAsString());
+        if (!expectError) {
+            LOGGER.log(Level.FINE, sb.toString());
+        }
+
         for (NameValuePair pair : webResponse.getResponseHeaders()) {
             if (pair.getName().equals("Triggered")) {
-                LOGGER.log(Level.FINE, "Triggered: " + pair.getValue());
+                sb.append('\n');
+                sb.append("Triggered: ");
+                sb.append(pair.getValue());
+                if (!expectError) {
+                    LOGGER.log(Level.FINE, "Triggered: " + pair.getValue());
+                }
             }
         }
         r.waitUntilNoActivity();
+        return sb.toString();
     }
 
     public String head() throws Exception {

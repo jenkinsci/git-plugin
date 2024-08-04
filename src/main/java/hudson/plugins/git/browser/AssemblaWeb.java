@@ -129,7 +129,12 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it does not look like Assembla");
                         }
                     } catch (IOException e) {
-                        return FormValidation.error("Exception reading from Assembla URL " + cleanUrl + " : " + handleIOException(v, e));
+                        String prefix = "Exception reading from Assembla URL " + cleanUrl + " : ";
+                        if (e.getMessage().equals(v)) {
+                            return FormValidation.error(prefix + "Unable to connect " + v, e);
+                        } else {
+                            return FormValidation.error(prefix + "ERROR: " + e.getMessage(), e);
+                        }
                     }
                 }
             }.check();

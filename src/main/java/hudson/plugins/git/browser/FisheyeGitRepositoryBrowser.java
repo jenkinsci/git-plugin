@@ -116,7 +116,11 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 							return FormValidation.error("This is a valid URL but it doesn't look like FishEye");
 						}
 					} catch (IOException e) {
-						return handleIOException(finalValue, e);
+						if (e.getMessage().equals(finalValue)) {
+							return FormValidation.error("Unable to connect " + finalValue, e);
+						} else {
+							return FormValidation.error(e.getMessage(), e);
+						}
 					}
 				}
 			}.check();

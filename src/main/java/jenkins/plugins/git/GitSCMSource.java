@@ -49,6 +49,8 @@ import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
@@ -92,6 +94,8 @@ import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
+import jenkins.security.FIPS140;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.Symbol;
@@ -105,6 +109,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * A {@link SCMSource} that discovers branches in a git repository.
@@ -159,6 +164,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @DataBoundSetter
     public void setCredentialsId(@CheckForNull String credentialsId) {
+        if (!isFIPSCompliantTLS(credentialsId, this.remote)) {
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
         this.credentialsId = credentialsId;
     }
 
@@ -431,6 +440,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     .includeCurrentValue(credentialsId);
         }
 
+        @RequirePOST
+        public FormValidation doCheckRemote(@AncestorInPath Item item,
+                                         @QueryParameter String credentialsId,
+                                         @QueryParameter String remote) throws IOException, InterruptedException {
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
+            return isFIPSCompliantTLS(credentialsId, remote) ? FormValidation.ok() : FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
+        }
+
+        @RequirePOST
         public FormValidation doCheckCredentialsId(@AncestorInPath Item context,
                                                    @QueryParameter String remote,
                                                    @QueryParameter String value) {
