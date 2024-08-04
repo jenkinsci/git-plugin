@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
@@ -47,21 +48,29 @@ public class BuildData implements Action, Serializable, Cloneable {
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
      * is attached to)
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public Map<String, Build> buildsByBranchName = new HashMap<>();
 
     /**
      * The last build that we did (among the values in {@link #buildsByBranchName}.)
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public Build lastBuild;
 
     /**
      * The name of the SCM as given by the user.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public String scmName;
 
     /**
      * The URLs that have been referenced.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE",
+                        justification = "Preserve API compatibility")
     public Set<String> remoteUrls = new HashSet<>();
 
     /**
@@ -102,7 +111,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public String getIconFileName() {
-        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-icon.svg";
+        return "symbol-git-icon plugin-git";
     }
 
     @Override

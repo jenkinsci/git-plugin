@@ -9,7 +9,6 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -61,7 +60,10 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     private String[] normalize(String s) {
-        return StringUtils.isBlank(s) ? null : s.split("[\\r\\n]+");
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        return s.split("[\\r\\n]+");
     }
 
     private List<Pattern> getIncludedPatterns() {
@@ -146,6 +148,7 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     @Extension
+    // No @Symbol annotation because path exclusion is done using a trait in Pipeline
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {

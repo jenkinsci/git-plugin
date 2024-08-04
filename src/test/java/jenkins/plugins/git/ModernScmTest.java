@@ -38,7 +38,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ModernScmTest {
 
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule();
 
     @Test
     @Issue("JENKINS-58964")

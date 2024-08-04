@@ -2,7 +2,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
 	xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
 	xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-	<t:summary icon="/plugin/git/icons/git-logo.svg">
+	<t:summary icon="symbol-git-logo plugin-git">
 
 	<strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
 	<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>

@@ -13,6 +13,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -83,6 +84,7 @@ public class GitLFSPull extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("lfs")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}

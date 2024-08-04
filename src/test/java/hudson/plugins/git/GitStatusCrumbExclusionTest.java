@@ -39,7 +39,10 @@ public class GitStatusCrumbExclusionTest {
     private final String branchArgument;
     private final byte[] branchArgumentBytes;
 
-    public GitStatusCrumbExclusionTest() throws IOException {
+    private final String notifyCommitApiToken;
+    private final byte[] notifyCommitApiTokenBytes;
+
+    public GitStatusCrumbExclusionTest() throws Exception {
         String jenkinsUrl = r.getURL().toExternalForm();
         if (!jenkinsUrl.endsWith("/")) {
             jenkinsUrl = jenkinsUrl + "/";
@@ -56,6 +59,9 @@ public class GitStatusCrumbExclusionTest {
 
         branchArgument = "branches=origin/some-branch-name";
         branchArgumentBytes = branchArgument.getBytes(StandardCharsets.UTF_8);
+
+        notifyCommitApiToken = "token=" + ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
+        notifyCommitApiTokenBytes = notifyCommitApiToken.getBytes(StandardCharsets.UTF_8);
     }
 
     private HttpURLConnection connectionPOST;
@@ -86,6 +92,8 @@ public class GitStatusCrumbExclusionTest {
     public void testPOSTValidPathMandatoryArgument() throws Exception {
         try (OutputStream os = connectionPOST.getOutputStream()) {
             os.write(urlArgumentBytes);
+            os.write(separatorBytes);
+            os.write(notifyCommitApiTokenBytes);
         }
         assertThat(connectionPOST.getResponseCode(), is(HttpURLConnection.HTTP_OK));
         assertThat(connectionPOST.getResponseMessage(), is("OK"));
@@ -97,6 +105,8 @@ public class GitStatusCrumbExclusionTest {
             String urlEmptyArgument = "url="; // Empty argument is not a valid URL
             byte[] urlEmptyArgumentBytes = urlEmptyArgument.getBytes(StandardCharsets.UTF_8);
             os.write(urlEmptyArgumentBytes);
+            os.write(separatorBytes);
+            os.write(notifyCommitApiTokenBytes);
         }
         assertThat(connectionPOST.getResponseCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
         assertThat(connectionPOST.getResponseMessage(), is("Bad Request"));
@@ -108,6 +118,8 @@ public class GitStatusCrumbExclusionTest {
             String urlBadArgument = "url=" + "http://256.256.256.256/"; // Not a valid URI per Java 8 javadoc
             byte[] urlBadArgumentBytes = urlBadArgument.getBytes(StandardCharsets.UTF_8);
             os.write(urlBadArgumentBytes);
+            os.write(separatorBytes);
+            os.write(notifyCommitApiTokenBytes);
         }
         assertThat(connectionPOST.getResponseCode(), is(HttpURLConnection.HTTP_OK));
         assertThat(connectionPOST.getResponseMessage(), is("OK"));
@@ -119,6 +131,8 @@ public class GitStatusCrumbExclusionTest {
             os.write(urlArgumentBytes);
             os.write(separatorBytes);
             os.write(branchArgumentBytes);
+            os.write(separatorBytes);
+            os.write(notifyCommitApiTokenBytes);
         }
         assertThat(connectionPOST.getResponseCode(), is(HttpURLConnection.HTTP_OK));
         assertThat(connectionPOST.getResponseMessage(), is("OK"));
@@ -231,7 +245,7 @@ public class GitStatusCrumbExclusionTest {
 
     @Test
     public void testGETValidPathMandatoryArgument() throws Exception {
-        URL getURL = new URL(notifyCommitURL + "?" + urlArgument);
+        URL getURL = new URL(notifyCommitURL + "?" + urlArgument + separator + notifyCommitApiToken);
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
         connectionGET.connect();
@@ -242,7 +256,7 @@ public class GitStatusCrumbExclusionTest {
 
     @Test
     public void testGETValidPathMandatoryAndOptionalArgument() throws Exception {
-        URL getURL = new URL(notifyCommitURL + "?" + urlArgument + separator + branchArgument);
+        URL getURL = new URL(notifyCommitURL + "?" + urlArgument + separator + branchArgument + separator + notifyCommitApiToken);
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
         connectionGET.connect();

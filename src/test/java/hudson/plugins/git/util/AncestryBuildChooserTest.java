@@ -225,13 +225,9 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     public void testFilterRevisionsNonExistingAncestor() throws Exception {
         final Integer maxAgeInDays = null;
         final String ancestorCommitSha1 = "This commit sha1 does not exist.";
-        
-        try {
-            List<String> candidateSha1s = getFilteredTestCandidates(maxAgeInDays, ancestorCommitSha1);
-            fail("Invalid sha1 should throw GitException.");
-        } catch (GitException e) {
-            return;
-        }
+
+        assertThrows("Invalid sha1 should throw GitException.", GitException.class,
+                () -> getFilteredTestCandidates(maxAgeInDays, ancestorCommitSha1));
     }
     
     @Test

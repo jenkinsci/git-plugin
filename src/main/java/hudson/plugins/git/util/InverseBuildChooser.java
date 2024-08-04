@@ -79,12 +79,7 @@ public class InverseBuildChooser extends BuildChooser {
         }
 
         // Filter out branch revisions that have already been built
-        for (Iterator<Revision> i = branchRevs.iterator(); i.hasNext(); ) {
-            Revision r = i.next();
-            if (buildData.hasBeenBuilt(r.getSha1())) {
-                i.remove();
-            }
-        }
+        branchRevs.removeIf(r -> buildData.hasBeenBuilt(r.getSha1()));
 
         // If we're in a build (not an SCM poll) and nothing new was found, run the last build again
         if (!isPollCall && branchRevs.isEmpty() && buildData.getLastBuiltRevision() != null) {

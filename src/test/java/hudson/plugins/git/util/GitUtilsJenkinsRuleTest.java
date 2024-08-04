@@ -43,28 +43,28 @@ import org.jvnet.hudson.test.JenkinsRule;
 public class GitUtilsJenkinsRuleTest {
 
     @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    public static JenkinsRule r = new JenkinsRule();
 
     @Test
     public void testWorkspaceToNode() throws Exception {
-        String labelString = "label-" + UUID.randomUUID().toString();
+        String labelString = "label-" + UUID.randomUUID();
         Label label = new LabelAtom(labelString);
-        DumbSlave agent = j.createOnlineSlave(label);
+        DumbSlave agent = r.createOnlineSlave(label);
         FilePath workspace = agent.getWorkspaceRoot();
         assertThat(GitUtils.workspaceToNode(workspace).getLabelString(), is(labelString));
 
         /* Check that workspace on master reports master even when agent connected */
-        assertThat(GitUtils.workspaceToNode(j.getInstance().getRootPath()), is(j.getInstance()));
+        assertThat(GitUtils.workspaceToNode(r.getInstance().getRootPath()), is(r.getInstance()));
     }
 
     @Test
     public void testWorkspaceToNodeRootPath() {
-        assertThat(GitUtils.workspaceToNode(j.getInstance().getRootPath()), is(j.getInstance()));
+        assertThat(GitUtils.workspaceToNode(r.getInstance().getRootPath()), is(r.getInstance()));
     }
 
     @Test
     public void testWorkspaceToNodeNullWorkspace() {
-        assertThat(GitUtils.workspaceToNode(null), is(j.getInstance()));
+        assertThat(GitUtils.workspaceToNode(null), is(r.getInstance()));
     }
 
     @Test
@@ -105,9 +105,9 @@ public class GitUtilsJenkinsRuleTest {
     public void testResolveGitToolBuiltOnAgent() throws Exception {
         TaskListener listener = StreamTaskListener.NULL;
         String gitTool = "/opt/my-non-existing-git/bin/git";
-        String labelString = "label-" + UUID.randomUUID().toString();
+        String labelString = "label-" + UUID.randomUUID();
         Label label = new LabelAtom(labelString);
-        DumbSlave agent = j.createOnlineSlave(label);
+        DumbSlave agent = r.createOnlineSlave(label);
         EnvVars env = new EnvVars();
         GitTool tool = GitUtils.resolveGitTool(gitTool, agent, env, listener);
         assertThat(tool.getGitExe(), startsWith("git"));

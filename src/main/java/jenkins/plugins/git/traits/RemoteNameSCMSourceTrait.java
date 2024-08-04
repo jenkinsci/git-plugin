@@ -39,6 +39,7 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -176,6 +177,7 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    @Symbol("remoteName")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
         /**
@@ -221,7 +223,7 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
         @Restricted(NoExternalUse.class) // stapler
         public FormValidation doCheckRemoteName(@QueryParameter String value) {
             value = StringUtils.trimToEmpty(value);
-            if (StringUtils.isBlank(value)) {
+            if (value == null || value.isBlank()) {
                 return FormValidation.error("You must specify a remote name");
             }
             if (AbstractGitSCMSource.DEFAULT_REMOTE_NAME.equals(value)) {

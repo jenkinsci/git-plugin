@@ -1,7 +1,8 @@
 package hudson.plugins.git;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+
 import static hudson.plugins.git.GitChangeSet.TRUNCATE_LIMIT;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
@@ -62,7 +63,7 @@ public class GitChangeSetBasicTest {
     @Test
     public void testInvalidDate() {
         final String badDateString = "2015-03-03x09:22:42 -0700";
-        GitChangeSet c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> " + badDateString), true);
+        GitChangeSet c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> " + badDateString), true);
         assertEquals(badDateString, c.getDate());
         assertEquals(-1L, c.getTimestamp());
     }
@@ -70,23 +71,23 @@ public class GitChangeSetBasicTest {
     @Test
     public void testIsoDate() {
 
-        GitChangeSet c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-0700"), true);
+        GitChangeSet c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-0700"), true);
         assertEquals("2015-03-03T09:22:42-0700", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
-        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-07:00"), true);
+        c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-07:00"), true);
         assertEquals("2015-03-03T09:22:42-07:00", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
-        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T16:22:42Z"), true);
+        c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T16:22:42Z"), true);
         assertEquals("2015-03-03T16:22:42Z", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
-        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 1425399762"), true);
+        c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 1425399762"), true);
         assertEquals("2015-03-03T16:22:42Z", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
 
-        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 1425374562 -0700"), true);
+        c = new GitChangeSet(Collections.singletonList("author John Doe <john.doe@jenkins-ci.org> 1425374562 -0700"), true);
         assertEquals("2015-03-03T09:22:42-0700", c.getDate());
         assertEquals(1425399762000L, c.getTimestamp());
     }

@@ -10,8 +10,8 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -19,6 +19,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -56,7 +57,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     /*default*/ URL getRepoUrl(GitChangeSet changeSet) throws IOException { // default visibility for tests
         String result = getRepoUrl();
         
-        if (StringUtils.isBlank(result))
+        if (result == null || result.isBlank())
             return normalizeToEndWithSlash(getUrlFromFirstConfiguredRepository(changeSet));
 
         else if (!result.contains("/"))
@@ -82,6 +83,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("teamFoundation")
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
         private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
@@ -91,8 +93,9 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
         public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
             try {
                 req.getSubmittedForm();
             } catch (ServletException e) {
@@ -137,7 +140,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
             final String finalValue = value;
             return new FormValidation.URLCheck() {
                 @Override
-                protected FormValidation check() throws IOException, ServletException {
+                protected FormValidation check() throws IOException {
                     try {
                         if (findText(open(new URL(finalValue)), "icrosoft")) {
                             return FormValidation.ok();
@@ -145,7 +148,11 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it doesn't look like a Microsoft server");
                         }
                     } catch (IOException e) {
-                        return handleIOException(finalValue, e);
+                        if (e.getMessage().equals(finalValue)) {
+                            return FormValidation.error("Unable to connect " + finalValue, e);
+                        } else {
+                            return FormValidation.error(e.getMessage(), e);
+                        }
                     }
                 }
             }.check();

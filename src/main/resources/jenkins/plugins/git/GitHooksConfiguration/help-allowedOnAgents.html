@@ -1,0 +1,23 @@
+<div>
+  <p>
+  <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks">Git hooks</a> allow scripts to be invoked when certain important git repository actions occur.
+  This configuration controls the execution of client-side hooks on <i>Jenkins agents</i>.
+  It is recommended that git hooks be <strong>disabled</strong> on Jenkins agents.
+  </p>
+  <p>
+  Most git repositories do not use hooks in the repository and do not need repository hooks.
+  In those rare cases where repository hooks are needed, it is highly recommended that they are <strong>disabled</strong> on the Jenkins controller and on Jenkins agents.
+  </p>
+  <p>
+  Client-side hooks are <strong>not</strong> copied when the repository is cloned.
+  However, client-side hooks might be installed in a repository by build steps or by misconfiguration.
+  </p>
+  <p>
+  If hook scripts are allowed on agents, a client-side hook script installed in a repository on a Jenkins agent will execute when the matching git operation is performed.
+  For example, if hooks are allowed on agents and a git repository on an agent includes a <code>post-checkout</code> hook, the hook script will run on the agent after any checkout in that repository.
+  If hooks are allowed on agents and a git repository on an agent includes a <code>pre-auto-gc</code> hook, the hook script will run on the agent before any automatic git garbage collection task.
+  </p>
+  <p>
+  See <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks">"Customizing Git - Git Hooks"</a> for more details about git repository hooks.
+  </p>
+</div>

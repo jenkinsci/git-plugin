@@ -106,6 +106,7 @@ public class GitUtilsTest {
         originRepo.init();
         originRepo.git("config", "user.name", "Author User Name");
         originRepo.git("config", "user.email", "author.user.name@mail.example.com");
+
         originRepo.git("tag", PRIOR_TAG_NAME_1);
         originRepo.git("tag", "-a", PRIOR_TAG_NAME_2, "-m", "Annotated tag " + PRIOR_TAG_NAME_2);
         priorHeadId = ObjectId.fromString(originRepo.head());
@@ -359,5 +360,15 @@ public class GitUtilsTest {
         Set<String> expectedNames = getExpectedNames();
         Set<String> actualNames = getActualNames(allRevisions);
         assertThat(actualNames, is(expectedNames));
+    }
+
+    /**
+     *
+     * @return EnvVars including GIT_CONFIG_NOSYSTEM set to
+     */
+    public static EnvVars getConfigNoSystemEnvsVars() {
+        EnvVars envVars = new EnvVars();
+        envVars.put("GIT_CONFIG_NOSYSTEM", "1");
+        return envVars;
     }
 }

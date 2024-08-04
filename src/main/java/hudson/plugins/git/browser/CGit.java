@@ -8,10 +8,12 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URL;
 
@@ -42,7 +44,7 @@ public class CGit extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "commit/" + param(url).add("id=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath() + "commit/" + param(url).add("id=" + changeSet.getId()));
     }
 
     /**
@@ -57,7 +59,7 @@ public class CGit extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("id=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("id=" + changeSet.getId()));
     }
 
     /**
@@ -73,13 +75,14 @@ public class CGit extends GitRepositoryBrowser {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
-            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getParentCommit()).toString()));
+            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getParentCommit())));
         } else {
-            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getId()).toString()));
+            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getId())));
         }
     }
 
     @Extension
+    @Symbol("cgit")
     public static class CGITDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
@@ -87,8 +90,9 @@ public class CGit extends GitRepositoryBrowser {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
         public CGit newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
             return req.bindJSON(CGit.class, jsonObject);
         }
     }

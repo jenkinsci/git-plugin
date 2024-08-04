@@ -1,13 +1,14 @@
 package hudson.plugins.git;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import hudson.plugins.git.util.GitUtilsTest;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
 import org.junit.Rule;
 
@@ -39,10 +40,11 @@ public abstract class AbstractGitRepository {
 
     @Before
     public void createGitRepository() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         TaskListener listener = StreamTaskListener.fromStderr();
         repo.init();
         testGitDir = repo.getRoot();
-        testGitClient = Git.with(listener, new EnvVars()).in(testGitDir).getClient();
+        testGitClient = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(testGitDir).getClient();
     }
 
     /**
@@ -55,12 +57,12 @@ public abstract class AbstractGitRepository {
     protected void commitNewFile(final String fileName) throws GitException, InterruptedException {
         File newFile = new File(testGitDir, fileName);
         assert !newFile.exists(); // Not expected to use commitNewFile to update existing file
-        try (PrintWriter writer = new PrintWriter(newFile, "UTF-8")) {
+        try (PrintWriter writer = new PrintWriter(newFile, StandardCharsets.UTF_8)) {
             writer.println("A file named " + fileName);
             writer.close();
             testGitClient.add(fileName);
             testGitClient.commit("Added a file named " + fileName);
-        } catch (FileNotFoundException | UnsupportedEncodingException notFound) {
+        } catch (IOException notFound) {
             throw new GitException(notFound);
         }
     }

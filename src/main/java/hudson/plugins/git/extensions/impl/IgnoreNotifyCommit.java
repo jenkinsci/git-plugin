@@ -46,6 +46,7 @@ public class IgnoreNotifyCommit extends FakeGitSCMExtension {
     }
 
     @Extension
+    // No @Symbol annotation, because ignore notifyCommit should be defined at a higher level in Pipeline
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}

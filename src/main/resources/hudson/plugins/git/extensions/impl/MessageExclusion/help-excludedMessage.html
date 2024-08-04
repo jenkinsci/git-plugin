@@ -1,10 +1,10 @@
 <div>
     If set, and Jenkins is set to poll for changes, Jenkins will ignore any revisions committed with message matched to
-    <a href="http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Pattern</a> when determining
+    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html">Pattern</a> when determining
     if a build needs to be triggered. This can be used to exclude commits done by the build itself from triggering another build,
     assuming the build server commits the change with a distinct message.
-    <p/>Exclusion uses <a href="http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Pattern</a>
-    <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Matcher.html#matches()">matching</a>
+    <p/>Exclusion uses <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html">Pattern</a>
+    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Matcher.html#matches()">matching</a>
     <p/>
   <pre>.*\[maven-release-plugin\].*</pre>
     The example above illustrates that if only revisions with "[maven-release-plugin]" message in first comment line

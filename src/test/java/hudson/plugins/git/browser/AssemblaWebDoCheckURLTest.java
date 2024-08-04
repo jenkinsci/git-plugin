@@ -26,12 +26,6 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testInitialChecksOnRepoUrl() throws Exception {
-        String url = "https://app.assembla.com/spaces/git-plugin/git/source";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
-    }
-
-    @Test
     public void testInitialChecksOnRepoUrlEmpty() throws Exception {
         String url = "";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
@@ -64,20 +58,6 @@ public class AssemblaWebDoCheckURLTest {
         String hostname = "assembla.comspaces";
         String url = "https://" + hostname + "/git-plugin/git/source";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
-    }
-
-    @Test
-    public void testPathLevelChecksOnRepoUrlValidURLNullProject() throws Exception {
-        String url = "https://app.assembla.com/space/git-plugin/git/source";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(null, url), is(FormValidation.ok()));
-    }
-
-    @Test
-    public void testPathLevelChecksOnRepoUrlUnableToConnect() throws Exception {
-        // Syntax issue related specific to Assembla
-        String url = "https://app.assembla.com/space/git-plugin/git/source/";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
-                is("Exception reading from Assembla URL " + url + " : ERROR: Unable to connect " + url));
     }
 
     @Test

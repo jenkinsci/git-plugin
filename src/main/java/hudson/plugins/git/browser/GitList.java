@@ -8,10 +8,12 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URL;
 
@@ -59,7 +61,7 @@ public class GitList extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	//GitList diff indices begin at 1
-        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1)));
+        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + (getIndexOfPath(path) + 1)));
     }
 
     /**
@@ -82,6 +84,7 @@ public class GitList extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("gitList")
     public static class GitListDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
@@ -89,8 +92,9 @@ public class GitList extends GitRepositoryBrowser {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
         public GitList newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
             return req.bindJSON(GitList.class, jsonObject);
         }
     }

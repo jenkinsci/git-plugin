@@ -8,10 +8,12 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URL;
 
@@ -59,7 +61,7 @@ public class GithubWeb extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	// Github seems to sort the output alphabetically by the path.
-        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path)));
+        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + getIndexOfPath(path));
     }
 
     /**
@@ -88,6 +90,7 @@ public class GithubWeb extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("github")
     public static class GithubWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
@@ -95,8 +98,9 @@ public class GithubWeb extends GitRepositoryBrowser {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
 		public GithubWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
 			return req.bindJSON(GithubWeb.class, jsonObject);
 		}
 	}

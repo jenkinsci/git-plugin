@@ -35,6 +35,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
@@ -52,7 +53,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -205,7 +207,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
             boolean executed = false;
             ChangelogCommand changelog = client.changelog();
-            try (Writer out = new OutputStreamWriter(changeLogStream, "UTF-8")) {
+            try (Writer out = new OutputStreamWriter(changeLogStream, StandardCharsets.UTF_8)) {
                 changelog.includes(commitId);
                 ObjectId fromCommitId;
                 if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
@@ -283,8 +285,53 @@ public class GitSCMFileSystem extends SCMFileSystem {
             return AbstractGitSCMSource.class.isAssignableFrom(descriptor.clazz);
         }
 
+        static class HeadNameResult {
+            final String headName;
+            final String prefix;
+
+            private HeadNameResult(String headName, String prefix) {
+                this.headName = headName;
+                this.prefix = prefix;
+            }
+
+            static HeadNameResult calculate(@NonNull BranchSpec branchSpec,
+                                            @CheckForNull SCMRevision rev,
+                                            @CheckForNull EnvVars env) {
+                String branchSpecExpandedName = branchSpec.getName();
+                if (env != null) {
+                    branchSpecExpandedName = env.expand(branchSpecExpandedName);
+                }
+
+                String prefix = Constants.R_HEADS;
+                if (branchSpecExpandedName.startsWith(Constants.R_TAGS)) {
+                    prefix = Constants.R_TAGS;
+                }
+
+                String headName;
+                if (rev != null && env != null) {
+                    headName = env.expand(rev.getHead().getName());
+                } else {
+                    if (branchSpecExpandedName.startsWith(prefix)) {
+                        headName = branchSpecExpandedName.substring(prefix.length());
+                    } else if (branchSpecExpandedName.startsWith("*/")) {
+                        headName = branchSpecExpandedName.substring(2);
+                    } else {
+                        headName = branchSpecExpandedName;
+                    }
+                }
+                return new HeadNameResult(headName, prefix);
+            }
+        }
+
         @Override
         public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
+                throws IOException, InterruptedException {
+            return build(owner, scm, rev, null);
+        }
+
+        @Override
+        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev,
+                                   @CheckForNull Run<?,?> _build)
                 throws IOException, InterruptedException {
             if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
                 return null;
@@ -301,6 +348,12 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 listener.getLogger().println("Git remote url is null");
                 return null;
             }
+
+            EnvVars env = null;
+            if (_build != null) {
+                env = _build.getEnvironment(listener);
+            }
+
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
             Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
             cacheLock.lock();
@@ -315,10 +368,10 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 String credentialsId = config.getCredentialsId();
                 if (credentialsId != null) {
                     StandardCredentials credential = CredentialsMatchers.firstOrNull(
-                            CredentialsProvider.lookupCredentials(
+                            CredentialsProvider.lookupCredentialsInItem(
                                 StandardUsernameCredentials.class,
                                 owner,
-                                ACL.SYSTEM,
+                                ACL.SYSTEM2,
                                 URIRequirementBuilder.fromUri(remote).build()
                             ),
                             CredentialsMatchers.allOf(
@@ -334,6 +387,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = StringUtils.defaultIfBlank(config.getName(), Constants.DEFAULT_REMOTE_NAME);
                 listener.getLogger().println("Setting " + remoteName + " to " + remote);
                 client.setRemoteUrl(remoteName, remote);
@@ -344,28 +398,15 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                String prefix = Constants.R_HEADS; 
-                if(branchSpec.getName().startsWith(Constants.R_TAGS)){
-                    prefix = Constants.R_TAGS; 
-                }
-                String headName;
-                if (rev != null) {
-                    headName = rev.getHead().getName();
-                } else {
-                    if (branchSpec.getName().startsWith(prefix)){
-                        headName = branchSpec.getName().substring(prefix.length()); 
-                    } else if (branchSpec.getName().startsWith("*/")) {
-                        headName = branchSpec.getName().substring(2);
-                    } else {
-                        headName = branchSpec.getName();
-                    }
-                }
-                client.fetch_().prune(true).from(remoteURI, Arrays
-                        .asList(new RefSpec(
-                                "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                        + headName))).execute();
+
+                HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, env);
+
+                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
+                        "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                                + headNameResult.headName))).execute();
+
                 listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" +headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
+                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
                 cacheLock.unlock();
             }
@@ -396,6 +437,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = builder.remoteName();
                 listener.getLogger().println("Setting " + remoteName + " to " + gitSCMSource.getRemote());
                 client.setRemoteUrl(remoteName, gitSCMSource.getRemote());

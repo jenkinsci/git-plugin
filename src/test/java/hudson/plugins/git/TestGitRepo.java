@@ -6,6 +6,7 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.model.UserProperty;
 import hudson.model.User;
+import hudson.plugins.git.util.GitUtilsTest;
 import hudson.tasks.Mailer;
 
 import java.io.File;
@@ -35,7 +36,7 @@ public class TestGitRepo {
 		this.name = name;
 		this.listener = listener;
 		
-		EnvVars envVars = new EnvVars();
+		EnvVars envVars = GitUtilsTest.getConfigNoSystemEnvsVars();
 		
 		gitDir = tmpDir;
 		User john = User.getOrCreateByIdOrFullName(johnDoe.getName());
@@ -52,6 +53,8 @@ public class TestGitRepo {
 
         // finally: initialize the repo
 		git.init();
+        git.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+        git.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
 	}
 	
     /**

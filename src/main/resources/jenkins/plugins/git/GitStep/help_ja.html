@@ -3,9 +3,11 @@
     Gitステップです。 指定したリポジトリからクローンを実行します。
     </p>
     <p>
-        このステップは、一般的なSCMのステップである<code>
-checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-     userRemoteConfigs: [[url: 'http://git-server/user/repository.git']]])</code>
+        このステップは、一般的なSCMのステップである
+<pre>
+checkout scmGit(branches: [[name: 'main]],
+    userRemoteConfigs: [[url: 'https://git-server/user/repository.git']])
+</pre>
     　　の短縮形です。　
 </p>
 </div>

@@ -7,7 +7,6 @@ import hudson.model.FreeStyleProject;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Builder;
 import hudson.tasks.Shell;
@@ -33,9 +32,9 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
                 Collections.singletonList(remote),
                 Collections.singletonList(new BranchSpec(branchSpec)),
                 null, null,
-                Collections.<GitSCMExtension>singletonList(extension));
+                Collections.singletonList(extension));
 
-        FreeStyleProject job = jenkins.createFreeStyleProject();
+        FreeStyleProject job = r.createFreeStyleProject();
         job.getBuildersList().add(createEnvEchoBuilder("tag", ENV_VAR_NAME_TAG));
         job.getBuildersList().add(createEnvEchoBuilder("msg", ENV_VAR_NAME_MESSAGE));
         job.setScm(scm);
@@ -46,8 +45,8 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
     protected void assertBuildEnvironment(FreeStyleBuild build, String expectedName, String expectedMessage)
             throws Exception {
         // In the freestyle shell step, unknown environment variables are returned as empty strings
-        jenkins.waitForMessage(String.format("tag='%s'", Util.fixNull(expectedName)), build);
-        jenkins.waitForMessage(String.format("msg='%s'", Util.fixNull(expectedMessage)), build);
+        r.waitForMessage(String.format("tag='%s'", Util.fixNull(expectedName)), build);
+        r.waitForMessage(String.format("msg='%s'", Util.fixNull(expectedMessage)), build);
     }
 
     private static Builder createEnvEchoBuilder(String key, String envVarName) {

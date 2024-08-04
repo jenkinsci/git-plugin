@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.Axis;
@@ -39,12 +40,13 @@ import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import hudson.tools.ToolProperty;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jvnet.hudson.test.Issue;
 
 import java.io.File;
@@ -65,9 +67,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,7 +79,7 @@ import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link GitPublisher}
- * 
+ *
  * @author Kohsuke Kawaguchi
  */
 public class GitPublisherTest extends AbstractGitProject {
@@ -85,6 +89,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
     }
@@ -96,13 +101,13 @@ public class GitPublisherTest extends AbstractGitProject {
 
         commitNewFile("a");
 
-        MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
+        MatrixProject mp = r.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(testGitDir.getAbsolutePath()));
-        mp.getPublishersList().add(new GitPublisher(
+        mp.getPublishersList().add(new TestGitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
-                Collections.<BranchToPush>emptyList(),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 true, true, false) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -124,7 +129,7 @@ public class GitPublisherTest extends AbstractGitProject {
             private Object writeReplace() { return new NullSCM(); }
         });
 
-        MatrixBuild b = jenkins.buildAndAssertSuccess(mp);
+        MatrixBuild b = r.buildAndAssertSuccess(mp);
 
         assertTrue(existsTag("foo"));
 
@@ -136,8 +141,8 @@ public class GitPublisherTest extends AbstractGitProject {
 
     @Test
     public void GitPublisherFreestylePushBranchWithJGit() throws Exception {
-        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+        GitTool tool = new JGitTool(Collections.emptyList());
+        r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -149,15 +154,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        project.getPublishersList().add(new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -190,18 +195,18 @@ public class GitPublisherTest extends AbstractGitProject {
         List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), null, null, null));
 
-        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList()); //testGitDir.getAbsolutePath()
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+        GitTool tool = new JGitTool(Collections.emptyList()); //testGitDir.getAbsolutePath()
+        r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
-        MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
+        MatrixProject mp = r.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("")),
-                null, tool.getName(), Collections.<GitSCMExtension>emptyList()));
-        mp.getPublishersList().add(new GitPublisher(
+                null, tool.getName(), Collections.emptyList()));
+        mp.getPublishersList().add(new TestGitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
-                Collections.<BranchToPush>emptyList(),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 true, true, false) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -223,7 +228,7 @@ public class GitPublisherTest extends AbstractGitProject {
             private Object writeReplace() { return new NullSCM(); }
         });
 
-        MatrixBuild b = jenkins.buildAndAssertSuccess(mp);
+        MatrixBuild b = r.buildAndAssertSuccess(mp);
 
         /* I don't understand why the log reports pushing tag to repo origin but the tag is not pushed */
         assertThat(b.getLog(50),
@@ -241,15 +246,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        project.getPublishersList().add(new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -277,15 +282,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        project.getPublishersList().add(new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -361,15 +366,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.NO_FF)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        project.getPublishersList().add(new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -449,15 +454,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF_ONLY)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        project.getPublishersList().add(new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -517,12 +522,7 @@ public class GitPublisherTest extends AbstractGitProject {
         assertTrue("commitFile2 should exist in the workspace",build2.getWorkspace().child("commitFile2").exists());
         revList = testGitClient.revList("branch2^1");
         assertEquals("branch2 should have master as a parent",revList.get(0),master);
-        try {
-          revList = testGitClient.revList("branch2^2");
-          assertTrue("branch2 should have no other parent than master",false);
-        } catch (java.lang.NullPointerException err) {
-          // expected
-        }
+        assertThrows("branch2 should have no other parent than master", NullPointerException.class, () -> testGitClient.revList("branch2^2"));
     }
 
     @Issue("JENKINS-24786")
@@ -544,7 +544,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteRepositories,
                 Collections.singletonList(new BranchSpec("origin/master")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(scm);
 
         // add parameters for remote repository configuration
@@ -556,7 +556,7 @@ public class GitPublisherTest extends AbstractGitProject {
         String tag_name = "test-tag";
         String note_content = "Test Note";
 
-        project.getPublishersList().add(new GitPublisher(
+        project.getPublishersList().add(new TestGitPublisher(
         		Collections.singletonList(new TagToPush("$TARGET_NAME", tag_name, "", false, false)),
                 Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH")),
                 Collections.singletonList(new NoteToPush("$TARGET_NAME", note_content, Constants.R_NOTES_COMMITS, false)),
@@ -583,13 +583,13 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(scm);
 
-        GitPublisher forcedPublisher = new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        GitPublisher forcedPublisher = new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, true);
         project.getPublishersList().add(forcedPublisher);
 
@@ -633,10 +633,10 @@ public class GitPublisherTest extends AbstractGitProject {
 
         // Remove forcedPublisher, add unforcedPublisher
         project.getPublishersList().remove(forcedPublisher);
-        GitPublisher unforcedPublisher = new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        GitPublisher unforcedPublisher = new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false);
         project.getPublishersList().add(unforcedPublisher);
 
@@ -681,11 +681,10 @@ public class GitPublisherTest extends AbstractGitProject {
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
-
-      project.getPublishersList().add(new GitPublisher(
-          Collections.<TagToPush>emptyList(),
+      project.getPublishersList().add(new TestGitPublisher(
+          Collections.emptyList(),
           Collections.singletonList(new BranchToPush("origin", "integration")),
-          Collections.<NoteToPush>emptyList(),
+          Collections.emptyList(),
           true, true, false));
 
       // create initial commit and then run the build against it:
@@ -711,16 +710,16 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(scm);
 
         BranchToPush btp = new BranchToPush("origin", "master");
         btp.setRebaseBeforePush(true);
 
-        GitPublisher rebasedPublisher = new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+        GitPublisher rebasedPublisher = new TestGitPublisher(
+                Collections.emptyList(),
                 Collections.singletonList(btp),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, true);
         project.getPublishersList().add(rebasedPublisher);
 
@@ -749,10 +748,13 @@ public class GitPublisherTest extends AbstractGitProject {
     @Issue("JENKINS-24786")
     @Test
     public void testMergeAndPushWithCharacteristicEnvVar() throws Exception {
+        // jgit doesn't work because of missing PerBuildTag
+        //GitTool tool = new JGitTool(Collections.emptyList());
+        //r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
         FreeStyleProject project = setupSimpleProject("master");
 
         /*
-         * JOB_NAME seemed like the more obvious choice, but when run from a 
+         * JOB_NAME seemed like the more obvious choice, but when run from a
          * multi-configuration job, the value of JOB_NAME includes an equals
          * sign.  That makes log parsing and general use of the variable more
          * difficult.  JENKINS_SERVER_COOKIE is a characteristic env var which
@@ -760,7 +762,7 @@ public class GitPublisherTest extends AbstractGitProject {
          */
         String envName = "JENKINS_SERVER_COOKIE";
         String envValue = project.getCharacteristicEnvVars().get(envName, "NOT-SET");
-        assertFalse("Env " + envName + " not set", envValue.equals("NOT-SET"));
+        assertNotEquals("Env " + envName + " not set", "NOT-SET", envValue);
 
         checkEnvVar(project, envName, envValue);
     }
@@ -801,7 +803,7 @@ public class GitPublisherTest extends AbstractGitProject {
         String tagMessageReference = envReference + " tag message";
         String noteReference = "note for " + envReference;
         String noteValue = "note for " + envValue;
-        GitPublisher publisher = new GitPublisher(
+        GitPublisher publisher = new TestGitPublisher(
                 Collections.singletonList(new TagToPush("origin", tagNameReference, tagMessageReference, false, true)),
                 Collections.singletonList(new BranchToPush("origin", envReference)),
                 Collections.singletonList(new NoteToPush("origin", noteReference, Constants.R_NOTES_COMMITS, false)),
@@ -853,6 +855,36 @@ public class GitPublisherTest extends AbstractGitProject {
         assertEquals(build1Head, testGitClient.revParse(Constants.HEAD).name());
         assertEquals("Wrong head commit in build1", topicCommit.getName(), build1Head);
 
+    }
+
+    /**
+     * doing this because some system and/or users may commit/tag gpgSign activated,
+     * and we cannot answer the passphrase if needed so disabled it locally for the test
+     */
+    private static class TestGitPublisher extends GitPublisher {
+        public TestGitPublisher(
+                List<TagToPush> tagsToPush,
+                List<BranchToPush> branchesToPush,
+                List<NoteToPush> notesToPush,
+                boolean pushOnlyIfSuccess,
+                boolean pushMerge,
+                boolean forcePush) {
+            super(tagsToPush, branchesToPush, notesToPush, pushOnlyIfSuccess, pushMerge, forcePush);
+        }
+
+        @Override
+        protected GitClient getGitClient(
+                GitSCM gitSCM,
+                BuildListener listener,
+                EnvVars environment,
+                AbstractBuild<?, ?> build,
+                UnsupportedCommand cmd)
+                throws IOException, InterruptedException {
+            GitClient gitClient = super.getGitClient(gitSCM, listener, environment, build, cmd);
+            gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+            gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+            return gitClient;
+        }
     }
 
     private boolean existsTag(String tag) throws InterruptedException {

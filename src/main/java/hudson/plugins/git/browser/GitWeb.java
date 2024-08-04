@@ -8,10 +8,12 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URL;
 
@@ -36,7 +38,7 @@ public class GitWeb extends GitRepositoryBrowser {
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
 
-        return new URL(url, url.getPath()+param(url).add("a=commit").add("h=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath()+ param(url).add("a=commit").add("h=" + changeSet.getId()));
     }
 
     private QueryBuilder param(URL url) {
@@ -82,6 +84,7 @@ public class GitWeb extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("gitWeb")
     public static class GitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
@@ -89,8 +92,9 @@ public class GitWeb extends GitRepositoryBrowser {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
         public GitWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
             return req.bindJSON(GitWeb.class, jsonObject);
         }
     }

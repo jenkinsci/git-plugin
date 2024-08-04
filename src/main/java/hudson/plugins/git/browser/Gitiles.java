@@ -16,10 +16,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -60,6 +62,7 @@ public class Gitiles extends GitRepositoryBrowser {
 
 
     @Extension
+    @Symbol("gitiles")
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
@@ -67,8 +70,9 @@ public class Gitiles extends GitRepositoryBrowser {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                            justification = "Inherited javadoc commits that req is non-null")
         public Gitiles newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-            assert req != null; //see inherited javadoc
             return req.bindJSON(Gitiles.class, jsonObject);
         }
 
@@ -84,7 +88,7 @@ public class Gitiles extends GitRepositoryBrowser {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {
-                protected FormValidation check() throws IOException, ServletException {
+                protected FormValidation check() throws IOException {
                     String v = cleanUrl;
                     if (!v.endsWith("/"))
                         v += '/';
@@ -97,7 +101,11 @@ public class Gitiles extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it doesn't look like Gitiles");
                         }
                     } catch (IOException e) {
-                        return handleIOException(v, e);
+                        if (e.getMessage().equals(v)) {
+                            return FormValidation.error("Unable to connect " + v, e);
+                        } else {
+                            return FormValidation.error(e.getMessage(), e);
+                        }
                     }
                 }
             }.check();

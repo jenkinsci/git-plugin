@@ -96,7 +96,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     }
 
     @Override
-    public void setCredentialPairBindings(@NonNull StandardCredentials credentials,Map<String,String> publicValues, Map<String,String> secretValues) {
+    public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String,String> secretValues, Map<String,String> publicValues) {
         StandardUsernamePasswordCredentials usernamePasswordCredentials = (StandardUsernamePasswordCredentials) credentials;
         if(usernamePasswordCredentials.isUsernameSecret()){
             secretValues.put(GIT_USERNAME_KEY, usernamePasswordCredentials.getUsername());
@@ -145,23 +145,28 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         protected FilePath write(StandardUsernamePasswordCredentials credentials, FilePath workspace)
                 throws IOException, InterruptedException {
             FilePath gitEcho;
+
+            FilePath usernameFile = workspace.createTempFile("username", ".txt");
+            usernameFile.write(this.userVariable + "\n", null);
+            FilePath passwordFile = workspace.createTempFile("password", ".txt");
+            passwordFile.write(this.passVariable + "\n", null);
+
               //Hard Coded platform dependent newLine
             if (this.unixNodeType) {
                 gitEcho = workspace.createTempFile("auth", ".sh");
-                // [#!/usr/bin/env sh] to be used if required, could have some corner cases
-                gitEcho.write("case $1 in\n"
-                        + "        Username*) echo " + this.userVariable
-                        + "                ;;\n"
-                        + "        Password*) echo " + this.passVariable
-                        + "                ;;\n"
+                gitEcho.write("#!/bin/sh\n"
+                        + "\n"
+                        + "case \"$1\" in\n"
+                        + "        Username*) cat " + unixArgEncodeFileName(usernameFile.getRemote()) + ";;\n"
+                        + "        Password*) cat " + unixArgEncodeFileName(passwordFile.getRemote()) + ";;\n"
                         + "        esac\n", null);
                 gitEcho.chmod(0500);
             } else {
                 gitEcho = workspace.createTempFile("auth", ".bat");
                 gitEcho.write("@ECHO OFF\r\n"
                         + "SET ARG=%~1\r\n"
-                        + "IF %ARG:~0,8%==Username (ECHO " + this.userVariable + ")\r\n"
-                        + "IF %ARG:~0,8%==Password (ECHO " + this.passVariable + ")", null);
+                        + "IF %ARG:~0,8%==Username type " + windowsArgEncodeFileName(usernameFile.getRemote()) + "\r\n"
+                        + "IF %ARG:~0,8%==Password type " + windowsArgEncodeFileName(passwordFile.getRemote()), null);
             }
             return gitEcho;
         }
@@ -169,6 +174,27 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         @Override
         protected Class<StandardUsernamePasswordCredentials> type() {
             return StandardUsernamePasswordCredentials.class;
+        }
+
+        /* Escape all single quotes in filename, then surround filename in single quotes.
+         * Only useful to prepare filename for reference from a shell script.
+         */
+        private String unixArgEncodeFileName(String filename) {
+            if (filename.contains("'")) {
+                filename = filename.replace("'", "'\\''");
+            }
+            return "'" + filename + "'";
+        }
+
+        /* Escape all double quotes in filename, then surround filename in double quotes.
+         * Only useful to prepare filename for reference from a DOS batch file.
+         */
+        private String windowsArgEncodeFileName(String filename) {
+            if (filename.contains("\"")) {
+                filename = filename.replace("\"", "^\"");
+            }
+            /* Ensure backslashes since cmd doesn't work with slashes as path separators */
+            return "\"" + filename.replace("/", "\\") + "\"";
         }
     }
 

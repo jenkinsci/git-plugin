@@ -30,7 +30,6 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
@@ -50,15 +49,17 @@ import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -93,6 +94,7 @@ import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
+import jenkins.security.FIPS140;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
@@ -107,6 +109,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * A {@link SCMSource} that discovers branches in a git repository.
@@ -161,6 +164,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @DataBoundSetter
     public void setCredentialsId(@CheckForNull String credentialsId) {
+        if (!isFIPSCompliantTLS(credentialsId, this.remote)) {
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
         this.credentialsId = credentialsId;
     }
 
@@ -181,7 +188,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         if (!DEFAULT_INCLUDES.equals(includes) || !DEFAULT_EXCLUDES.equals(excludes)) {
             traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
         }
-        if (!DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+        if (remoteName != null && !remoteName.isBlank() && !DEFAULT_REMOTE_NAME.equals(remoteName)) {
             traits.add(new RemoteNameSCMSourceTrait(remoteName));
         }
         if (ignoreOnPushNotifications) {
@@ -233,10 +240,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     }
                 }
             }
-            if (remoteName != null && !DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+            if (remoteName != null && !remoteName.isBlank() && !DEFAULT_REMOTE_NAME.equals(remoteName)) {
                 traits.add(new RemoteNameSCMSourceTrait(remoteName));
             }
-            if (StringUtils.isNotBlank(gitTool)) {
+            if (gitTool != null && !gitTool.isBlank()) {
                 traits.add(new GitToolSCMSourceTrait(gitTool));
             }
             if (browser != null) {
@@ -264,7 +271,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             if (!defaults.contains(rawRefSpecs.trim())) {
                 List<String> templates = new ArrayList<>();
                 for (String rawRefSpec : rawRefSpecs.split(" ")) {
-                    if (StringUtils.isBlank(rawRefSpec)) {
+                    if (rawRefSpec == null || rawRefSpec.isBlank()) {
                         continue;
                     }
                     if (defaults.contains(rawRefSpec)) {
@@ -294,11 +301,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @DataBoundSetter
     public void setBrowser(GitRepositoryBrowser browser) {
         List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
-        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof GitBrowserSCMSourceTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(scmSourceTrait -> scmSourceTrait instanceof GitBrowserSCMSourceTrait);
         if (browser != null) {
             traits.add(new GitBrowserSCMSourceTrait(browser));
         }
@@ -311,11 +314,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     public void setGitTool(String gitTool) {
         List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
         gitTool = Util.fixEmptyAndTrim(gitTool);
-        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof GitToolSCMSourceTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(scmSourceTrait -> scmSourceTrait instanceof GitToolSCMSourceTrait);
         if (gitTool != null) {
             traits.add(new GitToolSCMSourceTrait(gitTool));
         }
@@ -328,11 +327,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @Deprecated
     public void setExtensions(@CheckForNull List<GitSCMExtension> extensions) {
         List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
-        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof GitSCMExtensionTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(scmSourceTrait -> scmSourceTrait instanceof GitSCMExtensionTrait);
         EXTENSIONS:
         for (GitSCMExtension extension : Util.fixNull(extensions)) {
             for (SCMSourceTraitDescriptor d : SCMSourceTrait.all()) {
@@ -414,7 +409,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @NonNull
     @Override
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<SCMSourceTrait> getTraits() {
         return traits;
     }
@@ -446,6 +440,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     .includeCurrentValue(credentialsId);
         }
 
+        @RequirePOST
+        public FormValidation doCheckRemote(@AncestorInPath Item item,
+                                         @QueryParameter String credentialsId,
+                                         @QueryParameter String remote) throws IOException, InterruptedException {
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
+            return isFIPSCompliantTLS(credentialsId, remote) ? FormValidation.ok() : FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
+        }
+
+        @RequirePOST
         public FormValidation doCheckCredentialsId(@AncestorInPath Item context,
                                                    @QueryParameter String remote,
                                                    @QueryParameter String value) {
@@ -466,15 +469,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 return FormValidation.ok();
             }
 
-            for (ListBoxModel.Option o : CredentialsProvider.listCredentials(
+            for (ListBoxModel.Option o : CredentialsProvider.listCredentialsInItem(
                     StandardUsernameCredentials.class,
                     context,
                     context instanceof Queue.Task
-                            ? Tasks.getAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
+                            ? Tasks.getAuthenticationOf2((Queue.Task) context)
+                            : ACL.SYSTEM2,
                     URIRequirementBuilder.fromUri(remote).build(),
                     GitClient.CREDENTIALS_MATCHER)) {
-                if (StringUtils.equals(value, o.value)) {
+                if (Objects.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
                     // NOTE: we would need to actually lookup the credential to do the check, which may require
                     // fetching the actual credential instance from a remote credentials store. Perhaps this is
@@ -536,7 +539,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         public List<SCMSourceTrait> getTraitsDefaults() {
-            return Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait());
+            return Collections.singletonList(new BranchDiscoveryTrait());
         }
 
         @NonNull
@@ -627,7 +630,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                                 return Collections.emptyMap();
                                             }
                                         }
-                                        return Collections.<SCMHead, SCMRevision>singletonMap(head,
+                                        return Collections.singletonMap(head,
                                                 sha1 != null ? new GitBranchSCMRevision(head, sha1) : null);
                                     }
                                 }
@@ -659,7 +662,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                     continue;
                                 }
                                 if (GitStatus.looselyMatches(uri, remote)) {
-                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName()
+                                    LOGGER.fine("Triggering the indexing of " + owner.getFullDisplayName()
                                             + " as a result of event from " + origin);
                                     triggerIndexing(owner, source);
                                     result.add(new GitStatus.ResponseContributor() {

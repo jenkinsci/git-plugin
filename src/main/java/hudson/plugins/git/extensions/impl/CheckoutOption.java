@@ -15,6 +15,7 @@ import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -34,14 +35,6 @@ public class CheckoutOption extends FakeGitSCMExtension {
 
     public Integer getTimeout() {
         return timeout;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean requiresWorkspaceForPolling() {
-        return false;
     }
 
     /**
@@ -102,6 +95,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
     }
 
     @Extension
+    @Symbol("checkoutOption")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         /**

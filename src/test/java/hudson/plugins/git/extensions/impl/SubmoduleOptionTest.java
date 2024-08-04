@@ -68,9 +68,7 @@ public class SubmoduleOptionTest {
         Mockito.when(client.hasGitModules()).thenReturn(true);
         Mockito.when(client.submoduleUpdate()).thenThrow(new GitException("a git exception"));
 
-        Exception e = assertThrows(IOException.class, () -> {
-            submoduleOption.onCheckoutCompleted(scm, build, client, listener);
-        });
+        Exception e = assertThrows(IOException.class, () -> submoduleOption.onCheckoutCompleted(scm, build, client, listener));
         assertThat(e.getMessage(), is("Could not perform submodule update"));
     }
 
@@ -231,6 +229,22 @@ public class SubmoduleOptionTest {
 
     @Test
     public void testToString() {
+        assertThat(submoduleOption.toString(), is("SubmoduleOption{"
+                + "disableSubmodules=false"
+                + ", recursiveSubmodules=false"
+                + ", trackingSubmodules=false"
+                + ", reference='null'"
+                + ", parentCredentials=false"
+                + ", timeout=null"
+                + ", shallow=false"
+                + ", depth=null"
+                + ", threads=null"
+                + '}'));
+    }
+
+    @Test
+    public void testToStringDataBoundConstructor() {
+        submoduleOption = new SubmoduleOption();
         assertThat(submoduleOption.toString(), is("SubmoduleOption{"
                 + "disableSubmodules=false"
                 + ", recursiveSubmodules=false"

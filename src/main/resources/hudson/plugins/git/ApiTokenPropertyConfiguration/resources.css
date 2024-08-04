@@ -1,0 +1,10 @@
+.api-token-list .api-token-list-item-row {
+    display: flex;
+    align-items: center;
+    max-width: 700px;
+    gap: 10px;
+}
+.api-token-list .api-token-list-item .hidden, .api-token-list .api-token-list-empty-item.hidden {
+    display: none;
+}
+

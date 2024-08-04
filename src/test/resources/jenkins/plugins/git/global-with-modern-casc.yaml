@@ -54,7 +54,7 @@ unclassified:
                       extension:
                         email: "my@email.com"
                         name: "my_user"
-                  - "gitLFSPullTrait"
+                  - "lfs"
                   - "ignoreOnPushNotificationTrait"
                   - "pruneStaleBranchTrait"
                   - refSpecs:

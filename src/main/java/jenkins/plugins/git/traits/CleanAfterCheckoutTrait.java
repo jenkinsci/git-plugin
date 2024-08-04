@@ -28,6 +28,7 @@ package jenkins.plugins.git.traits;
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -61,6 +62,7 @@ public class CleanAfterCheckoutTrait extends GitSCMExtensionTrait<CleanCheckout>
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    @Symbol("cleanAfterCheckout")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

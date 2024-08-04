@@ -10,12 +10,14 @@ import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URL;
@@ -66,6 +68,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 	}
 
 	@Extension
+	@Symbol("fisheye")
 	public static class FisheyeGitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
 		@NonNull
@@ -74,8 +77,9 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 		}
 
 		@Override
+                @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
+                                    justification = "Inherited javadoc commits that req is non-null")
 		public FisheyeGitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
-			assert req != null; //see inherited javadoc
 			return req.bindJSON(FisheyeGitRepositoryBrowser.class, jsonObject);
 		}
 
@@ -104,7 +108,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 			final String finalValue = value;
 			return new URLCheck() {
 				@Override
-				protected FormValidation check() throws IOException, ServletException {
+				protected FormValidation check() throws IOException {
 					try {
 						if (findText(open(new URL(finalValue)), "FishEye")) {
 							return FormValidation.ok();
@@ -112,7 +116,11 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 							return FormValidation.error("This is a valid URL but it doesn't look like FishEye");
 						}
 					} catch (IOException e) {
-						return handleIOException(finalValue, e);
+						if (e.getMessage().equals(finalValue)) {
+							return FormValidation.error("Unable to connect " + finalValue, e);
+						} else {
+							return FormValidation.error(e.getMessage(), e);
+						}
 					}
 				}
 			}.check();

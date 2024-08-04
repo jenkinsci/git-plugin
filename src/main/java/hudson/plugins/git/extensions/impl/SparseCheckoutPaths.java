@@ -15,7 +15,6 @@ import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -27,11 +26,10 @@ public class SparseCheckoutPaths extends GitSCMExtension {
 
     @DataBoundConstructor
     public SparseCheckoutPaths(List<SparseCheckoutPath> sparseCheckoutPaths) {
-        this.sparseCheckoutPaths = sparseCheckoutPaths == null ? Collections.<SparseCheckoutPath>emptyList() : sparseCheckoutPaths;
+        this.sparseCheckoutPaths = sparseCheckoutPaths == null ? Collections.emptyList() : sparseCheckoutPaths;
     }
 
     @Whitelisted
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<SparseCheckoutPath> getSparseCheckoutPaths() {
         return sparseCheckoutPaths;
     }

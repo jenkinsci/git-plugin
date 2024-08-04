@@ -35,7 +35,6 @@ import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.MergeRecord;
 import java.io.IOException;
 import jenkins.scm.api.SCMSource;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
@@ -94,7 +93,7 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
                                             Revision marked, Revision rev)
             throws IOException, InterruptedException, GitException {
         ObjectId baseObjectId;
-        if (StringUtils.isBlank(baseHash)) {
+        if (baseHash == null || baseHash.isBlank()) {
             try {
                 baseObjectId = git.revParse(Constants.R_REFS + baseName);
             } catch (GitException e) {

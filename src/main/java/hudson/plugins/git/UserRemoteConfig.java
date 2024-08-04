@@ -21,6 +21,9 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitSCMSource;
+import jenkins.security.FIPS140;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -35,8 +38,8 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.regex.Pattern;
+import java.util.Objects;
 import java.util.UUID;
-import org.apache.commons.lang.StringUtils;
 
 import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
@@ -58,6 +61,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         this.name = fixEmpty(name);
         this.refspec = fixEmpty(refspec);
         this.credentialsId = fixEmpty(credentialsId);
+        if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(this.credentialsId) && StringUtils.startsWith(this.url, "http:")) {
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
     }
 
     @Exported
@@ -107,7 +113,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 /* Construct a fake project, suppress the deprecation warning because the
                  * replacement for the deprecated API isn't accessible in this context. */
                 @SuppressWarnings("deprecation")
-                Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
+                Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID());
                 project = fakeProject;
             }
             return new StandardListBoxModel()
@@ -149,12 +155,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 return FormValidation.ok();
             }
             for (ListBoxModel.Option o : CredentialsProvider
-                    .listCredentials(StandardUsernameCredentials.class, project, project instanceof Queue.Task
-                                    ? Tasks.getAuthenticationOf((Queue.Task) project)
-                                    : ACL.SYSTEM,
+                    .listCredentialsInItem(StandardUsernameCredentials.class, project, project instanceof Queue.Task
+                                    ? Tasks.getAuthenticationOf2((Queue.Task) project)
+                                    : ACL.SYSTEM2,
                             GitURIRequirementsBuilder.fromUri(url).build(),
                             GitClient.CREDENTIALS_MATCHER)) {
-                if (StringUtils.equals(value, o.value)) {
+                if (Objects.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
                     // NOTE: we would need to actually lookup the credential to do the check, which may require
                     // fetching the actual credential instance from a remote credentials store. Perhaps this is
@@ -170,6 +176,10 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
+
+            if (!GitSCMSource.isFIPSCompliantTLS(credentialsId, value)) {
+                return FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
+            }
 
             // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
             // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
@@ -259,7 +269,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
         private static StandardCredentials lookupCredentials(@CheckForNull Item project, String credentialId, String uri) {
             return (credentialId == null) ? null : CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
+                        CredentialsProvider.lookupCredentialsInItem(StandardCredentials.class, project, ACL.SYSTEM2,
                                 GitURIRequirementsBuilder.fromUri(uri).build()),
                         CredentialsMatchers.withId(credentialId));
         }

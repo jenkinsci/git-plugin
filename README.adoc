@@ -6,13 +6,7 @@
 [#introduction]
 == Introduction
 
-[.float-group]
---
-[.text-center]
-image:https://jenkins.io/images/logos/jenkins/jenkins.png[Jenkins logo,height=192,role=center,float=right]
-image:images/signe-1923369_640.png[plus,height=64,float=right]
-image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,height=128,float=right]
---
+image::images/jenkins-and-git.png[Jenkins and Git]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
@@ -23,7 +17,7 @@ toc::[]
 == Changelog in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases]
 
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
-Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
+Prior release notes are recorded in the git plugin repository link:https://github.com/jenkinsci/git-plugin/blob/git-4.7.2/CHANGELOG.adoc[change log].
 
 == Pipelines
 
@@ -50,6 +44,137 @@ link:https://plugins.jenkins.io/tuleap-git-branch-source/[Tuleap].
 The link:https://youtu.be/B_2FXWI6CWg[30 minute video clip] below introduces Multibranch Pipelines.
 
 image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
+
+=== Pipeline examples
+
+The examples below were created with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator].
+Create your own checkout commands with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] configured for your needs.
+
+==== Checkout with defaults
+
+Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'master']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
+==== Checkout with a specific branch
+
+Checkout from the git plugin source repository using https protocol, no credentials, and the `stable-3.x` branch.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'stable-3.x']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
+==== Checkout with ssh and a private key credential
+
+Checkout from the git plugin source repository using ssh protocol, ssh private credentials, and the `v4.11.x`  branch.
+The git plugin supports private key credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'v4.11.x']],
+    userRemoteConfigs: [[credentialsId:  'my-ssh-private-key-id',
+        url: 'ssh://github.com/jenkinsci/git-plugin.git']])
+----
+
+==== Checkout with https and a username/password credential
+
+Checkout from the git plugin source repository using https protocol, username/password credentials, and the `v4.9.x` branch.
+The git plugin supports username/password credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'v4.9.x']],
+    userRemoteConfigs: [[credentialsId: 'my-username-password-id',
+        url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
+==== Checkout with git large file support enabled
+
+Checkout from the git plugin source repository using https protocol with large file support enabled for the `stable-3.x` branch.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'stable-3.x']],
+    extensions: [ lfs() ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
+==== Checkout without fetching tags (advanced clone behavior)
+
+Checkout from the git plugin source repository using https with no credentials and without tags.
+This can save time and disk space when you want to access the repository without considering tags.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [ cloneOption(noTags: true) ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
+==== Checkout with a shallow clone to reduce data traffic
+
+Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and a shallow clone.
+Shallow clone requests a limited number of commits from the tip of the requested branch and may save time, data transfer, and disk space.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: '*/master']],
+    extensions: [ cloneOption(shallow: true) ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+----
+
+==== Checkout with a narrow refspec
+
+Checkout from the workspace cleanup plugin source repository using https without credentials, the `master` branch, and with a refspec specific to the master branch.
+This can save time, data transfer, and disk space when you only need to access the references specified by the refspec.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: '*/master']],
+    extensions: [ cloneOption(honorRefspec: true) ],
+    userRemoteConfigs: [[refspec: '+refs/heads/master:refs/remotes/origin/master',
+        url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+----
+
+==== Checkout and prune stale remote branches
+
+Checkout from the workspace cleanup plugin source repository using https without credentials and with prune tags and prune branches extension enabled.
+This removes remote tracking branches and tags from the local workspace if they no longer exist on the remote.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [pruneStaleBranch(), pruneTags(true)],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+----
+
+==== Wipe out repository before checkout
+
+Remove all files in the workspace before a checkout from the workspace cleanup plugin source repository using https without credentials, a default branch.
+Ensures a fully fresh workspace.
+
+[source,groovy]
+----
+deleteDir()
+checkout scmGit(
+    branches: [[name: '*/master']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+----
 
 [#credential-binding]
 === Git Credentials Binding
@@ -173,12 +298,19 @@ Refer to webhook documentation for your repository:
 * link:https://plugins.jenkins.io/bitbucket[Bitbucket]
 * link:https://plugins.jenkins.io/gitlab-branch-source[GitLab]
 * link:https://github.com/jenkinsci/gitea-plugin/blob/master/docs/README.md[Gitea]
+* link:https://docs.tuleap.org/user-guide/code-versioning/git.html#jenkins-webhooks[Tuleap]
 
-Other git repositories can use a link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks[post-receive hook] in the remote repository to notify Jenkins of changes.
-Add the following line in your `hooks/post-receive` file on the git server, replacing <URL of the Git repository> with the fully qualified URL you use when cloning the repository.
+Other git repositories can use a link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks[post-receive hook] in the remote repository to notify Jenkins of changes.  The `notifyCommit` endpoint can take four parameters.
+
+* `url` (required) should match the URL in which a Jenkins job is configured to clone.
+* `branches` (optional) is a comma separated list of one or more branches meant for multi-branch pipelines.
+* `sha1` (optional) the SHA1 Git commit hash which triggered the notification.
+* `token` (optional) a secret token which must match the Jenkins configuration.  Jenkins ignores non-matching token requests.
+
+Add the following line in your `hooks/post-receive` file on the git server, replacing <URL of the Git repository> with the fully qualified URL you use when cloning the repository, and replacing <Access token> with a token generated by a Jenkins administrator using the "Git plugin notifyCommit access tokens" section of the "Configure Global Security" page.
 
 ....
-curl http://yourserver/git/notifyCommit?url=<URL of the Git repository>
+curl "http://yourserver/git/notifyCommit?url=<URL of the Git repository>&token=<Access token>"
 ....
 
 This will scan all the jobs that:
@@ -191,8 +323,19 @@ If polling finds a change worthy of a build, a build will be triggered.
 
 This allows a notify script to remain the same for all Jenkins jobs.
 Or if you have multiple repositories under a single repository host application (such as Gitosis), you can share a single post-receive hook script with all the repositories.
-Finally, this URL doesn't require authentication even for secured Jenkins, because the server doesn't directly use anything that the client is sending.
-It polls to verify that there is a change before it actually starts a build.
+
+The `token` parameter is required by default as a security measure, but can be disabled by the following link:https://www.jenkins.io/doc/book/managing/system-properties/[system property]:
+
+....
+hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL
+....
+
+It has two modes:
+
+* `disabled-for-polling` - Allows unauthenticated requests as long as they only request polling of the repository supplied in the `url` query parameter. Prohibits unauthenticated requests that attempt to schedule a build immediately by providing a
+`sha1` query parameter.
+* `disabled` - Fully disables the access token mechanism and allows all requests to `notifyCommit`
+to be unauthenticated. *This option is insecure and is not recommended.*
 
 When notifyCommit is successful, the list of triggered projects is returned.
 
@@ -277,6 +420,56 @@ If the workspace is removed, the tag that was applied is lost.
 Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
 Applying a git tag in an agent workspace doesn't have many practical uses.
 
+[#configuration-as-code]
+=== Configuration as code
+
+The global settings of the git plugin can be defined with the Jenkins link:https://plugins.jenkins.io/configuration-as-code/[configuration as code plugin].
+Detailed descriptions of the individual settings are available in the link:#global-configuration[global configuration settings] section of this document.
+
+An example configuration might look like this:
+
+[,yaml]
+----
+unclassified:
+  scmGit:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    globalConfigEmail: "jenkins-user@example.com"
+    globalConfigName: "jenkins-user"
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: true
+    useExistingAccountWithSameEmail: false
+----
+
+[#security-configuration]
+
+=== Security Configuration
+
+image:/images/git-security-configuration.png[Security Configuration]
+
+In the `Configure Global Security` page, the Git Plugin provides the following option:
+
+[[global-security-git-hooks]]
+Git Hooks::
+
+  link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks[Git hooks] allow scripts to be invoked when certain important git repository actions occur.
+  This configuration controls the execution of client-side hooks on the controller and on agents.
+  It is recommended that git hooks be **disabled** on the controller and on agents.
++
+Most git repositories do not use hooks in the repository and do not need repository hooks.
+In those rare cases where repository hooks are needed, it is highly recommended that they are **disabled** on the Jenkins controller and on Jenkins agents.
++
+Client-side hooks are **not** copied when the repository is cloned by Jenkins using the inbuilt SCM methods.
+However, client-side hooks might be installed in a repository by build steps or by misconfiguration.
++
+If hook scripts are allowed, a client-side hook script installed in a repository will execute when the matching git operation is performed.
+For example, if hooks are allowed and a git repository includes a `post-checkout` hook, the hook script will run after any checkout in that repository.
+If hooks are allowed and a git repository includes a `pre-auto-gc` hook, the hook script will run before any automatic git garbage collection task.
++
+See link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks["Customizing Git - Git Hooks"] for more details about git repository hooks.
+
 [#repository-browser]
 === Repository Browser
 
@@ -313,7 +506,7 @@ Options include:
 URL::
 
   Root URL serving this FishEye repository.
-  For example, `\https://fisheye.example.com/browser/my-project`
+  For example, `\https://fisheye.example.com/browse/my-project`
 
 [#kiln-repository-browser]
 ==== Kiln
@@ -355,7 +548,7 @@ Options include:
 URL::
 
   Root URL serving this Bitbucket repository.
-  For example, `\https://bitbucket.example.com/username/my-project`
+  For example, `\https://bitbucket.org/username/my-project`
 
 [bitbucketserver-repository-browser]
 ==== bitbucketserver
@@ -369,7 +562,7 @@ Options include:
 URL::
 
   Root URL serving this Bitbucket repository.
-  For example, `\https://bitbucket-server:7990/username/my-project`
+  For example, `\https://bitbucket.example.com/username/my-project`
 
 [#cgit-repository-browser]
 ==== cgit
@@ -448,9 +641,9 @@ URL::
 [[gitlab-version]]
 Version::
 
-  Major and minor version of GitLab you use, such as 12.6.
+  Major and minor version of GitLab you use, such as 15.6.
   If you don't specify a version, a modern version of GitLab (>= 8.0) is assumed.
-  For example, `12.6`
+  For example, `15.6`
 
 [#gitlist-repository-browser]
 ==== gitlist
@@ -509,10 +702,8 @@ URL::
 [#phabricator-repository-browser]
 ==== phabricator
 
-image:images/git-repository-browser-phabricator.png[Phabricator Repository Browser]
-
-Repository browser for git repositories hosted by link:https://www.phacility.com/phabricator/[Phacility Phabricator].
-Options include:
+Effective June 1, 2021, Phabricator is link:https://admin.phacility.com/phame/post/view/11/phacility_is_winding_down_operations/[no longer actively maintained].
+This browser is *deprecated*.
 
 [[phabricator-url]]
 URL::
@@ -1029,6 +1220,23 @@ Inverse::
   This is useful, for example, when you have jobs building your master and various release branches and you want a second job which builds all new feature branches.
   For example, branches which do not match these patterns without redundantly building master and the release branches again each time they change.
 
+[#first-build-changelog]
+==== First build changelog
+
+image:/images/git-extension-for-first-build.png[First build changelog]
+
+The Jenkins git plugin provides an option to trigger a Pipeline build on the first commit on a branch.
+By default, no changelog is generated for the first build because the first build has no predecessor build for comparison.
+When the first build changelog option is enabled, the most recent commit will be used as the changelog of the first build.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [ firstBuildChangelog() ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
 [#merge-extensions]
 === Merge Extensions
 
@@ -1128,20 +1336,19 @@ Previous Pipeline syntax looked like this:
 
 ```groovy
 checkout([$class: 'GitSCM',
-          branches: [[name: 'master']],
-          doGenerateSubmoduleConfigurations: false,
-          extensions: [],
-          submoduleCfg: [],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+    branches: [[name: 'master']],
+    doGenerateSubmoduleConfigurations: false,
+    extensions: [],
+    submoduleCfg: [],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
 ```
 
 Current Pipeline Syntax looks like this:
 
 ```groovy
-checkout([$class: 'GitSCM',
-          branches: [[name: 'master']],
-          extensions: [],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+checkout scmGit(
+    branches: [[name: 'master']],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']])
 ```
 
 [#environment-variables]
@@ -1160,8 +1367,8 @@ GIT_LOCAL_BRANCH:: Name of branch being built without remote name, as in `master
 === Commit Variables
 
 GIT_COMMIT:: SHA-1 of the commit used in this build
-GIT_PREVIOUS_COMMIT:: SHA-1 of the commit used in the preceding build of this project
-GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA-1 of the commit used in the most recent successful build of this project
+GIT_PREVIOUS_COMMIT:: SHA-1 of the commit used in the preceding build of this project. If this is the first time a particular branch is being built, this variable is not set.
+GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA-1 of the commit used in the most recent successful build of this project. If this is the first time a particular branch is being built, this variable is not set.
 
 [#system-configuration-variables]
 === System Configuration Variables
@@ -1170,7 +1377,7 @@ GIT_URL:: Remote URL of the first git repository in this workspace
 GIT_URL_n:: Remote URL of the additional git repositories in this workspace (if any)
 GIT_AUTHOR_EMAIL:: Author e-mail address that will be used for **new commits in this workspace**
 GIT_AUTHOR_NAME:: Author name that will be used for **new commits in this workspace**
-GIT_COMMITTER_EMAIL:: Committer e-mail address that will be used for **new commits in this workspace***
+GIT_COMMITTER_EMAIL:: Committer e-mail address that will be used for **new commits in this workspace**
 GIT_COMMITTER_NAME:: Committer name that will be used for **new commits in this workspace**
 
 [#token-macro-variables]
@@ -1182,7 +1389,7 @@ The git plugin provides token macros for:
 
 GIT_REVISION:: Expands to the Git SHA1 commit ID that points to the commit that was built.
   length:: integer length of the commit ID that should be displayed.
-  `${GIT_REVISION}` might expand to `a806ba7701bcfc9f784ccb7854c26f03e045c1d2`, while `${GIT_REVISION,length=8}` would expoand to `a806ba77`.
+  `${GIT_REVISION}` might expand to `a806ba7701bcfc9f784ccb7854c26f03e045c1d2`, while `${GIT_REVISION,length=8}` would expand to `a806ba77`.
 
 GIT_BRANCH:: Expands to the name of the branch that was built.
   all:: boolean that expands to all branch names that point to the current commit when enabled.
@@ -1208,10 +1415,31 @@ The default git timeout value (in minutes) can be overridden by the `org.jenkins
 The property should be set on the controller and on all agents to have effect (see https://issues.jenkins.io/browse/JENKINS-22547[JENKINS-22547]).
 
 [[GitPlugin-WhyNotJGit]]
+=== Disable command line git
+
 Command line git is the reference git implementation in the git plugin and the git client plugin.
 Command line git provides the most functionality and is the most stable implementation.
 Some installations may not want to install command line git and may want to disable the command line git implementation.
 Administrators may disable command line git with the property `org.jenkinsci.plugins.gitclient.Git.useCLI=false`.
+
+[#allow-local-checkout]
+=== Allow local checkout
+
+Command line git and JGit can fetch a repository using a local URL (like `file:/my/repo.git`) or a path (like `/my/repo.git`).
+link:https://www.jenkins.io/security/advisory/2022-05-17/#SECURITY-2478[SECURITY-2478] notes that fetching from a local URL or a path creates a security vulnerability on the Jenkins controller.
+Current releases of the git plugin disallow fetch from a local URL and from a path.
+If a local URL or a path is required and administrators accept the risk of disabling this security safeguard, the Java property `hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true` can be set from the command line that starts the Jenkins controller.
+
+[#cacheRootDir]
+=== Cache root directory
+
+Multibranch Pipelines that use the Git branch source will create cached git repositories on the Jenkins controller.
+By default, the cached git repositories are stored in the `caches` subdirectory of the Jenkins home directory (`JENKINS_HOME`).
+
+Administrators may want to store those git repositories in another location for better performance or to exclude them from backups.
+For example, they might choose to place the cache directories in `/var/cache/jenkins`.
+
+The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
 
 [#git-publisher]
 == Git Publisher
@@ -1342,7 +1570,6 @@ Report issues and enhancements in the link:https://www.jenkins.io/participate/re
 == Contributing to the Plugin
 
 Refer to link:CONTRIBUTING.adoc#contributing-to-the-git-plugin[contributing to the plugin] for contribution guidelines.
-Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin development priorities] for the prioritized list of development topics.
 
 == Remove Git Plugin BuildsByBranch BuildData Script
 
@@ -1380,7 +1607,7 @@ for (job in allItems) {
   def counter = 0;
   for (build in job.getBuilds()) {
     // It is possible for a build to have multiple BuildData actions
-    // since we can use the Mulitple SCM plugin.
+    // since we can use the Multiple SCM plugin.
     def gitActions = build.getActions(hudson.plugins.git.util.BuildData.class)
     if (gitActions != null) {
       for (action in gitActions) {
