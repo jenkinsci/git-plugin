@@ -42,7 +42,7 @@ public class FIPSModeSCMSourceTest {
         /* Guess the version number from the Maven command line property */
         /* Default version number copied from pom.xml jenkins.version */
         VersionNumber jenkinsFailsTests = new VersionNumber("2.461");
-        VersionNumber jenkinsVersion = new VersionNumber(System.getProperty("jenkins.version", "2.440.3"));
+        VersionNumber jenkinsVersion = new VersionNumber(System.getProperty("jenkins.version", "2.470"));
         /** Skip tests to avoid delaying plugin BOM and Spring Security 6.x Upgrade */
         boolean skipTests = false;
         if (jenkinsVersion.isNewerThanOrEqualTo(jenkinsFailsTests)) {
