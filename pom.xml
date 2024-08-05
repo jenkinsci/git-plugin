@@ -229,6 +229,14 @@
       <artifactId>git-tag-message</artifactId>
       <version>1.7.1</version>
       <scope>test</scope>
+      <exclusions>
+        <!-- this is introducing a dependency on an old version of git-plugin
+        and so a few of the usual suspects plugins eddsa, trilead which we don't really want -->
+        <exclusion>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>${project.artifactId}</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
