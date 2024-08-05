@@ -148,6 +148,9 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
       <optional>true</optional>
+      <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.440.x and 2.452.x lines -->
+      <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
+      <version>822.824.v14451b_c0fd42</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -239,6 +242,14 @@
       <artifactId>git-tag-message</artifactId>
       <version>1.7.1</version>
       <scope>test</scope>
+      <exclusions>
+        <!-- this is introducing a dependency on an old version of git-plugin
+        and so a few of the usual suspects plugins eddsa, trilead which we don't really want -->
+        <exclusion>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>${project.artifactId}</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
