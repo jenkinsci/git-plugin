@@ -102,17 +102,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     }
 
     public void notifyCommit(JenkinsRule r) throws Exception {
-        synchronousPolling(r);
         String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
-        WebResponse webResponse = r.createWebClient()
-                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain").getWebResponse();
-        LOGGER.log(Level.FINE, webResponse.getContentAsString());
-        for (NameValuePair pair : webResponse.getResponseHeaders()) {
-            if (pair.getName().equals("Triggered")) {
-                LOGGER.log(Level.FINE, "Triggered: " + pair.getValue());
-            }
-        }
-        r.waitUntilNoActivity();
+        notifyCommitWithResults(r, notifyCommitToken, null);
     }
 
     public String notifyCommitWithResults(JenkinsRule r) throws Exception {
