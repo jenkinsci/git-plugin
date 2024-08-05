@@ -101,13 +101,27 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         return new File(this.sampleRepo, rel).mkdirs();
     }
 
-    public String notifyCommit(JenkinsRule r) throws Exception {
+    public void notifyCommit(JenkinsRule r) throws Exception {
+        synchronousPolling(r);
         String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
-        return notifyCommit(r, notifyCommitToken, null);
+        WebResponse webResponse = r.createWebClient()
+                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain").getWebResponse();
+        LOGGER.log(Level.FINE, webResponse.getContentAsString());
+        for (NameValuePair pair : webResponse.getResponseHeaders()) {
+            if (pair.getName().equals("Triggered")) {
+                LOGGER.log(Level.FINE, "Triggered: " + pair.getValue());
+            }
+        }
+        r.waitUntilNoActivity();
     }
 
-    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken) throws Exception {
-        return notifyCommit(r, notifyCommitToken, null);
+    public String notifyCommitWithResults(JenkinsRule r) throws Exception {
+        String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
+        return notifyCommitWithResults(r, notifyCommitToken, null);
+    }
+
+    public String notifyCommitWithResults(JenkinsRule r, @CheckForNull String notifyCommitToken) throws Exception {
+        return notifyCommitWithResults(r, notifyCommitToken, null);
     }
 
     /**
@@ -126,7 +140,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
      * @param notifyCommitToken token used for notifyCommit authentication
      * @param sha1 SHA-1 hash to included in notifyCommit
      **/
-    public String notifyCommit(JenkinsRule r, @CheckForNull String notifyCommitToken, @CheckForNull String sha1) throws Exception {
+    public String notifyCommitWithResults(JenkinsRule r, @CheckForNull String notifyCommitToken, @CheckForNull String sha1) throws Exception {
         boolean expectError = notifyCommitToken == null || notifyCommitToken.contains(INVALID_NOTIFY_COMMIT_TOKEN);
         synchronousPolling(r);
         JenkinsRule.WebClient webClient = r.createWebClient();

@@ -328,7 +328,7 @@ public class GitStepTest {
     public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         createJob();
-        String response = sampleRepo.notifyCommit(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN);
+        String response = sampleRepo.notifyCommitWithResults(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN);
         assertThat(response, containsString("Invalid access token"));
     }
 
@@ -337,7 +337,7 @@ public class GitStepTest {
     public void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         createJob();
-        String response = sampleRepo.notifyCommit(r, null);
+        String response = sampleRepo.notifyCommitWithResults(r, null);
         assertThat(response, containsString("An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details."));
     }
 
@@ -349,7 +349,7 @@ public class GitStepTest {
         createJob();
         /* sha1 is ignored because invalid access token is provided */
         String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
-        String response = sampleRepo.notifyCommit(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN, sha1);
+        String response = sampleRepo.notifyCommitWithResults(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN, sha1);
         assertThat(response, containsString("Invalid access token"));
     }
 
@@ -361,7 +361,7 @@ public class GitStepTest {
         createJob();
         /* sha1 is ignored because no access token is provided */
         String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
-        String response = sampleRepo.notifyCommit(r, null, sha1);
+        String response = sampleRepo.notifyCommitWithResults(r, null, sha1);
         assertThat(response, containsString("An access token is required when using the sha1 parameter"));
     }
 
