@@ -524,16 +524,11 @@ public class AbstractGitSCMSourceTest {
                 break;
             }
         }
-        final boolean CLI_GIT_LESS_THAN_280 = !sampleRepo.gitVersionAtLeast(2, 8);
-        if (duplicatePrimary && CLI_GIT_LESS_THAN_280) {
-            assertThat(refAction, is(nullValue()));
-        } else {
-            assertThat(refAction, notNullValue());
-            assertThat(refAction.getName(), is("new-primary"));
-            when(owner.getAction(GitRemoteHeadRefAction.class)).thenReturn(refAction);
-            when(owner.getActions(GitRemoteHeadRefAction.class)).thenReturn(Collections.singletonList(refAction));
-            actions = source.fetchActions(headByName.get("new-primary"), null, listener);
-        }
+        assertThat(refAction, notNullValue());
+        assertThat(refAction.getName(), is("new-primary"));
+        when(owner.getAction(GitRemoteHeadRefAction.class)).thenReturn(refAction);
+        when(owner.getActions(GitRemoteHeadRefAction.class)).thenReturn(Collections.singletonList(refAction));
+        actions = source.fetchActions(headByName.get("new-primary"), null, listener);
 
         PrimaryInstanceMetadataAction primary = null;
         for (Action a: actions) {
@@ -542,11 +537,7 @@ public class AbstractGitSCMSourceTest {
                 break;
             }
         }
-        if (duplicatePrimary && CLI_GIT_LESS_THAN_280) {
-            assertThat(primary, is(nullValue()));
-        } else {
-            assertThat(primary, notNullValue());
-        }
+        assertThat(primary, notNullValue());
     }
 
     @Issue("JENKINS-31155")
@@ -1070,11 +1061,6 @@ public class AbstractGitSCMSourceTest {
 
     @Test
     public void refLockAvoidedIfPruneTraitPresentOnNotFoundRetrieval() throws Exception {
-        /* Older git versions have unexpected behaviors with prune */
-        if (!sampleRepo.gitVersionAtLeast(1, 9, 0)) {
-            /* Do not distract warnings system by using assumeThat to skip tests */
-            return;
-        }
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
@@ -1089,11 +1075,6 @@ public class AbstractGitSCMSourceTest {
 
     @Test
     public void refLockAvoidedIfPruneTraitPresentOnTagRetrieval() throws Exception {
-        /* Older git versions have unexpected behaviors with prune */
-        if (!sampleRepo.gitVersionAtLeast(1, 9, 0)) {
-            /* Do not distract warnings system by using assumeThat to skip tests */
-            return;
-        }
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());

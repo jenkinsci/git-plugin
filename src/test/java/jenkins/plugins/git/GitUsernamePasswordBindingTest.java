@@ -213,7 +213,7 @@ public class GitUsernamePasswordBindingTest {
         if (isCliGitTool()) {
             if (isWindows()) {
                 assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
-            } else if (g.gitVersionAtLeast(2, 3, 0)) {
+            } else {
                 assertThat(fileContents, containsString("GIT_TERMINAL_PROMPT=false"));
             }
         }
@@ -262,7 +262,7 @@ public class GitUsernamePasswordBindingTest {
         if (isCliGitTool()) {
             if (isWindows()) {
                 assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
-            } else if (g.gitVersionAtLeast(2, 3, 0)) {
+            } else {
                 assertThat(fileContents, containsString("GIT_TERMINAL_PROMPT=false"));
             }
         }
