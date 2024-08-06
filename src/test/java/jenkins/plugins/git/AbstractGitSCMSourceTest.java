@@ -25,6 +25,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.util.StreamTaskListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1043,7 +1044,7 @@ public class AbstractGitSCMSourceTest {
 
         createRefLockEnvironment(listener, source);
 
-        final GitException e = assertThrows(GitException.class, () -> source.fetch("v1.2", listener, null));
+        final IOException e = assertThrows(IOException.class, () -> source.fetch("v1.2", listener, null));
         assertFalse(e.getMessage().contains("--prune"));
     }
 
@@ -1064,7 +1065,7 @@ public class AbstractGitSCMSourceTest {
 
         createRefLockEnvironment(listener, source);
 
-        final GitException e = assertThrows(GitException.class, () -> source.fetch("v1.2", listener, null));
+        final IOException e = assertThrows(IOException.class, () -> source.fetch("v1.2", listener, null));
         assertFalse(e.getMessage().contains("--prune"));
     }
 
