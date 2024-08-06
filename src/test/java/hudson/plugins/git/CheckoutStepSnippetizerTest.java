@@ -75,6 +75,8 @@ public class CheckoutStepSnippetizerTest {
     /* Tested values common to many tests */
     private final String remoteConfig = "userRemoteConfigs: [[url: '" + url + "']]";
 
+    public CheckoutStepSnippetizerTest() throws Exception {}
+
     @Test
     public void checkoutSimplest() throws Exception {
         tester.assertRoundTrip(checkoutStep, "checkout scmGit("

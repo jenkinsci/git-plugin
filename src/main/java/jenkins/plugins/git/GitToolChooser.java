@@ -7,6 +7,7 @@ import hudson.ExtensionPoint;
 import hudson.model.Item;
 import hudson.model.Node;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
@@ -102,7 +103,13 @@ public class GitToolChooser {
             if (cacheDir != null) {
                 Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
                 GitClient client = git.getClient();
-                if (client.hasGitRepo(false)) {
+                boolean hasGitRepo;
+                try {
+                    hasGitRepo = client.hasGitRepo(false);
+                } catch (GitException x) {
+                    throw new IOException(x);
+                }
+                if (hasGitRepo) {
                     long clientRepoSize = FileUtils.sizeOfDirectory(cacheDir) / 1024; // Conversion from Bytes to Kilo Bytes
                     if (clientRepoSize > sizeOfRepo) {
                         if (sizeOfRepo > 0) {

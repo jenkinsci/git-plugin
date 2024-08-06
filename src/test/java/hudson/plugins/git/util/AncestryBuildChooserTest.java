@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -115,7 +114,7 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     
     // Git Client implementation throws away committer date info so we have to do this manually..
     // Copied from JGitAPIImpl.commit(String message)
-    private void commit(String message, PersonIdent author, PersonIdent committer) {
+    private void commit(String message, PersonIdent author, PersonIdent committer) throws Exception {
         try (@SuppressWarnings("deprecation") // Local repository reference
              Repository repo = testGitClient.getRepository()) {
             CommitCommand cmd = Git.wrap(repo).commit().setMessage(message);
@@ -125,8 +124,6 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
                 // cmd.setCommitter(new PersonIdent(committer,new Date()));
                 cmd.setCommitter(committer);
             cmd.call();
-        } catch (GitAPIException e) {
-            throw new GitException(e);
         }
     }
     
