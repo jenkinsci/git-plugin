@@ -3,7 +3,6 @@ package hudson.plugins.git.extensions.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Set;
 
 import hudson.model.Result;
@@ -70,7 +69,7 @@ public class CloneOptionNoTagsTest extends GitSCMExtensionTest {
         assertTrue("there should no tags have been fetched from remote", allTagsInProjectWorkspace().isEmpty());
     }
 
-    private Set<String> allTagsInProjectWorkspace() throws IOException, InterruptedException {
+    private Set<String> allTagsInProjectWorkspace() throws Exception {
         GitClient git = Git.with(listener, null).in(project.getSomeWorkspace()).getClient();
         return git.getTagNames("*");
     }

@@ -29,6 +29,7 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.LocalBranch;
@@ -82,7 +83,12 @@ public final class GitStep extends SCMStep {
 
     @Override
     public SCM createSCM() {
-        return new GitSCM(GitSCM.createRepoList(url, credentialsId), Collections.singletonList(new BranchSpec("*/" + branch)), null, null, Collections.singletonList(new LocalBranch(branch)));
+        try {
+            return new GitSCM(GitSCM.createRepoList(url, credentialsId), Collections.singletonList(new BranchSpec("*/" + branch)), null, null, Collections.singletonList(new LocalBranch(branch)));
+        } catch (GitException x) {
+            // TODO interface defines no checked exception
+            throw new IllegalStateException(x);
+        }
     }
 
     @Extension

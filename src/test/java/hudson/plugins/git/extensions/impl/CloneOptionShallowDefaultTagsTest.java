@@ -8,7 +8,6 @@ import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.extensions.GitSCMExtension;
 
-import java.io.IOException;
 import java.util.Set;
 
 import org.jenkinsci.plugins.gitclient.Git;
@@ -51,7 +50,7 @@ public class CloneOptionShallowDefaultTagsTest extends GitSCMExtensionTest {
         assertEquals("tag " + tagName + " should have been cloned from remote", 1, tagsInProjectWorkspaceWithName(tagName).size());
     }
 
-    private Set<String> tagsInProjectWorkspaceWithName(String tagPattern) throws IOException, InterruptedException {
+    private Set<String> tagsInProjectWorkspaceWithName(String tagPattern) throws Exception {
         GitClient git = Git.with(listener, null).in(project.getSomeWorkspace()).getClient();
         return git.getTagNames(tagPattern);
     }

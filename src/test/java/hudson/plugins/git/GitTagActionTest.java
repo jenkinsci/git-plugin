@@ -290,8 +290,12 @@ public class GitTagActionTest {
             @Override
             protected GitClient getGitClient(TaskListener listener, EnvVars environment, FilePath workspace) throws IOException, InterruptedException {
                 GitClient gitClient = super.getGitClient(listener, environment, workspace);
-                gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
-                gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+                try {
+                    gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+                    gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+                } catch (GitException x) {
+                    throw new IOException(x);
+                }
                 return gitClient;
             }
         }

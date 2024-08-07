@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.UserRemoteConfig;
@@ -509,11 +510,16 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             GitRefSCMHead gitHead = (GitRefSCMHead) scmHead;
             withRefSpec(gitHead.getRef());
         }
-        return new GitSCM(
-                asRemoteConfigs(),
-                Collections.singletonList(new BranchSpec(head().getName())),
-                browser(), gitTool(),
-                extensions);
+        try {
+            return new GitSCM(
+                    asRemoteConfigs(),
+                    Collections.singletonList(new BranchSpec(head().getName())),
+                    browser(), gitTool(),
+                    extensions);
+        } catch (GitException x) {
+            // TODO interface defines no checked exception
+            throw new IllegalStateException(x);
+        }
     }
 
     /**

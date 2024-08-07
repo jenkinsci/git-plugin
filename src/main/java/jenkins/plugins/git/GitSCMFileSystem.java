@@ -183,6 +183,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 throw new IOException("Closed");
             }
             return client.withRepository((Repository repository, VirtualChannel virtualChannel) -> function.invoke(repository));
+        } catch (GitException x) {
+            throw new IOException(x);
         } finally {
             cacheLock.unlock();
         }
@@ -219,14 +221,14 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 changelog.to(out).max(GitSCM.MAX_CHANGELOG).execute();
                 executed = true;
                 return !commitId.equals(fromCommitId);
-            } catch (GitException ge) {
-                throw new IOException("Unable to retrieve changes", ge);
             } finally {
                 if (!executed) {
                     changelog.abort();
                 }
                 changeLogStream.close();
             }
+        } catch (GitException ge) {
+            throw new IOException("Unable to retrieve changes", ge);
         } finally {
             cacheLock.unlock();
         }
@@ -407,6 +409,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
+            } catch (GitException x) {
+                throw new IOException(x);
             } finally {
                 cacheLock.unlock();
             }
@@ -452,6 +456,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, gitSCMSource.getRemote(), Constants.R_REMOTES+remoteName+"/"+head.getName(),
                         (AbstractGitSCMSource.SCMRevisionImpl) rev);
+            } catch (GitException x) {
+                throw new IOException(x);
             } finally {
                 cacheLock.unlock();
             }

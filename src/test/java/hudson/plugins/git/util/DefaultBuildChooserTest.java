@@ -157,7 +157,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         assertThat(candidateRevisions, hasSize(1));
     }
 
-    private void createRefsWithPredefinedOrderInHashSet(String ref1, String ref2) throws InterruptedException {
+    private void createRefsWithPredefinedOrderInHashSet(String ref1, String ref2) throws Exception {
         ObjectId commit1 = testGitClient.revParse("HEAD");
         testGitClient.ref(ref1);
         testGitClient.commit("Commit");

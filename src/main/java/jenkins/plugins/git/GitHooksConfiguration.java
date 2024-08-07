@@ -28,6 +28,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.PersistentDescriptor;
+import hudson.plugins.git.GitException;
 import hudson.remoting.Channel;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
@@ -85,12 +86,12 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
         return GlobalConfigurationCategory.get(GlobalConfigurationCategory.Security.class);
     }
 
-    public static void configure(GitClient client) throws IOException, InterruptedException {
+    public static void configure(GitClient client) throws GitException, IOException, InterruptedException {
         final GitHooksConfiguration configuration = GitHooksConfiguration.get();
         configure(client, configuration.isAllowedOnController(), configuration.isAllowedOnAgents());
     }
 
-    public static void configure(GitClient client, final boolean allowedOnController, final boolean allowedOnAgents) throws IOException, InterruptedException {
+    public static void configure(GitClient client, final boolean allowedOnController, final boolean allowedOnAgents) throws GitException, IOException, InterruptedException {
         if (Channel.current() == null) {
             //Running on controller
             try (Repository ignored = client.getRepository()){
@@ -106,7 +107,7 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
         }
     }
 
-    public static void configure(GitClient client, final boolean allowed) throws IOException, InterruptedException {
+    public static void configure(GitClient client, final boolean allowed) throws GitException, IOException, InterruptedException {
         if (!allowed) {
             client.withRepository((repo, channel) -> {
                 disable(repo);

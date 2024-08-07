@@ -26,7 +26,6 @@ package jenkins.plugins.git;
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.Random;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -58,14 +57,14 @@ public class GitHooksConfigurationTest {
     }
 
     @Before
-    public void setUp() throws IOException, InterruptedException {
+    public void setUp() throws Exception {
         configuration = GitHooksConfiguration.get();
         Git git = Git.with(TaskListener.NULL, new EnvVars());
         client = git.getClient();
     }
 
     @After
-    public void resetHooksPath() throws IOException, InterruptedException {
+    public void resetHooksPath() throws Exception {
         client.withRepository((repo, channel) -> {
             final StoredConfig repoConfig = repo.getConfig();
             repoConfig.unset("core", null, "hooksPath");
@@ -118,7 +117,7 @@ public class GitHooksConfigurationTest {
         assertThat(GitHooksConfiguration.get().getCategory(), is(configuration.getCategory()));
     }
 
-    private void setCoreHooksPath(String hooksPath) throws IOException, InterruptedException {
+    private void setCoreHooksPath(String hooksPath) throws Exception {
         /* Configure a core.hook with path `hooksPath` */
         client.withRepository((repo, channel) -> {
             final StoredConfig repoConfig = repo.getConfig();
@@ -128,7 +127,7 @@ public class GitHooksConfigurationTest {
         });
     }
 
-    private String getCoreHooksPath() throws IOException, InterruptedException {
+    private String getCoreHooksPath() throws Exception {
         String hooksPath = client.withRepository((repo, channel) -> {
             final StoredConfig repoConfig = repo.getConfig();
             return repoConfig.getString("core", null, "hooksPath");

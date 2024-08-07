@@ -24,7 +24,7 @@ public class TFS2013GitRepositoryBrowserTest {
     private static final GitChangeSetSample sample = new GitChangeSetSample(false);
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         GitSCM scm = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
                 new ArrayList<>(),

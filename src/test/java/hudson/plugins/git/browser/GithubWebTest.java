@@ -136,7 +136,7 @@ public class GithubWebTest {
     }
 
     @Test
-    public void testGuessBrowser() {
+    public void testGuessBrowser() throws Exception {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");
         assertGuessURL("https://github.com/kohsuke/msv/", "https://github.com/kohsuke/msv/");
         assertGuessURL("https://github.com/kohsuke/msv", "https://github.com/kohsuke/msv/");
@@ -153,7 +153,7 @@ public class GithubWebTest {
         }
     }
 
-    private void assertGuessURL(String repo, String web) {
+    private void assertGuessURL(String repo, String web) throws Exception {
         RepositoryBrowser<?> guess = new GitSCM(repo).guessBrowser();
         String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
         assertEquals("For repo '" + repo + "':", web, actual);

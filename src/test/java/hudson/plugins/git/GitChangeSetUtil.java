@@ -130,7 +130,7 @@ public class GitChangeSetUtil {
         }
     }
 
-    public static GitChangeSet genChangeSet(ObjectId sha1, String gitImplementation, boolean authorOrCommitter) throws IOException, InterruptedException {
+    public static GitChangeSet genChangeSet(ObjectId sha1, String gitImplementation, boolean authorOrCommitter) throws GitException, IOException, InterruptedException {
         EnvVars envVars = new EnvVars();
         TaskListener listener = StreamTaskListener.fromStdout();
         GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(gitImplementation).getClient();

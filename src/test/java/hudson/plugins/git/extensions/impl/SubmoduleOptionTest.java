@@ -260,7 +260,7 @@ public class SubmoduleOptionTest {
 
     @Test
     @Issue("JENKINS-64382")
-    public void testDetermineSupportForJGit() {
+    public void testDetermineSupportForJGit() throws Exception {
         /* JGit was incorrectly used when submodule option was added with no items checked. */
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
         scm.getExtensions().add(submoduleOption);
@@ -271,7 +271,7 @@ public class SubmoduleOptionTest {
 
     @Test
     @Issue("JENKINS-64382")
-    public void testDetermineSupportForJGitRecursiveSubmodules() {
+    public void testDetermineSupportForJGitRecursiveSubmodules() throws Exception {
         /* JGit was incorrectly used when submodule option was added with only recursive submodule checked. */
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
         submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
@@ -287,7 +287,7 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testDetermineSupportForJGitThreads() {
+    public void testDetermineSupportForJGitThreads() throws Exception {
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
         Integer threads = randomSmallNonNegativeIntegerOrNull();
         submoduleOption.setThreads(threads);

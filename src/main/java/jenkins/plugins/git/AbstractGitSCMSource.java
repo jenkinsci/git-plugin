@@ -314,13 +314,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     private interface Retriever<T> {
-        default T run(GitClient client, String remoteName) throws IOException, InterruptedException {
+        default T run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
             throw new AbstractMethodError("Not implemented");
         }
     }
 
     private interface Retriever2<T> extends Retriever<T> {
-        T run(GitClient client, String remoteName, FetchCommand fetch) throws IOException, InterruptedException;
+        T run(GitClient client, String remoteName, FetchCommand fetch) throws GitException, IOException, InterruptedException;
     }
 
     @NonNull
@@ -415,6 +415,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 return ((Retriever2<T>)retriever).run(client, remoteName, fetchCommand);
             }
             return retriever.run(client, remoteName);
+        } catch (GitException x) {
+            throw new IOException(x);
         } finally {
             cacheLock.unlock();
         }
@@ -438,7 +440,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         //TODO write test using GitRefSCMHead
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
-                              public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                              public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
                                   if (head instanceof GitTagSCMHead) {
                                       try {
                                           ObjectId objectId = client.revParse(Constants.R_TAGS + head.getName());
@@ -608,7 +610,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         doRetrieve(new Retriever2<Void>() {
             @Override
-            public Void run(GitClient client, String remoteName, FetchCommand fetch) throws IOException, InterruptedException {
+            public Void run(GitClient client, String remoteName, FetchCommand fetch) throws GitException, IOException, InterruptedException {
                 final Map<String, ObjectId> remoteReferences;
                 if (context.wantBranches() || context.wantTags() || context.wantOtherRefs()) {
                     listener.getLogger().println("Listing remote references...");
@@ -878,9 +880,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         listener.getLogger().printf("Attempting to resolve %s from remote references...%n", revision);
         boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
         boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
-        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
-                getRemote(), null, headsOnly, tagsOnly
-        );
+        Map<String, ObjectId> remoteReferences;
+        try {
+            remoteReferences = client.getRemoteReferences(getRemote(), null, headsOnly, tagsOnly);
+        } catch (GitException x) {
+            throw new IOException(x);
+        }
         String tagName = null;
         Set<String> shortNameMatches = new TreeSet<>();
         String shortHashMatch = null;
@@ -998,7 +1003,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             final String tagRef = Constants.R_TAGS+tagName;
             return doRetrieve(new Retriever<SCMRevision>() {
                                   @Override
-                                  public SCMRevision run(GitClient client, String remoteName) throws IOException,
+                                  public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException,
                                           InterruptedException {
                                       try (@SuppressWarnings("deprecation") // Local repo reference
                                            final Repository repository = client.getRepository();
@@ -1024,7 +1029,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
-                              public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                              public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
                                   ObjectId objectId;
                                   String hash;
                                   try {
@@ -1106,9 +1111,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             listener.getLogger().println("Listing remote references...");
             boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
             boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
-            Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
-                    getRemote(), null, headsOnly, tagsOnly
-            );
+            Map<String, ObjectId> remoteReferences;
+            try {
+                remoteReferences = client.getRemoteReferences(getRemote(), null, headsOnly, tagsOnly);
+            } catch (GitException x) {
+                throw new IOException(x);
+            }
             for (String name : remoteReferences.keySet()) {
                 if (context.wantBranches()) {
                     if (name.startsWith(Constants.R_HEADS)) {
@@ -1173,7 +1181,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         GitClient client = git.getClient();
         client.addDefaultCredentials(getCredentials());
-        Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+        Map<String, String> symrefs;
+        try {
+            symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+        } catch (GitException x) {
+            throw new IOException(x);
+        }
         if (symrefs.containsKey(Constants.HEAD)) {
             // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
             String target = symrefs.get(Constants.HEAD);
@@ -1193,7 +1206,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is
         // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and
         // Ubuntu 16)
-        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+        Map<String, ObjectId> remoteReferences;
+        try {
+            remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+        } catch (GitException x) {
+            throw new IOException(x);
+        }
         if (remoteReferences.containsKey(Constants.HEAD)) {
             ObjectId head = remoteReferences.get(Constants.HEAD);
             Set<String> names = new TreeSet<>();

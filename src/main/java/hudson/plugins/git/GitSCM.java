@@ -182,7 +182,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param repositoryUrl git repository URL
      *      Repository URL to clone from.
      */
-    public GitSCM(String repositoryUrl) {
+    public GitSCM(String repositoryUrl) throws GitException {
         this(
                 createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
@@ -197,7 +197,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Collection<SubmoduleConfig> submoduleCfg,
             @CheckForNull GitRepositoryBrowser browser,
             @CheckForNull String gitTool,
-            List<GitSCMExtension> extensions) {
+            List<GitSCMExtension> extensions) throws GitException {
         this(userRemoteConfigs, branches, browser, gitTool, extensions);
     }
 
@@ -207,7 +207,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BranchSpec> branches,
             @CheckForNull GitRepositoryBrowser browser,
             @CheckForNull String gitTool,
-            List<GitSCMExtension> extensions) {
+            List<GitSCMExtension> extensions) throws GitException {
 
         // moved from createBranches
         if (branches == null || branches.isEmpty()) {
@@ -265,7 +265,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @SuppressWarnings("deprecation") // `source` field is deprecated but required
-    public Object readResolve() throws IOException {
+    public Object readResolve() throws IOException, GitException {
         // Migrate data
 
         // Default unspecified to v0
@@ -491,7 +491,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Deprecated
-    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build) throws IOException, InterruptedException {
+    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build) throws GitException, IOException, InterruptedException {
         return getParamExpandedRepos(build, new LogTaskListener(LOGGER, Level.INFO));
     }
 
@@ -505,7 +505,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      * @return can be empty but never null.
      */
-    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
+    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build, TaskListener listener) throws GitException, IOException, InterruptedException {
         List<RemoteConfig> expandedRepos = new ArrayList<>();
 
         EnvVars env = build.getEnvironment(listener);
@@ -523,7 +523,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param remoteRepository Remote repository with parameters
      * @return remote repository with expanded parameters
      */
-    public RemoteConfig getParamExpandedRepo(EnvVars env, RemoteConfig remoteRepository) {
+    public RemoteConfig getParamExpandedRepo(EnvVars env, RemoteConfig remoteRepository) throws GitException {
         List<RefSpec> refSpecs = getRefSpecs(remoteRepository, env);
     	return newRemoteConfig(
                 getParameterString(remoteRepository.getName(), env),
@@ -693,7 +693,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public static final Pattern GIT_REF = Pattern.compile("^(refs/[^/]+)/(.+)");
 
-    private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws IOException, InterruptedException {
+    private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws GitException, IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Jenkins ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
@@ -836,7 +836,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace) throws GitException, IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
@@ -859,7 +859,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace, UnsupportedCommand postBuildUnsupportedCommand) throws GitException, IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
@@ -870,12 +870,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @NonNull
-    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws) throws IOException, InterruptedException {
+    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws) throws GitException, IOException, InterruptedException {
         return createClient(listener, environment, build, n, ws, null);
     }
 
     @NonNull
-    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
+    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws GitException, IOException, InterruptedException {
 
         if (postBuildUnsupportedCommand == null) {
             /* UnsupportedCommand supports JGit by default */
@@ -976,7 +976,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void fetchFrom(GitClient git,
             @CheckForNull Run<?, ?> run,
             TaskListener listener,
-            RemoteConfig remoteRepository) throws InterruptedException, IOException {
+            RemoteConfig remoteRepository) throws GitException, InterruptedException, IOException {
 
         boolean first = true;
         for (URIish url : remoteRepository.getURIs()) {
@@ -999,7 +999,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec... refSpec) {
+    private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec... refSpec) throws GitException {
 
         try {
             Config repoConfig = new Config();
@@ -1115,7 +1115,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final @NonNull BuildData buildData,
                                               final EnvVars environment,
                                               final @NonNull GitClient git,
-                                              final @NonNull TaskListener listener) throws IOException, InterruptedException {
+                                              final @NonNull TaskListener listener) throws GitException, IOException, InterruptedException {
         PrintStream log = listener.getLogger();
         Collection<Revision> candidates = Collections.emptyList();
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
@@ -1195,7 +1195,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * By the end of this method, remote refs are updated to include all the commits found in the remote servers.
      */
-    private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
+    private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws GitException, IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
         boolean removeSecondFetch = false;
@@ -1273,7 +1273,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public void checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline)
             throws IOException, InterruptedException {
+        try {
+            _checkout(build, launcher, workspace, listener, changelogFile, baseline);
+        } catch (GitException x) {
+            throw new IOException(x);
+        }
+    }
 
+    private void _checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws GitException, IOException, InterruptedException {
         if (!ALLOW_LOCAL_CHECKOUT && !workspace.isRemote()) {
             abortIfSourceIsLocal();
         }
@@ -1359,7 +1366,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // Needs to be after the checkout so that revToBuild is in the workspace
         try {
             printCommitMessageToLog(listener, git, revToBuild);
-        } catch (IOException | ArithmeticException | GitException ge) {
+        } catch (IOException | ArithmeticException ge) {
             // JENKINS-45729 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-46628 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-62710 reports a JGit arithmetic exception on an older Java 8 system.
@@ -1416,7 +1423,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     private void printCommitMessageToLog(TaskListener listener, GitClient git, final Build revToBuild)
-            throws IOException {
+            throws GitException, IOException {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
@@ -1469,7 +1476,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws GitException, IOException, InterruptedException {
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
@@ -1814,7 +1821,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,
                 String[] repoNames,
-                String[] refs) throws IOException {
+                String[] refs) throws GitException, IOException {
 
             List<RemoteConfig> remoteRepositories;
             Config repoConfig = new Config();
@@ -2069,7 +2076,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */
-    protected FilePath workingDirectory(Job<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException {
+    protected FilePath workingDirectory(Job<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws GitException, IOException, InterruptedException {
         // JENKINS-10880: workspace can be null
         if (workspace == null) {
             return null;
