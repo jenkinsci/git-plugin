@@ -286,40 +286,68 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         static class HeadNameResult {
-            final String headName;
-            final String prefix;
+            final String remoteHeadName;
+            final String refspec;
+            final SCMRevision rev;
 
-            private HeadNameResult(String headName, String prefix) {
-                this.headName = headName;
-                this.prefix = prefix;
+            private HeadNameResult(String remoteHeadName, String refspec, SCMRevision rev) {
+                this.remoteHeadName = remoteHeadName;
+                this.refspec = refspec;
+                this.rev = rev;
             }
 
             static HeadNameResult calculate(@NonNull BranchSpec branchSpec,
                                             @CheckForNull SCMRevision rev,
-                                            @CheckForNull EnvVars env) {
+                                            @CheckForNull String refSpec,
+                                            @CheckForNull EnvVars env,
+                                            @CheckForNull String remoteName) {
+
                 String branchSpecExpandedName = branchSpec.getName();
                 if (env != null) {
                     branchSpecExpandedName = env.expand(branchSpecExpandedName);
                 }
+                String refspecExpandedName = refSpec;
+                if (env != null) {
+                    refspecExpandedName = env.expand(refspecExpandedName);
+                }
 
+                // default to a branch (refs/heads)
                 String prefix = Constants.R_HEADS;
+                // check for a tag
                 if (branchSpecExpandedName.startsWith(Constants.R_TAGS)) {
                     prefix = Constants.R_TAGS;
+                } else if (branchSpecExpandedName.equals(Constants.FETCH_HEAD) && StringUtils.isNotBlank(refspecExpandedName)) {
+                    // check for FETCH_HEAD
+                    prefix = null;
+                } else if (branchSpecExpandedName.matches("[0-9a-f]{6,40}")) {
+                    // commit-id
+                    prefix = null;
+                    rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead(branchSpecExpandedName), branchSpecExpandedName);
                 }
 
-                String headName;
+                String calculatedHeadName = branchSpecExpandedName;
                 if (rev != null && env != null) {
-                    headName = env.expand(rev.getHead().getName());
-                } else {
-                    if (branchSpecExpandedName.startsWith(prefix)) {
-                        headName = branchSpecExpandedName.substring(prefix.length());
-                    } else if (branchSpecExpandedName.startsWith("*/")) {
-                        headName = branchSpecExpandedName.substring(2);
+                    calculatedHeadName = env.expand(rev.getHead().getName());
+                } else if (prefix != null && branchSpecExpandedName.startsWith(prefix)) {
+                    calculatedHeadName = branchSpecExpandedName.substring(prefix.length());
+                } else if (branchSpecExpandedName.startsWith("*/")) {
+                    calculatedHeadName = branchSpecExpandedName.substring(2);
+                }
+
+                if (StringUtils.isBlank(refspecExpandedName)) {
+                    if (prefix != null && prefix.equals(Constants.R_TAGS)) {
+                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":" + prefix + calculatedHeadName;
                     } else {
-                        headName = branchSpecExpandedName;
+                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":" + Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
                     }
                 }
-                return new HeadNameResult(headName, prefix);
+
+                String remoteHead = calculatedHeadName;
+                if (prefix != null && prefix.equals(Constants.R_HEADS)) {
+                    remoteHead = Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
+                }
+
+                return new HeadNameResult(remoteHead, refspecExpandedName, rev);
             }
         }
 
@@ -399,14 +427,11 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
 
-                HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, env);
+                HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, config.getRefspec(), env, remoteName);
+                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(headNameResult.refspec))).execute();
 
-                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
-                        "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                + headNameResult.headName))).execute();
-
-                listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
+                listener.getLogger().println("Done with " + remoteName + " using " + headNameResult.remoteHeadName + ".");
+                return new GitSCMFileSystem(client, remote, headNameResult.remoteHeadName, (AbstractGitSCMSource.SCMRevisionImpl) headNameResult.rev);
             } finally {
                 cacheLock.unlock();
             }
