@@ -94,6 +94,8 @@ public class GitUsernamePasswordBindingTest {
 
     private final String password;
 
+    private final String hostname;
+
     private final GitTool gitToolInstance;
 
     private final String credentialID = DigestUtils.sha256Hex(("Git Usernanme and Password Binding").getBytes(StandardCharsets.UTF_8));
@@ -138,6 +140,7 @@ public class GitUsernamePasswordBindingTest {
     public GitUsernamePasswordBindingTest(String username, String password, GitTool gitToolInstance) {
         this.username = username;
         this.password = password;
+        this.hostname = "hostname";
         this.gitToolInstance = gitToolInstance;
     }
 
@@ -152,7 +155,7 @@ public class GitUsernamePasswordBindingTest {
         CredentialsProvider.lookupStores(r.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
 
         //GitUsernamePasswordBinding instance
-        gitCredBind = new GitUsernamePasswordBinding(gitToolInstance.getName(), credentials.getId());
+        gitCredBind = new GitUsernamePasswordBinding(gitToolInstance.getName(), credentials.getId(), hostname);
         assertThat(gitCredBind.type(), is(StandardUsernamePasswordCredentials.class));
 
         //Setting Git Tool
@@ -175,7 +178,7 @@ public class GitUsernamePasswordBindingTest {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject prj = r.createFreeStyleProject();
         prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
-                singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID))));
+                singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID, hostname))));
         prj.getBuildersList().add(isWindows() ? new BatchFile(batchCheck(isCliGitTool())) : new Shell(shellCheck()));
         r.configRoundtrip((Item) prj);
 
@@ -189,6 +192,7 @@ public class GitUsernamePasswordBindingTest {
         }else {
             assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(""));
         }
+        assertThat(((GitUsernamePasswordBinding) binding).getHostName(), equalTo(hostname));
 
         FreeStyleBuild b = r.buildAndAssertSuccess(prj);
         if(credentials.isUsernameSecret()) {
@@ -279,7 +283,7 @@ public class GitUsernamePasswordBindingTest {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
         FreeStyleProject prj = r.createFreeStyleProject();
         prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
-                singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID))));
+                singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(), credentialID, hostname))));
         prj.getBuildersList().add(isWindows() ? new BatchFile(batchCheck(false)) : new Shell(shellCheck()));
         r.configRoundtrip((Item) prj);
         SecretBuildWrapper wrapper = prj.getBuildWrappersList().get(SecretBuildWrapper.class);
@@ -327,6 +331,19 @@ public class GitUsernamePasswordBindingTest {
             assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Username type"));
             assertThat(tempScriptFile.readToString(), containsString("IF %ARG:~0,8%==Password type"));
         }
+    }
+
+    @Test
+    public void test_GenerateGitStore_write() throws IOException, InterruptedException {
+        GitUsernamePasswordBinding.GenerateGitStore tempGenGitStore = new GitUsernamePasswordBinding.GenerateGitStore(this.username, this.password, this.hostname, credentials.getId());
+        assertThat(tempGenGitStore.type(), is(StandardUsernamePasswordCredentials.class));
+        FilePath tempStoreFile = tempGenGitStore.write(credentials, rootFilePath);
+        if (!isWindows()) {
+            assertThat(tempStoreFile.mode(), is(0500));
+        }
+        assertThat(tempStoreFile.readToString(), containsString(this.username));
+        assertThat(tempStoreFile.readToString(), containsString(this.password));
+        assertThat(tempStoreFile.readToString(), containsString(this.hostname));
     }
 
     /**
