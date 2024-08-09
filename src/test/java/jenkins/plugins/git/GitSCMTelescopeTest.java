@@ -95,7 +95,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testOf_GitSCM() {
+    public void testOf_GitSCM() throws Exception {
         /* Testing GitSCMTelescope.of() for non null return needs JenkinsRule */
         GitSCM multiBranchSource = new GitSCM(remote);
         GitSCMTelescope telescopeOfMultiBranchSource = GitSCMTelescope.of(multiBranchSource);
@@ -133,7 +133,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
      * @param repoUrl URL to the repository for the returned GitSCM
      * @return GitSCM with a single branch in its definition
      */
-    private GitSCM getSingleBranchSource(String repoUrl) {
+    private GitSCM getSingleBranchSource(String repoUrl) throws Exception {
         UserRemoteConfig remoteConfig = new UserRemoteConfig(
                 repoUrl,
                 "origin",

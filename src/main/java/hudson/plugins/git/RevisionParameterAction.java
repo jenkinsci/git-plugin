@@ -87,11 +87,11 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     }   
 
     @Deprecated
-    public Revision toRevision(IGitAPI git) throws InterruptedException {
+    public Revision toRevision(IGitAPI git) throws GitException, InterruptedException {
         return toRevision((GitClient) git);
     }
 
-    public Revision toRevision(GitClient git) throws InterruptedException {
+    public Revision toRevision(GitClient git) throws GitException, InterruptedException {
     	if (revision != null) {
     		return revision;
     	}

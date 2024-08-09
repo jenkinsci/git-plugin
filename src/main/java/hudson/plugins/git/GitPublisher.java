@@ -153,7 +153,7 @@ public class GitPublisher extends Recorder implements Serializable {
             EnvVars environment,
             AbstractBuild<?, ?> build,
             UnsupportedCommand cmd)
-            throws IOException, InterruptedException {
+            throws GitException, IOException, InterruptedException {
         return gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
     }
     
@@ -190,7 +190,12 @@ public class GitPublisher extends Recorder implements Serializable {
 
             UnsupportedCommand cmd = new UnsupportedCommand();
             cmd.gitPublisher(true);
-            final GitClient git  = getGitClient(gitSCM, listener, environment, build, cmd);
+            final GitClient git;
+            try {
+                git = getGitClient(gitSCM, listener, environment, build, cmd);
+            } catch (GitException x) {
+                throw new IOException(x);
+            }
 
             URIish remoteURI;
 

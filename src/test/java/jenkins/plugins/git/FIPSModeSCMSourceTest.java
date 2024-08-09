@@ -2,8 +2,8 @@ package jenkins.plugins.git;
 
 import hudson.logging.LogRecorder;
 import hudson.model.TaskListener;
-import hudson.plugins.git.GitException;
 import hudson.util.StreamTaskListener;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.RealJenkinsRule;
@@ -29,7 +29,7 @@ public class FIPSModeSCMSourceTest {
         rule.then( r -> {
             GitSCMSource source = new GitSCMSource("http://insecure-repo");
             TaskListener listener = StreamTaskListener.fromStderr();
-            assertThrows("expected exception as repo doesn't exist", GitException.class, () -> source.fetch(listener));
+            assertThrows("expected exception as repo doesn't exist", IOException.class, () -> source.fetch(listener));
 
             LogRecorder logRecorder = new LogRecorder(AbstractGitSCMSource.class.getName());
             LogRecorder.Target target = new LogRecorder.Target(AbstractGitSCMSource.class.getName(), Level.SEVERE);

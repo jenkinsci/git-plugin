@@ -65,7 +65,7 @@ public class GitChangeSetPluginHistoryTest {
         "edf066f3",
     };
 
-    public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, String sha1String) throws IOException, InterruptedException {
+    public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, String sha1String) throws Exception {
         this.sha1 = ObjectId.fromString(sha1String);
         StringWriter stringWriter = new StringWriter();
         git.changelog().includes(sha1).max(1).to(stringWriter).execute();
@@ -95,7 +95,7 @@ public class GitChangeSetPluginHistoryTest {
     }
 
     @Parameterized.Parameters(name = "{2}-{1}")
-    public static Collection<Object[]> generateData() throws IOException, InterruptedException {
+    public static Collection<Object[]> generateData() throws Exception {
         List<Object[]> args = new ArrayList<>();
         String[] implementations = new String[]{"git", "jgit"};
         boolean[] choices = {true, false};

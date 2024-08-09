@@ -32,7 +32,7 @@ public class TestGitRepo {
 	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
 	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
     
-    public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
+    public TestGitRepo(String name, File tmpDir, TaskListener listener) throws Exception {
 		this.name = name;
 		this.listener = listener;
 		
