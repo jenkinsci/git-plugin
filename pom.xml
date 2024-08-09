@@ -140,7 +140,7 @@
       <optional>true</optional>
       <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.440.x and 2.452.x lines -->
       <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
-      <version>822.824.v14451b_c0fd42</version>
+      <version>832.va_66e270d2946</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
