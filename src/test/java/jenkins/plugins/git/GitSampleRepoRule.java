@@ -81,7 +81,12 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         run(true, tmp.getRoot(), "git", "version");
         checkGlobalConfig();
         git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
-        git("branch", "-m", "master");
+        if (gitVersionAtLeast(2, 30)) {
+            // Force branch name to master even if system default is not master
+            // Fails on git 2.25 and earlier (Ubuntu 20.04, etc.)
+            // Works on git 2.30 and later
+            git("branch", "-m", "master");
+        }
         write("file", "");
         git("add", "file");
         git("config", "user.name", "Git SampleRepoRule");
