@@ -101,6 +101,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
+import jenkins.security.FIPS140;
 import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang.StringUtils;
@@ -329,13 +330,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     private interface Retriever<T> {
-        default T run(GitClient client, String remoteName) throws IOException, InterruptedException {
+        default T run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
             throw new AbstractMethodError("Not implemented");
         }
     }
 
     private interface Retriever2<T> extends Retriever<T> {
-        T run(GitClient client, String remoteName, FetchCommand fetch) throws IOException, InterruptedException;
+        T run(GitClient client, String remoteName, FetchCommand fetch) throws GitException, IOException, InterruptedException;
     }
 
     @NonNull
@@ -367,6 +368,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return doRetrieve(retriever, context, listener, prune, getOwner(), delayFetch);
     }
 
+    /**
+     * Returns false if a non-TLS protocol is used when FIPS mode is enabled.
+     * @param credentialsId any credentials (can be {@code null})
+     * @param remoteUrl the git remote url
+     * @return {@code false} if using any credentials with a non TLS protocol with FIPS mode activated
+     * @see FIPS140#useCompliantAlgorithms()
+     */
+    public static boolean isFIPSCompliantTLS(String credentialsId, String remoteUrl) {
+        return !FIPS140.useCompliantAlgorithms() || StringUtils.isEmpty(credentialsId) || (!StringUtils.startsWith(remoteUrl, "http:") && !StringUtils.startsWith(remoteUrl, "git:"));
+    }
+
     @NonNull
     private <T, C extends GitSCMSourceContext<C, R>, R extends GitSCMSourceRequest> T doRetrieve(Retriever<T> retriever,
                                                                                                  @NonNull C context,
@@ -375,6 +387,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                                                                                  @CheckForNull Item retrieveContext,
                                                                                                  boolean delayFetch)
             throws IOException, InterruptedException {
+        if (!isFIPSCompliantTLS(this.getCredentialsId(), this.getRemote())) {
+            listener.fatalError(Messages.git_fips_url_notsecured());
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
+
         String cacheEntry = getCacheEntry();
         Lock cacheLock = getCacheLock(cacheEntry);
         cacheLock.lock();
@@ -413,6 +431,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 return ((Retriever2<T>)retriever).run(client, remoteName, fetchCommand);
             }
             return retriever.run(client, remoteName);
+        } catch (GitException x) {
+            throw new IOException(x);
         } finally {
             cacheLock.unlock();
         }
@@ -436,7 +456,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         //TODO write test using GitRefSCMHead
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
-                              public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                              public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
                                   if (head instanceof GitTagSCMHead) {
                                       try {
                                           ObjectId objectId = client.revParse(Constants.R_TAGS + head.getName());
@@ -606,7 +626,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         doRetrieve(new Retriever2<Void>() {
             @Override
-            public Void run(GitClient client, String remoteName, FetchCommand fetch) throws IOException, InterruptedException {
+            public Void run(GitClient client, String remoteName, FetchCommand fetch) throws GitException, IOException, InterruptedException {
                 final Map<String, ObjectId> remoteReferences;
                 if (context.wantBranches() || context.wantTags() || context.wantOtherRefs()) {
                     listener.getLogger().println("Listing remote references...");
@@ -876,9 +896,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         listener.getLogger().printf("Attempting to resolve %s from remote references...%n", revision);
         boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
         boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
-        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
-                getRemote(), null, headsOnly, tagsOnly
-        );
+        Map<String, ObjectId> remoteReferences;
+        try {
+            remoteReferences = client.getRemoteReferences(getRemote(), null, headsOnly, tagsOnly);
+        } catch (GitException x) {
+            throw new IOException(x);
+        }
         String tagName = null;
         Set<String> shortNameMatches = new TreeSet<>();
         String shortHashMatch = null;
@@ -996,7 +1019,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             final String tagRef = Constants.R_TAGS+tagName;
             return doRetrieve(new Retriever<SCMRevision>() {
                                   @Override
-                                  public SCMRevision run(GitClient client, String remoteName) throws IOException,
+                                  public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException,
                                           InterruptedException {
                                       try (@SuppressWarnings("deprecation") // Local repo reference
                                            final Repository repository = client.getRepository();
@@ -1022,7 +1045,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
-                              public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                              public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
                                   ObjectId objectId;
                                   String hash;
                                   try {
@@ -1104,9 +1127,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             listener.getLogger().println("Listing remote references...");
             boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
             boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
-            Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
-                    getRemote(), null, headsOnly, tagsOnly
-            );
+            Map<String, ObjectId> remoteReferences;
+            try {
+                remoteReferences = client.getRemoteReferences(getRemote(), null, headsOnly, tagsOnly);
+            } catch (GitException x) {
+                throw new IOException(x);
+            }
             for (String name : remoteReferences.keySet()) {
                 if (context.wantBranches()) {
                     if (name.startsWith(Constants.R_HEADS)) {
@@ -1142,6 +1168,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (!isFIPSCompliantTLS(this.getCredentialsId(), this.getRemote())) {
+            listener.fatalError(Messages.git_fips_url_notsecured());
+            LOGGER.log(Level.SEVERE, Messages.git_fips_url_notsecured());
+            throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
         if (telescope != null) {
             final String remote = getRemote();
             final StandardUsernameCredentials credentials = getCredentials();
@@ -1166,7 +1197,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         GitClient client = git.getClient();
         client.addDefaultCredentials(getCredentials());
-        Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+        Map<String, String> symrefs;
+        try {
+            symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+        } catch (GitException x) {
+            throw new IOException(x);
+        }
         if (symrefs.containsKey(Constants.HEAD)) {
             // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
             String target = symrefs.get(Constants.HEAD);
@@ -1186,7 +1222,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is
         // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and
         // Ubuntu 16)
-        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+        Map<String, ObjectId> remoteReferences;
+        try {
+            remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+        } catch (GitException x) {
+            throw new IOException(x);
+        }
         if (remoteReferences.containsKey(Constants.HEAD)) {
             ObjectId head = remoteReferences.get(Constants.HEAD);
             Set<String> names = new TreeSet<>();

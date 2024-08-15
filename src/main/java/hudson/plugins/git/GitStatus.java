@@ -12,6 +12,7 @@ import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.triggers.SCMTrigger;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -177,7 +178,9 @@ public class GitStatus implements UnprotectedRootAction {
             contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));
         }
 
-        return (StaplerRequest req, StaplerResponse rsp, Object node) -> {
+        return new HttpResponse() {
+          @Override
+          public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException {
             rsp.setStatus(SC_OK);
             rsp.setContentType("text/plain");
             for (int i = 0; i < contributors.size(); i++) {
@@ -192,6 +195,7 @@ public class GitStatus implements UnprotectedRootAction {
             for (ResponseContributor c : contributors) {
                 c.writeBody(req, rsp, w);
             }
+          }
         };
     }
 

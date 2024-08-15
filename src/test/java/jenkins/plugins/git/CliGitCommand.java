@@ -60,11 +60,11 @@ public class CliGitCommand {
     private String[] output;
     private ArgumentListBuilder args;
 
-    public CliGitCommand(GitClient client, String... arguments) {
+    public CliGitCommand(GitClient client, String... arguments) throws GitException {
         this(client, GitUtilsTest.getConfigNoSystemEnvsVars(), arguments);
     }
 
-    public CliGitCommand(GitClient client, EnvVars envVars, String... arguments) {
+    public CliGitCommand(GitClient client, EnvVars envVars, String... arguments) throws GitException {
         args = new ArgumentListBuilder("git");
         args.add(arguments);
         listener = StreamTaskListener.NULL;

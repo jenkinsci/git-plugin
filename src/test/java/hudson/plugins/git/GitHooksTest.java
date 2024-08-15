@@ -146,11 +146,6 @@ public class GitHooksTest extends AbstractGitTestCase {
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         run = r.buildAndAssertSuccess(job);
         r.assertLogContains("Hello Pipeline", run);
-        if (!sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            return;
-        }
         assertFalse(postCheckoutOutput1.exists());
         assertFalse(postCheckoutOutput2.exists());
 
@@ -213,20 +208,12 @@ public class GitHooksTest extends AbstractGitTestCase {
         commit("Commit3", janeDoe, "Commit number 3");
         GitHooksConfiguration.get().setAllowedOnController(true);
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogContains("h4xor3d", run);
-        }
+        r.assertLogContains("h4xor3d", run);
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         commit("Commit4", janeDoe, "Commit number 4");
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogNotContains("h4xor3d", run);
-        }
+        r.assertLogNotContains("h4xor3d", run);
     }
 
     @Test
@@ -245,20 +232,12 @@ public class GitHooksTest extends AbstractGitTestCase {
         commit("Commit3", janeDoe, "Commit number 3");
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogContains("h4xor3d", run);
-        }
+        r.assertLogContains("h4xor3d", run);
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         GitHooksConfiguration.get().setAllowedOnController(true);
         commit("Commit4", janeDoe, "Commit number 4");
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogNotContains("h4xor3d", run);
-        }
+        r.assertLogNotContains("h4xor3d", run);
     }
 
     private WorkflowJob setupAndRunPipelineCheckout(String node) throws Exception {
@@ -289,11 +268,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogNotContains("h4xor3d", run);
-        }
+        r.assertLogNotContains("h4xor3d", run);
         return job;
     }
 

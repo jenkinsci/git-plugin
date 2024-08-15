@@ -146,6 +146,16 @@ public class GitPublisher extends Recorder implements Serializable {
         input = input.replaceAll("\\$BUILDDURATION", buildDuration);
         return input;
     }
+
+    protected GitClient getGitClient(
+            GitSCM gitSCM,
+            BuildListener listener,
+            EnvVars environment,
+            AbstractBuild<?, ?> build,
+            UnsupportedCommand cmd)
+            throws GitException, IOException, InterruptedException {
+        return gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
+    }
     
     @Override
     public boolean perform(AbstractBuild<?, ?> build,
@@ -180,7 +190,12 @@ public class GitPublisher extends Recorder implements Serializable {
 
             UnsupportedCommand cmd = new UnsupportedCommand();
             cmd.gitPublisher(true);
-            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
+            final GitClient git;
+            try {
+                git = getGitClient(gitSCM, listener, environment, build, cmd);
+            } catch (GitException x) {
+                throw new IOException(x);
+            }
 
             URIish remoteURI;
 
@@ -322,15 +337,15 @@ public class GitPublisher extends Recorder implements Serializable {
                      
             if (isPushNotes()) {
                 for (final NoteToPush b : notesToPush) {
-                    if (b.getnoteMsg() == null)
+                    if (b.getNoteMsg() == null)
                         throw new AbortException("No note to push defined");
 
                     b.setEmptyTargetRepoToOrigin();
-                    String noteMsgTmp = environment.expand(b.getnoteMsg());
+                    String noteMsgTmp = environment.expand(b.getNoteMsg());
                     final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, build);
-                    final String noteNamespace = environment.expand(b.getnoteNamespace());
+                    final String noteNamespace = environment.expand(b.getNoteNamespace());
                     final String targetRepo = environment.expand(b.getTargetRepoName());
-                    final boolean noteReplace = b.getnoteReplace();
+                    final boolean noteReplace = b.getNoteReplace();
                     
                     try {
                     	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
@@ -569,16 +584,31 @@ public class GitPublisher extends Recorder implements Serializable {
         private String noteNamespace;
         private boolean noteReplace;
 
+        @Deprecated
         public String getnoteMsg() {
             return noteMsg;
         }
         
+        @Deprecated
         public String getnoteNamespace() {
         	return noteNamespace;
         }
         
+        @Deprecated
         public boolean getnoteReplace() {
         	return noteReplace;
+        }
+
+        public String getNoteMsg() {
+            return noteMsg;
+        }
+
+        public String getNoteNamespace() {
+            return noteNamespace;
+        }
+
+        public boolean getNoteReplace() {
+            return noteReplace;
         }
 
         @DataBoundConstructor

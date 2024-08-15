@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package jenkins.plugins.git;
+package hudson.plugins.git;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -31,6 +31,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Label;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTagAction;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.ChangeLogSet;
@@ -39,13 +40,25 @@ import hudson.triggers.SCMTrigger;
 import java.util.Iterator;
 import java.util.List;
 import jenkins.util.VirtualFile;
+import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.GitStep;
+import jenkins.plugins.git.RandomOrder;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeTrue;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -90,6 +103,13 @@ public class GitStepTest {
             return true;
         }
         return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+    }
+
+    private static String NOTIFY_COMMIT_ACCESS_CONTROL_ORIGINAL = GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL;
+
+    @After
+    public void resetNotifyCommitAccessControl() {
+        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = NOTIFY_COMMIT_ACCESS_CONTROL_ORIGINAL;
     }
 
     @Test
@@ -283,11 +303,66 @@ public class GitStepTest {
             "node {\n" +
             "  git url: $/" + sampleRepo + "/$\n" +
             "  writeFile file: 'file', text: 'edited by build'\n" +
+            "  rungit 'config --local commit.gpgsign false'\n" +
+            "  rungit 'config --local tag.gpgSign false'\n" +
             "  rungit 'commit --all --message=edits'\n" +
             "  rungit 'show master'\n" +
             "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("+edited by build", b);
+    }
+
+    private WorkflowJob createJob() throws Exception {
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
+        p.setDefinition(new CpsFlowDefinition(
+            "node {\n" +
+            "    error('this should never be called')\n" +
+            "}", true));
+        return p;
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    public void testDoNotifyCommitWithInvalidApiToken() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        createJob();
+        String response = sampleRepo.notifyCommitWithResults(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN);
+        assertThat(response, containsString("Invalid access token"));
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    public void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        createJob();
+        String response = sampleRepo.notifyCommitWithResults(r, null);
+        assertThat(response, containsString("An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details."));
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    public void testDoNotifyCommitWithSha1AndAllowModePollWithInvalidToken() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
+        createJob();
+        /* sha1 is ignored because invalid access token is provided */
+        String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
+        String response = sampleRepo.notifyCommitWithResults(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN, sha1);
+        assertThat(response, containsString("Invalid access token"));
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    public void testDoNotifyCommitWithSha1AndAllowModePoll() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
+        createJob();
+        /* sha1 is ignored because no access token is provided */
+        String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
+        String response = sampleRepo.notifyCommitWithResults(r, null, sha1);
+        assertThat(response, containsString("An access token is required when using the sha1 parameter"));
     }
 
 }
