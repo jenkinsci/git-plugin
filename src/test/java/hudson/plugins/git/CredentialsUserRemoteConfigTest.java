@@ -163,6 +163,7 @@ public class CredentialsUserRemoteConfigTest {
             "pruneTags()",
             "pruneTags(false)",
             "pruneTags(true)",
+            "sparseCheckout(sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']])",
             "submodule(disableSubmodules: true)",
             "submodule(depth: 1, shallow: true)",
             "submodule(parentCredentials: true, recursiveSubmodules: true, threads: 13)",
