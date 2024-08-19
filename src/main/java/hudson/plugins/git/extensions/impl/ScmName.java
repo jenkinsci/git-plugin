@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
@@ -17,6 +18,16 @@ public class ScmName extends FakeGitSCMExtension {
     @DataBoundConstructor
     public ScmName(String name) {
         this.name = name;
+    }
+
+    @Override
+    @CheckForNull
+    public String getDeprecationAlternative() {
+        // This extension is not intended to be used in Pipeline
+        // Custom SCM name should be set directly by Pipeline
+        // arguments when performing multiple checkouts in a single
+        // Pipeline.
+        return "Use the custom scm name as the userRemoteConfigs value for 'name'";
     }
 
     public String getName() {

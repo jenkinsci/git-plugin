@@ -37,6 +37,29 @@ import org.jenkinsci.plugins.gitclient.*;
 public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> {
 
     /**
+     * When extensions created for freestyle projects have a more
+     * general purpose replacement in Pipeline, the more general
+     * purpose Pipeline step is preferred.  This method allows the
+     * deprecated extension to suggest the preferred alternative.
+     *
+     * If the extension should not be used in Pipeline and there is an
+     * alternative syntax that should be used, return the alternative
+     * syntax suggestion.
+     *
+     * If the extension should not be used in Pipeline and there is no
+     * alternative syntax suggestion, return an empty string.
+     *
+     * If the extension should be used in Pipeline, return null.
+     *
+     * @return alternative syntax suggestion for Pipeline syntax to replace this extension.
+     *         Null indicates the extension is intended for use in Pipeline.
+     */
+    @CheckForNull
+    public String getDeprecationAlternative() {
+        return null;
+    }
+
+    /**
      * @return <code>true</code> when this extension has a requirement to get a workspace during polling,
      * typically as it has to check for incoming changes, not just remote HEAD.
      */
@@ -142,7 +165,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
             return rev;
         }
     }
-    
+
     @Deprecated
     public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener, Revision marked, Revision rev) throws IOException, InterruptedException, GitException {
         if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateRevisionToBuild", GitSCM.class, Run.class, GitClient.class, TaskListener.class, Revision.class, Revision.class)) {
@@ -165,6 +188,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     public void beforeCheckout(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
             beforeCheckout(scm, (AbstractBuild) build, git, (BuildListener) listener);
+        }
+        String message = "***DEPRECATED*** " + getDescriptor().getDisplayName() + " is deprecated in Pipeline.";
+        String alternative = getDeprecationAlternative();
+        if (alternative != null && !(build instanceof AbstractBuild)) {
+            if (alternative.isEmpty()) {
+                listener.getLogger().println(message);
+            } else {
+                listener.getLogger().println(message + " " + getDeprecationAlternative());
+            }
         }
     }
 

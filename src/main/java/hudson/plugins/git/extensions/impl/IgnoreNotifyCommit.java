@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -13,6 +14,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class IgnoreNotifyCommit extends FakeGitSCMExtension {
     @DataBoundConstructor
     public IgnoreNotifyCommit() {
+    }
+
+    @Override
+    @CheckForNull
+    public String getDeprecationAlternative() {
+        // This extension is not intended to be used in Pipeline
+        // No alternative is offered because notifyCommits should be ignored at a higher level in Pipeline
+        return "";
     }
 
     /**

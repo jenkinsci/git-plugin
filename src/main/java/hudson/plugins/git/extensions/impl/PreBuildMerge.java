@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.plugins.git.GitException;
@@ -135,6 +136,13 @@ public class PreBuildMerge extends GitSCMExtension {
     @Override
     public GitClientType getRequiredClient() {
         return GitClientType.GITCLI;
+    }
+
+    @Override
+    @CheckForNull
+    public String getDeprecationAlternative() {
+        // This extension is not intended to be used in Pipeline
+        return "Use shell or bat or powershell steps to implement git merge.";
     }
 
     /**

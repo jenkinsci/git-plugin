@@ -37,6 +37,13 @@ public class PathRestriction extends GitSCMExtension {
         return true;
     }
 
+    @Override
+    @CheckForNull
+    public String getDeprecationAlternative() {
+        // This extension is not intended to be used in Pipeline
+        return "Use exclusion traits in multibranch Pipelines to exclude commit paths.";
+    }
+
     @DataBoundConstructor
     public PathRestriction(String includedRegions, String excludedRegions) {
         this.includedRegions = includedRegions;

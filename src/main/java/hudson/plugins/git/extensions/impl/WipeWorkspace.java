@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -28,6 +29,13 @@ public class WipeWorkspace extends GitSCMExtension {
     public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Wiping out workspace first.");
         git.getWorkTree().deleteContents();
+    }
+
+    @Override
+    @CheckForNull
+    public String getDeprecationAlternative() {
+        // This extension is not intended to be used in Pipeline
+        return "Use cleanWs() to empty the Pipeline workspace before checkout.";
     }
 
     /**

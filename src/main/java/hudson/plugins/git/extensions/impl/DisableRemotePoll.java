@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -19,6 +20,13 @@ public class DisableRemotePoll extends GitSCMExtension {
     @Override
     public boolean requiresWorkspaceForPolling() {
         return true;
+    }
+
+    @Override
+    @CheckForNull
+    public String getDeprecationAlternative() {
+        // This extension is not intended to be used in Pipeline
+        return "Use poll: false instead.";
     }
 
     @Extension
