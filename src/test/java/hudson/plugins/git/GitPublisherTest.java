@@ -116,8 +116,13 @@ public class GitPublisherTest extends AbstractGitProject {
                     return super.perform(build, launcher, listener);
                 } finally {
                     // until the 3rd one (which is the last one), we shouldn't create a tag
-                    if (run.get()<3)
-                        assertFalse(existsTag("foo"));
+                    if (run.get() < 3) {
+                        try {
+                            assertFalse(existsTag("foo"));
+                        } catch (Exception x) {
+                            throw new AssertionError(x);
+                        }
+                    }
                 }
             }
 
@@ -215,8 +220,13 @@ public class GitPublisherTest extends AbstractGitProject {
                     return super.perform(build, launcher, listener);
                 } finally {
                     // until the 3rd one (which is the last one), we shouldn't create a tag
-                    if (run.get()<3)
-                        assertFalse(existsTag("foo"));
+                    if (run.get() < 3) {
+                        try {
+                            assertFalse(existsTag("foo"));
+                        } catch (Exception x) {
+                            throw new AssertionError(x);
+                        }
+                    }
                 }
             }
 
@@ -880,23 +890,27 @@ public class GitPublisherTest extends AbstractGitProject {
                 AbstractBuild<?, ?> build,
                 UnsupportedCommand cmd)
                 throws IOException, InterruptedException {
-            GitClient gitClient = super.getGitClient(gitSCM, listener, environment, build, cmd);
-            gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
-            gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
-            return gitClient;
+            try {
+                GitClient gitClient = super.getGitClient(gitSCM, listener, environment, build, cmd);
+                gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+                gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+                return gitClient;
+            } catch (GitException x) {
+                throw new IOException(x);
+            }
         }
     }
 
-    private boolean existsTag(String tag) throws InterruptedException {
+    private boolean existsTag(String tag) throws Exception {
         return existsTagInRepo(testGitClient, tag);
     }
 
-    private boolean existsTagInRepo(GitClient gitClient, String tag) throws InterruptedException {
+    private boolean existsTagInRepo(GitClient gitClient, String tag) throws Exception {
         Set<String> tags = gitClient.getTagNames("*");
         return tags.contains(tag);
     }
 
-    private boolean containsTagMessage(String tag, String str) throws InterruptedException {
+    private boolean containsTagMessage(String tag, String str) throws Exception {
         String msg = testGitClient.getTagMessage(tag);
         return msg.contains(str);
     }
@@ -927,7 +941,14 @@ class LongRunningCommit extends Builder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        try {
+            return _perform(build, launcher, listener);
+        } catch (Exception x) {
+            throw new IOException(x);
+        }
+    }
 
+    private boolean _perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws Exception {
         TestGitRepo workspaceGit = new TestGitRepo("workspace", new File(build.getWorkspace().getRemote()), listener);
         TestGitRepo remoteGit = new TestGitRepo("remote", this.remoteGitDir, listener);
 

@@ -126,7 +126,7 @@ public class GitSCMBrowserTest {
     }
 
     @Test
-    public void guessedBrowser() {
+    public void guessedBrowser() throws Exception {
         GitSCM gitSCM = new GitSCM(gitURI);
         GitRepositoryBrowser browser = (GitRepositoryBrowser) gitSCM.guessBrowser();
         if (expectedClass == null || expectedURI == null) {

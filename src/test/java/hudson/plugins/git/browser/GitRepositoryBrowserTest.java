@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSetUtil;
+import hudson.plugins.git.GitException;
 
 import org.eclipse.jgit.lib.ObjectId;
 
@@ -84,14 +85,14 @@ public class GitRepositoryBrowserTest {
         try {
             GitClient git = Git.with(TaskListener.NULL, new EnvVars()).getClient();
             headCommit = git.revParse("HEAD");
-        } catch (IOException | InterruptedException e) {
+        } catch (GitException | IOException | InterruptedException e) {
             headCommit = ObjectId.fromString("016407404eeda093385ba2ebe9557068b519b669"); // simple commit
         }
         return headCommit;
     }
 
     @Before
-    public void setUp() throws IOException, InterruptedException {
+    public void setUp() throws Exception {
         browser = new GitRepositoryBrowserImpl(null);
         changeSet = GitChangeSetUtil.genChangeSet(sha1, gitImplementation, useAuthorName);
         paths = changeSet.getPaths();

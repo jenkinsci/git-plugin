@@ -54,7 +54,7 @@ public class GitSCMUnitTest {
     private final GitSCM gitSCM = new GitSCM(gitDir);
     private final String repoURL = "https://github.com/jenkinsci/git-plugin";
 
-    public GitSCMUnitTest() {
+    public GitSCMUnitTest() throws Exception {
     }
 
     @Test
@@ -220,7 +220,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranch() {
+    public void testRequiresWorkspaceForPollingSingleBranch() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
@@ -229,7 +229,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranchWithRemoteName() {
+    public void testRequiresWorkspaceForPollingSingleBranchWithRemoteName() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("origin/master")),
@@ -238,7 +238,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardRemoteName() {
+    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardRemoteName() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("*/master")),
@@ -247,7 +247,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardSuffix() {
+    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardSuffix() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master*")),
@@ -256,7 +256,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingMultiBranch() {
+    public void testRequiresWorkspaceForPollingMultiBranch() throws Exception {
         /* Multi-branch use case */
         List<BranchSpec> branches = new ArrayList<>();
         branches.add(new BranchSpec("master"));
@@ -268,7 +268,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingEmptyBranchName() {
+    public void testRequiresWorkspaceForPollingEmptyBranchName() throws Exception {
         /* Multi-branch use case */
         EnvVars env = new EnvVars();
         env.put("A", "");
@@ -291,7 +291,7 @@ public class GitSCMUnitTest {
 
     @Test
     @Deprecated
-    public void testIsDoGenerateSubmoduleConfigurationsTrue() {
+    public void testIsDoGenerateSubmoduleConfigurationsTrue() throws Exception {
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null, Collections.emptyList());
@@ -343,7 +343,7 @@ public class GitSCMUnitTest {
 
     @Issue("JENKINS-68562")
     @Test
-    public void testAbortIfSourceIsLocal() {
+    public void testAbortIfSourceIsLocal() throws Exception {
         GitSCM gitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null, Collections.emptyList());
