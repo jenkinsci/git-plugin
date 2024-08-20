@@ -159,7 +159,7 @@ This removes remote tracking branches and tags from the local workspace if they 
 ----
 checkout scmGit(
     branches: [[name: 'master']],
-    extensions: [pruneStaleBranch(), pruneTags(true)],
+    extensions: [ pruneStaleBranch(), pruneTags(true) ],
     userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
@@ -1089,6 +1089,16 @@ Multiple sparse checkout path values can be added to a single job.
 Path::
 
   File or directory to be included in the checkout
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [
+        sparseCheckout(sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']])
+    ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
 
 [#git-lfs-pull-after-checkout]
 ==== Git LFS pull after checkout
