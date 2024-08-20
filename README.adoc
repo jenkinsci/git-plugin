@@ -470,6 +470,38 @@ If hooks are allowed and a git repository includes a `pre-auto-gc` hook, the hoo
 +
 See link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks["Customizing Git - Git Hooks"] for more details about git repository hooks.
 
+[[global-security-notify-commit-access-control]]
+Notify Commit Access Control::
+
+The NOTIFY_COMMIT_ACCESS_CONTROL setting allows you to control access to the notifyCommit URL.
+This URL is used to trigger builds when changes are pushed to the repository.
+By default, access to this URL is unrestricted, which means anyone who knows the URL can trigger a build.
++
+To enhance security, it is recommended to restrict access to the notifyCommit URL.
+You can configure this setting to allow only authenticated users or specific IP addresses to trigger builds.
++
+To configure NOTIFY_COMMIT_ACCESS_CONTROL, navigate to the Configure Global Security page and locate the Git Plugin section.
+From there, you can specify the access control rules that best fit your security requirements.
++
+You can set the NOTIFY_COMMIT_ACCESS_CONTROL value using the following methods:
++
+
+....
+java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled -jar jenkins.war
+....
+
++
+[#using-a-groovy-script-security-configuration]
+==== Using a Groovy Script
++
+Alternatively, the property can be set using a Groovy script placed in the `init.groovy.d` directory. This method is useful for environments where you manage Jenkins settings through scripts:
++
+
+[source,groovy]
+----
+hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = 'disabled'
+----
+
 [#repository-browser]
 === Repository Browser
 
