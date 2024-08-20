@@ -492,7 +492,7 @@ java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled -jar j
 
 +
 [#using-a-groovy-script-security-configuration]
-==== Using a Groovy Script
+ Using a Groovy Script::
 +
 Alternatively, the property can be set using a Groovy script placed in the `init.groovy.d` directory. This method is useful for environments where you manage Jenkins settings through scripts:
 +
