@@ -13,6 +13,7 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -52,10 +53,11 @@ public class SparseCheckoutPaths extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("sparseCheckout")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Sparse Checkout paths";
+            return "Sparse checkout paths";
         }
     }
 
