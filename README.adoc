@@ -344,7 +344,7 @@ Using a system property::
 
 The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set from the command line that starts Jenkins.
 This method is useful for environments where initial Jenkins settings are managed with command line arguments.
-
++
 ....
 java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled-for-polling -jar jenkins.war
 ....
@@ -354,7 +354,7 @@ java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled-for-po
 
 The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set using a Groovy script placed in the `init.groovy.d` subdirectory of the Jenkins home directory.
 This method is useful for environments where Jenkins settings are managed with link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/#post-initialization-script-init-hook[Groovy post-initialization scripts].
-
++
 [source,groovy]
 ----
 hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL='disabled-for-polling'
