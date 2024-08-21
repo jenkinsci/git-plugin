@@ -324,6 +324,8 @@ If polling finds a change worthy of a build, a build will be triggered.
 This allows a notify script to remain the same for all Jenkins jobs.
 Or if you have multiple repositories under a single repository host application (such as Gitosis), you can share a single post-receive hook script with all the repositories.
 
+When notifyCommit is successful, the list of triggered projects is returned.
+
 The `token` parameter is required by default as a security measure, but can be disabled by the following link:https://www.jenkins.io/doc/book/managing/system-properties/[system property]:
 
 ....
@@ -337,7 +339,27 @@ It has two modes:
 * `disabled` - Fully disables the access token mechanism and allows all requests to `notifyCommit`
 to be unauthenticated. *This option is insecure and is not recommended.*
 
-When notifyCommit is successful, the list of triggered projects is returned.
+You can set the `NOTIFY_COMMIT_ACCESS_CONTROL` value with either a link:https://www.jenkins.io/doc/book/managing/system-properties/[system property] or a link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/[Groovy hook script].
+
+[[using-a-system-property-push-notification]]
+Using a system property::
+
+The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set from the command line that starts Jenkins.
+This method is useful for environments where initial Jenkins settings are managed with command line arguments.
++
+....
+java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled-for-polling -jar jenkins.war
+....
+
+[[using-a-groovy-script-push-notification]]
+ Using a Groovy script::
+
+The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set using a Groovy script placed in the `init.groovy.d` subdirectory of the Jenkins home directory.
+This method is useful for environments where Jenkins settings are managed with link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/#post-initialization-script-init-hook[Groovy post-initialization scripts].
++
+----
+hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL='disabled-for-polling'
+----
 
 [#enabling-jgit]
 === Enabling JGit
