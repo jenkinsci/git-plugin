@@ -330,10 +330,20 @@ The `token` parameter is required by default as a security measure, but can be d
 hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL
 ....
 
-You can set the NOTIFY_COMMIT_ACCESS_CONTROL value with either a link:https://www.jenkins.io/doc/book/managing/system-properties/[Java system property] or a link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/[Groovy hook script].
+It has two modes:
 
-[[using-a-java-system-property-push-notification]]
-Using a Java system property::
+* `disabled-for-polling` - Allows unauthenticated requests as long as they only request polling of the repository supplied in the `url` query parameter. Prohibits unauthenticated requests that attempt to schedule a build immediately by providing a
+`sha1` query parameter.
+* `disabled` - Fully disables the access token mechanism and allows all requests to `notifyCommit`
+to be unauthenticated. *This option is insecure and is not recommended.*
+
+You can set the `NOTIFY_COMMIT_ACCESS_CONTROL` value with either a link:https://www.jenkins.io/doc/book/managing/system-properties/[system property] or a link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/[Groovy hook script].
+
+[[using-a-system-property-push-notification]]
+Using a system property::
+
+The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set from the command line that starts Jenkins.
+This method is useful for environments where initial Jenkins settings are managed with command line arguments.
 
 ....
 java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled-for-polling -jar jenkins.war
@@ -342,20 +352,13 @@ java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled-for-po
 [[using-a-groovy-script-push-notification]]
  Using a Groovy script::
 
-The property can be set using a Groovy script placed in the `init.groovy.d` directory.
-This method is useful for environments where you manage Jenkins settings with link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/#post-initialization-script-init-hook[Groovy post-initialization scripts].
+The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set using a Groovy script placed in the `init.groovy.d` subdirectory of the Jenkins home directory.
+This method is useful for environments where Jenkins settings are managed with link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/#post-initialization-script-init-hook[Groovy post-initialization scripts].
 
 [source,groovy]
 ----
 hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL='disabled-for-polling'
 ----
-
-It has two modes:
-
-* `disabled-for-polling` - Allows unauthenticated requests as long as they only request polling of the repository supplied in the `url` query parameter. Prohibits unauthenticated requests that attempt to schedule a build immediately by providing a
-`sha1` query parameter.
-* `disabled` - Fully disables the access token mechanism and allows all requests to `notifyCommit`
-to be unauthenticated. *This option is insecure and is not recommended.*
 
 When notifyCommit is successful, the list of triggered projects is returned.
 
