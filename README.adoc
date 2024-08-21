@@ -324,6 +324,8 @@ If polling finds a change worthy of a build, a build will be triggered.
 This allows a notify script to remain the same for all Jenkins jobs.
 Or if you have multiple repositories under a single repository host application (such as Gitosis), you can share a single post-receive hook script with all the repositories.
 
+When notifyCommit is successful, the list of triggered projects is returned.
+
 The `token` parameter is required by default as a security measure, but can be disabled by the following link:https://www.jenkins.io/doc/book/managing/system-properties/[system property]:
 
 ....
@@ -358,8 +360,6 @@ This method is useful for environments where Jenkins settings are managed with l
 ----
 hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL='disabled-for-polling'
 ----
-
-When notifyCommit is successful, the list of triggered projects is returned.
 
 [#enabling-jgit]
 === Enabling JGit
