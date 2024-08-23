@@ -444,7 +444,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
         public FormValidation doCheckRemote(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String remote) throws IOException, InterruptedException {
-            Jenkins.get().checkPermission(Jenkins.MANAGE);
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.MANAGE) ||
+                item != null && !item.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.warning("Not allowed to modify remote");
+            }
             return isFIPSCompliantTLS(credentialsId, remote) ? FormValidation.ok() : FormValidation.error(hudson.plugins.git.Messages.git_fips_url_notsecured());
         }
 
