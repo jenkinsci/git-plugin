@@ -69,7 +69,7 @@
   </scm>
 
   <properties>
-    <revision>5.3.1</revision>
+    <revision>5.4.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.baseline>2.440</jenkins.baseline>
@@ -89,7 +89,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3276.vcd71db_867fb_2</version>
+        <version>3289.v3ff9637cd241</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -165,7 +165,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.16.1</version>
+      <version>3.16.2</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
@@ -296,7 +296,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.5.0</version>
         <configuration>
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>
