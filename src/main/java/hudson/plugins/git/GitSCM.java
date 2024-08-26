@@ -1663,7 +1663,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean allowSecondFetch;
         private boolean disableGitToolChooser;
         private boolean addGitTagAction;
-
+        private String globalUrlRegEx;
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
@@ -1771,7 +1771,29 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public String getGlobalConfigEmail() {
             return Util.fixEmptyAndTrim(globalConfigEmail);
         }
+        /**
+         * Global setting for Regular Expression
+         * @return url regex
+         */
+        public String getGlobalUrlRegEx(){ return globalUrlRegEx; }
 
+        public void setGlobalUrlRegEx(String globalUrlRegEx){
+            if (globalUrlRegEx == null || globalUrlRegEx.trim().isEmpty()) {
+                // If the user doesn't provide a value, use the default one
+                globalUrlRegEx = getDefaultGlobalUrlRegEx();
+            }
+            this.globalUrlRegEx = globalUrlRegEx;
+
+
+        }
+        public String getDefaultGlobalUrlRegEx() {
+          return "(.*github.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)"+"&&&"+
+                   "(.*gitlab.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)"+"&&&"+
+                    "(.*?//(?<org>\\w+).*visualstudio.*?/(?<repo>[^/]+?)(?:\\.git)?/?$)"+"&&&"+
+                    "(.*bitbucket.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)"+"&&&"+
+                    "(.*assembla.com[:/](?<repo>[^/]+?)(?:\\.git)?$)"+"&&&"+
+                    "(git@git.*?[:/](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)";
+        }
         /**
          * Global setting to be used to set GIT_COMMITTER_EMAIL and GIT_AUTHOR_EMAIL.
          * @param globalConfigEmail user.email value to be assigned

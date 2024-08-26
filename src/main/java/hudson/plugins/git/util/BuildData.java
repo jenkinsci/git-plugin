@@ -30,6 +30,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.net.MalformedURLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import hudson.plugins.git.GitSCM;
+
 /**
  * Captures the Git related information for a build.
  *
@@ -292,6 +298,65 @@ public class BuildData implements Action, Serializable, Cloneable {
     public boolean hasBeenReferenced(String remoteUrl) {
         return remoteUrls.contains(remoteUrl);
     }
+
+    protected GitSCM.DescriptorImpl getDescriptorImpl(){
+        return new GitSCM.DescriptorImpl();
+    }
+
+   public String getRepoName(String remoteUrl) throws MalformedURLException {
+    GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
+    String globalRegex = descriptor.getGlobalUrlRegEx();
+
+    if (globalRegex == null || globalRegex.isEmpty()) {
+        return "Global Regex is not set up";
+    }
+    String[] regexps = globalRegex.split("&&&");
+    for (String regex : regexps) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(remoteUrl);
+
+        if (matcher.matches()) {
+            if (regex.contains("(?<repo>")) { // Check if regex contains the 'repo' named group
+                try {
+                    return matcher.group("repo");
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                    return "Failed to extract 'repo' group";
+                }
+            } else {
+                return "Regex must contain a named group 'repo'";
+            }
+        }
+    }
+    return "No matching repository name found in the URL";
+    }
+
+    public String getOrganizationName(String remoteUrl) {
+    GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
+    String globalRegex = descriptor.getGlobalUrlRegEx();
+    if (globalRegex == null || globalRegex.isEmpty()) {
+        return "Global Regex is not set up";
+    }
+    String[] regexps = globalRegex.split("&&&");
+    for (String regex : regexps) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(remoteUrl);
+
+        if (matcher.matches()) {
+            // Check if the pattern includes the 'org' group
+            if (regex.contains("(?<org>")) {
+                try {
+                    return matcher.group("org");
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                    return "Regex must contain a named group 'org'";
+                }
+            } else {
+                return "Organization name not found in the URL";
+            }
+        }
+    }
+    return "No matching organization name found in the URL";
+
+}
 
     @Override
     public BuildData clone() {
