@@ -545,7 +545,7 @@ public class BuildDataTest {
         assertFalse("Distinct objects shouldn't be similar", dataClone.similarTo(data));
 
         data2.addRemoteUrl(noSlash);
-        assertTrue("Objects with same remote URL dissimilar", data2.similarTo   (dataClone));
+        assertTrue("Objects with same remote URL dissimilar", data2.similarTo(dataClone));
         assertTrue("Objects with same remote URL dissimilar", dataClone.similarTo(data2));
 
         // Another saved build still keeps objects similar
