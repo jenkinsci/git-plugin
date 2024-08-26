@@ -21,9 +21,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import java.net.MalformedURLException;
+import org.mockito.MockedStatic;
+import jenkins.model.Jenkins;
+import hudson.plugins.git.GitSCM;
+import java.util.List;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 
 /**
  * @author Mark Waite
@@ -33,7 +44,7 @@ public class BuildDataTest {
     private BuildData data;
     private final ObjectId sha1 = ObjectId.fromString("929e92e3adaff2e6e1d752a8168c1598890fe84c");
     private final String remoteUrl = "https://github.com/jenkinsci/git-plugin";
-
+    private GitSCM.DescriptorImpl descriptor;
     @Before
     public void setUp() throws Exception {
         data = new BuildData();
@@ -441,6 +452,7 @@ public class BuildDataTest {
         simple3.addRemoteUrl(null);
         simple3.addRemoteUrl(SIMPLE_URL);
         assertTrue(simple.similarTo(simple3));
+        System.out.println("Test Case " + ":............................................................................................");
     }
 
     @Test
@@ -534,7 +546,7 @@ public class BuildDataTest {
         assertFalse("Distinct objects shouldn't be similar", dataClone.similarTo(data));
 
         data2.addRemoteUrl(noSlash);
-        assertTrue("Objects with same remote URL dissimilar", data2.similarTo(dataClone));
+        assertTrue("Objects with same remote URL dissimilar", data2.similarTo   (dataClone));
         assertTrue("Objects with same remote URL dissimilar", dataClone.similarTo(data2));
 
         // Another saved build still keeps objects similar
@@ -578,4 +590,96 @@ public class BuildDataTest {
         emptyData.remoteUrls = null;
         assertEquals(emptyData.hashCode(), emptyData.hashCode());
     }
+
+    // Helper method for GitOrgRepoName-related setup
+    private void setupGitOrgRepoNameMock() throws MalformedURLException {
+
+        MockedStatic<Jenkins> mockedJenkins = mockStatic(Jenkins.class);
+        Jenkins mockJenkins = mock(Jenkins.class);
+        mockedJenkins.when(Jenkins::getInstanceOrNull).thenReturn(mockJenkins);
+
+        // Create a mock for the GitSCM.DescriptorImpl class
+        descriptor = mock(GitSCM.DescriptorImpl.class);
+        // Setup the behavior for the mock descriptor when Jenkins.getDescriptor is called
+        when(mockJenkins.getDescriptor(GitSCM.class)).thenReturn(descriptor);
+        String mockRegexPattern =
+                "(.*github.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)" +
+                        "&&&" +
+                        "(.*gitlab.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)" +
+                        "&&&" +
+                        "(.*?//(?<org>\\w+).*visualstudio.*?/(?<repo>[^/]+?)(?:\\.git)?/?$)" +
+                        "&&&" +
+                        "(.*bitbucket.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)" +
+                        "&&&" +
+                        "(.*assembla.com[:/](?<repo>[^/]+?)(?:\\.git)?$)"+
+                        "&&&" +
+                        "(git@git.*?[:/](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)";
+        when(descriptor.getGlobalUrlRegEx()).thenReturn(mockRegexPattern);
+        data = spy(new BuildData() {
+            @Override
+            protected GitSCM.DescriptorImpl getDescriptorImpl() {
+                return descriptor;
+            }
+        });
+    }
+
+    @Test
+    public void testOrganizationAndRepoNameExtraction() throws MalformedURLException {
+        setupGitOrgRepoNameMock();
+        List<TestUrl> testUrls = new ArrayList<>();
+        testUrls.add(new TestUrl( "https://github.com/mohdishaq786/Backend_challenge_stage2.git","mohdishaq786","Backend_challenge_stage2"));
+        testUrls.add(new TestUrl("git@bitbucket.org:markewaite/tasks.git", "markewaite", "tasks"));
+        testUrls.add(new TestUrl("git@bitbucket.org:markewaite/bin.git", "markewaite", "bin"));
+        testUrls.add(new TestUrl("https://markewaite@bitbucket.org/markewaite/tasks.git", "markewaite", "tasks"));
+        testUrls.add(new TestUrl("https://markewaite@bitbucket.org/markewaite/git-client-plugin.git", "markewaite", "git-client-plugin"));
+        testUrls.add(new TestUrl("https://markewaite@bitbucket.org/markewaite/bin.git", "markewaite", "bin"));
+        testUrls.add(new TestUrl("https://MarkEWaite:also-a-password@gitlab.com/MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("https://MarkEWaite:another-password@github.com/MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("https://MarkEWaite:yes-this-is-a-password@github.com/MarkEWaite/bin.git", "MarkEWaite", "bin"));
+        testUrls.add(new TestUrl("https://gitlab.com/MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("https://gitlab.com/MarkEWaite/tasks", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("https://gitlab.com/MarkEWaite/bin", "MarkEWaite", "bin"));
+        testUrls.add(new TestUrl("https://github.com/MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("git@github.com:MarkEWaite/bin.git", "MarkEWaite", "bin"));
+        testUrls.add(new TestUrl("git@gitlab.com:MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("git@github.com:MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("https://bitbucket.org/markewaite/bin.git", "markewaite", "bin"));
+        testUrls.add(new TestUrl("https://bitbucket.org/markewaite/git-client-plugin.git", "markewaite", "git-client-plugin"));
+        testUrls.add(new TestUrl("https://bitbucket.org/markewaite/tasks.git", "markewaite", "tasks"));
+        testUrls.add(new TestUrl("https://github.com/MarkEWaite/bin.git", "MarkEWaite", "bin"));
+        testUrls.add(new TestUrl("https://markwaite.visualstudio.com/_git/elisp", "markwaite", "elisp"));
+        testUrls.add(new TestUrl("https://markwaite.visualstudio.com/DefaultCollection/_git/", "markwaite", "_git"));
+        testUrls.add(new TestUrl("https://markwaite.visualstudio.com/DefaultCollection/elisp/_git/elisp", "markwaite", "elisp"));
+        testUrls.add(new TestUrl("https://git.assembla.com/git-plugin.bin.git", "Organization name not found in the URL", "git-plugin.bin"));
+        testUrls.add(new TestUrl("git@git.assembla.com:git-plugin.bin.git", "Organization name not found in the URL", "git-plugin.bin"));
+        testUrls.add(new TestUrl("ssh://markwaite@vs-ssh.visualstudio.com:22/DefaultCollection/_ssh/elisp", "markwaite", "elisp"));
+        testUrls.add(new TestUrl("ssh://git@github.com/MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
+        testUrls.add(new TestUrl("ssh://git.assembla.com/git-plugin.bin.git", "Organization name not found in the URL", "git-plugin.bin"));
+
+
+
+        for (TestUrl testUrl : testUrls) {
+            String repoName = data.getRepoName(testUrl.remoteUrl);
+            String orgName = data.getOrganizationName(testUrl.remoteUrl);
+
+            assertEquals("Repo name mismatch for URL: " + testUrl.remoteUrl, testUrl.expectedRepoName, repoName);
+            assertEquals("Org name mismatch for URL: " + testUrl.remoteUrl, testUrl.expectedOrgName, orgName);
+
+        }
+    }
+
+    // Helper class to hold test URLs and expected results
+    private static class TestUrl {
+        String remoteUrl;
+        String expectedOrgName;
+        String expectedRepoName;
+
+        TestUrl(String remoteUrl, String expectedOrgName, String expectedRepoName) {
+            this.remoteUrl = remoteUrl;
+            this.expectedOrgName = expectedOrgName;
+            this.expectedRepoName = expectedRepoName;
+        }
+    }
+
+
 }

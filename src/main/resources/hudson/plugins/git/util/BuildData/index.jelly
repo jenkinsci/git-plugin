@@ -18,6 +18,8 @@
 			<j:if test="${!remoteUrl.startsWith('http')}">
 				<br/><strong>${%Repository}</strong>: ${remoteUrl}
 			</j:if>
+				<br/><strong>${%Organization Name}</strong>: ${it.getOrganizationName(remoteUrl)}
+            	<br/><strong>${%Repo Name}</strong>: ${it.getRepoName(remoteUrl)}
 		</j:forEach>
 	</j:if>
 	<ul>

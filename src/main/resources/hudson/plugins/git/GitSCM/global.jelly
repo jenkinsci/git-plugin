@@ -8,6 +8,9 @@
     <f:entry title="${%Global Config user.email Value}" field="globalConfigEmail">
       <f:textbox />
     </f:entry>
+    <f:entry title="${%Global Repository RegEx Url}" field="globalUrlRegEx">
+      <f:textbox default="${descriptor.defaultGlobalUrlRegEx}"/>
+    </f:entry>
     <f:entry field="createAccountBasedOnEmail">
       <f:checkbox title="${%Create new accounts based on author/committer's email}" name="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}"/>
     </f:entry>
