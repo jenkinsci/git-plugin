@@ -452,7 +452,6 @@ public class BuildDataTest {
         simple3.addRemoteUrl(null);
         simple3.addRemoteUrl(SIMPLE_URL);
         assertTrue(simple.similarTo(simple3));
-        System.out.println("Test Case " + ":............................................................................................");
     }
 
     @Test
