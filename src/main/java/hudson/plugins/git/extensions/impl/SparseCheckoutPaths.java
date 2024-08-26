@@ -57,7 +57,13 @@ public class SparseCheckoutPaths extends GitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Sparse checkout paths";
+            /* TODO Fix capitalization error here and in Jenkins acceptance test harness.
+             *
+             * https://github.com/jenkinsci/acceptance-test-harness/pull/1685#issuecomment-2310075738
+             * Acceptance test harness for Git SCM should find components by class instead of by
+             * display name. Otherwise changes to display name need to be made in ATH and the plugin.
+             */
+            return "Sparse Checkout paths";
         }
     }
 
