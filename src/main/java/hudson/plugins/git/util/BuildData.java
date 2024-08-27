@@ -7,6 +7,7 @@ import hudson.model.Action;
 import hudson.model.Api;
 import hudson.model.Run;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import java.io.Serializable;
@@ -26,15 +27,13 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import static hudson.Util.fixNull;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.net.MalformedURLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import hudson.plugins.git.GitSCM;
 
 /**
  * Captures the Git related information for a build.
@@ -304,15 +303,15 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
    public String getRepoName(String remoteUrl) throws MalformedURLException {
-    GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
-    String globalRegex = descriptor.getGlobalUrlRegEx();
+       GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
+       String globalRegex = descriptor.getGlobalUrlRegEx();
 
-    if (globalRegex == null || globalRegex.isEmpty()) {
-        return "Global Regex is not set up";
-    }
-    String[] regexps = globalRegex.split("&&&");
-    for (String regex : regexps) {
-        Pattern pattern = Pattern.compile(regex);
+       if (globalRegex == null || globalRegex.isEmpty()) {
+           return "Global Regex is not set up";
+       }
+       String[] regexps = globalRegex.split("&&&");
+       for (String regex : regexps) {
+           Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(remoteUrl);
 
         if (matcher.matches()) {
@@ -326,37 +325,36 @@ public class BuildData implements Action, Serializable, Cloneable {
                 return "Regex must contain a named group 'repo'";
             }
         }
-    }
-    return "No matching repository name found in the URL";
-    }
+       }
+       return "No matching repository name found in the URL";
+   }
 
     public String getOrganizationName(String remoteUrl) {
-    GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
-    String globalRegex = descriptor.getGlobalUrlRegEx();
-    if (globalRegex == null || globalRegex.isEmpty()) {
-        return "Global Regex is not set up";
-    }
-    String[] regexps = globalRegex.split("&&&");
-    for (String regex : regexps) {
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(remoteUrl);
+        GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
+        String globalRegex = descriptor.getGlobalUrlRegEx();
+        if (globalRegex == null || globalRegex.isEmpty()) {
+            return "Global Regex is not set up";
+        }
+        String[] regexps = globalRegex.split("&&&");
+        for (String regex : regexps) {
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(remoteUrl);
 
-        if (matcher.matches()) {
-            // Check if the pattern includes the 'org' group
-            if (regex.contains("(?<org>")) {
-                try {
-                    return matcher.group("org");
-                } catch (IllegalArgumentException | IllegalStateException e) {
-                    return "Regex must contain a named group 'org'";
+            if (matcher.matches()) {
+                // Check if the pattern includes the 'org' group
+                if (regex.contains("(?<org>")) {
+                    try {
+                        return matcher.group("org");
+                    } catch (IllegalArgumentException | IllegalStateException e) {
+                        return "Regex must contain a named group 'org'";
+                    }
+                } else {
+                    return "Organization name not found in the URL";
                 }
-            } else {
-                return "Organization name not found in the URL";
             }
         }
+        return "No matching organization name found in the URL";
     }
-    return "No matching organization name found in the URL";
-
-}
 
     @Override
     public BuildData clone() {
