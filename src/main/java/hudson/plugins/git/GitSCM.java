@@ -1664,6 +1664,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean disableGitToolChooser;
         private boolean addGitTagAction;
         private String globalUrlRegEx;
+
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
