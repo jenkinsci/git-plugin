@@ -1772,6 +1772,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public String getGlobalConfigEmail() {
             return Util.fixEmptyAndTrim(globalConfigEmail);
         }
+
         /**
          * Global setting for Regular Expression
          * @return url regex
@@ -1784,9 +1785,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 globalUrlRegEx = getDefaultGlobalUrlRegEx();
             }
             this.globalUrlRegEx = globalUrlRegEx;
-
-
         }
+
         public String getDefaultGlobalUrlRegEx() {
           return "(.*github.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)"+"&&&"+
                    "(.*gitlab.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)"+"&&&"+
@@ -1795,6 +1795,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     "(.*assembla.com[:/](?<repo>[^/]+?)(?:\\.git)?$)"+"&&&"+
                     "(git@git.*?[:/](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)";
         }
+
         /**
          * Global setting to be used to set GIT_COMMITTER_EMAIL and GIT_AUTHOR_EMAIL.
          * @param globalConfigEmail user.email value to be assigned
