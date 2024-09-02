@@ -249,7 +249,7 @@
     <dependency>
       <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
       <artifactId>testcontainers-gitserver</artifactId>
-      <version>0.8.0</version>
+      <version>0.9.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
