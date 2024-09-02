@@ -37,6 +37,8 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.Objects;
 import java.util.UUID;
@@ -49,6 +51,8 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @ExportedBean
 public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {
+
+    private static final Logger LOGGER = Logger.getLogger(UserRemoteConfig.class.getName());
 
     private String name;
     private String refspec;
@@ -221,6 +225,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             try {
                 git.getHeadRev(url, "HEAD");
             } catch (GitException e) {
+
+                LOGGER.log(Level.FINE, "cannot validate git url", e);
                 return FormValidation.error(Messages.UserRemoteConfig_FailedToConnect(e.getMessage()));
             }
 

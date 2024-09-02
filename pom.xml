@@ -105,6 +105,16 @@
       <artifactId>git-client</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+      <artifactId>mina-sshd-api-common</artifactId>
+      <version>2.14.0-SNAPSHOT-999999-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+      <artifactId>mina-sshd-api-core</artifactId>
+      <version>2.14.0-SNAPSHOT-999999-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
     </dependency>
@@ -272,6 +282,7 @@
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>jenkins-test-harness</artifactId>
+      <version>2267.v630b_613db_162</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -300,6 +311,38 @@
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-fips-libs</id>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.bouncycastle</groupId>
+                  <artifactId>bc-fips</artifactId>
+                  <version>1.0.2.4</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.bouncycastle</groupId>
+                  <artifactId>bcpkix-fips</artifactId>
+                  <version>1.0.7</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.bouncycastle</groupId>
+                  <artifactId>bctls-fips</artifactId>
+                  <version>1.0.17</version>
+                </artifactItem>
+              </artifactItems>
+              <stripVersion>true</stripVersion>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

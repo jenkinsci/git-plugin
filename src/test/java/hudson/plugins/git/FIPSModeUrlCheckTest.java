@@ -17,13 +17,19 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.FormValidation;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.logging.Level;
+
 import jenkins.branch.MultiBranchProject;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.jenkinsci.plugins.gitclient.GitHostKeyVerificationConfiguration;
+import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.gitclient.verifier.AcceptFirstConnectionStrategy;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -40,7 +46,14 @@ import org.testcontainers.containers.BindMode;
 public class FIPSModeUrlCheckTest {
 
     @Rule public RealJenkinsRule rule = new RealJenkinsRule().omitPlugins("eddsa-api", "trilead-api", "git-tag-message")
-            .javaOptions("-Djenkins.security.FIPS140.COMPLIANCE=true");
+            .withFIPSEnabled()
+            //.withLogger("org.apache.sshd", Level.ALL)
+            .withLogger("org.jenkinsci.plugins.gitclient", Level.ALL)
+            // this can be very noisy when parsing ~/.ssh/known_hosts
+            .withLogger("org.eclipse.jgit.internal.transport.sshd.KnownHostEntryReader", Level.SEVERE)
+            .withDebugPort(8000)
+            .withDebugServer(true)
+            .withDebugSuspend(true);
 
     @Rule
     public TemporaryFolder directory = new TemporaryFolder();
@@ -99,67 +112,38 @@ public class FIPSModeUrlCheckTest {
     }
 
     @Test
-    public void testUserRemoteConfigCheck() throws Throwable {
+    public void testUserRemoteHTTPConfigCheck() throws Throwable {
         Assume.assumeTrue(DockerClientFactory.instance().isDockerAvailable());
-        // ssh with credentials all good
-        try (GitServerContainer containerUnderTest =
-                     new GitServerContainer(GitServerVersions.V2_45.getDockerImageName()).withGitRepo("someRepo")) {
-            containerUnderTest.withClasspathResourceMapping(
-                    "ssh-keys/id_rsa.pub", "/home/git/.ssh/authorized_keys", BindMode.READ_ONLY);
-            containerUnderTest.withClasspathResourceMapping(
-                    "sshd_config", "/etc/ssh/sshd_config", BindMode.READ_ONLY);
 
-            containerUnderTest.start();
+        rule.then( r -> {
+            GitTool.DescriptorImpl gitTools = r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class);
+            gitTools.setInstallations(new JGitTool());
 
-            SshIdentity sshClientIdentity = new SshIdentity(
-                    this.getClass()
-                            .getClassLoader()
-                            .getResourceAsStream("ssh-keys/id_rsa")
-                            .readAllBytes(),
-                    this.getClass()
-                            .getClassLoader()
-                            .getResourceAsStream("ssh-keys/id_rsa.pub")
-                            .readAllBytes(),
-                    new byte[0]);
-            byte[] privateKey = sshClientIdentity.getPrivateKey();
-            byte[] passphrase = sshClientIdentity.getPassphrase();
-            // ssh://git@localhost:33011/srv/git/someRepo.git
-            // we don't want the user part of the uri or jgit will use this user
-            // and we want to be sure to test our implementation with dynamic user
-            final String repoUrl = StringUtils.remove(containerUnderTest.getGitRepoURIAsSSH().toString(), "git@");
-            rule.then( r -> {
-                BasicSSHUserPrivateKey sshUserPrivateKey = getBasicSSHUserPrivateKey(privateKey, passphrase);
-                SystemCredentialsProvider.getInstance().getCredentials().add(sshUserPrivateKey);
-                SystemCredentialsProvider.getInstance()
-                        .getCredentials()
-                        .add(new UsernamePasswordCredentialsImpl(
-                                CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
-                SystemCredentialsProvider.getInstance().save();
-                FreeStyleProject p = r.createProject(FreeStyleProject.class, "mbp");
-                UserRemoteConfig.DescriptorImpl descriptor =
-                        ExtensionList.lookupSingleton(UserRemoteConfig.DescriptorImpl.class);
+            r.jenkins.getDescriptorByType(GitHostKeyVerificationConfiguration.class)
+                    .setSshHostKeyVerificationStrategy(new AcceptFirstConnectionStrategy());
 
-                {
-                    // http with credentials rejected
-                    FormValidation validation = descriptor.doCheckUrl(p, "mycreds", "http://github.com/olamy/beer");
-                    assertThat(validation.kind, is(FormValidation.Kind.ERROR));
-                    assertThat(validation.getMessage(), containsString(Messages.git_fips_url_notsecured()));
-                }
+            SystemCredentialsProvider.getInstance()
+                    .getCredentials()
+                    .add(new UsernamePasswordCredentialsImpl(
+                            CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+            SystemCredentialsProvider.getInstance().save();
+            FreeStyleProject p = r.createProject(FreeStyleProject.class, "mbp");
+            UserRemoteConfig.DescriptorImpl descriptor =
+                    ExtensionList.lookupSingleton(UserRemoteConfig.DescriptorImpl.class);
 
-                {
-                    // https without credentials all good
-                    FormValidation validation = descriptor.doCheckUrl(p, null, "https://github.com/jenkinsci/git-plugin");
-                    assertThat(validation.kind, is(FormValidation.Kind.OK));
-                }
+            {
+                // http with credentials rejected
+                FormValidation validation = descriptor.doCheckUrl(p, "mycreds", "http://github.com/olamy/beer");
+                assertThat(validation.kind, is(FormValidation.Kind.ERROR));
+                assertThat(validation.getMessage(), containsString(Messages.git_fips_url_notsecured()));
+            }
 
-                Assume.assumeTrue(DockerClientFactory.instance().isDockerAvailable());
-
-                {
-                    FormValidation validation = descriptor.doCheckUrl(p, sshUserPrivateKey.getId(), repoUrl);
-                    assertThat(validation.kind, is(FormValidation.Kind.OK));
-                }
-            });
-        }
+            {
+                // https without credentials all good
+                FormValidation validation = descriptor.doCheckUrl(p, null, "https://github.com/jenkinsci/git-plugin");
+                assertThat(validation.kind, is(FormValidation.Kind.OK));
+            }
+        });
 
         // http without credentials all good
         try (GitHttpServerContainer containerUnderTest =
@@ -179,12 +163,70 @@ public class FIPSModeUrlCheckTest {
 
     }
 
-    private static BasicSSHUserPrivateKey getBasicSSHUserPrivateKey(byte[] privateKey, byte[] passphrase) {
+
+    @Test
+    public void testUserRemoteSSHConfigCheck() throws Throwable {
+        Assume.assumeTrue(DockerClientFactory.instance().isDockerAvailable());
+
+        String keyName = "rsa2048"; // "id_rsa"; //rsa2048
+
+        // ssh with credentials all good
+        try (GitServerContainer containerUnderTest =
+                     new GitServerContainer(GitServerVersions.V2_45.getDockerImageName()).withGitRepo("someRepo")) {
+            containerUnderTest.withClasspathResourceMapping(
+                    "ssh-keys/" + keyName + ".pub", "/home/git/.ssh/authorized_keys", BindMode.READ_WRITE);
+            containerUnderTest.withClasspathResourceMapping(
+                    "sshd_config", "/etc/ssh/sshd_config", BindMode.READ_WRITE);
+
+            containerUnderTest.start();
+
+            String passphrase = "theaustraliancricketteamisthebest";
+
+            SshIdentity sshClientIdentity = new SshIdentity(
+                    this.getClass()
+                            .getClassLoader()
+                            .getResourceAsStream("ssh-keys/" + keyName)
+                            .readAllBytes(),
+                    this.getClass()
+                            .getClassLoader()
+                            .getResourceAsStream("ssh-keys/" + keyName + ".pub")
+                            .readAllBytes(),
+                    passphrase.getBytes(StandardCharsets.UTF_8));
+            byte[] privateKey = sshClientIdentity.getPrivateKey();
+            // ssh://git@localhost:33011/srv/git/someRepo.git
+            // we don't want the user part of the uri or jgit will use this user
+            // and we want to be sure to test our implementation with dynamic user
+            final String repoUrl = StringUtils.remove(containerUnderTest.getGitRepoURIAsSSH().toString(), "git@");
+            rule.then(r -> {
+                GitTool.DescriptorImpl gitTools = r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class);
+                gitTools.setInstallations(new JGitTool());
+
+                r.jenkins.getDescriptorByType(GitHostKeyVerificationConfiguration.class)
+                        .setSshHostKeyVerificationStrategy(new AcceptFirstConnectionStrategy());
+
+                BasicSSHUserPrivateKey sshUserPrivateKey = getBasicSSHUserPrivateKey(new String(privateKey), passphrase);
+                SystemCredentialsProvider.getInstance().getCredentials().add(sshUserPrivateKey);
+
+                SystemCredentialsProvider.getInstance().save();
+                FreeStyleProject p = r.createProject(FreeStyleProject.class, "mbp");
+                UserRemoteConfig.DescriptorImpl descriptor =
+                        ExtensionList.lookupSingleton(UserRemoteConfig.DescriptorImpl.class);
+                {
+                    FormValidation validation = descriptor.doCheckUrl(p, sshUserPrivateKey.getId(), repoUrl);
+                    assertThat(validation.getMessage(), validation.kind, is(FormValidation.Kind.OK));
+                }
+            });
+        }
+    }
+
+
+
+    private static BasicSSHUserPrivateKey getBasicSSHUserPrivateKey(String privateKey, String passphrase) {
         BasicSSHUserPrivateKey.PrivateKeySource privateKeySource = new BasicSSHUserPrivateKey.PrivateKeySource() {
             @NotNull
             @Override
             public List<String> getPrivateKeys() {
-                return List.of(new String(privateKey));
+                return List.of(privateKey);
             }
         };
         return new BasicSSHUserPrivateKey(
@@ -192,7 +234,7 @@ public class FIPSModeUrlCheckTest {
                 "some-id",
                 "git",
                 privateKeySource,
-                new String(passphrase),
+                passphrase,
                 "description");
     }
 
