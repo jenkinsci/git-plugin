@@ -13,6 +13,8 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 class UnsetHooks implements RepositoryCallback<Object> {
     private static final Logger LOGGER = Logger.getLogger(UnsetHooks.class.getName());
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public Object invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
         final StoredConfig repoConfig = repo.getConfig();

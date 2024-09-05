@@ -11,6 +11,8 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
  * Disables git hooks. This can get remotely executed on agents.
  */
 class DisableHooks implements RepositoryCallback<Object> {
+    private static final long serialVersionUID = 1L;
+
     static final String DISABLED_WIN = "NUL:";
     static final String DISABLED_NIX = "/dev/null";
 
