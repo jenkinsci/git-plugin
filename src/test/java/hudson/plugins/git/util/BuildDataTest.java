@@ -649,11 +649,11 @@ public class BuildDataTest {
         testUrls.add(new TestUrl("https://markwaite.visualstudio.com/_git/elisp", "markwaite", "elisp"));
         testUrls.add(new TestUrl("https://markwaite.visualstudio.com/DefaultCollection/_git/", "markwaite", "_git"));
         testUrls.add(new TestUrl("https://markwaite.visualstudio.com/DefaultCollection/elisp/_git/elisp", "markwaite", "elisp"));
-        testUrls.add(new TestUrl("https://git.assembla.com/git-plugin.bin.git", "Organization name not found in the URL", "git-plugin.bin"));
-        testUrls.add(new TestUrl("git@git.assembla.com:git-plugin.bin.git", "Organization name not found in the URL", "git-plugin.bin"));
+        testUrls.add(new TestUrl("https://git.assembla.com/git-plugin.bin.git", null, "git-plugin.bin"));
+        testUrls.add(new TestUrl("git@git.assembla.com:git-plugin.bin.git", null, "git-plugin.bin"));
         testUrls.add(new TestUrl("ssh://markwaite@vs-ssh.visualstudio.com:22/DefaultCollection/_ssh/elisp", "markwaite", "elisp"));
         testUrls.add(new TestUrl("ssh://git@github.com/MarkEWaite/tasks.git", "MarkEWaite", "tasks"));
-        testUrls.add(new TestUrl("ssh://git.assembla.com/git-plugin.bin.git", "Organization name not found in the URL", "git-plugin.bin"));
+        testUrls.add(new TestUrl("ssh://git.assembla.com/git-plugin.bin.git", null, "git-plugin.bin"));
 
 
 
