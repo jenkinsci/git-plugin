@@ -301,16 +301,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     protected GitSCM.DescriptorImpl getDescriptorImpl(){
         return new GitSCM.DescriptorImpl();
     }
-    /**
-     * Extracts the repository name from a given Git remote URL.
-     * This method uses a global regular expression defined in the Jenkins Git plugin
-     * configuration (GitSCM.DescriptorImpl). If the global regex is not defined or empty,
-     * it defaults to the plugin's default regular expression. The method checks if the regex
-     * pattern contains a named capturing group 'repo' and attempts to extract it.
-     *
-     * @param remoteUrl The Git remote URL to parse.
-     * @return The repository name if matched and extracted successfully; otherwise, null.
-     */
+
     public String getRepoName(String remoteUrl) throws MalformedURLException {
        GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
        String globalRegex = descriptor.getGlobalUrlRegEx();
@@ -340,16 +331,7 @@ public class BuildData implements Action, Serializable, Cloneable {
        // Return null if no matching repository name is found in the URL
        return null;
     }
-    /**
-     * Extracts the repository name from a given Git remote URL.
-     * This method uses a global regular expression defined in the Jenkins Git plugin
-     * configuration (GitSCM.DescriptorImpl). If the global regex is not defined or empty,
-     * it defaults to the plugin's default regular expression. The method checks if the regex
-     * pattern contains a named capturing group 'repo' and attempts to extract it.
-     *
-     * @param remoteUrl The Git remote URL to parse.
-     * @return The repository name if matched and extracted successfully; otherwise, null.
-     */
+
     public String getOrganizationName(String remoteUrl) {
         GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
         String globalRegex = descriptor.getGlobalUrlRegEx();
