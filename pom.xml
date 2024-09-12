@@ -42,14 +42,6 @@
       <url>http://rsandell.com</url>
     </developer>
     <developer>
-      <id>mramonleon</id>
-      <name>M Ramon Leon</name>
-      <email>rleon@cloudbees.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-    <developer>
       <id>olamy</id>
       <name>Olivier Lamy</name>
       <email>olamy@apache.org</email>
