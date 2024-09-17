@@ -66,7 +66,7 @@ public class FIPSModeUrlCheckTest {
             SystemCredentialsProvider.getInstance()
                     .getCredentials()
                     .add(new UsernamePasswordCredentialsImpl(
-                            CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+                            CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t-that-needs-to-be-long"));
             SystemCredentialsProvider.getInstance().save();
             MultiBranchProject<?, ?> mbp = r.createProject(WorkflowMultiBranchProject.class, "mbp");
             GitSCMSource.DescriptorImpl descriptor = ExtensionList.lookupSingleton(GitSCMSource.DescriptorImpl.class);
