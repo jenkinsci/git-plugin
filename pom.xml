@@ -42,14 +42,6 @@
       <url>http://rsandell.com</url>
     </developer>
     <developer>
-      <id>mramonleon</id>
-      <name>M Ramon Leon</name>
-      <email>rleon@cloudbees.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-    <developer>
       <id>olamy</id>
       <name>Olivier Lamy</name>
       <email>olamy@apache.org</email>
@@ -89,7 +81,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3289.v3ff9637cd241</version>
+        <version>3358.vea_fa_1f41504d</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -187,7 +179,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>892.vd6219fc0a_efb</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -250,7 +241,7 @@
     <dependency>
       <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
       <artifactId>testcontainers-gitserver</artifactId>
-      <version>0.8.0</version>
+      <version>0.9.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
