@@ -912,9 +912,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
         GitClient c = git.getClient();
-        for (GitSCMExtension ext : extensions) {
-            c = ext.decorate(this,c);
-        }
 
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
             String ucCredentialsId = uc.getCredentialsId();
@@ -937,6 +934,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
         // TODO add default credentials
+
+        for (GitSCMExtension ext : extensions) {
+            c = ext.decorate(this,c);
+        }
 
         return c;
     }
