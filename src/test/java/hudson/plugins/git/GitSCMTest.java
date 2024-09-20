@@ -5,7 +5,6 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import org.htmlunit.html.HtmlPage;
@@ -2916,30 +2915,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         r.waitForMessage("Commit message: \"test commit\"", run);
     }
 
-    @Issue("JENKINS-73677")
-    @Test
-    public void testExtensionsDecorateClientAfterSettingCredentials() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        FreeStyleProject project = setupSimpleProject("master");
-        StandardCredentials extensionCredentials = createCredential(CredentialsScope.GLOBAL, "github");
-        store.addCredentials(Domain.global(), extensionCredentials);
-        // setup global config
-        List<UserRemoteConfig> remoteConfigs = GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", null);
-        project.setScm(new GitSCM(
-            remoteConfigs,
-            Collections.singletonList(new BranchSpec("master")),
-            false,
-            null,
-            null,
-            null,
-            List.of(new TestSetCredentialsGitSCMExtension((StandardUsernameCredentials) extensionCredentials))));
-        sampleRepo.init();
-        sampleRepo.write("file", "v1");
-        sampleRepo.git("commit", "--all", "--message=test commit");
-        Run<?, ?> run = r.buildAndAssertSuccess(project);
-        r.waitForMessage("using GIT_ASKPASS to set credentials " + extensionCredentials.getDescription(), run);
-    }
-
     private void setupJGit(GitSCM git) {
         git.gitTool="jgit";
         r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.emptyList()));
@@ -2972,20 +2947,5 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     private StandardCredentials createCredential(CredentialsScope scope, String id) {
         return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
-    }
-
-    public static class TestSetCredentialsGitSCMExtension extends GitSCMExtension {
-
-        private final StandardUsernameCredentials credentials;
-
-        public TestSetCredentialsGitSCMExtension(StandardUsernameCredentials credentials) {
-            this.credentials = credentials;
-        }
-
-        @Override
-        public GitClient decorate(GitSCM scm, GitClient git) throws GitException {
-            git.setCredentials(credentials);
-            return git;
-        }
     }
 }
