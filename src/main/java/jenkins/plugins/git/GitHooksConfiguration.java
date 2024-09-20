@@ -26,22 +26,30 @@ package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Functions;
 import hudson.model.PersistentDescriptor;
 import hudson.plugins.git.GitException;
 import hudson.remoting.Channel;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.IOException;
+import java.util.logging.Logger;
+
 
 
 @Extension @Symbol("gitHooks") @Restricted(NoExternalUse.class)
 public class GitHooksConfiguration extends GlobalConfiguration implements PersistentDescriptor {
+
+    public static final String DISABLED_WIN = "NUL:";
+    public static final String DISABLED_NIX = "/dev/null";
+    static final Logger LOGGER = Logger.getLogger(GitHooksConfiguration.class.getName());
 
     private boolean allowedOnController = false;
     private boolean allowedOnAgents = false;
@@ -101,10 +109,33 @@ public class GitHooksConfiguration extends GlobalConfiguration implements Persis
 
     public static void configure(GitClient client, final boolean allowed) throws GitException, IOException, InterruptedException {
         if (!allowed) {
-            client.withRepository(new DisableHooks());
+            client.withRepository((repo, channel) -> {
+                disable(repo);
+                return null;
+            });
         } else {
-            client.withRepository(new UnsetHooks());
+            client.withRepository((repo, channel) -> {
+                unset(repo);
+                return null;
+            });
         }
     }
 
+    private static void unset(final Repository repo) throws IOException {
+        final StoredConfig repoConfig = repo.getConfig();
+        final String val = repoConfig.getString("core", null, "hooksPath");
+        if (val != null && !val.isEmpty() && !DISABLED_NIX.equals(val) && !DISABLED_WIN.equals(val)) {
+            LOGGER.warning(() -> String.format("core.hooksPath explicitly set to %s and will be left intact on %s.", val, repo.getDirectory()));
+        } else {
+            repoConfig.unset("core", null, "hooksPath");
+            repoConfig.save();
+        }
+    }
+
+    private static void disable(final Repository repo) throws IOException {
+        final String VAL = Functions.isWindows() ? DISABLED_WIN : DISABLED_NIX;
+        final StoredConfig repoConfig = repo.getConfig();
+        repoConfig.setString("core", null, "hooksPath", VAL);
+        repoConfig.save();
+    }
 }
