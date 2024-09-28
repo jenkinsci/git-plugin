@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.*;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.Descriptor.FormException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -347,7 +348,7 @@ public class CredentialsUserRemoteConfigTest {
         r.waitForMessage("No credentials specified", b);
     }
 
-    private StandardCredentials createCredential(CredentialsScope scope, String id) {
-        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
+    private StandardCredentials createCredential(CredentialsScope scope, String id) throws FormException {
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password-longer-than-14");
     }
 }

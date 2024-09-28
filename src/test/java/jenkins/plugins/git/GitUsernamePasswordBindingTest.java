@@ -8,6 +8,7 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.EnvVars;
 import hudson.FilePath;
 
+import hudson.model.Descriptor.FormException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
@@ -113,12 +114,12 @@ public class GitUsernamePasswordBindingTest {
         "randomName",
     };
     private static String[] passwords = {
-        "&Ampersand&",
+        "&Ampersand-long-enough&",
         "He said \"Hello\", then left.",
-        "default=@#(*^!",
+        "default=@#(*^!-long-enough",
         "has_a_trailing_quote=@#(*^!'",
-        "here's-a-quote",
-        "special%%_342@**",
+        "here's-a-quote-long-enough",
+        "special%%_342@**-long-enough",
         "%interior-single-quote%_786'@**",
     };
     private static GitTool[] gitTools = {
@@ -142,7 +143,7 @@ public class GitUsernamePasswordBindingTest {
     }
 
     @Before
-    public void basicSetup() throws IOException {
+    public void basicSetup() throws FormException, IOException {
         //File init
         rootDir = tempFolder.getRoot();
         rootFilePath = new FilePath(rootDir.getAbsoluteFile());

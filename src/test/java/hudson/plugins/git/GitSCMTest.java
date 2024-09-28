@@ -13,7 +13,25 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Functions;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.Action;
+import hudson.model.Cause;
+import hudson.model.Descriptor;
+import hudson.model.Descriptor.FormException;
+import hudson.model.EnvironmentContributingAction;
+import hudson.model.EnvironmentContributor;
+import hudson.model.Fingerprint;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.StringParameterDefinition;
+import hudson.model.StringParameterValue;
+import hudson.model.TaskListener;
+import hudson.model.User;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -158,9 +176,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
-    private StandardCredentials getInvalidCredential() {
+    private StandardCredentials getInvalidCredential() throws FormException {
         String username = "bad-user";
-        String password = "bad-password";
+        String password = "bad-password-but-long-enough";
         CredentialsScope scope = CredentialsScope.GLOBAL;
         String id = "username-" + username + "-password-" + password;
         return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
@@ -2945,7 +2963,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         return java.io.File.pathSeparatorChar==';';
     }
 
-    private StandardCredentials createCredential(CredentialsScope scope, String id) {
-        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
+    private StandardCredentials createCredential(CredentialsScope scope, String id) throws FormException {
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password-needs-to-be-14");
     }
 }

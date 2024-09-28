@@ -133,7 +133,7 @@ public class FIPSModeUrlCheckTest {
                 SystemCredentialsProvider.getInstance()
                         .getCredentials()
                         .add(new UsernamePasswordCredentialsImpl(
-                                CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+                                CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t-at-least-14-chars"));
                 SystemCredentialsProvider.getInstance().save();
                 FreeStyleProject p = r.createProject(FreeStyleProject.class, "mbp");
                 UserRemoteConfig.DescriptorImpl descriptor =
