@@ -123,7 +123,7 @@ public class GitStepTest {
     @Test
     public void roundtrip_withcredentials() throws Exception {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        IdCredentials c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "user", "pass");
+        IdCredentials c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "user", "password-needs-to-be-14");
         CredentialsProvider.lookupStores(r.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
         GitStep step = new GitStep("git@github.com:jenkinsci/workflow-plugin.git");

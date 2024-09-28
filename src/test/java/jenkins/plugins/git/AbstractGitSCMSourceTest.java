@@ -340,7 +340,7 @@ public class AbstractGitSCMSourceTest {
         assert folderStore != null;
         String fCredentialsId = "fcreds";
         StandardCredentials fCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-            fCredentialsId, "fcreds", "user", "password");
+            fCredentialsId, "fcreds", "user", "password-longer-than-14");
         folderStore.addCredentials(Domain.global(), fCredentials);
         folderStore.save();
         WorkflowJob p = f.createProject(WorkflowJob.class, "wjob");
