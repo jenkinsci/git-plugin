@@ -81,7 +81,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3413.v0d896b_76a_30d</version>
+        <version>3435.v238d66a_043fb_</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -95,6 +95,13 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
+      <exclusions>
+        <!-- TODO: Remove the commons-io exclusion when no longer needed for upper bounds on mina dependency from git-client -->
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
