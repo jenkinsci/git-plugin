@@ -85,6 +85,13 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <!-- TODO: Remove when 2.14.0-133.vcc091215a_358 or newer is in BOM -->
+        <!-- https://github.com/jenkinsci/mina-sshd-api-plugin/releases/tag/2.14.0-133.vcc091215a_358 -->
+        <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+        <artifactId>mina-sshd-api-common</artifactId>
+        <version>2.14.0-133.vcc091215a_358</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -95,13 +102,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <exclusions>
-        <!-- TODO: Remove the commons-io exclusion when no longer needed for upper bounds on mina dependency from git-client -->
-        <exclusion>
-          <groupId>commons-io</groupId>
-          <artifactId>commons-io</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
