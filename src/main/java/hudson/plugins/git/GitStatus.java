@@ -19,10 +19,10 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMEvent;
@@ -115,6 +115,75 @@ public class GitStatus implements UnprotectedRootAction {
         return s.toString();
     }
 
+    /**
+     * Copied from scm API plugin.
+     * Helper method to get the origin of an event from a {@link HttpServletRequest}. The current format is the
+     * list of hostname / ip addresses from the request (parsing {@code X-Forwarded-For} headers) separated by
+     * {@code} followed by a {@code} and finally the requested URL (omitting the query portion of the URL).
+     *
+     * @param req the {@link HttpServletRequest} or {@code null} (this is to allow passing
+     *            {@link Stapler#getCurrentRequest()} without having to check for {@code null})
+     * @return the origin of the event or {@code null} if the {@link HttpServletRequest} is null.
+     * @since 2.0.3
+     */
+    @CheckForNull
+    private String originOf(@CheckForNull HttpServletRequest req) {
+        if (req == null) {
+            return null;
+        }
+        String last = null;
+        StringBuilder result = new StringBuilder();
+        // TODO RFC 7239 support once standard is approved
+        String header = req.getHeader("X-Forwarded-For");
+        if (StringUtils.isNotBlank(header)) {
+            for (String remote : header.split("(,\\s*)")) {
+                if (StringUtils.isBlank(remote)) {
+                    continue;
+                }
+                if (last != null) {
+                    result.append(" → ");
+                }
+                last = StringUtils.trim(remote);
+                result.append(last);
+            }
+        }
+        String remoteHost = req.getRemoteHost();
+        String remoteAddr = req.getRemoteAddr();
+        if (last == null || (!(StringUtils.equals(last, remoteHost) || StringUtils.equals(last, remoteAddr)))) {
+            if (last != null) {
+                result.append(" → ");
+            }
+            if (!StringUtils.isBlank(remoteHost) && !remoteHost.equals(remoteAddr)) {
+                result.append(remoteHost);
+                result.append('/');
+            }
+            result.append(remoteAddr);
+        }
+        result.append(" ⇒ ");
+        String scheme = StringUtils.defaultIfBlank(req.getHeader("X-Forwarded-Proto"), req.getScheme());
+        result.append(scheme);
+        result.append("://");
+        result.append(req.getServerName());
+        String portStr = req.getHeader("X-Forwarded-Port");
+        int port;
+        if (portStr != null) {
+            try {
+                port = Integer.parseInt(portStr);
+            } catch (NumberFormatException e) {
+                port = req.getLocalPort();
+            }
+        } else {
+            port = req.getLocalPort();
+        }
+        if (!("http".equals(scheme) && port == 80 || "https".equals(scheme) && port == 443)) {
+            result.append(':');
+            result.append(port);
+        }
+        result.append(req.getRequestURI());
+        // omit query as may contain "secrets"
+        return result.toString();
+    }
+
     public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter() String branches, @QueryParameter() String sha1,
                                        @QueryParameter() String token) {
@@ -173,14 +242,14 @@ public class GitStatus implements UnprotectedRootAction {
 
         final List<ResponseContributor> contributors = new ArrayList<>();
         Jenkins jenkins = Jenkins.get();
-        String origin = SCMEvent.originOf(request);
+        String origin = originOf(request);
         for (Listener listener : jenkins.getExtensionList(Listener.class)) {
             contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));
         }
 
         return new HttpResponse() {
           @Override
-          public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException {
+          public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node) throws IOException {
             rsp.setStatus(SC_OK);
             rsp.setContentType("text/plain");
             for (int i = 0; i < contributors.size(); i++) {
@@ -232,7 +301,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param rsp the response.
          * @since 1.4.1
          */
-        public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+        public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
         }
 
         /**
@@ -243,7 +312,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param w   the writer.
          * @since 1.4.1
          */
-        public void writeBody(StaplerRequest req, StaplerResponse rsp, PrintWriter w) {
+        public void writeBody(StaplerRequest2 req, StaplerResponse2 rsp, PrintWriter w) {
             writeBody(w);
         }
 
@@ -543,7 +612,7 @@ public class GitStatus implements UnprotectedRootAction {
              */
             @Override
             @SuppressWarnings("deprecation")
-            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+            public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
                 // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
                 // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());
@@ -578,7 +647,7 @@ public class GitStatus implements UnprotectedRootAction {
              */
             @Override
             @SuppressWarnings("deprecation")
-            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+            public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
                 // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
                 // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());

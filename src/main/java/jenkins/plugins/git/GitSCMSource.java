@@ -107,8 +107,8 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
@@ -671,7 +671,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                     result.add(new GitStatus.ResponseContributor() {
                                         @Override
                                         @SuppressWarnings("deprecation")
-                                        public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+                                        public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
                                             // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
                                             // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                                             rsp.addHeader("Triggered", owner.getAbsoluteUrl());

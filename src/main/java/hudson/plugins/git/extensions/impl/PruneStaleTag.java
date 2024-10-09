@@ -47,7 +47,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Prune stale local tags that do not exist on any remote.
@@ -166,7 +166,7 @@ public class PruneStaleTag extends GitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         @Override
-        public GitSCMExtension newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public GitSCMExtension newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
             return new PruneStaleTag(true);
         }
 

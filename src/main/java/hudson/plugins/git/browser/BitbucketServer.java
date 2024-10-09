@@ -8,7 +8,7 @@ import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -81,7 +81,7 @@ public class BitbucketServer extends GitRepositoryBrowser {
         @Override
         @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
                             justification = "Inherited javadoc commits that req is non-null")
-        public BitbucketServer newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+        public BitbucketServer newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(BitbucketServer.class, jsonObject);
         }
     }

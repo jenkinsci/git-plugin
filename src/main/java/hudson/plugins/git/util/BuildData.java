@@ -21,7 +21,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -141,7 +141,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     @Restricted(NoExternalUse.class) // only used from stapler/jelly
     @CheckForNull
     public Run<?,?> getOwningRun() {
-        StaplerRequest req = Stapler.getCurrentRequest();
+        StaplerRequest2 req = Stapler.getCurrentRequest2();
         if (req == null) {
             return null;
         }
