@@ -62,7 +62,7 @@
   </scm>
 
   <properties>
-    <revision>5.5.3</revision>
+    <revision>5.6.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
