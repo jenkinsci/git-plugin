@@ -5,13 +5,14 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.88</version>
+    <version>5.1</version>
     <relativePath />
   </parent>
 
   <artifactId>git</artifactId>
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
+
   <name>Git plugin</name>
   <url>https://github.com/${gitHubRepo}</url>
   <inceptionYear>2007</inceptionYear>
@@ -64,8 +65,11 @@
     <revision>5.5.3</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.baseline>2.440</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+    <jenkins.baseline>2.462</jenkins.baseline>
+    <!-- TODO Replace with the standard jenkins.baseline references after LTS requires Java 17  -->
+    <!-- <jenkins.version>${jenkins.baseline}.1</jenkins.version> -->
+    <jenkins.version>2.479</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
@@ -114,6 +118,8 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
+      <!-- TODO: Remove when release is available in plugin BOM -->
+      <version>698.v8e3b_c788f0a_6</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
