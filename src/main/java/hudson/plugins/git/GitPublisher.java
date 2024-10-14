@@ -28,7 +28,7 @@ import org.jenkinsci.plugins.gitclient.PushCommand;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.kohsuke.stapler.*;
 
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -437,7 +437,7 @@ public class GitPublisher extends Recorder implements Serializable {
         }
         
         public FormValidation doCheckRemote(
-                @AncestorInPath AbstractProject project, StaplerRequest2 req)
+                @AncestorInPath AbstractProject project, StaplerRequest req)
                 throws IOException, ServletException {
             String remote = req.getParameter("value");
             boolean isMerge = req.getParameter("isMerge") != null;

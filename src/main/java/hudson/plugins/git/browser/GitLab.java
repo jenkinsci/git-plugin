@@ -12,14 +12,14 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.URL;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 
 import org.kohsuke.stapler.QueryParameter;
 
@@ -145,7 +145,7 @@ public class GitLab extends GitRepositoryBrowser {
         @Override
         @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
                             justification = "Inherited javadoc commits that req is non-null")
-        public GitLab newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
+        public GitLab newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(GitLab.class, jsonObject);
         }
 

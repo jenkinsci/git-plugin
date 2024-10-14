@@ -9,7 +9,7 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
 
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.IDN;
@@ -46,7 +46,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
 
     public final URL getUrl() throws IOException {
         String u = url;
-        StaplerRequest2 req = Stapler.getCurrentRequest2();
+        StaplerRequest req = Stapler.getCurrentRequest();
         if (req != null) {
             Job job = req.findAncestorObject(Job.class);
             if (job != null) {

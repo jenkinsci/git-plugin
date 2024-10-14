@@ -17,7 +17,7 @@ import java.net.URL;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
@@ -26,7 +26,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * @author Manolo Carrasco Moñino
@@ -72,7 +72,7 @@ public class Gitiles extends GitRepositoryBrowser {
         @Override
         @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
                             justification = "Inherited javadoc commits that req is non-null")
-        public Gitiles newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
+        public Gitiles newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(Gitiles.class, jsonObject);
         }
 

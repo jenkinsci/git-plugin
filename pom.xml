@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.1</version>
+    <version>4.88</version>
     <relativePath />
   </parent>
 
@@ -66,10 +66,8 @@
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.479</jenkins.baseline>
-    <!-- TODO Replace with the standard jenkins.baseline references after LTS requires Java 17  -->
-    <!-- <jenkins.version>${jenkins.baseline}.1</jenkins.version> -->
-    <jenkins.version>${jenkins.baseline}</jenkins.version>
+    <jenkins.baseline>2.452</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.4</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
@@ -78,6 +76,7 @@
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
+    <test>InjectedTest</test>
   </properties>
 
   <dependencyManagement>
@@ -89,13 +88,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <!-- TODO: Remove when 2.14.0-133.vcc091215a_358 or newer is in BOM -->
-        <!-- https://github.com/jenkinsci/mina-sshd-api-plugin/releases/tag/2.14.0-133.vcc091215a_358 -->
-        <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
-        <artifactId>mina-sshd-api-common</artifactId>
-        <version>2.14.0-133.vcc091215a_358</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -106,8 +98,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <!-- TODO: Remove when release is available in plugin BOM -->
-      <version>6.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -120,8 +110,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <!-- TODO: Remove when release is available in plugin BOM -->
-      <version>698.v8e3b_c788f0a_6</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -145,9 +133,6 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
       <optional>true</optional>
-      <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.440.x and 2.452.x lines -->
-      <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
-      <version>822.824.v14451b_c0fd42</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

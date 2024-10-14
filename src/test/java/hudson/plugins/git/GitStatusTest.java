@@ -33,10 +33,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest2;
-import org.kohsuke.stapler.StaplerResponse2;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 public class GitStatusTest extends AbstractGitProject {
 
@@ -536,8 +536,8 @@ public class GitStatusTest extends AbstractGitProject {
         HttpResponse rsp = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, notifyCommitApiToken);
 
         // Up to 10 "Triggered" headers + 1 extra warning are returned.
-        StaplerRequest2 sReq = mock(StaplerRequest2.class);
-        StaplerResponse2 sRsp = mock(StaplerResponse2.class);
+        StaplerRequest sReq = mock(StaplerRequest.class);
+        StaplerResponse sRsp = mock(StaplerResponse.class);
         Mockito.when(sRsp.getWriter()).thenReturn(mock(PrintWriter.class));
         rsp.generateResponse(sReq, sRsp, null);
         Mockito.verify(sRsp, Mockito.times(11)).addHeader(Mockito.eq("Triggered"), Mockito.anyString());

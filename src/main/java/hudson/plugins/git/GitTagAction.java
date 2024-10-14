@@ -11,13 +11,13 @@ import hudson.util.MultipartFormDataParser;
 import jenkins.model.*;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.kohsuke.stapler.StaplerRequest2;
-import org.kohsuke.stapler.StaplerResponse2;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -149,7 +149,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
      * @throws ServletException on servlet error
      */
     @RequirePOST
-    public synchronized void doSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
+    public synchronized void doSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         getACL().checkPermission(getPermission());
 
         try (MultipartFormDataParser parser = new MultipartFormDataParser(req)) {

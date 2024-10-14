@@ -19,10 +19,10 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
-import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static jakarta.servlet.http.HttpServletResponse.SC_OK;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMEvent;
@@ -180,7 +180,7 @@ public class GitStatus implements UnprotectedRootAction {
 
         return new HttpResponse() {
           @Override
-          public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node) throws IOException {
+          public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException {
             rsp.setStatus(SC_OK);
             rsp.setContentType("text/plain");
             for (int i = 0; i < contributors.size(); i++) {
@@ -232,7 +232,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param rsp the response.
          * @since 1.4.1
          */
-        public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
+        public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
         }
 
         /**
@@ -243,7 +243,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param w   the writer.
          * @since 1.4.1
          */
-        public void writeBody(StaplerRequest2 req, StaplerResponse2 rsp, PrintWriter w) {
+        public void writeBody(StaplerRequest req, StaplerResponse rsp, PrintWriter w) {
             writeBody(w);
         }
 
@@ -543,7 +543,7 @@ public class GitStatus implements UnprotectedRootAction {
              */
             @Override
             @SuppressWarnings("deprecation")
-            public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
+            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
                 // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
                 // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());
@@ -578,7 +578,7 @@ public class GitStatus implements UnprotectedRootAction {
              */
             @Override
             @SuppressWarnings("deprecation")
-            public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
+            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
                 // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
                 // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());

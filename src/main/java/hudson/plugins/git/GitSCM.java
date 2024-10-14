@@ -66,10 +66,10 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 
 import java.io.File;
 import java.io.IOException;
@@ -1884,7 +1884,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return mergeOptions;
         }
 
-        public FormValidation doGitRemoteNameCheck(StaplerRequest2 req)
+        public FormValidation doGitRemoteNameCheck(StaplerRequest req)
                 throws IOException, ServletException {
             String mergeRemoteName = req.getParameter("value");
             boolean isMerge = req.getParameter("isMerge") != null;
@@ -1905,7 +1905,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         @Override
-        public boolean configure(StaplerRequest2 req, JSONObject formData) throws FormException {
+        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
             req.bindJSON(this, formData);
             save();
             return true;

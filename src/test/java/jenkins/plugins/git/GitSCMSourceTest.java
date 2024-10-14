@@ -49,7 +49,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Collections;
 import org.jvnet.hudson.test.TestExtension;
