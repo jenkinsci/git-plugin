@@ -89,13 +89,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <!-- TODO: Remove when 2.14.0-133.vcc091215a_358 or newer is in BOM -->
-        <!-- https://github.com/jenkinsci/mina-sshd-api-plugin/releases/tag/2.14.0-133.vcc091215a_358 -->
-        <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
-        <artifactId>mina-sshd-api-common</artifactId>
-        <version>2.14.0-133.vcc091215a_358</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -106,8 +99,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <!-- TODO: Remove when release is available in plugin BOM -->
-      <version>6.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -120,8 +111,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <!-- TODO: Remove when release is available in plugin BOM -->
-      <version>698.v8e3b_c788f0a_6</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
