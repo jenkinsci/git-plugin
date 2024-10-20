@@ -252,8 +252,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public List<GitSCMExtension> getExtensions() {
         List<GitSCMExtension> extensions = new ArrayList<>();
         for (SCMSourceTrait t : getTraits()) {
-            if (t instanceof GitSCMExtensionTrait) {
-                extensions.add(((GitSCMExtensionTrait) t).getExtension());
+            if (t instanceof GitSCMExtensionTrait<?> trait) {
+                extensions.add(trait.getExtension());
             }
         }
         return Collections.unmodifiableList(extensions);
@@ -441,25 +441,25 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
-                                  if (head instanceof GitTagSCMHead) {
+                                  if (head instanceof GitTagSCMHead mHead) {
                                       try {
                                           ObjectId objectId = client.revParse(Constants.R_TAGS + head.getName());
-                                          return new GitTagSCMRevision((GitTagSCMHead) head, objectId.name());
+                                          return new GitTagSCMRevision(mHead, objectId.name());
                                       } catch (GitException e) {
                                           // tag does not exist
                                           return null;
                                       }
-                                  } else if (head instanceof GitBranchSCMHead) {
+                                  } else if (head instanceof GitBranchSCMHead mHead) {
                                       for (Branch b : client.getRemoteBranches()) {
                                           String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                                           if (branchName.equals(head.getName())) {
-                                              return new GitBranchSCMRevision((GitBranchSCMHead)head, b.getSHA1String());
+                                              return new GitBranchSCMRevision(mHead, b.getSHA1String());
                                           }
                                       }
-                                  } else if (head instanceof GitRefSCMHead) {
+                                  } else if (head instanceof GitRefSCMHead mHead) {
                                       try {
-                                          ObjectId objectId = client.revParse(((GitRefSCMHead) head).getRef());
-                                          return new GitRefSCMRevision((GitRefSCMHead)head, objectId.name());
+                                          ObjectId objectId = client.revParse(mHead.getRef());
+                                          return new GitRefSCMRevision(mHead, objectId.name());
                                       } catch (GitException e) {
                                           // ref could not be found
                                           return null;
@@ -1253,8 +1253,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     protected List<Action> retrieveActions(@NonNull SCMHead head, @CheckForNull SCMHeadEvent event,
                                            @NonNull TaskListener listener) throws IOException, InterruptedException {
         SCMSourceOwner owner = getOwner();
-        if (owner instanceof Actionable) {
-            for (GitRemoteHeadRefAction a: ((Actionable) owner).getActions(GitRemoteHeadRefAction.class)) {
+        if (owner instanceof Actionable actionable) {
+            for (GitRemoteHeadRefAction a: actionable.getActions(GitRemoteHeadRefAction.class)) {
                 if (getRemote().equals(a.getRemote())) {
                     if (head.getName().equals(a.getName())) {
                         return Collections.singletonList(new PrimaryInstanceMetadataAction());

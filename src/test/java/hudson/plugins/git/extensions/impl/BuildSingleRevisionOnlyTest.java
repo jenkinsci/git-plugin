@@ -79,7 +79,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
 
         r.assertBuildStatusSuccess(build);
         boolean result = build.getLog(100).contains(
-                String.format("Scheduling another build to catch up with %s", project.getName()));
+                "Scheduling another build to catch up with %s".formatted(project.getName()));
         Assert.assertFalse("Single revision scheduling did not prevent a build of a different revision", result);
     }
 
@@ -109,7 +109,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile);
 
         r.assertBuildStatusSuccess(build);
-        r.waitForMessage(String.format("Scheduling another build to catch up with %s", project.getName()), build);
+        r.waitForMessage("Scheduling another build to catch up with %s".formatted(project.getName()), build);
 
         // Wait briefly for newly scheduled job to start.
         // Once job has started, waitForAllJobsToComplete will hold the test until job completes.

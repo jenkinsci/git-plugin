@@ -2,6 +2,8 @@ package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.InvisibleAction;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -10,6 +12,7 @@ import java.util.Objects;
  */
 public class GitRemoteHeadRefAction extends InvisibleAction implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @NonNull

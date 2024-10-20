@@ -12,6 +12,7 @@ import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -33,6 +34,7 @@ import org.kohsuke.stapler.StaplerRequest2;
  */
 public class Gitiles extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor

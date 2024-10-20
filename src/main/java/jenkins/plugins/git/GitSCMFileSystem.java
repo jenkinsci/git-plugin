@@ -212,8 +212,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
             try (Writer out = new OutputStreamWriter(changeLogStream, StandardCharsets.UTF_8)) {
                 changelog.includes(commitId);
                 ObjectId fromCommitId;
-                if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
-                    fromCommitId = ObjectId.fromString(((AbstractGitSCMSource.SCMRevisionImpl) revision).getHash());
+                if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl impl) {
+                    fromCommitId = ObjectId.fromString(impl.getHash());
                     changelog.excludes(fromCommitId);
                 } else {
                     fromCommitId = null;
@@ -257,15 +257,15 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            return source instanceof GitSCM
-                    && ((GitSCM) source).getUserRemoteConfigs().size() == 1
-                    && ((GitSCM) source).getBranches().size() == 1
-                    && !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
+            return source instanceof GitSCM gscm
+                    && gscm.getUserRemoteConfigs().size() == 1
+                    && gscm.getBranches().size() == 1
+                    && !gscm.getBranches().get(0).getName().equals("*") // JENKINS-57587
                     && (
-                        ((GitSCM) source).getBranches().get(0).getName().matches(
+                        gscm.getBranches().get(0).getName().matches(
                             "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
                         )
-                        || ((GitSCM) source).getBranches().get(0).getName().matches(
+                        || gscm.getBranches().get(0).getName().matches(
                             "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
                         )
                     );

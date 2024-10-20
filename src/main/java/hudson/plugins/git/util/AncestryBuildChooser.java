@@ -8,6 +8,7 @@ import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -157,6 +158,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
             return Messages.BuildChooser_Ancestry();
         }
     }
-    
+
+    @Serial
     private static final long serialVersionUID = 1L;
 }

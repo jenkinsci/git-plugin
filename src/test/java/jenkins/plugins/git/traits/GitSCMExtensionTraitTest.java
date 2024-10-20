@@ -20,8 +20,8 @@ public class GitSCMExtensionTraitTest {
     public List<GitSCMExtensionTraitDescriptor> descriptors() {
         List<GitSCMExtensionTraitDescriptor> list = new ArrayList<>();
         for (Descriptor<SCMSourceTrait> d : SCMSourceTrait.all()) {
-            if (d instanceof GitSCMExtensionTraitDescriptor) {
-                list.add((GitSCMExtensionTraitDescriptor) d);
+            if (d instanceof GitSCMExtensionTraitDescriptor descriptor) {
+                list.add(descriptor);
             }
         }
         return list;

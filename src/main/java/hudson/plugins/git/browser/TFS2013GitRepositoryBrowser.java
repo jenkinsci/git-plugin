@@ -39,13 +39,13 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
 
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
-        String spec = String.format("commit/%s#path=%s&_a=compare", path.getChangeSet().getId(), path.getPath());
+        String spec = "commit/%s#path=%s&_a=compare".formatted(path.getChangeSet().getId(), path.getPath());
         return new URL(getRepoUrl(path.getChangeSet()), spec);
     }
 
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
-        String spec = String.format("commit/%s#path=%s&_a=history", path.getChangeSet().getId(), path.getPath());
+        String spec = "commit/%s#path=%s&_a=history".formatted(path.getChangeSet().getId(), path.getPath());
         return encodeURL(new URL(getRepoUrl(path.getChangeSet()), spec));
     }
 

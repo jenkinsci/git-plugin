@@ -75,12 +75,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -710,13 +711,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final EnvVars pollEnv = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
+        final EnvVars pollEnv = project instanceof AbstractProject<?,?> ap ? GitUtils.getPollEnvironment(ap, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(pollEnv);
 
         if (!requiresWorkspaceForPolling(pollEnv)) {
 
-            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
+            final EnvVars environment = project instanceof AbstractProject<?,?> ap ? GitUtils.getPollEnvironment(ap, workspace, launcher, listener, false) : new EnvVars();
 
             GitClient git = createClient(listener, environment, lastBuild, Jenkins.get(), null);
 
@@ -784,7 +785,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final Node node = GitUtils.workspaceToNode(workspace);
-        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : project.getEnvironment(node, listener);
+        final EnvVars environment = project instanceof AbstractProject<?,?> ap ? GitUtils.getPollEnvironment(ap, workspace, launcher, listener) : project.getEnvironment(node, listener);
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
@@ -1175,8 +1176,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             log.println("Multiple candidate revisions");
             if (checkForMultipleRevisions) {
                 Job<?, ?> job = build.getParent();
-                if (job instanceof AbstractProject) {
-                    AbstractProject project = (AbstractProject) job;
+                if (job instanceof AbstractProject<?,?> project) {
                     if (!project.isDisabled()) {
                         log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
                         if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause("This build was triggered by build "
@@ -1416,7 +1416,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         try {
             // Check for local remotes with no protocol like /path/to/repo.git/
-            return !Files.exists(Paths.get(remoteUrl));
+            return !Files.exists(Path.of(remoteUrl));
         } catch (InvalidPathException e) {
             return true;
         }
@@ -1937,6 +1937,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 //        }
     }
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Whitelisted

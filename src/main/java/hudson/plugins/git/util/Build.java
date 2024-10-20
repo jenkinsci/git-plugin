@@ -9,6 +9,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -19,6 +20,7 @@ import java.util.Objects;
  */
 @ExportedBean(defaultVisibility = 999)
 public class Build implements Serializable, Cloneable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

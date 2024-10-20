@@ -24,6 +24,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.*;
@@ -365,8 +366,7 @@ public class GitUtils implements Serializable {
         List<? extends Action> buildActions = b.getAllActions();
         for (Action action : buildActions) {
             // most importantly, ParametersAction will be processed here (for parameterized builds)
-            if (action instanceof ParametersAction) {
-                ParametersAction envAction = (ParametersAction) action;
+            if (action instanceof ParametersAction envAction) {
                 envAction.buildEnvironment(b, env);
             }
         }
@@ -410,5 +410,6 @@ public class GitUtils implements Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

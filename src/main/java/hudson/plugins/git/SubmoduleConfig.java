@@ -3,7 +3,7 @@ package hudson.plugins.git;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-
+import java.io.Serial;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -16,6 +16,7 @@ import java.util.Collections;
  */
 @Deprecated
 public class SubmoduleConfig implements java.io.Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     private static final String[] EMPTY_ARRAY = new String[0];
     String   submoduleName = null;

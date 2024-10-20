@@ -109,8 +109,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
     protected GitSCMExtensionTraitDescriptor() {
         super();
         Type bt = Types.getBaseClass(clazz, GitSCMExtensionTrait.class);
-        if (bt instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) bt;
+        if (bt instanceof ParameterizedType pt) {
             // this 'extension' is the closest approximation of E of GitSCMExtensionTrait<E>.
             extension = Types.erasure(pt.getActualTypeArguments()[0]);
             if (!GitSCMExtension.class.isAssignableFrom(extension) || GitSCMExtension.class == extension) {

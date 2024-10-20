@@ -131,7 +131,7 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
 
         final List<GitRepositoryBrowser> browsers = new ArrayList<>();
         for (LibraryConfiguration library : libraries) {
-            final String errorMessage = String.format("Error checking library %s", library.getName());
+            final String errorMessage = "Error checking library %s".formatted(library.getName());
             final LibraryRetriever retriever = library.getRetriever();
             assertThat(errorMessage, retriever, instanceOf(SCMRetriever.class));
             final SCM scm =  ((SCMRetriever) retriever).getScm();

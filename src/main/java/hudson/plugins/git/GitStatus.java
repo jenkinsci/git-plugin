@@ -430,9 +430,9 @@ public class GitStatus implements UnprotectedRootAction {
                             }
                             if (!branchFound) continue;
                             urlFound = true;
-                            if (!(project instanceof ParameterizedJobMixIn.ParameterizedJob && ((ParameterizedJobMixIn.ParameterizedJob) project).isDisabled())) {
+                            if (!(project instanceof ParameterizedJobMixIn.ParameterizedJob<?,?> job && job.isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
-                                if (project instanceof Job) {
+                                if (project instanceof Job<?,?> job) {
                                     Set<String> buildParametersNames = new HashSet<>();
                                     if (allowNotifyCommitParameters || !safeParameters.isEmpty()) {
                                         for (ParameterValue parameterValue: allBuildParameters) {
@@ -442,7 +442,7 @@ public class GitStatus implements UnprotectedRootAction {
                                         }
                                     }
 
-                                    List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
+                                    List<ParameterValue> jobParametersValues = getDefaultParametersValues(job);
                                     for (ParameterValue defaultParameterValue : jobParametersValues) {
                                         if (!buildParametersNames.contains(defaultParameterValue.getName())) {
                                             allBuildParameters.add(defaultParameterValue);

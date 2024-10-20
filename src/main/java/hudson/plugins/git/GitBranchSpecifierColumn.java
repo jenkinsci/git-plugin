@@ -26,8 +26,7 @@ public class GitBranchSpecifierColumn extends ListViewColumn {
         SCMTriggerItem s = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(item);
         if(s != null) {
             for(SCM scm : s.getSCMs()) {
-                if (scm instanceof GitSCM) {
-                    GitSCM gitScm = (GitSCM)scm;
+                if (scm instanceof GitSCM gitScm) {
                     for(BranchSpec spec : gitScm.getBranches()) {
                         branchSpec.add(spec.getName());
                     }

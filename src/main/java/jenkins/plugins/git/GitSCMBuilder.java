@@ -499,15 +499,14 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             extensions.add(new GitSCMSourceDefaults(head() instanceof TagSCMHead));
         }
         SCMRevision revision = revision();
-        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
+        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl impl) {
             // remove any conflicting BuildChooserSetting if present
             extensions.removeIf(gitSCMExtension -> gitSCMExtension instanceof BuildChooserSetting);
             extensions.add(new BuildChooserSetting(new AbstractGitSCMSource.SpecificRevisionBuildChooser(
-                    (AbstractGitSCMSource.SCMRevisionImpl) revision)));
+                    impl)));
         }
         SCMHead scmHead = head();
-        if (scmHead instanceof GitRefSCMHead) {
-            GitRefSCMHead gitHead = (GitRefSCMHead) scmHead;
+        if (scmHead instanceof GitRefSCMHead gitHead) {
             withRefSpec(gitHead.getRef());
         }
         try {

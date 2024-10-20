@@ -220,8 +220,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 EXTENSIONS:
                 for (GitSCMExtension extension : extensions) {
                     for (SCMSourceTraitDescriptor d : SCMSourceTrait.all()) {
-                        if (d instanceof GitSCMExtensionTraitDescriptor) {
-                            GitSCMExtensionTraitDescriptor descriptor = (GitSCMExtensionTraitDescriptor) d;
+                        if (d instanceof GitSCMExtensionTraitDescriptor descriptor) {
                             if (descriptor.getExtensionClass().isInstance(extension)) {
                                 try {
                                     SCMSourceTrait trait = descriptor.convertToTrait(extension);
@@ -331,8 +330,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         EXTENSIONS:
         for (GitSCMExtension extension : Util.fixNull(extensions)) {
             for (SCMSourceTraitDescriptor d : SCMSourceTrait.all()) {
-                if (d instanceof GitSCMExtensionTraitDescriptor) {
-                    GitSCMExtensionTraitDescriptor descriptor = (GitSCMExtensionTraitDescriptor) d;
+                if (d instanceof GitSCMExtensionTraitDescriptor descriptor) {
                     if (descriptor.getExtensionClass().isInstance(extension)) {
                         try {
                             SCMSourceTrait trait = descriptor.convertToTrait(extension);
@@ -369,12 +367,12 @@ public class GitSCMSource extends AbstractGitSCMSource {
         String remoteName = null;
         RefSpecsSCMSourceTrait refSpecs = null;
         for (SCMSourceTrait trait : traits) {
-            if (trait instanceof RemoteNameSCMSourceTrait) {
-                remoteName = ((RemoteNameSCMSourceTrait) trait).getRemoteName();
+            if (trait instanceof RemoteNameSCMSourceTrait sourceTrait) {
+                remoteName = sourceTrait.getRemoteName();
                 if (refSpecs != null) break;
             }
-            if (trait instanceof RefSpecsSCMSourceTrait) {
-                refSpecs = (RefSpecsSCMSourceTrait) trait;
+            if (trait instanceof RefSpecsSCMSourceTrait sourceTrait) {
+                refSpecs = sourceTrait;
                 if (remoteName != null) break;
             }
         }
@@ -432,7 +430,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return new StandardListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(
-                            context instanceof Queue.Task ? Tasks.getAuthenticationOf((Queue.Task)context) : ACL.SYSTEM,
+                            context instanceof Queue.Task t ? Tasks.getAuthenticationOf(t) : ACL.SYSTEM,
                             context,
                             StandardUsernameCredentials.class,
                             URIRequirementBuilder.fromUri(remote).build(),
@@ -475,8 +473,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
             for (ListBoxModel.Option o : CredentialsProvider.listCredentialsInItem(
                     StandardUsernameCredentials.class,
                     context,
-                    context instanceof Queue.Task
-                            ? Tasks.getAuthenticationOf2((Queue.Task) context)
+                    context instanceof Queue.Task t
+                            ? Tasks.getAuthenticationOf2(t)
                             : ACL.SYSTEM2,
                     URIRequirementBuilder.fromUri(remote).build(),
                     GitClient.CREDENTIALS_MATCHER)) {
@@ -584,8 +582,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
                             @Override
                             public boolean isMatch(SCMSource source) {
-                                if (source instanceof GitSCMSource) {
-                                    GitSCMSource git = (GitSCMSource) source;
+                                if (source instanceof GitSCMSource git) {
                                     GitSCMSourceContext ctx =
                                             new GitSCMSourceContext<>(null, SCMHeadObserver.none())
                                                     .withTraits(git.getTraits());
@@ -611,8 +608,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             @NonNull
                             @Override
                             public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
-                                if (source instanceof GitSCMSource) {
-                                    GitSCMSource git = (GitSCMSource) source;
+                                if (source instanceof GitSCMSource git) {
                                     GitSCMSourceContext<?,?> ctx =
                                             new GitSCMSourceContext<>(null, SCMHeadObserver.none())
                                                     .withTraits(git.getTraits());
@@ -649,8 +645,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 } else {
                     for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
                         for (SCMSource source : owner.getSCMSources()) {
-                            if (source instanceof GitSCMSource) {
-                                GitSCMSource git = (GitSCMSource) source;
+                            if (source instanceof GitSCMSource git) {
                                 GitSCMSourceContext<?, ?> ctx =
                                         new GitSCMSourceContext<>(null, SCMHeadObserver.none())
                                                 .withTraits(git.getTraits());
