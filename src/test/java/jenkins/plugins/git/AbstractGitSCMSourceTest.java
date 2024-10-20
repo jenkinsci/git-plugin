@@ -8,6 +8,7 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -39,7 +40,6 @@ import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.plugins.git.traits.PruneStaleBranchTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
-
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
@@ -54,6 +54,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -426,7 +427,7 @@ public class AbstractGitSCMSourceTest {
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash);
         rev = source.fetch(devHash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
         assertThat(rev.getHead().getName(), is("dev"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash.substring(0, 10));
@@ -532,7 +533,7 @@ public class AbstractGitSCMSourceTest {
         actions = source.fetchActions(headByName.get("new-primary"), null, listener);
 
         PrimaryInstanceMetadataAction primary = null;
-        for (Action a: actions) {
+        for (Action a : actions) {
             if (a instanceof PrimaryInstanceMetadataAction) {
                 primary = (PrimaryInstanceMetadataAction) a;
                 break;
@@ -827,7 +828,7 @@ public class AbstractGitSCMSourceTest {
         StreamTaskListener listener = StreamTaskListener.fromStderr();
 
         final SCMHeadObserver.Collector collector =
-        source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
+                source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
 
         final Map<SCMHead, SCMRevision> result = collector.result();
         assertThat(result.entrySet(), hasSize(4));
@@ -1139,6 +1140,115 @@ public class AbstractGitSCMSourceTest {
             sharedSampleRepo = null;
         }
     }
+
+    @Issue("JENKINS-62592")
+    @Test
+    public void exactBranchMatchShouldSupersedePartialBranchMatch() throws Exception {
+        sampleRepo.init();
+        String masterHash = sampleRepo.head();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("tag", "v1");
+        String v1Hash = sampleRepo.head();
+        sampleRepo.write("file", "modified2");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        sampleRepo.git("tag", "-a", "v2", "-m", "annotated");
+        String v2Hash = sampleRepo.head();
+        sampleRepo.write("file", "modified3");
+        sampleRepo.git("commit", "--all", "--message=dev3");
+        // Grab the devHash, but lets try and generate a hash that we know will cause an issue in our test
+        ArrayList<String> hashFirstLetter = new ArrayList<>(
+                Arrays.asList(masterHash.substring(0, 1), v1Hash.substring(0, 1), v2Hash.substring(0, 1))
+        );
+        sampleRepo.git("tag", "devTag");
+        String devTagHash = sampleRepo.head();
+        int devTagIteration = 4; // In order to name new files and create new commits
+        String previousNewHash = null;
+        String newHash = devTagHash;
+        while (!hashFirstLetter.contains(devTagHash.substring(0, 1))) {
+            // Generate a new commit and try again
+            sampleRepo.git("tag", "devTag" + devTagIteration);
+            sampleRepo.write("file", "modified" + devTagIteration);
+            sampleRepo.git("commit", "--all", "--message=dev" + (devTagIteration++));
+            previousNewHash = newHash;
+            newHash = sampleRepo.head();
+            hashFirstLetter.add(newHash.substring(0, 1));
+        }
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(new ArrayList<>());
+
+        TaskListener listener = StreamTaskListener.fromStderr();
+        listener.getLogger().printf("ArrayList of first hash chars: %s", hashFirstLetter);
+
+        // Test existing functionality with additional revisions
+        listener.getLogger().println("\n=== fetch('master') ===\n");
+        SCMRevision rev = source.fetch("master", listener, null);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        listener.getLogger().println("\n=== fetch('v1') ===\n");
+        rev = source.fetch("v1", listener, null);
+        assertThat(rev, instanceOf(GitTagSCMRevision.class));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
+        listener.getLogger().println("\n=== fetch('v2') ===\n");
+        rev = source.fetch("v2", listener, null);
+        assertThat(rev, instanceOf(GitTagSCMRevision.class));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
+        rev = source.fetch(masterHash, listener, null);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        assertThat(rev.getHead().getName(), is("master"));
+
+        // Test new functionality and verify that we are able to grab what we expect (full match versus hazy short hash)
+        if (!devTagHash.equals(newHash)) {
+            listener.getLogger().printf("%n=== fetch('%s') ===%n%n", newHash);
+            rev = source.fetch(newHash, listener, null);
+            assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(newHash));
+            assertThat(rev.getHead().getName(), is("dev"));
+
+            listener.getLogger().printf("%n=== fetch('%s') short hash ===%n%n", newHash.substring(0, 6));
+            rev = source.fetch(newHash.substring(0, 6), listener, null);
+            assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(newHash));
+            assertThat(rev.getHead().getName(), is("dev"));
+
+
+            int lastDevTag = devTagIteration == 4 ? 4 : devTagIteration - 1;
+            String headHash = devTagIteration == 4 ? devTagHash : previousNewHash;
+            listener.getLogger().printf("%n=== fetch(devTag%d) ===%n%n", lastDevTag);
+            rev = source.fetch("devTag" + lastDevTag, listener, null);
+            assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(rev.getHead().getName(), is("devTag" + lastDevTag));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(headHash));
+
+            String ambiguousTag = hashFirstLetter.get(hashFirstLetter.size() - 1);
+            String ambiguousHash = sampleRepo.head();
+            sampleRepo.git("tag", ambiguousTag);
+            sampleRepo.write("file", "modified and ambiguous");
+            sampleRepo.git("commit", "--all", "--message=ambiguousTagCommit");
+            listener.getLogger().printf("%n=== fetch(%s) ===%n%n", ambiguousTag);
+            rev = source.fetch(ambiguousTag, listener, null);
+            assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(rev.getHead().getName(), is(ambiguousTag));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(ambiguousHash));
+
+            // Remove ambiguous tag from the repo and thne create a branch with the ambiguous search
+            sampleRepo.git("tag", "-d", ambiguousTag);
+            sampleRepo.git("checkout", "-b", ambiguousTag);
+            sampleRepo.write("file", "modified and ambiguous but a branch this time!");
+            sampleRepo.git("commit", "--all", "--message=ambiguousBranchCommit");
+            listener.getLogger().printf("%n=== fetch(%s) branch ===%n%n", ambiguousTag);
+            String ambiguousBranchHash = sampleRepo.head();
+            rev = source.fetch(ambiguousTag, listener, null);
+            assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(rev.getHead().getName(), is(ambiguousTag));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(ambiguousBranchHash));
+        }
+    }
+
     //Ugly but MockGitClient needs to be static and no good way to pass it on
     static GitSampleRepoRule sharedSampleRepo;
 
