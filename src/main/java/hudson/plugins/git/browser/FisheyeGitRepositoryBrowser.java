@@ -40,7 +40,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 			return null; // no diff if this is not an edit change
 		String r1 = path.getChangeSet().getParentCommit();
 		String r2 = path.getChangeSet().getId();
-		return new URL(getUrl(), getPath(path) + "?r1=%s&r2=%s".formatted(r1, r2));
+		return new URL(getUrl(), "%s?r1=%s&r2=%s".formatted(getPath(path), r1, r2));
 	}
 
 	@Override

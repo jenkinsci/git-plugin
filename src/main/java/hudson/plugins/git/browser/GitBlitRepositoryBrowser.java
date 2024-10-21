@@ -46,8 +46,10 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         URL url = getUrl();
         return new URL(url,
-                (url.getPath() + "blobdiff?r=%s&h=%s&hb=%s").formatted(encodeString(projectName), path.getChangeSet().getId(),
-                        path.getChangeSet().getParentCommit()));
+                       "%sblobdiff?r=%s&h=%s&hb=%s".formatted(url.getPath(),
+                                                              encodeString(projectName),
+                                                              path.getChangeSet().getId(),
+                                                              path.getChangeSet().getParentCommit()));
     }
 
     @Override
@@ -57,14 +59,18 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
         }
         URL url = getUrl();
         return new URL(url,
-                (url.getPath() + "blob?r=%s&h=%s&f=%s").formatted(encodeString(projectName), path.getChangeSet().getId(),
-                        encodeString(path.getPath())));
+                       "%sblob?r=%s&h=%s&f=%s".formatted(url.getPath(),
+                                                         encodeString(projectName),
+                                                         path.getChangeSet().getId(),
+                                                         encodeString(path.getPath())));
     }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, (url.getPath() + "commit?r=%s&h=%s").formatted(encodeString(projectName), changeSet.getId()));
+        return new URL(url, "%scommit?r=%s&h=%s".formatted(url.getPath(),
+                                                           encodeString(projectName),
+                                                           changeSet.getId()));
     }
 
     public String getProjectName() {
