@@ -297,23 +297,6 @@
           <failOnViolation>true</failOnViolation>
         </configuration>
       </plugin>
-      <plugin>
-	<groupId>org.openrewrite.maven</groupId>
-	<artifactId>rewrite-maven-plugin</artifactId>
-	<version>5.42.0</version>
-	<configuration>
-	  <activeRecipes>
-	    <recipe>org.openrewrite.java.migrate.UpgradeToJava17</recipe>
-	  </activeRecipes>
-	</configuration>
-	<dependencies>
-	  <dependency>
-	    <groupId>org.openrewrite.recipe</groupId>
-	    <artifactId>rewrite-migrate-java</artifactId>
-	    <version>2.26.1</version>
-	  </dependency>
-	</dependencies>
-      </plugin>
     </plugins>
   </build>
 
