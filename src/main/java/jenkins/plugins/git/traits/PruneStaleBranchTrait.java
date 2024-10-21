@@ -52,8 +52,7 @@ public class PruneStaleBranchTrait extends GitSCMExtensionTrait<PruneStaleBranch
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        if (context instanceof GitSCMSourceContext) {
-            GitSCMSourceContext<?, ?> ctx = (GitSCMSourceContext<?, ?>) context;
+        if (context instanceof GitSCMSourceContext<?,?> ctx) {
             ctx.pruneRefs(true);
         }
     }

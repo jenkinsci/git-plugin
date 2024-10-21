@@ -13,6 +13,7 @@ import org.kohsuke.stapler.StaplerRequest2;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 
 /**
@@ -20,6 +21,7 @@ import java.net.URL;
  */
 public class GitoriousWeb extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor

@@ -12,6 +12,7 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.net.IDN;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -225,5 +226,6 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         }
     }
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

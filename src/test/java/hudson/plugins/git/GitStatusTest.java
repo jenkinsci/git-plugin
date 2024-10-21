@@ -308,8 +308,8 @@ public class GitStatusTest extends AbstractGitProject {
 
     private void assertAdditionalParameters(Collection<? extends Action> actions) {
         for (Action action: actions) {
-            if (action instanceof ParametersAction) {
-                final List<ParameterValue> parameters = ((ParametersAction) action).getParameters();
+            if (action instanceof ParametersAction parametersAction) {
+                final List<ParameterValue> parameters = parametersAction.getParameters();
                 assertEquals(2, parameters.size());
                 for (ParameterValue value : parameters) {
                     assertTrue((value.getName().equals("paramKey1") && value.getValue().equals("paramValue1"))

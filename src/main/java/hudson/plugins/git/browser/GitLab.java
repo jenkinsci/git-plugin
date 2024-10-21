@@ -15,6 +15,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -28,6 +29,7 @@ import org.kohsuke.stapler.QueryParameter;
  */
 public class GitLab extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private Double version;

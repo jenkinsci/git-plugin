@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -30,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 
 public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final String projectName;
@@ -44,8 +46,10 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         URL url = getUrl();
         return new URL(url,
-                String.format(url.getPath() + "blobdiff?r=%s&h=%s&hb=%s", encodeString(projectName), path.getChangeSet().getId(),
-                        path.getChangeSet().getParentCommit()));
+                       "%sblobdiff?r=%s&h=%s&hb=%s".formatted(url.getPath(),
+                                                              encodeString(projectName),
+                                                              path.getChangeSet().getId(),
+                                                              path.getChangeSet().getParentCommit()));
     }
 
     @Override
@@ -55,14 +59,18 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
         }
         URL url = getUrl();
         return new URL(url,
-                String.format(url.getPath() + "blob?r=%s&h=%s&f=%s", encodeString(projectName), path.getChangeSet().getId(),
-                        encodeString(path.getPath())));
+                       "%sblob?r=%s&h=%s&f=%s".formatted(url.getPath(),
+                                                         encodeString(projectName),
+                                                         path.getChangeSet().getId(),
+                                                         encodeString(path.getPath())));
     }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, String.format(url.getPath() + "commit?r=%s&h=%s", encodeString(projectName), changeSet.getId()));
+        return new URL(url, "%scommit?r=%s&h=%s".formatted(url.getPath(),
+                                                           encodeString(projectName),
+                                                           changeSet.getId()));
     }
 
     public String getProjectName() {

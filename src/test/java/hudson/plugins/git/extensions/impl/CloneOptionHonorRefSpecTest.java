@@ -61,9 +61,9 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
 
     private static Builder createEnvEchoBuilder(String envVarName) {
         if (isWindows()) {
-            return new BatchFile(String.format("echo %s=%%%s%%", envVarName, envVarName));
+            return new BatchFile("echo %s=%%%s%%".formatted(envVarName, envVarName));
         }
-        return new Shell(String.format("echo \"%s=${%s}\"", envVarName, envVarName));
+        return new Shell("echo \"%s=${%s}\"".formatted(envVarName, envVarName));
     }
 
     @Before

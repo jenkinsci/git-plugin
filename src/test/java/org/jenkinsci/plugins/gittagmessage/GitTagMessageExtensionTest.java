@@ -45,15 +45,15 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
     protected void assertBuildEnvironment(FreeStyleBuild build, String expectedName, String expectedMessage)
             throws Exception {
         // In the freestyle shell step, unknown environment variables are returned as empty strings
-        r.waitForMessage(String.format("tag='%s'", Util.fixNull(expectedName)), build);
-        r.waitForMessage(String.format("msg='%s'", Util.fixNull(expectedMessage)), build);
+        r.waitForMessage("tag='%s'".formatted(Util.fixNull(expectedName)), build);
+        r.waitForMessage("msg='%s'".formatted(Util.fixNull(expectedMessage)), build);
     }
 
     private static Builder createEnvEchoBuilder(String key, String envVarName) {
         if (Functions.isWindows()) {
-            return new BatchFile(String.format("echo %s='%%%s%%'", key, envVarName));
+            return new BatchFile("echo %s='%%%s%%'".formatted(key, envVarName));
         }
-        return new Shell(String.format("echo \"%s='${%s}'\"", key, envVarName));
+        return new Shell("echo \"%s='${%s}'\"".formatted(key, envVarName));
     }
 
 }

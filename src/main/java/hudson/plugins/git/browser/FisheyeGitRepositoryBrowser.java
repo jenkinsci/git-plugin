@@ -20,12 +20,14 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 import java.util.regex.Pattern;
 
 public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 
-	private static final long serialVersionUID = 2881872624557203410L;
+    @Serial
+    private static final long serialVersionUID = 2881872624557203410L;
 
 	@DataBoundConstructor
 	public FisheyeGitRepositoryBrowser(String repoUrl) {
@@ -38,7 +40,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 			return null; // no diff if this is not an edit change
 		String r1 = path.getChangeSet().getParentCommit();
 		String r2 = path.getChangeSet().getId();
-		return new URL(getUrl(), getPath(path) + String.format("?r1=%s&r2=%s", r1, r2));
+		return new URL(getUrl(), "%s?r1=%s&r2=%s".formatted(getPath(path), r1, r2));
 	}
 
 	@Override

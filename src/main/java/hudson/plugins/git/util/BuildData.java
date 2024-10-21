@@ -9,6 +9,8 @@ import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,6 +32,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 /**
  * Captures the Git related information for a build.
  *
@@ -39,6 +42,7 @@ import java.util.logging.Logger;
  */
 @ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

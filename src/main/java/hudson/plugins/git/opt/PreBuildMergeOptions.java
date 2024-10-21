@@ -6,6 +6,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -15,6 +16,7 @@ import java.io.Serializable;
  */
 @ExportedBean(defaultVisibility = 999)
 public class PreBuildMergeOptions implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

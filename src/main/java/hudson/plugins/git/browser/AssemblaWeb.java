@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -32,6 +33,7 @@ import java.net.URL;
  */
 public class AssemblaWeb extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
