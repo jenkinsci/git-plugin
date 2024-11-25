@@ -699,7 +699,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // Poll for changes. Are there any unbuilt revisions that Jenkins ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
-
+        LOGGER.log(Level.FINEST, "Setting remote url: ");
         final Run lastBuild = project.getLastBuild();
         if (lastBuild == null) {
             // If we've never been built before, well, gotta build!
@@ -924,6 +924,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("No credentials specified");
             } else {
                 String url = getParameterString(uc.getUrl(), environment);
+
                 StandardUsernameCredentials credentials = lookupScanCredentials(build, url, ucCredentialsId);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
@@ -984,18 +985,27 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (URIish url : remoteRepository.getURIs()) {
             try {
                 if (first) {
+                    LOGGER.log(Level.FINEST, "Setting remote url: ", url.toPrivateASCIIString());
                     git.setRemoteUrl(remoteRepository.getName(), url.toPrivateASCIIString());
                     first = false;
                 } else {
+                    LOGGER.log(Level.FINEST, "Adding remote url: ", url.toPrivateASCIIString());
                     git.addRemoteUrl(remoteRepository.getName(), url.toPrivateASCIIString());
                 }
 
-                FetchCommand fetch = git.fetch_().from(url, remoteRepository.getFetchRefSpecs());
+                FetchCommand fetch = git.fetch_();
+                if(fetch instanceof CliGitAPIImpl) {
+                    LOGGER.log(Level.FINEST, "Instance of CliGitAPIImpl ");
+                } else {
+                    LOGGER.log(Level.FINEST, "Instance of JGitAPIImpl ");
+                }
+                fetch.from(url, remoteRepository.getFetchRefSpecs());
                 for (GitSCMExtension extension : extensions) {
                     extension.decorateFetchCommand(this, run, git, listener, fetch);
                 }
                 fetch.execute();
             } catch (GitException ex) {
+                ex.printStackTrace();
                 throw new GitException("Failed to fetch from "+url.toString(), ex);
             }
         }
@@ -1242,7 +1252,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             } catch (GitException ex) {
                 /* Allow retry by throwing AbortException instead of
                  * GitException. See JENKINS-20531. */
-                ex.printStackTrace(listener.error("Error fetching remote repo '" + remoteRepository.getName() + "'"));
+                //ex.printStackTrace(listener.error("Error fetching remote repo '" + remoteRepository.getName() + "'"));
+                ex.printStackTrace();
                 throw new AbortException("Error fetching remote repo '" + remoteRepository.getName() + "'");
             }
         }
