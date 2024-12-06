@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -42,7 +43,7 @@ import java.time.format.DateTimeParseException;
  * Represents a change set.
  * @author Nigel Magnay
  */
-public class GitChangeSet extends ChangeLogSet.Entry {
+public class GitChangeSet extends ChangeLogSet.Entry implements Serializable {
 
     private static final String PREFIX_AUTHOR = "author ";
     private static final String PREFIX_COMMITTER = "committer ";
@@ -637,7 +638,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     @ExportedBean(defaultVisibility=999)
-    public static class Path implements AffectedFile {
+    public static class Path implements AffectedFile, Serializable {
 
         private String src;
         private String dst;
