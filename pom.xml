@@ -97,6 +97,18 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
+      <version>6.1.1-rc3654.7b_7c5682d984</version>
+    </dependency>
+    <!-- this plugin is relying on transitivity and on the bom so any change in git-client have no effect -->
+    <dependency>
+      <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+      <artifactId>mina-sshd-api-common</artifactId>
+      <version>2.14.0-134.v08fe1eb_b_e7a_1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+      <artifactId>mina-sshd-api-core</artifactId>
+      <version>2.14.0-134.v08fe1eb_b_e7a_1</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
