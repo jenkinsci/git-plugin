@@ -62,7 +62,7 @@
   </scm>
 
   <properties>
-    <revision>5.6.1</revision>
+    <revision>5.7.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
@@ -132,7 +132,7 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
       <optional>true</optional>
-      <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.440.x and 2.452.x lines -->
+      <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.452.x line -->
       <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
       <version>822.824.v14451b_c0fd42</version>
     </dependency>
