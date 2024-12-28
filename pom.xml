@@ -24,36 +24,6 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <id>markewaite</id>
-      <name>Mark Waite</name>
-      <email>mark.earl.waite@gmail.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>rsandell</id>
-      <name>Robert Sandell</name>
-      <email>rsandell@cloudbees.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <url>http://rsandell.com</url>
-    </developer>
-    <developer>
-      <id>olamy</id>
-      <name>Olivier Lamy</name>
-      <email>olamy@apache.org</email>
-      <url>https://about.me/olamy</url>
-      <timezone>Australia/Brisbane</timezone>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-  </developers>
-
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
