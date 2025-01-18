@@ -294,7 +294,7 @@ Other credential types will not work with the ssh protocol.
 To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changes to the repository.
 Refer to webhook documentation for your repository:
 
-* link:https://plugins.jenkins.io/github#GitHubPlugin-GitHubhooktriggerforGITScmpolling[GitHub]
+* link:https://plugins.jenkins.io/github/#plugin-content-github-hook-trigger-for-gitscm-polling[GitHub]
 * link:https://plugins.jenkins.io/bitbucket[Bitbucket]
 * link:https://plugins.jenkins.io/gitlab-branch-source[GitLab]
 * link:https://github.com/jenkinsci/gitea-plugin/blob/master/docs/README.md[Gitea]
@@ -364,7 +364,7 @@ hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL='disabled-for-polling'
 [#enabling-jgit]
 === Enabling JGit
 
-See the link:https://plugins.jenkins.io/git-client/#enabling-jgit[git client plugin documentation] for instructions to enable JGit.
+See the link:https://plugins.jenkins.io/git-client/#plugin-content-enabling-jgit[git client plugin documentation] for instructions to enable JGit.
 JGit becomes available throughout Jenkins once it has been enabled.
 
 [#global-configuration]
