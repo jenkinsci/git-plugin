@@ -53,7 +53,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3944.v1a_e4f8b_452db_</version>
+        <version>4023.va_eeb_b_4e45f07</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -104,7 +104,7 @@
       <optional>true</optional>
       <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.479.x and 2.492.x line -->
       <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
-      <version>832.va_66e270d2946</version>
+      <!-- <version>832.va_66e270d2946</version> -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
