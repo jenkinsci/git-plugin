@@ -2172,7 +2172,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Jenkins jenkins = Jenkins.get();
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
 
-        if (desc.getOldGitExe() != null) {
+        if (desc != null && desc.getOldGitExe() != null) {
             String exe = desc.getOldGitExe();
             String defaultGit = GitTool.getDefaultInstallation().getGitExe();
             if (exe.equals(defaultGit)) {
