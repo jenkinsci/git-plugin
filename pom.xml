@@ -38,7 +38,7 @@
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
     <!-- REMOVE -->
-    <jenkins.version>2.494-rc35897.1f8edd4c1651</jenkins.version>
+    <jenkins.version>2.495</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Do not run extra reporting for checkstyle or pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
