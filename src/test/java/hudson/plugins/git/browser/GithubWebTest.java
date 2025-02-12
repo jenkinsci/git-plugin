@@ -155,7 +155,7 @@ public class GithubWebTest {
 
     private void assertGuessURL(String repo, String web) throws Exception {
         RepositoryBrowser<?> guess = new GitSCM(repo).guessBrowser();
-        String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
+        String actual = guess instanceof GithubWeb gw ? gw.getRepoUrl() : null;
         assertEquals("For repo '" + repo + "':", web, actual);
     }
 
@@ -170,7 +170,7 @@ public class GithubWebTest {
 
     private void assertGuessURL(String remote, String web, String... refSpecs) {
         RepositoryBrowser<?> guess = new MockSCMSource(remote, refSpecs).build(new SCMHead("master")).guessBrowser();
-        String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
+        String actual = guess instanceof GithubWeb gw ? gw.getRepoUrl() : null;
         assertEquals(web, actual);
     }
 

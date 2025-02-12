@@ -49,7 +49,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Collections;
 import org.jvnet.hudson.test.TestExtension;
@@ -425,8 +425,8 @@ public class GitSCMSourceTest {
                                       @NonNull SCMHead head,
                                       final SCMRevision rev) throws IOException, InterruptedException {
             final String hash;
-            if (rev instanceof AbstractGitSCMSource.SCMRevisionImpl) {
-                hash = ((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash();
+            if (rev instanceof AbstractGitSCMSource.SCMRevisionImpl impl) {
+                hash = impl.getHash();
             } else {
                 switch (head.getName()) {
                     case "foo":

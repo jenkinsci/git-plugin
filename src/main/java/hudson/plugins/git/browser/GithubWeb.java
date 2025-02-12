@@ -10,11 +10,12 @@ import net.sf.json.JSONObject;
 
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 
 /**
@@ -22,6 +23,7 @@ import java.net.URL;
  */
 public class GithubWeb extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
@@ -100,7 +102,7 @@ public class GithubWeb extends GitRepositoryBrowser {
         @Override
         @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
                             justification = "Inherited javadoc commits that req is non-null")
-		public GithubWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+		public GithubWeb newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
 			return req.bindJSON(GithubWeb.class, jsonObject);
 		}
 	}

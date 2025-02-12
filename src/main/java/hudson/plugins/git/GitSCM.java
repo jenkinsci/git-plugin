@@ -66,21 +66,22 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.export.Exported;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -710,13 +711,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final EnvVars pollEnv = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
+        final EnvVars pollEnv = project instanceof AbstractProject<?,?> ap ? GitUtils.getPollEnvironment(ap, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(pollEnv);
 
         if (!requiresWorkspaceForPolling(pollEnv)) {
 
-            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
+            final EnvVars environment = project instanceof AbstractProject<?,?> ap ? GitUtils.getPollEnvironment(ap, workspace, launcher, listener, false) : new EnvVars();
 
             GitClient git = createClient(listener, environment, lastBuild, Jenkins.get(), null);
 
@@ -784,7 +785,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final Node node = GitUtils.workspaceToNode(workspace);
-        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : project.getEnvironment(node, listener);
+        final EnvVars environment = project instanceof AbstractProject<?,?> ap ? GitUtils.getPollEnvironment(ap, workspace, launcher, listener) : project.getEnvironment(node, listener);
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
@@ -912,9 +913,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
         GitClient c = git.getClient();
-        for (GitSCMExtension ext : extensions) {
-            c = ext.decorate(this,c);
-        }
 
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
             String ucCredentialsId = uc.getCredentialsId();
@@ -937,6 +935,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
         // TODO add default credentials
+
+        for (GitSCMExtension ext : extensions) {
+            c = ext.decorate(this,c);
+        }
 
         return c;
     }
@@ -1163,7 +1165,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         buildData.saveBuild(revToBuild);
 
         if (buildData.getBuildsByBranchName().size() >= 100) {
-            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://plugins.jenkins.io/git/#remove-git-plugin-buildsbybranch-builddata-script");
+            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://plugins.jenkins.io/git/#plugin-content-remove-git-plugin-buildsbybranch-builddata-script");
         }
         boolean checkForMultipleRevisions = true;
         BuildSingleRevisionOnly ext = extensions.get(BuildSingleRevisionOnly.class);
@@ -1175,8 +1177,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             log.println("Multiple candidate revisions");
             if (checkForMultipleRevisions) {
                 Job<?, ?> job = build.getParent();
-                if (job instanceof AbstractProject) {
-                    AbstractProject project = (AbstractProject) job;
+                if (job instanceof AbstractProject<?,?> project) {
                     if (!project.isDisabled()) {
                         log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
                         if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause("This build was triggered by build "
@@ -1416,7 +1417,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         try {
             // Check for local remotes with no protocol like /path/to/repo.git/
-            return !Files.exists(Paths.get(remoteUrl));
+            return !Files.exists(Path.of(remoteUrl));
         } catch (InvalidPathException e) {
             return true;
         }
@@ -1884,7 +1885,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return mergeOptions;
         }
 
-        public FormValidation doGitRemoteNameCheck(StaplerRequest req)
+        public FormValidation doGitRemoteNameCheck(StaplerRequest2 req)
                 throws IOException, ServletException {
             String mergeRemoteName = req.getParameter("value");
             boolean isMerge = req.getParameter("isMerge") != null;
@@ -1905,7 +1906,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(StaplerRequest2 req, JSONObject formData) throws FormException {
             req.bindJSON(this, formData);
             save();
             return true;
@@ -1937,6 +1938,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 //        }
     }
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Whitelisted

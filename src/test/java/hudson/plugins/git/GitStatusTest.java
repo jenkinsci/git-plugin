@@ -33,10 +33,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 public class GitStatusTest extends AbstractGitProject {
 
@@ -308,8 +308,8 @@ public class GitStatusTest extends AbstractGitProject {
 
     private void assertAdditionalParameters(Collection<? extends Action> actions) {
         for (Action action: actions) {
-            if (action instanceof ParametersAction) {
-                final List<ParameterValue> parameters = ((ParametersAction) action).getParameters();
+            if (action instanceof ParametersAction parametersAction) {
+                final List<ParameterValue> parameters = parametersAction.getParameters();
                 assertEquals(2, parameters.size());
                 for (ParameterValue value : parameters) {
                     assertTrue((value.getName().equals("paramKey1") && value.getValue().equals("paramValue1"))
@@ -536,8 +536,8 @@ public class GitStatusTest extends AbstractGitProject {
         HttpResponse rsp = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, notifyCommitApiToken);
 
         // Up to 10 "Triggered" headers + 1 extra warning are returned.
-        StaplerRequest sReq = mock(StaplerRequest.class);
-        StaplerResponse sRsp = mock(StaplerResponse.class);
+        StaplerRequest2 sReq = mock(StaplerRequest2.class);
+        StaplerResponse2 sRsp = mock(StaplerResponse2.class);
         Mockito.when(sRsp.getWriter()).thenReturn(mock(PrintWriter.class));
         rsp.generateResponse(sReq, sRsp, null);
         Mockito.verify(sRsp, Mockito.times(11)).addHeader(Mockito.eq("Triggered"), Mockito.anyString());

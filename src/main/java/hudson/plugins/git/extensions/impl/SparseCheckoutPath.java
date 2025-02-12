@@ -10,11 +10,13 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPath> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -6177158367915899356L;
 
     @SuppressFBWarnings(value="SE_TRANSIENT_FIELD_NOT_RESTORED", justification="Default value is OK in deserialization")

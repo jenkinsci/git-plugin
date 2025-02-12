@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.FilePath;
 import hudson.model.*;
+import hudson.model.Descriptor.FormException;
 import hudson.model.labels.LabelAtom;
 import hudson.plugins.git.GitTool;
 import hudson.slaves.DumbSlave;
@@ -800,17 +801,19 @@ public class GitToolChooserTest {
     /* Attempt to perform a checkout without defining a remote repository. Expected to fail, but should not report NPE */
     private void failAProject(GitSampleRepoRule sampleRepo) throws Exception {
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "intentionally-failing-job-without-remote-config");
-        p.setDefinition(new CpsFlowDefinition("node {\n"
-                                              + "  checkout(\n"
-                                              + "    [$class: 'GitSCM']\n"
-                                              + "  )\n"
-                                              + "}", true));
+        p.setDefinition(new CpsFlowDefinition("""
+                                              node {
+                                                checkout(
+                                                  [$class: 'GitSCM']
+                                                )
+                                              }
+                                              """, true));
         WorkflowRun b = r.buildAndAssertStatus(hudson.model.Result.FAILURE, p);
         r.waitForMessage("Couldn't find any revision to build", b);
     }
 
-    private StandardCredentials createCredential(CredentialsScope scope, String id) {
-        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
+    private StandardCredentials createCredential(CredentialsScope scope, String id) throws FormException {
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password-longer-than-14");
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */

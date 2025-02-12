@@ -227,8 +227,7 @@ public class AbstractGitSCMSourceTest {
         Set<SCMHead> scmHeadSet = source.fetch(listener);
         long now = System.currentTimeMillis();
         for (SCMHead scmHead : scmHeadSet) {
-            if (scmHead instanceof GitTagSCMHead) {
-                GitTagSCMHead tagHead = (GitTagSCMHead) scmHead;
+            if (scmHead instanceof GitTagSCMHead tagHead) {
                 // FAT file system time stamps only resolve to 2 second boundary
                 // EXT3 file system time stamps only resolve to 1 second boundary
                 long fileTimeStampFuzz = isWindows() ? 2000L : 1000L;
@@ -340,7 +339,7 @@ public class AbstractGitSCMSourceTest {
         assert folderStore != null;
         String fCredentialsId = "fcreds";
         StandardCredentials fCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-            fCredentialsId, "fcreds", "user", "password");
+            fCredentialsId, "fcreds", "user", "password-longer-than-14");
         folderStore.addCredentials(Domain.global(), fCredentials);
         folderStore.save();
         WorkflowJob p = f.createProject(WorkflowJob.class, "wjob");
@@ -520,8 +519,8 @@ public class AbstractGitSCMSourceTest {
         List<Action> actions = source.fetchActions(null, listener);
         GitRemoteHeadRefAction refAction = null;
         for (Action a: actions) {
-            if (a instanceof GitRemoteHeadRefAction) {
-                refAction = (GitRemoteHeadRefAction) a;
+            if (a instanceof GitRemoteHeadRefAction action) {
+                refAction = action;
                 break;
             }
         }
@@ -533,8 +532,8 @@ public class AbstractGitSCMSourceTest {
 
         PrimaryInstanceMetadataAction primary = null;
         for (Action a: actions) {
-            if (a instanceof PrimaryInstanceMetadataAction) {
-                primary = (PrimaryInstanceMetadataAction) a;
+            if (a instanceof PrimaryInstanceMetadataAction action) {
+                primary = action;
                 break;
             }
         }

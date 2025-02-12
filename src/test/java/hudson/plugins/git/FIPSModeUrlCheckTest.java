@@ -66,7 +66,7 @@ public class FIPSModeUrlCheckTest {
             SystemCredentialsProvider.getInstance()
                     .getCredentials()
                     .add(new UsernamePasswordCredentialsImpl(
-                            CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+                            CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t-that-needs-to-be-long"));
             SystemCredentialsProvider.getInstance().save();
             MultiBranchProject<?, ?> mbp = r.createProject(WorkflowMultiBranchProject.class, "mbp");
             GitSCMSource.DescriptorImpl descriptor = ExtensionList.lookupSingleton(GitSCMSource.DescriptorImpl.class);
@@ -133,7 +133,7 @@ public class FIPSModeUrlCheckTest {
                 SystemCredentialsProvider.getInstance()
                         .getCredentials()
                         .add(new UsernamePasswordCredentialsImpl(
-                                CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+                                CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t-at-least-14-chars"));
                 SystemCredentialsProvider.getInstance().save();
                 FreeStyleProject p = r.createProject(FreeStyleProject.class, "mbp");
                 UserRemoteConfig.DescriptorImpl descriptor =
@@ -222,11 +222,13 @@ public class FIPSModeUrlCheckTest {
                 {
                     // http with creds rejected
                     p.setDefinition(new CpsFlowDefinition(
-                            "node {\n" +
-                                    "    dir('foo') {\n" +
-                                    "        git url: 'http://foo.com/beer.git', credentialsId: 'yup'\n" +
-                                    "    }\n" +
-                                    "}", true));
+                            """
+                            node {
+                                dir('foo') {
+                                    git url: 'http://foo.com/beer.git', credentialsId: 'yup'
+                                }
+                            }
+                            """, true));
                     WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, p);
                     r.assertLogContains(Messages.git_fips_url_notsecured(), b);
                 }
@@ -272,12 +274,14 @@ public class FIPSModeUrlCheckTest {
                     // http with creds rejected
                     // Intentionally using modern syntax to check compatibility
                     p.setDefinition(new CpsFlowDefinition(
-                            "node {\n" +
-                                    "    dir('foo') {\n" +
-                                    "        checkout scmGit(branches: [[name: 'master']],\n" +
-                                    "                        userRemoteConfigs: [[credentialsId: 'foocreds', url: 'http://github.com/foo/beer.git']])\n" +
-                                    "    }\n" +
-                                    "}", true));
+                            """
+                            node {
+                                dir('foo') {
+                                    checkout scmGit(branches: [[name: 'master']],
+                                                    userRemoteConfigs: [[credentialsId: 'foocreds', url: 'http://github.com/foo/beer.git']])
+                                }
+                            }
+                            """, true));
                     WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, p);
                     r.assertLogContains(Messages.git_fips_url_notsecured(), b);
                 }

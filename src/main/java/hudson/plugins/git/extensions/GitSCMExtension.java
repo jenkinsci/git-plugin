@@ -82,8 +82,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public FilePath getWorkingDirectory(GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
-        if (context instanceof AbstractProject) {
-            return getWorkingDirectory(scm, (AbstractProject) context, workspace, environment, listener);
+        if (context instanceof AbstractProject<?,?> project) {
+            return getWorkingDirectory(scm, project, workspace, environment, listener);
         }
         return null;
     }
@@ -136,8 +136,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public Revision decorateRevisionToBuild(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener, Revision marked, Revision rev) throws IOException, InterruptedException, GitException {
-        if (build instanceof AbstractBuild && listener instanceof BuildListener) {
-            return decorateRevisionToBuild(scm, (AbstractBuild) build, git, (BuildListener) listener, marked, rev);
+        if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
+            return decorateRevisionToBuild(scm, abstractBuild, git, buildListener, marked, rev);
         } else {
             return rev;
         }
@@ -163,8 +163,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public void beforeCheckout(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
-        if (build instanceof AbstractBuild && listener instanceof BuildListener) {
-            beforeCheckout(scm, (AbstractBuild) build, git, (BuildListener) listener);
+        if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
+            beforeCheckout(scm, abstractBuild, git, buildListener);
         }
     }
 
@@ -192,8 +192,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
-        if (build instanceof AbstractBuild && listener instanceof BuildListener) {
-            onCheckoutCompleted(scm, (AbstractBuild) build, git, (BuildListener) listener);
+        if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
+            onCheckoutCompleted(scm, abstractBuild, git, buildListener);
         }
     }
 
@@ -252,8 +252,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
-        if (build instanceof AbstractBuild && listener instanceof BuildListener) {
-            decorateCloneCommand(scm, (AbstractBuild) build, git, (BuildListener) listener, cmd);
+        if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
+            decorateCloneCommand(scm, abstractBuild, git, buildListener, cmd);
         }
     }
 
@@ -307,8 +307,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public void decorateMergeCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
-        if (build instanceof AbstractBuild && listener instanceof BuildListener) {
-            decorateMergeCommand(scm, (AbstractBuild) build, git, (BuildListener) listener, cmd);
+        if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
+            decorateMergeCommand(scm, abstractBuild, git, buildListener, cmd);
         }
     }
 
@@ -331,8 +331,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
-        if (build instanceof AbstractBuild && listener instanceof BuildListener) {
-            decorateCheckoutCommand(scm, (AbstractBuild) build, git, (BuildListener) listener, cmd);
+        if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
+            decorateCheckoutCommand(scm, abstractBuild, git, buildListener, cmd);
         }
     }
 

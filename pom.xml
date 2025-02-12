@@ -5,13 +5,14 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.86</version>
+    <version>5.7</version>
     <relativePath />
   </parent>
 
   <artifactId>git</artifactId>
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
+
   <name>Git plugin</name>
   <url>https://github.com/${gitHubRepo}</url>
   <inceptionYear>2007</inceptionYear>
@@ -23,44 +24,6 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <id>markewaite</id>
-      <name>Mark Waite</name>
-      <email>mark.earl.waite@gmail.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>rsandell</id>
-      <name>Robert Sandell</name>
-      <email>rsandell@cloudbees.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <url>http://rsandell.com</url>
-    </developer>
-    <developer>
-      <id>mramonleon</id>
-      <name>M Ramon Leon</name>
-      <email>rleon@cloudbees.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>olamy</id>
-      <name>Olivier Lamy</name>
-      <email>olamy@apache.org</email>
-      <url>https://about.me/olamy</url>
-      <timezone>Australia/Brisbane</timezone>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-  </developers>
-
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
@@ -69,11 +32,12 @@
   </scm>
 
   <properties>
-    <revision>5.3.1</revision>
+    <revision>5.7.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.baseline>2.440</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
@@ -89,7 +53,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3258.vcdcf15936a_fd</version>
+        <version>4136.vca_c3202a_7fd1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -138,9 +102,9 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
       <optional>true</optional>
-      <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.440.x and 2.452.x lines -->
+      <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.479.x and 2.492.x line -->
       <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
-      <version>822.824.v14451b_c0fd42</version>
+      <!-- <version>832.va_66e270d2946</version> -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -170,16 +134,14 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.16.1</version>
+      <version>3.18.2</version>
       <scope>test</scope>
     </dependency>
-    <!--Credential Binding Plugin-->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials-binding</artifactId>
     </dependency>
     <dependency>
-      <!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
       <optional>true</optional>
@@ -192,7 +154,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>892.vd6219fc0a_efb</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -237,34 +198,19 @@
       <artifactId>git-tag-message</artifactId>
       <version>1.7.1</version>
       <scope>test</scope>
-      <exclusions>
-        <!-- this is introducing a dependency on an old version of git-plugin
-        and so a few of the usual suspects plugins eddsa, trilead which we don't really want -->
-        <exclusion>
-          <groupId>${project.groupId}</groupId>
-          <artifactId>${project.artifactId}</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
-      <version>1.20.1</version>
+      <version>1.20.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
       <artifactId>testcontainers-gitserver</artifactId>
-      <version>0.8.0</version>
+      <version>0.11.0</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
-    <!-- JCasC compatibility -->
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
@@ -301,7 +247,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.6.0</version>
         <configuration>
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>

@@ -29,7 +29,7 @@ public class UserRemoteConfigTest {
     @Issue("JENKINS-38048")
     @Test
     public void credentialsDropdown() throws Exception {
-        SystemCredentialsProvider.getInstance().getCredentials().add(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t"));
+        SystemCredentialsProvider.getInstance().getCredentials().add(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t-that-needs-to-be-long"));
         SystemCredentialsProvider.getInstance().save();
         FreeStyleProject p1 = r.createFreeStyleProject("p1");
         FreeStyleProject p2 = r.createFreeStyleProject("p2");

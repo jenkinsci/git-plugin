@@ -14,7 +14,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.Serializable;
@@ -58,7 +58,7 @@ public class ApiTokenPropertyConfiguration extends GlobalConfiguration implement
     }
 
     @RequirePOST
-    public HttpResponse doGenerate(StaplerRequest req) {
+    public HttpResponse doGenerate(StaplerRequest2 req) {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         String apiTokenName = req.getParameter("apiTokenName");
@@ -102,7 +102,7 @@ public class ApiTokenPropertyConfiguration extends GlobalConfiguration implement
     }
 
     @RequirePOST
-    public HttpResponse doRevoke(StaplerRequest req) {
+    public HttpResponse doRevoke(StaplerRequest2 req) {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         String apiTokenUuid = req.getParameter("apiTokenUuid");
