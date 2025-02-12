@@ -193,7 +193,8 @@ public abstract class AbstractGitTestCase {
         if (credential != null) {
             project.getBuildersList().add(new HasCredentialBuilder(credential.getId()));
         }
-        scm.getExtensions().add(new DisableRemotePoll()); // don't work on a file:// repository
+        if (!fastRemotePoll)
+            scm.getExtensions().add(new DisableRemotePoll());
         if (relativeTargetDir!=null)
             scm.getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));
         if (excludedUsers!=null)

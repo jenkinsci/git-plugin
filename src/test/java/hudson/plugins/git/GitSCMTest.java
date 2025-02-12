@@ -334,6 +334,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
 //        FreeStyleProject project = setupProject("master", true, false);
         FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
+        assertFalse("scm should not require workspace for polling", project.getScm().requiresWorkspaceForPolling());
+
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
