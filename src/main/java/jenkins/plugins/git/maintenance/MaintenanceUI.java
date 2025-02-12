@@ -106,7 +106,6 @@ public class MaintenanceUI extends ManagementLink {
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
         if(config != null) {
 
-            // Todo
             // schedule maintenance tasks only if all cron syntax are valid.
             // else can't schedule maintenance tasks.
 

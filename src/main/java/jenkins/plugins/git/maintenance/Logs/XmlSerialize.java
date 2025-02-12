@@ -28,7 +28,6 @@ public class XmlSerialize{
 
     public XmlSerialize(){
         this.xStream = new XStream(new DomDriver());
-        // Need to change the Permission type. Todo need to read documentation and update security.
         this.xStream.addPermission(AnyTypePermission.ANY);
         Jenkins jenkins = Jenkins.getInstanceOrNull();
 

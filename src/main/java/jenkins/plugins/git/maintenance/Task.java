@@ -2,7 +2,6 @@ package jenkins.plugins.git.maintenance;
 
 /**
  * POJO to store configuration for maintenance tasks.
- * @since TODO
  *
  * @author Hrushikesh Rao
  */

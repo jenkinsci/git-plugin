@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 /**
  * MaintenanceTaskConfiguration is responsible for creating tasks,fetching tasks, storing the configuration in Jenkins. It extends the
  * <b>{@link GlobalConfiguration}</b> class.
- * @since TODO
  *
  * @author Hrushikesh Rao
  */
