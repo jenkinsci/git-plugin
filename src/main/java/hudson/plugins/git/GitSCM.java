@@ -664,6 +664,37 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return branch;
     }
 
+    /**
+     * If any branch can match a multiple remote branches, then workspace polling is required.
+     *
+     * Returns {@code true} if any branches require workspace polling.
+     */
+    private boolean branchesRequireWorkspaceForPolling(@NonNull EnvVars env, @CheckForNull TaskListener listener) {
+        for (BranchSpec branchSpec : getBranches()) {
+            final String branch = branchSpec.getName();
+            final String expandedBranch = env.expand(branch);
+
+            // If the branch contains a wildcard anywhere other than a leading */ or is empty (which is intepreted as
+            // **), it can match multiple remote branches.
+            final String strippedBranch = expandedBranch.replaceAll("^\\*/", "");
+            if (strippedBranch.equals("") || strippedBranch.contains("*")) {
+                if (listener != null) {
+                    final PrintStream log = listener.getLogger();
+
+                    if (branch.equals(expandedBranch)) {
+                        log.printf("Branch '%s' requires workspace for polling%n", branch);
+                    } else {
+                        log.printf("Branch '%s' (expanded to '%s') requires workspace for polling%n",
+                                   branch, expandedBranch);
+                    }
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> abstractBuild, FilePath workspace, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
         return SCMRevisionState.NONE;
@@ -672,17 +703,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public boolean requiresWorkspaceForPolling() {
         // TODO would need to use hudson.plugins.git.util.GitUtils.getPollEnvironment
-        return requiresWorkspaceForPolling(new EnvVars());
+        return requiresWorkspaceForPolling(new EnvVars(), null);
     }
 
     /* Package protected for test access */
-    boolean requiresWorkspaceForPolling(EnvVars environment) {
+    boolean requiresWorkspaceForPolling(EnvVars environment, TaskListener listener) {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
-
-        final String singleBranch = getSingleBranch(environment);
-        return singleBranch == null || singleBranch.equals("**");
+        return branchesRequireWorkspaceForPolling(environment, listener);
     }
 
     @Override
@@ -717,7 +746,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final String singleBranch = getSingleBranch(pollEnv);
 
-        if (!requiresWorkspaceForPolling(pollEnv)) {
+        if (!requiresWorkspaceForPolling(pollEnv, listener)) {
 
             final EnvVars environment = project instanceof AbstractProject<?,?> ap ? GitUtils.getPollEnvironment(ap, workspace, launcher, listener, false) : new EnvVars();
 
