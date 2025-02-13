@@ -275,7 +275,7 @@ public class GitSCMUnitTest {
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("${A}")),
                 null, null, Collections.emptyList());
-        assertFalse(bigGitSCM.requiresWorkspaceForPolling(env));
+        assertTrue(bigGitSCM.requiresWorkspaceForPolling(env));
     }
 
     @Test

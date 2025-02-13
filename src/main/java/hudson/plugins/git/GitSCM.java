@@ -680,7 +680,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
-        return getSingleBranch(environment) == null;
+
+        final String singleBranch = getSingleBranch(environment);
+        return singleBranch == null || singleBranch.equals("**");
     }
 
     @Override
