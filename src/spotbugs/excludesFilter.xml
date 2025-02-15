@@ -14,6 +14,8 @@
     <Or>
       <Class name="hudson.plugins.git.GitChangeSetList" />
       <Class name="hudson.plugins.git.GitSCM" />
+      <Class name="jenkins.plugins.git.maintenance.MaintenanceTaskConfiguration" />
+      <Class name="jenkins.plugins.git.maintenance.TaskExecutor" />
     </Or>
   </Match>
   <Match>
