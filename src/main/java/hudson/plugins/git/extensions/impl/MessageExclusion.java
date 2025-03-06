@@ -41,7 +41,6 @@ public class MessageExclusion extends GitSCMExtension {
 	public String getExcludedMessage() { return excludedMessage; }
 
 	@Override
-	@SuppressFBWarnings(value="NP_BOOLEAN_RETURN_NULL", justification="null used to indicate other extensions should decide")
 	@CheckForNull
 	public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
 		if (excludedPattern == null){

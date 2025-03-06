@@ -35,7 +35,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class GitUtils implements Serializable {
     
-    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
     @NonNull
     GitClient git;
     @NonNull
