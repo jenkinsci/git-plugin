@@ -350,7 +350,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    @Whitelisted
     public GitRepositoryBrowser getBrowser() {
         return browser;
     }
