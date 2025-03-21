@@ -1,0 +1,455 @@
+openapi: 3.0.3
+info:
+  title: Jenkins Git Plugin API
+  description: Specification for Jenkins Git Plugin REST API
+  version: 5.7.0
+servers:
+  - url: 'https'
+paths:
+  /job/{job_name}/scm/api/json:
+    get:
+      description: Retrieve Git SCM configuration for a specific job.
+      operationId: getGitSCMConfig
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+      responses:
+        '200':
+          description: Successfully retrieved SCM configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitSCMConfig'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
+
+  /git/notifyCommit:
+    post:
+      description: Trigger a repository scan to check for changes.
+      operationId: triggerGitScan
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: Git repository URL to scan.
+      responses:
+        '200':
+          description: Successfully triggered repository scan.
+        '400':
+          description: Invalid request.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
+
+  /job/{job_name}/scm/branches/api/json:
+    get:
+      description: Retrieve branch filtering details for a job.
+      operationId: getBranchSpec
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+      responses:
+        '200':
+          description: Successfully retrieved branch filtering details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchSpec'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
+
+  /job/{job_name}/scm/changeset/api/json:
+    get:
+      summary: Get Git ChangeSet for a Jenkins Job
+      description: Retrieve details of changed files in the latest Git commit for a job.
+      operationId: getGitChangeSet
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+      responses:
+        '200':
+          description: Successfully retrieved Git ChangeSet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitChangeSet'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
+
+  /job/{job_name}/build/{build_number}/changes/api/json:
+    get:
+      summary: Get Git Change Sets for a Build
+      description: Retrieve a list of Git changes that went into a particular build.
+      operationId: getGitChangeSetList
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+        - name: build_number
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Build number to retrieve changes for.
+      responses:
+        '200':
+          description: Successfully retrieved Git Change Set List.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitChangeSetList'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: Job or build not found.
+      security:
+        - jenkins_auth: [ ]
+      tags:
+        - gitPlugin
+
+  /job/{job_name}/gitRevisionParameters/api/json:
+    get:
+      summary: Get Git Revision Build Parameters Configuration
+      description: Retrieve configuration information about Git revision parameters that pass Git commits to downstream builds.
+      operationId: getGitRevisionParameters
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+      responses:
+        '200':
+          description: Successfully retrieved Git revision parameters configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitRevisionBuildParameters'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: Job not found or no Git revision parameters configured.
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
+
+    post:
+      summary: Configure Git Revision Build Parameters
+      description: Set up Git revision parameters to pass Git commits to downstream builds.
+      operationId: configureGitRevisionParameters
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GitRevisionBuildParametersInput'
+        required: true
+      responses:
+        '200':
+          description: Successfully configured Git revision parameters.
+        '400':
+          description: Invalid request.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: Job not found.
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
+
+  /job/{job_name}/git/tag/api/json:
+    get:
+      summary: Get Git Tags for a Jenkins Job
+      description: Retrieve a list of Git tags for a specific Jenkins job.
+      operationId: getGitTags
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+      responses:
+        '200':
+          description: Successfully retrieved Git tags.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitTagAction'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
+
+  /job/{job_name}/git/tag:
+      post:
+        summary: Create a Git Tag
+        description: Creates a new Git tag for a Jenkins job.
+        operationId: createGitTag
+        parameters:
+          - name: job_name
+            in: path
+            required: true
+            schema:
+              type: string
+            description: Name of the Jenkins job.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tagName:
+                    type: string
+                    description: The name of the new Git tag.
+                  comment:
+                    type: string
+                    description: A comment for the tag.
+        responses:
+          '201':
+            description: Git tag created successfully.
+          '400':
+            description: Invalid request.
+          '401':
+            $ref: '#/components/responses/unauthorized'
+          '403':
+            $ref: '#/components/responses/forbidden'
+        security:
+          - jenkins_auth: []
+        tags:
+          - gitPlugin
+
+components:
+  responses:
+    unauthorized:
+      description: Authentication is required.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthorized access.
+
+    forbidden:
+      description: User lacks required permissions.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Access forbidden.
+
+  schemas:
+    GitSCMConfig:
+      type: object
+      properties:
+        userRemoteConfigs:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                description: Git remote repository URL.
+              name:
+                type: string
+                description: Remote repository name.
+        branches:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Git branch name.
+        mergeOptions:
+          type: object
+          properties:
+            mergeStrategy:
+              type: string
+              description: Merge strategy used in pre-build.
+
+    BranchSpec:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The branch name pattern.
+        filteredBranches:
+          type: array
+          items:
+            type: object
+            properties:
+              branchName:
+                type: string
+                description: The filtered branch name.
+              matches:
+                type: boolean
+                description: Indicates whether the branch matches the pattern.
+
+    GitChangeSet:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique commit ID (SHA).
+        date:
+          type: string
+          format: date-time
+          description: The timestamp of the commit.
+        authorEmail:
+          type: string
+          description: The email of the commit author.
+        msg:
+          type: string
+          description: The commit message.
+        comment:
+          type: string
+          description: The full commit description.
+        paths:
+          type: array
+          items:
+            $ref: '#/components/schemas/GitPath'
+        author:
+          $ref: '#/components/schemas/GitUser'
+
+    GitPath:
+      type: object
+      properties:
+        file:
+          type: string
+          description: Path of the changed file in the commit.
+        editType:
+          type: string
+          description: Type of change (ADD, DELETE, MODIFY).
+
+    GitUser:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the author or committer.
+        email:
+          type: string
+          description: Email address of the author or committer.
+
+    GitChangeSetList:
+      type: object
+      properties:
+        kind:
+          type: string
+          description: The kind of change set (always "git" for Git change sets).
+        emptySet:
+          type: boolean
+          description: Indicates whether the change set is empty.
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/GitChangeSet'
+          description: List of Git change sets in this build.
+
+    GitRevisionBuildParameters:
+      type: object
+      properties:
+        combineQueuedCommits:
+          type: boolean
+          description: Whether to combine queued commits when passing the revision to downstream builds.
+        descriptor:
+          type: object
+          properties:
+            displayName:
+              type: string
+              description: Display name of the parameter.
+              example: "Pass-through Git Commit that was built"
+
+    GitRevisionBuildParametersInput:
+        type: object
+        required:
+          - combineQueuedCommits
+        properties:
+          combineQueuedCommits:
+            type: boolean
+            description: Whether to combine queued commits when passing the revision to downstream builds.
+    GitTagAction:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/GitTag'
+
+    GitTag:
+        type: object
+        properties:
+          branch:
+            type: string
+            description: The branch associated with the tag.
+          tag:
+            type: string
+            description: The Git tag name.
