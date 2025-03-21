@@ -281,6 +281,65 @@ paths:
         tags:
           - gitPlugin
 
+  /job/{job_name}/scm/mergeOptions/api/json:
+   get:
+    summary: Get Git Merge Options for a Jenkins Job
+    description: Retrieve user-defined Git merge options for a specific Jenkins job.
+    operationId: getUserMergeOptions
+    parameters:
+      - name: job_name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Name of the Jenkins job.
+    responses:
+      '200':
+        description: Successfully retrieved merge options.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserMergeOptions'
+      '401':
+        $ref: '#/components/responses/unauthorized'
+      '403':
+        $ref: '#/components/responses/forbidden'
+    security:
+      - jenkins_auth: []
+    tags:
+      - gitPlugin
+
+  /job/{job_name}/scm/mergeOptions:
+    post:
+      summary: Set Git Merge Options
+      description: Configure Git merge options for a Jenkins job.
+      operationId: setUserMergeOptions
+      parameters:
+        - name: job_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the Jenkins job.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserMergeOptions'
+      responses:
+        '201':
+          description: Merge options successfully updated.
+        '400':
+          description: Invalid request.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+      security:
+        - jenkins_auth: []
+      tags:
+        - gitPlugin
 components:
   responses:
     unauthorized:
@@ -453,3 +512,23 @@ components:
           tag:
             type: string
             description: The Git tag name.
+    UserMergeOptions:
+      type: object
+      properties:
+        mergeRemote:
+          type: string
+          description: The remote repository (e.g., `origin`).
+        mergeTarget:
+          type: string
+          description: The branch being merged (e.g., `master`).
+        ref:
+          type: string
+          description: The full Git reference (e.g., `origin/master`).
+        mergeStrategy:
+          type: string
+          enum: [ recursive, resolve, octopus, ours, subtree ]
+          description: The Git merge strategy.
+        fastForwardMode:
+          type: string
+          enum: [ FF, NO_FF, ONLY_FF ]
+          description: The fast-forward merge mode.
