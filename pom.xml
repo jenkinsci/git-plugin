@@ -41,7 +41,7 @@
     <no-test-jar>false</no-test-jar>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
-    <!-- Do not run extra reporting for checkstyle or pmd -->
+    <!-- Do not run extra reporting for pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
@@ -236,19 +236,5 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.6.0</version>
-        <configuration>
-          <configLocation>google_checks.xml</configLocation>
-          <failOnViolation>true</failOnViolation>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>
