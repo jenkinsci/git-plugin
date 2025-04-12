@@ -1691,13 +1691,9 @@ for (job in allItems) {
 }
 ----
 
-++++
 include::src/main/resources/jenkins/plugins/git/GitStep/help.html[]
-++++
 
-++++
 include::src/main/resources/jenkins/plugins/git/GitStep/help-branch.html[]
-++++
 
 ++++
 include::src/main/resources/jenkins/plugins/git/GitStep/help-changelog.html[]
