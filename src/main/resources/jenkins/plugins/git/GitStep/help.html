@@ -59,13 +59,13 @@ checkout scmGit(branches: [[name: 'main']],
     Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Syntax Snippet Generator</a> generates this example:
 <pre>
-git 'https://github.com/jenkinsci/git-plugin'
+git 'https://github.com/jenkinsci/git-plugin.git'
 </pre>
     </p>
 
     <strong><a id="git-step-with-https-and-branch">Example: Git step with https and a specific branch</a></strong>
     <p>
-    Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.204).
+    Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.492).
     Note that this must be a local branch name like 'master' or 'develop'.
     </p>
     <p>
@@ -80,7 +80,7 @@ git 'https://github.com/jenkinsci/git-plugin'
     </p>
     <p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Syntax Snippet Generator</a> generates this example:
 <pre>
-git branch: 'stable-2.204',
+git branch: 'stable-2.492',
     url: 'https://github.com/jenkinsci/jenkins.git'
 </pre>
     </p>
