@@ -105,7 +105,6 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         if (refSpecExpectedValue == null || refSpecExpectedValue.isEmpty()) {
             /* Test does not support an empty or null expected value.
                Skip the test if the expected value is empty or null */
-            System.out.println("*** testRefSpecWithExpandedVariables empty expected value for '" + refSpecName + "' ***");
             return;
         }
         // Create initial commit
