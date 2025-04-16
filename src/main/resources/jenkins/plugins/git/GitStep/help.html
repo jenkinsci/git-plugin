@@ -1,10 +1,10 @@
 <div>
     <p>
-    Git step. It performs a clone from the specified repository.
+    The <code>git</code> step performs a clone from the specified repository into a Pipeline workspace.
     </p>
     <p>
     Use the <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Syntax Snippet Generator</a> to generate a sample pipeline script for the git step.
-    More advanced checkout operations require the <code>checkout</code> step rather than the <code>git</code> step.
+    More advanced checkout operations require the <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>checkout</code> step</a> rather than the <code>git</code> step.
     Examples of the <code>git</code> step include:
     <ul>
       <li><a href="#git-step-with-defaults">Git step with defaults</a></li>
@@ -17,7 +17,7 @@
     </p>
 
     <p>
-    The <code>git</code> step is a simplified shorthand for a subset of the more powerful <code>checkout</code> step:
+    The <code>git</code> step is a simplified shorthand for a subset of the more powerful <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>checkout</code> step</a>:
 <pre>
 checkout scmGit(branches: [[name: 'main']],
     userRemoteConfigs: [[url: 'https://git-server/user/repository.git']])
@@ -27,14 +27,14 @@ checkout scmGit(branches: [[name: 'main']],
     <hr>
 
     <p>
-    <strong>NOTE:</strong> The <code>checkout</code> step is the <strong>preferred SCM checkout method</strong>.
+    <strong>NOTE:</strong> The <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>checkout</code> step</a> is the <strong>preferred SCM checkout method</strong>.
     It provides significantly more functionality than the <code>git</code> step.
     </p>
     <p>Use the <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Syntax Snippet Generator</a> to generate a sample pipeline script for the checkout step.
     </p>
     <p>
-    The <code>checkout</code> step can be used in many cases where the <code>git</code> step cannot be used.
-    Refer to the <a href="https://plugins.jenkins.io/git/#plugin-content-extensions">git plugin documentation</a> for detailed descriptions of options available to the checkout step.
+    The <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>checkout</code> step</a> can be used in many cases where the <code>git</code> step cannot be used.
+    Refer to the <a href="https://plugins.jenkins.io/git/#plugin-content-extensions">git plugin documentation</a> for detailed descriptions of options available to the <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>checkout</code> step</a>.
     For example, the <code>git</code> step does <strong>not</strong> support:
     <ul>
       <li>SHA-1 checkout</li>
@@ -59,13 +59,13 @@ checkout scmGit(branches: [[name: 'main']],
     Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Syntax Snippet Generator</a> generates this example:
 <pre>
-git 'https://github.com/jenkinsci/git-plugin'
+git 'https://github.com/jenkinsci/git-plugin.git'
 </pre>
     </p>
 
     <strong><a id="git-step-with-https-and-branch">Example: Git step with https and a specific branch</a></strong>
     <p>
-    Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.204).
+    Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.492).
     Note that this must be a local branch name like 'master' or 'develop'.
     </p>
     <p>
@@ -76,11 +76,11 @@ git 'https://github.com/jenkinsci/git-plugin'
       <li>Tag names are <strong>not supported</strong> as the branch argument</li>
     </ul>
     <p>
-    Remote branch names, SHA-1 hashes, and tag names <strong>are supported</strong> by the general purpose <code>checkout</code> step.
+    Remote branch names, SHA-1 hashes, and tag names <strong>are supported</strong> by the general purpose <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>checkout</code> step</a>.
     </p>
     <p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Syntax Snippet Generator</a> generates this example:
 <pre>
-git branch: 'stable-2.204',
+git branch: 'stable-2.492',
     url: 'https://github.com/jenkinsci/jenkins.git'
 </pre>
     </p>
