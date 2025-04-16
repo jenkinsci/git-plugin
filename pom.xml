@@ -64,17 +64,24 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
     </dependency>
-    <!-- TODO: Remove when git client plugin is released -->
+    <!-- TODO: Remove when git client plugin is released and mina is in jenkins.baseline -->
     <dependency>
       <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
       <artifactId>mina-sshd-api-common</artifactId>
-      <version>2.15.0-158.vc368a_4a_d8a_9a_</version>
+      <version>2.15.0-161.vb_200831a_c15b_</version>
     </dependency>
-    <!-- TODO: Remove when git client plugin is released -->
+    <!-- TODO: Remove when git client plugin is released and mina is in jenkins.baseline -->
     <dependency>
       <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
       <artifactId>mina-sshd-api-core</artifactId>
-      <version>2.15.0-158.vc368a_4a_d8a_9a_</version>
+      <version>2.15.0-161.vb_200831a_c15b_</version>
+    </dependency>
+    <!-- TODO: Remove when git client plugin is released and mina is in jenkins.baseline -->
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>eddsa-api</artifactId>
+      <version>0.3.0.1-19.vc432d923e5ee</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
