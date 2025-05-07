@@ -25,6 +25,7 @@
 package hudson.plugins.git.extensions.impl;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -166,7 +167,7 @@ public class PruneStaleTag extends GitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         @Override
-        public GitSCMExtension newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
+        public GitSCMExtension newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject formData) throws FormException {
             return new PruneStaleTag(true);
         }
 

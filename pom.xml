@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.5</version>
+    <version>5.16</version>
     <relativePath />
   </parent>
 
@@ -36,11 +36,10 @@
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.479</jenkins.baseline>
-    <!-- REMOVE -->
-    <jenkins.version>2.495</jenkins.version>
+    <jenkins.baseline>2.504</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
     <no-test-jar>false</no-test-jar>
-    <!-- Do not run extra reporting for checkstyle or pmd -->
+    <!-- Do not run extra reporting for pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
@@ -52,7 +51,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3944.v1a_e4f8b_452db_</version>
+        <version>4710.v016f0a_07e34d</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -103,7 +102,7 @@
       <optional>true</optional>
       <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.479.x and 2.492.x line -->
       <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
-      <version>832.va_66e270d2946</version>
+      <!-- <version>832.va_66e270d2946</version> -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -128,7 +127,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.18.1</version>
+      <version>4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -196,7 +195,7 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
-      <version>1.20.4</version>
+      <version>1.21.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -235,19 +234,5 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.6.0</version>
-        <configuration>
-          <configLocation>google_checks.xml</configLocation>
-          <failOnViolation>true</failOnViolation>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>

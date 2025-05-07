@@ -452,6 +452,10 @@ An example configuration might look like this:
 
 [,yaml]
 ----
+security:
+  gitHooks:
+    allowedOnAgents: false
+    allowedOnController: false
 unclassified:
   scmGit:
     addGitTagAction: false
