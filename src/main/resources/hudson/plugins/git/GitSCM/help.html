@@ -109,9 +109,9 @@ checkout changelog: false,
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 checkout changelog: false,
-         scmGit(userRemoteConfigs: [
-                    [ url: 'https://github.com/jenkinsci/credentials-plugin' ]
-                ])
+         scm: scmGit(userRemoteConfigs: [
+                         [ url: 'https://github.com/jenkinsci/credentials-plugin' ]
+                         ])
 </pre>
     </p>
 
@@ -124,9 +124,9 @@ checkout changelog: false,
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 checkout poll: false,
-         scmGit(userRemoteConfigs: [
-                    [ url: 'git://git.kernel.org/pub/scm/git/git.git' ]
-                ])
+         scm: scmGit(userRemoteConfigs: [
+                         [ url: 'git://git.kernel.org/pub/scm/git/git.git' ]
+                         ])
 </pre>
     </p>
 
