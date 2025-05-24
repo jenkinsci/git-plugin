@@ -21,7 +21,7 @@ Prior release notes are recorded in the git plugin repository link:https://githu
 
 == Pipelines
 
-The link:https://www.jenkins.io/doc/pipeline/steps/params/scmgit/[scmGit parameter] of the git plugin is used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step] to checkout git repositories into Pipeline workspaces.
+The link:https://www.jenkins.io/doc/pipeline/steps/params/scmgit/[`scmGit` parameter] of the git plugin is used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step] to checkout git repositories into Pipeline workspaces.
 The link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] guides the user to select checkout options.
 
 The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] below introduces the Pipeline Syntax Snippet Generator and shows how it is used to generate steps for the Jenkins Pipeline.
