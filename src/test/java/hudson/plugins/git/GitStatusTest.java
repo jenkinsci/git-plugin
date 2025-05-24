@@ -1,31 +1,42 @@
 package hudson.plugins.git;
 
-import hudson.model.*;
+import hudson.model.Action;
+import hudson.model.Cause;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Run;
+import hudson.model.StringParameterDefinition;
+import hudson.model.View;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
-import jakarta.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.PrintWriter;
+import java.net.URISyntaxException;
+import java.util.*;
+import org.eclipse.jgit.transport.URIish;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.kohsuke.stapler.HttpResponses;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+
+import jakarta.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
-import org.mockito.Mockito;
-
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class GitStatusTest extends AbstractGitProject {
 
