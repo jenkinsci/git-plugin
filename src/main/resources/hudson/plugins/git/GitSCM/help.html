@@ -61,7 +61,7 @@ checkout scmGit(userRemoteConfigs: [
 
     <hr>
 
-    <strong><a id="checkout-step-with-defaults">Example: Checkout step with defaults</a></strong>
+    <strong id="checkout-step-with-defaults">Example: Checkout step with defaults</strong>
     <p>
     Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
@@ -72,7 +72,7 @@ checkout scmGit(userRemoteConfigs: [
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-https-and-branch">Example: Checkout step with https and a specific branch</a></strong>
+    <strong id="checkout-step-with-https-and-branch">Example: Checkout step with https and a specific branch</strong>
     <p>
     Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.289).
     </p>
@@ -85,7 +85,7 @@ checkout scmGit(branches: [[name: 'stable-2.289']],
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-ssh-and-credential">Example: Checkout step with ssh and a private key credential</a></strong>
+    <strong id="checkout-step-with-ssh-and-credential">Example: Checkout step with ssh and a private key credential</strong>
     <p>
     Checkout from the git client plugin source repository using ssh protocol, private key credentials, and the master branch.
     The credential must be a private key credential if the remote git repository is accessed with the ssh protocol.
@@ -100,7 +100,7 @@ checkout changelog: false,
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-https-and-changelog">Example: Checkout step with https and changelog disabled</a></strong>
+    <strong id="checkout-step-with-https-and-changelog">Example: Checkout step with https and changelog disabled</strong>
     <p>
     Checkout from the Jenkins source repository using https protocol, no credentials, the master branch, and changelog calculation disabled.
     If changelog is <code>false</code>, then the changelog will not be computed for this job.
@@ -115,7 +115,7 @@ checkout changelog: false,
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-git-and-polling">Example: Checkout step with git protocol and polling disabled</a></strong>
+    <strong id="checkout-step-with-git-and-polling">Example: Checkout step with git protocol and polling disabled</strong>
     <p>
     Checkout from the command line git repository using git protocol, no credentials, the master branch, and no polling for changes.
     If poll is <code>false</code>, then the remote repository will not be polled for changes.
@@ -132,7 +132,7 @@ checkout poll: false,
 
     <hr>
 
-    <strong><a id="argument-descriptions">Argument Descriptions</a></strong>
+    <strong id="argument-descriptions">Argument Descriptions</strong>
     <!-- Automatically generated argument docs inserted here -->
     <!-- See https://jenkins.io/doc/pipeline/steps/workflow-scm-step/ -->
     <!-- See also https://jenkins-url/pipeline-syntax/html#argument-descriptions -->
