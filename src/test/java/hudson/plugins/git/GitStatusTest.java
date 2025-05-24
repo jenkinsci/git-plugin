@@ -606,4 +606,20 @@ public class GitStatusTest extends AbstractGitProject {
         assertNotNull(lastBuild);
         assertEquals(lastBuild.getNumber(), 1);
     }
+
+    @Test
+    public void testDoNotifyCommitWithSshSubDomain() throws Exception { /* No parameters */
+        this.repoURL = "ssh://git@ssh.github.com/jenkinsci/git-plugin.git";
+        FreeStyleProject project = setupNotifyProject();
+        final String differingUrl = "https://github.com/jenkinsci/git-plugin.git";
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, differingUrl, branch, sha1, notifyCommitApiToken);
+        assertEquals("URL: " + differingUrl
+                + " SHA1: " + sha1
+                + " Branches: " + branch, this.gitStatus.toString());
+
+        r.waitUntilNoActivity();
+        FreeStyleBuild lastBuild = project.getLastBuild();
+        assertNotNull(lastBuild);
+    }
+
 }
