@@ -208,8 +208,20 @@ public class GitStatus implements UnprotectedRootAction {
      * @return true if left-hand side loosely matches right-hand side
      */
     public static boolean looselyMatches(URIish lhs, URIish rhs) {
-        return Objects.equals(lhs.getHost(),rhs.getHost())
+        return looselyMatchHost(lhs, rhs)
             && Objects.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+    }
+
+    /**
+     * Match hosts removing any "ssh." at the start of the subdomain.
+     * Some cloud providers prepend "ssh." in the host for ssh urls - while only allowing to send the https url (without ssh.) to the notify commit endpoint.
+     *
+     * Ignoring the "ssh" subdomain allows keeping loosely matching the url.
+     */
+    private static boolean looselyMatchHost(URIish lhs, URIish rhs) {
+        String lhsHost = StringUtils.removeStart(lhs.getHost(), "ssh.");
+        String rhsHost = StringUtils.removeStart(rhs.getHost(), "ssh.");
+        return Objects.equals(lhsHost, rhsHost);
     }
 
     private static String normalizePath(String path) {
