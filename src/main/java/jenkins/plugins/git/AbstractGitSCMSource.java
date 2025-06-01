@@ -632,7 +632,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                         discoverBranches(repository, walk, request, remoteReferences);
                     }
                     if (context.wantTags()) {
-                        discoverTags(repository, walk, request, remoteReferences);
+                        discoverTags(repository, walk, request, remoteReferences,
+                                context.getAtLeastTagCommitTimeMillis(),
+                                context.getAtMostTagCommitTimeMillis());
                     }
                     if (context.wantOtherRefs()) {
                         discoverOtherRefs(repository, walk, request, remoteReferences,
@@ -772,7 +774,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
             private void discoverTags(final Repository repository,
                                           final RevWalk walk, GitSCMSourceRequest request,
-                                          Map<String, ObjectId> remoteReferences)
+                                          Map<String, ObjectId> remoteReferences,
+                                          long atLeastMillis,
+                                          long atMostMillis)
                     throws IOException, InterruptedException {
                 listener.getLogger().println("Checking tags...");
                 walk.setRetainBody(false);
@@ -785,6 +789,21 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     final String tagName = StringUtils.removeStart(ref.getKey(), Constants.R_TAGS);
                     RevCommit commit = walk.parseCommit(ref.getValue());
                     final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+
+                    if (atLeastMillis >= 0L || atMostMillis >= 0L) {
+                        if (atMostMillis >= 0L && atLeastMillis > atMostMillis) {
+                            /* Invalid. It's impossible for any tag to satisfy this. */
+                            continue;
+                        }
+                        long tagAge = System.currentTimeMillis() - lastModified;
+                        if (atMostMillis >= 0L && tagAge > atMostMillis) {
+                            continue;
+                        }
+                        if (atLeastMillis >= 0L && tagAge < atLeastMillis) {
+                            continue;
+                        }
+                    }
+
                     if (request.process(new GitTagSCMHead(tagName, lastModified),
                             new SCMSourceRequest.IntermediateLambda<ObjectId>() {
                                 @Nullable
