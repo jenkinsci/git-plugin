@@ -87,7 +87,7 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
       <!-- TODO: Remove when git client plugin version is in plugin BOM -->
-      <version>6.2.0-rc3755.2717849a_17b_9</version>
+      <version>6.2.0-rc3780.b_b_a_03b_4cf51a_</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
