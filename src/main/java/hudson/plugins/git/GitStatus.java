@@ -228,6 +228,7 @@ public class GitStatus implements UnprotectedRootAction {
         if (path.startsWith("/"))   path=path.substring(1);
         if (path.endsWith("/"))     path=path.substring(0,path.length()-1);
         if (path.endsWith(".git"))  path=path.substring(0,path.length()-4);
+        path = path.replace("/_git/", "/"); //ignore _git meta path in http urls as they are usually not in ssh urls
         return path;
     }
 

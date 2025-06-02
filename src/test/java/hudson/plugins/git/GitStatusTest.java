@@ -17,9 +17,7 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
 import java.io.File;
 import java.io.PrintWriter;
-import java.net.URISyntaxException;
 import java.util.*;
-import org.eclipse.jgit.transport.URIish;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.kohsuke.stapler.HttpResponses;
@@ -608,10 +606,10 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithSshSubDomain() throws Exception { /* No parameters */
+    public void testDoNotifyCommitWithSshSubDomainAnd_gitInPath() throws Exception { /* No parameters */
         this.repoURL = "ssh://git@ssh.github.com/jenkinsci/git-plugin.git";
         FreeStyleProject project = setupNotifyProject();
-        final String differingUrl = "https://github.com/jenkinsci/git-plugin.git";
+        final String differingUrl = "https://github.com/jenkinsci/_git/git-plugin.git";
         this.gitStatus.doNotifyCommit(requestWithNoParameter, differingUrl, branch, sha1, notifyCommitApiToken);
         assertEquals("URL: " + differingUrl
                 + " SHA1: " + sha1
