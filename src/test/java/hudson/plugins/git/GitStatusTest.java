@@ -606,10 +606,10 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithSshSubDomainAnd_gitInPath() throws Exception { /* No parameters */
-        this.repoURL = "ssh://git@ssh.github.com/jenkinsci/git-plugin.git";
+    public void testDoNotifyCommitWithSshAzureDevopsPath() throws Exception { /* No parameters */
+        this.repoURL = "git@ssh.dev.azure.com:v3/myorg/PROJECT/reponame";
         FreeStyleProject project = setupNotifyProject();
-        final String differingUrl = "https://github.com/jenkinsci/_git/git-plugin.git";
+        final String differingUrl = "https://myorg@dev.azure.com/myorg/PROJECT/_git/reponame";
         this.gitStatus.doNotifyCommit(requestWithNoParameter, differingUrl, branch, sha1, notifyCommitApiToken);
         assertEquals("URL: " + differingUrl
                 + " SHA1: " + sha1
