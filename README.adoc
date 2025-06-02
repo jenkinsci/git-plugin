@@ -560,7 +560,7 @@ Options include:
 URL or name::
 
   Root URL serving this Azure DevOps repository.
-  For example, `\https://example.visualstudio.com/_git/my-project.`
+  For example, `\https://dev.azure.com/example/_git/my-project`
 
 [bitbucketweb-repository-browser]
 ==== bitbucketweb
