@@ -1,6 +1,5 @@
 package hudson.plugins.git.util;
 
-import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -197,7 +196,6 @@ public class GitUtils implements Serializable {
      * @return filtered tip branches
      * @throws InterruptedException when interrupted
      */
-    @WithBridgeMethods(Collection.class)
     public List<Revision> filterTipBranches(final Collection<Revision> revisions) throws GitException, InterruptedException {
         // If we have 3 branches that we might want to build
         // ----A--.---.--- B
