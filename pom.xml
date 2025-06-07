@@ -203,7 +203,7 @@
     <dependency>
       <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
       <artifactId>testcontainers-gitserver</artifactId>
-      <version>0.11.0</version>
+      <version>0.12.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
