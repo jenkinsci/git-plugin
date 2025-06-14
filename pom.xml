@@ -46,6 +46,10 @@
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
+    <!--
+    TODO Remove once in BOM - https://github.com/jenkinsci/bom/pull/4840/files
+    -->
+    <mina-sshd-api.version>2.15.0-161.vb_200831a_c15b_</mina-sshd-api.version>
   </properties>
 
   <dependencyManagement>
@@ -64,9 +68,29 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
     </dependency>
+    <!-- TODO: Remove when git client plugin is released and mina is in jenkins.baseline -->
+    <dependency>
+      <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+      <artifactId>mina-sshd-api-common</artifactId>
+      <version>${mina-sshd-api.version}</version>
+    </dependency>
+    <!-- TODO: Remove when git client plugin is released and mina is in jenkins.baseline -->
+    <dependency>
+      <groupId>io.jenkins.plugins.mina-sshd-api</groupId>
+      <artifactId>mina-sshd-api-core</artifactId>
+      <version>${mina-sshd-api.version}</version>
+    </dependency>
+    <!-- TODO: Remove when git client plugin is released and mina is in jenkins.baseline -->
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>eddsa-api</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
+      <!-- TODO: Remove when git client plugin version is in plugin BOM -->
+      <version>6.2.0-rc3800.2128f546d212</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
