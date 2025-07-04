@@ -7,6 +7,7 @@
 == Introduction
 
 image::images/jenkins-and-git.png[Jenkins and Git]
+image::https://static.scarf.sh/a.png?x-pxid=e010adc8-3614-41ef-b7e8-2f42328e8962&page=git-plugin-readme[]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
@@ -21,7 +22,7 @@ Prior release notes are recorded in the git plugin repository link:https://githu
 
 == Pipelines
 
-The git plugin provides an SCM implementation to be used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step].
+The link:https://www.jenkins.io/doc/pipeline/steps/params/scmgit/[`scmGit` parameter] of the git plugin is used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step] to checkout git repositories into Pipeline workspaces.
 The link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] guides the user to select checkout options.
 
 The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] below introduces the Pipeline Syntax Snippet Generator and shows how it is used to generate steps for the Jenkins Pipeline.
@@ -294,7 +295,7 @@ Other credential types will not work with the ssh protocol.
 To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changes to the repository.
 Refer to webhook documentation for your repository:
 
-* link:https://plugins.jenkins.io/github#GitHubPlugin-GitHubhooktriggerforGITScmpolling[GitHub]
+* link:https://plugins.jenkins.io/github/#plugin-content-github-hook-trigger-for-gitscm-polling[GitHub]
 * link:https://plugins.jenkins.io/bitbucket[Bitbucket]
 * link:https://plugins.jenkins.io/gitlab-branch-source[GitLab]
 * link:https://github.com/jenkinsci/gitea-plugin/blob/master/docs/README.md[Gitea]
@@ -364,7 +365,7 @@ hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL='disabled-for-polling'
 [#enabling-jgit]
 === Enabling JGit
 
-See the link:https://plugins.jenkins.io/git-client/#enabling-jgit[git client plugin documentation] for instructions to enable JGit.
+See the link:https://plugins.jenkins.io/git-client/#plugin-content-enabling-jgit[git client plugin documentation] for instructions to enable JGit.
 JGit becomes available throughout Jenkins once it has been enabled.
 
 [#global-configuration]
@@ -452,6 +453,10 @@ An example configuration might look like this:
 
 [,yaml]
 ----
+security:
+  gitHooks:
+    allowedOnAgents: false
+    allowedOnController: false
 unclassified:
   scmGit:
     addGitTagAction: false
@@ -556,7 +561,7 @@ Options include:
 URL or name::
 
   Root URL serving this Azure DevOps repository.
-  For example, `\https://example.visualstudio.com/_git/my-project.`
+  For example, `\https://dev.azure.com/example/_git/my-project`
 
 [bitbucketweb-repository-browser]
 ==== bitbucketweb

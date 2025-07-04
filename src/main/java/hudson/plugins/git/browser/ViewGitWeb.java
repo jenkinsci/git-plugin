@@ -21,7 +21,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.io.Serial;
@@ -91,9 +90,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
-        public ViewGitWeb newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
+        public ViewGitWeb newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(ViewGitWeb.class, jsonObject);
         }
 
