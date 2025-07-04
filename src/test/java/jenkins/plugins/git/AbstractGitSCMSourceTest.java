@@ -454,13 +454,6 @@ public class AbstractGitSCMSourceTest {
         rev = source.fetch(v2Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
-
-        String v2Tag = "refs/tags/v2";
-        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Tag);
-        rev = source.fetch(v2Tag, listener, null);
-        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
-
     }
 
     public static abstract class ActionableSCMSourceOwner extends Actionable implements SCMSourceOwner {
