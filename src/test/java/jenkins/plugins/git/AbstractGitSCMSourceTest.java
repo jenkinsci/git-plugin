@@ -1147,13 +1147,17 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         System.setProperty(Git.class.getName() + ".mockClient", MockGitClientForTags.class.getName());
-        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        TaskListener listener = StreamTaskListener.fromStderr();
-        source.fetch(listener);
-        assertFalse(tagsFetched);
-        source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
-        source.fetch(listener);
-        assertTrue(tagsFetched);
+        try {
+            GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+            TaskListener listener = StreamTaskListener.fromStderr();
+            source.fetch(listener);
+            assertFalse(tagsFetched);
+            source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
+            source.fetch(listener);
+            assertTrue(tagsFetched);
+        } finally {
+            System.clearProperty(Git.class.getName() + ".mockClient");
+        }
     }
 
     static boolean tagsFetched;
