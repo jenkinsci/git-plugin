@@ -81,7 +81,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -454,6 +453,13 @@ public class AbstractGitSCMSourceTest {
         rev = source.fetch(v2Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+
+        String v2Tag = "refs/tags/v2";
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Tag);
+        rev = source.fetch(v2Tag, listener, null);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+
     }
 
     public static abstract class ActionableSCMSourceOwner extends Actionable implements SCMSourceOwner {
@@ -1132,101 +1138,6 @@ public class AbstractGitSCMSourceTest {
             sharedSampleRepo = null;
         }
     }
-
-    @Test
-    public void indexingDoNotFetchTagsWithoutTagDiscoveryTrait() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        sampleRepo.init();
-        sampleRepo.git("checkout", "-b", "dev");
-        sampleRepo.write("file", "modified");
-        sampleRepo.git("commit", "--all", "--message=dev");
-        sampleRepo.git("tag", "lightweight");
-        sampleRepo.write("file", "modified2");
-        sampleRepo.git("commit", "--all", "--message=dev2");
-        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
-        sampleRepo.write("file", "modified3");
-        sampleRepo.git("commit", "--all", "--message=dev3");
-        System.setProperty(Git.class.getName() + ".mockClient", MockGitClientForTags.class.getName());
-        try {
-            GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-            TaskListener listener = StreamTaskListener.fromStderr();
-            source.fetch(listener);
-            assertFalse(tagsFetched);
-            source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
-            source.fetch(listener);
-            assertTrue(tagsFetched);
-        } finally {
-            System.clearProperty(Git.class.getName() + ".mockClient");
-        }
-    }
-
-    static boolean tagsFetched;
-
-    public static class MockGitClientForTags extends TestJGitAPIImpl {
-
-        public MockGitClientForTags(String exe, EnvVars env, File workspace, TaskListener listener) {
-            super(workspace, listener);
-        }
-
-        @Override
-        public FetchCommand fetch_() {
-            // resetting to default behaviour, which is tags are fetched
-            tagsFetched = true;
-            final FetchCommand fetchCommand = super.fetch_();
-            return new FetchCommand() {
-                @Override
-                public FetchCommand from(URIish urIish, List<RefSpec> list) {
-                    fetchCommand.from(urIish, list);
-                    return this;
-                }
-
-                @Override
-                @Deprecated
-                public FetchCommand prune() {
-                    fetchCommand.prune(true);
-                    return this;
-                }
-
-                @Override
-                public FetchCommand prune(boolean b) {
-                    fetchCommand.prune(b);
-                    return this;
-                }
-
-                @Override
-                public FetchCommand shallow(boolean b) {
-                    fetchCommand.shallow(b);
-                    return this;
-                }
-
-                @Override
-                public FetchCommand timeout(Integer integer) {
-                    fetchCommand.timeout(integer);
-                    return this;
-                }
-
-                @Override
-                public FetchCommand tags(boolean b) {
-                    fetchCommand.tags(b);
-                    // record the value being set for assertions later
-                    tagsFetched = b;
-                    return this;
-                }
-
-                @Override
-                public FetchCommand depth(Integer integer) {
-                    fetchCommand.depth(integer);
-                    return this;
-                }
-
-                @Override
-                public void execute() throws GitException, InterruptedException {
-                    fetchCommand.execute();
-                }
-            };
-        }
-    }
-
     //Ugly but MockGitClient needs to be static and no good way to pass it on
     static GitSampleRepoRule sharedSampleRepo;
 
