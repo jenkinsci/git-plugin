@@ -53,7 +53,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>4969.v6ffa_18d90c9f</version>
+        <version>5043.v855ff4819a_0f</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -129,7 +129,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>4.0.3</version>
+      <version>4.0.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
