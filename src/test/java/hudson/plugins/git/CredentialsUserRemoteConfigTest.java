@@ -227,6 +227,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'RhodeCode', repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce']",
             "[$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
             "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin']",
+            "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://dev.azure.com/MarkEWaite/git-plugin/_git/git-plugin']",
             "[$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value']",
             // Assembla now requires login to access their URLs
             // "assembla('https://app.assembla.com/spaces/git-plugin/git/source')",
@@ -242,6 +243,7 @@ public class CredentialsUserRemoteConfigTest {
             "gogs('https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?
             "kiln('https://kiln.example.com/MarkEWaite/git-plugin')",
             "teamFoundation('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
+            "teamFoundation('https://dev.azure.com/MarkEWaite/git-plugin/_git/git-plugin')",
             "phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/')",
             "redmine('https://www.redmine.org/projects/redmine/repository')",
             "rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce')",
