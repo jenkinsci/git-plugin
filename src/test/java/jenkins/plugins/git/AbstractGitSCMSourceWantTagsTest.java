@@ -12,7 +12,6 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.util.StreamTaskListener;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.trait.SCMSourceTrait;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
@@ -28,6 +26,8 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.TestJGitAPIImpl;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -40,8 +40,34 @@ public class AbstractGitSCMSourceWantTagsTest {
     @Rule
     public JenkinsRule r = new JenkinsRule();
 
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    @ClassRule
+    public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+
+    private GitSCMSource source;
+    private final TaskListener LISTENER = StreamTaskListener.fromStderr();
+
+    private static final String LIGHTWEIGHT_TAG_NAME = "lightweight-tag";
+    private static final String ANNOTATED_TAG_NAME = "annotated-tag";
+    private static final String BRANCH_NAME = "dev";
+
+    @BeforeClass
+    public static void fillSampleRepo() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", BRANCH_NAME);
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=" + BRANCH_NAME + "-commit-1");
+        sampleRepo.git("tag", LIGHTWEIGHT_TAG_NAME);
+        sampleRepo.write("file", "modified2");
+        sampleRepo.git("commit", "--all", "--message=" + BRANCH_NAME + "-commit-2");
+        sampleRepo.git("tag", "-a", ANNOTATED_TAG_NAME, "-m", "annotated-tag-message");
+        sampleRepo.write("file", "modified3");
+        sampleRepo.git("commit", "--all", "--message=" + BRANCH_NAME + "-commit-3");
+    }
+
+    @Before
+    public void setGitSCMSource() {
+        source = new GitSCMSource(sampleRepo.toString());
+    }
 
     @Before
     public void setMockGitClient() {
@@ -53,55 +79,96 @@ public class AbstractGitSCMSourceWantTagsTest {
         System.clearProperty(Git.class.getName() + ".mockClient");
     }
 
+    private static final boolean ORIGINAL_IGNORE_TAG_DISCOVERY_TRAIT = GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT;
+
+    @After
+    public void resetIgnoreTagDiscoveryTrait() {
+        GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT = ORIGINAL_IGNORE_TAG_DISCOVERY_TRAIT;
+    }
+
     @Test
-    public void indexingDoNotFetchTagsWithoutTagDiscoveryTrait() throws Exception {
-        String lightweightTagName = "lightweight-tag";
-        String annotatedTagName = "annotated-tag";
-        String branchName = "dev";
-        sampleRepo.init();
-        sampleRepo.git("checkout", "-b", branchName);
-        sampleRepo.write("file", "modified");
-        sampleRepo.git("commit", "--all", "--message=" + branchName + "-commit-1");
-        sampleRepo.git("tag", lightweightTagName);
-        sampleRepo.write("file", "modified2");
-        sampleRepo.git("commit", "--all", "--message=" + branchName + "-commit-2");
-        sampleRepo.git("tag", "-a", annotatedTagName, "-m", "annotated-tag-message");
-        sampleRepo.write("file", "modified3");
-        sampleRepo.git("commit", "--all", "--message=" + branchName + "-commit-3");
-
-        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        TaskListener listener = StreamTaskListener.fromStderr();
-
+    public void indexingHasNoTrait() throws Exception {
         // The source has no traits - empty result and no tags fetched
-        Set<SCMHead> noHeads = source.fetch(listener);
+        Set<SCMHead> noHeads = source.fetch(LISTENER);
         assertThat(noHeads, is(empty()));
         assertFalse(tagsFetched);
+    }
 
+    @Test
+    public void indexingHasNoTraitIgnoreTagDiscoveryTrait() throws Exception {
+        // The source has no traits - empty result and no tags fetched
+        GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT = true;
+        Set<SCMHead> noHeads = source.fetch(LISTENER);
+        assertThat(noHeads, is(empty()));
+        assertTrue(tagsFetched); // tags fetched but returned heads is empty
+    }
+
+    @Test
+    public void indexingHasTagDiscoveryTrait() throws Exception {
         // The source has the tag discovery trait - only tags fetched
         source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
-        Set<SCMHead> taggedHeads = source.fetch(listener);
+        Set<SCMHead> taggedHeads = source.fetch(LISTENER);
         assertThat(
                 taggedHeads.stream().map(p -> p.getName()).collect(Collectors.toList()),
-                containsInAnyOrder(lightweightTagName, annotatedTagName));
+                containsInAnyOrder(LIGHTWEIGHT_TAG_NAME, ANNOTATED_TAG_NAME));
         assertTrue(tagsFetched);
+    }
 
+    @Test
+    public void indexingHasTagDiscoveryTraitIgnoreTagDiscoveryTrait() throws Exception {
+        GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT = true;
+        // The source has the tag discovery trait - only tags fetched
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
+        Set<SCMHead> taggedHeads = source.fetch(LISTENER);
+        assertThat(
+                taggedHeads.stream().map(p -> p.getName()).collect(Collectors.toList()),
+                containsInAnyOrder(LIGHTWEIGHT_TAG_NAME, ANNOTATED_TAG_NAME));
+        assertTrue(tagsFetched);
+    }
+
+    @Test
+    public void indexingHasBranchDiscoveryTrait() throws Exception {
         // The source has the branch discovery trait - only branches fetched
         source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
-        Set<SCMHead> branchHeads = source.fetch(listener);
+        Set<SCMHead> branchHeads = source.fetch(LISTENER);
         assertThat(
                 branchHeads.stream().map(p -> p.getName()).collect(Collectors.toList()),
-                containsInAnyOrder(branchName, "master"));
+                containsInAnyOrder(BRANCH_NAME, "master"));
         assertFalse(tagsFetched);
+    }
 
+    @Test
+    public void indexingHasBranchDiscoveryTraitIgnoreTagDiscoveryTrait() throws Exception {
+        GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT = true;
+        // The source has the branch discovery trait - only branches fetched
+        source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
+        Set<SCMHead> branchHeads = source.fetch(LISTENER);
+        assertThat(
+                branchHeads.stream().map(p -> p.getName()).collect(Collectors.toList()),
+                containsInAnyOrder(BRANCH_NAME, "master"));
+        assertTrue(tagsFetched); // tags fetched but returned heads is only branches
+    }
+
+    @Test
+    public void indexingHasBranchAndTagDiscoveryTrait() throws Exception {
         // The source has the branch discovery and tag discovery trait - branches and tags fetched
-        List<SCMSourceTrait> traits = new ArrayList<>();
-        traits.add(new BranchDiscoveryTrait());
-        traits.add(new TagDiscoveryTrait());
-        source.setTraits(traits);
-        Set<SCMHead> heads = source.fetch(listener);
+        source.setTraits(List.of(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        Set<SCMHead> heads = source.fetch(LISTENER);
         assertThat(
                 heads.stream().map(p -> p.getName()).collect(Collectors.toList()),
-                containsInAnyOrder(branchName, "master", lightweightTagName, annotatedTagName));
+                containsInAnyOrder(BRANCH_NAME, "master", LIGHTWEIGHT_TAG_NAME, ANNOTATED_TAG_NAME));
+        assertTrue(tagsFetched);
+    }
+
+    @Test
+    public void indexingHasBranchAndTagDiscoveryTraitIgnoreTagDiscoveryTrait() throws Exception {
+        GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT = true;
+        // The source has the branch discovery and tag discovery trait - branches and tags fetched
+        source.setTraits(List.of(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        Set<SCMHead> heads = source.fetch(LISTENER);
+        assertThat(
+                heads.stream().map(p -> p.getName()).collect(Collectors.toList()),
+                containsInAnyOrder(BRANCH_NAME, "master", LIGHTWEIGHT_TAG_NAME, ANNOTATED_TAG_NAME));
         assertTrue(tagsFetched);
     }
 
