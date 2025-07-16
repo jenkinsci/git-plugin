@@ -129,6 +129,24 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private String credentialsId;
 
     static final String IGNORE_TAG_DISCOVERY_TRAIT_PROPERTY = GitSCMSource.class.getName() + ".IGNORE_TAG_DISCOVERY_TRAIT";
+
+    /**
+     * Ignore the tag discovery trait when fetching multibranch Pipelines.
+     *
+     * Git plugin versions 5.7.0 and earlier will always fetch tags
+     * when scanning a multibranch Pipeline, whether or not the tag
+     * discovery trait had been added. Releases after git plugin 5.7.0
+     * honor the tag discovery trait when scanning a multibranch
+     * Pipeline. If the tag discovery trait has been added, then tags
+     * are fetched. If the tag discovery trait has not been added,
+     * then tags are not fetched.
+     *
+     * If honoring the tag discovery trait causes problems for a user,
+     * a Java property can be set during Jenkins startup to restore
+     * the previous (buggy) behavior.
+     *
+     * Refer to the plugin documentation for more details.
+     */
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL")
     public static /* not final */ boolean IGNORE_TAG_DISCOVERY_TRAIT =
             SystemProperties.getBoolean(IGNORE_TAG_DISCOVERY_TRAIT_PROPERTY);
@@ -300,7 +318,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
     public boolean isIgnoreOnPushNotifications() {
         return SCMTrait.find(traits, IgnoreOnPushNotificationTrait.class) != null;
     }
-
 
     // For Stapler only
     @Restricted(DoNotUse.class)
