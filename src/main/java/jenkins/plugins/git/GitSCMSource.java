@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
@@ -95,6 +96,7 @@ import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.security.FIPS140;
+import jenkins.util.SystemProperties;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
@@ -125,6 +127,11 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @CheckForNull
     private String credentialsId;
+
+    static final String IGNORE_TAG_DISCOVERY_TRAIT_PROPERTY = GitSCMSource.class.getName() + ".IGNORE_TAG_DISCOVERY_TRAIT";
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL")
+    public static /* not final */ boolean IGNORE_TAG_DISCOVERY_TRAIT =
+            SystemProperties.getBoolean(IGNORE_TAG_DISCOVERY_TRAIT_PROPERTY);
 
     @Deprecated
     private transient String remoteName;
