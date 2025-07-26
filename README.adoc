@@ -1478,6 +1478,15 @@ For example, they might choose to place the cache directories in `/var/cache/jen
 
 The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
 
+[#ignoreTagDiscoveryTrait]
+=== Ignore tag discovery trait
+
+Multibranch Pipelines that use the Git branch source prior to Git plugin 5.8.0 always fetch tags from the remote repository, whether or not the tag discovery trait is set.
+That bug is fixed in Git plugin 5.8.0 and later.
+
+Administrators that depend on the old (buggy) behavior can set the property `jenkins.plugins.git.GitSCMSource.IGNORE_TAG_DISCOVERY=true`.
+When administrators detect that their multibranch Pipelines depend on that bug, they should add the tag discovery trait to the multibranch Pipeline definition.
+
 [#git-publisher]
 == Git Publisher
 
