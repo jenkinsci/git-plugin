@@ -51,7 +51,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMBuilder;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 
 /**

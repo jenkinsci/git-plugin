@@ -104,7 +104,7 @@ import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
 import jenkins.security.FIPS140;
 import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
