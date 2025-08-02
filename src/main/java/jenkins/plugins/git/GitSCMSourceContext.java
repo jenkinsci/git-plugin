@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -94,6 +95,12 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     @NonNull
     private String remoteName = AbstractGitSCMSource.DEFAULT_REMOTE_NAME;
+
+    @CheckForNull
+    private long atLeastTagCommitTimeMillis;
+
+    @CheckForNull
+    private long atMostTagCommitTimeMillis;
 
     /**
      * Constructor.
@@ -190,6 +197,14 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public final String remoteName() {
         return remoteName;
+    }
+
+    public final long getAtLeastTagCommitTimeMillis() {
+        return atLeastTagCommitTimeMillis;
+    }
+
+    public final long getAtMostTagCommitTimeMillis() {
+        return atMostTagCommitTimeMillis;
     }
 
     /**
@@ -356,6 +371,25 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
             ));
         }
         return result;
+    }
+
+    private long getTagCommitTimeLimitMillisFromDays(String limitDays) {
+        long tagCommitTimeLimit = Long.parseLong(StringUtils.defaultIfBlank(limitDays, "-1"));
+        return tagCommitTimeLimit < 0 ? -1L : TimeUnit.DAYS.toMillis(tagCommitTimeLimit);
+    }
+
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public final C withAtLeastTagCommitTimeDays(String atLeastDays) {
+        this.atLeastTagCommitTimeMillis = getTagCommitTimeLimitMillisFromDays(atLeastDays);
+        return (C) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public final C withAtMostTagCommitTimeDays(String atMostDays) {
+        this.atMostTagCommitTimeMillis = getTagCommitTimeLimitMillisFromDays(atMostDays);
+        return (C) this;
     }
 
     /**
