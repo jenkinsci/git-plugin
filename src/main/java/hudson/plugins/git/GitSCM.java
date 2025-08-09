@@ -303,7 +303,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (remoteRepositories != null && userRemoteConfigs == null) {
             userRemoteConfigs = new ArrayList<>();
             for(RemoteConfig cfg : remoteRepositories) {
-                // converted as in config.jelly
+                // converted as in index.jelly
                 String url = "";
                 if (cfg.getURIs().size() > 0 && cfg.getURIs().get(0) != null)
                     url = cfg.getURIs().get(0).toPrivateString();
