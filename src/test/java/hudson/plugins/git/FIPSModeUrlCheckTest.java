@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import java.util.List;
 import jenkins.branch.MultiBranchProject;
 import jenkins.plugins.git.GitSCMSource;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
