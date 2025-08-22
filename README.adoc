@@ -3,11 +3,14 @@
 :toc: macro
 :toc-title:
 
++++
+<script src="images/scarf.js"></script>
++++
+
 [#introduction]
 == Introduction
 
 image::images/jenkins-and-git.png[Jenkins and Git]
-image::https://static.scarf.sh/a.png?x-pxid=e010adc8-3614-41ef-b7e8-2f42328e8962&page=git-plugin-readme[]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
