@@ -3,6 +3,10 @@
 :toc: macro
 :toc-title:
 
++++
+<script src="images/scarf.js"></script>
++++
+
 [#introduction]
 == Introduction
 
