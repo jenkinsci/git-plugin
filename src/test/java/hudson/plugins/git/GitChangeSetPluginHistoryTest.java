@@ -45,26 +45,6 @@ public class GitChangeSetPluginHistoryTest {
     @ClassRule
     public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
-    /* git 1.7.1 on CentOS 6.7 "whatchanged" generates no output for
-     * the SHA1 hashes (from this repository) in this list. Rather
-     * than skip testing on that old git version, this exclusion list
-     * allows most tests to run. Debian 6 / git 1.7.2.5 also has the issue.
-     */
-    private static final String[] git171exceptions = {
-        "6e467b23",
-        "750b6806",
-        "7eeb070b",
-        "87988f4d",
-        "94d982c2",
-        "a571899e",
-        "b9e497b0",
-        "bc71cd2d",
-        "bca98ea9",
-        "c73b4ff3",
-        "dcd329f4",
-        "edf066f3",
-    };
-
     public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, String sha1String) throws Exception {
         this.sha1 = ObjectId.fromString(sha1String);
         StringWriter stringWriter = new StringWriter();
