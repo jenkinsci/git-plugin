@@ -168,6 +168,22 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
 
+    static Set<String> cacheEntries = new HashSet<>();
+
+    static {
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        if(jenkins != null){
+            File[] caches = new File(jenkins.getRootDir(),"caches").listFiles();
+            if(caches != null) {
+                for (File cache : caches) {
+                    String cacheEntry = cache.getName();
+                    cacheEntries.add(cacheEntry);
+                }
+            }
+            LOGGER.log(Level.FINE,"Caches on Jenkins controller " + cacheEntries);
+        }
+    }
+
     public AbstractGitSCMSource() {
     }
     
@@ -1287,6 +1303,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return getCacheEntry(getRemote());
     }
 
+    protected static Set<String> getCacheEntries(){
+        return cacheEntries;
+    }
+
     protected static File getCacheDir(String cacheEntry) {
         return getCacheDir(cacheEntry, true);
     }
@@ -1301,7 +1321,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         if (!cacheDir.isDirectory()) {
             if (createDirectory) {
                 boolean ok = cacheDir.mkdirs();
-                if (!ok) {
+                if(ok) {
+                    cacheEntries.add(cacheEntry);
+                }else{
                     LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
                 }
             } else {
