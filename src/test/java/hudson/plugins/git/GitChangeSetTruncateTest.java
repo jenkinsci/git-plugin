@@ -142,7 +142,7 @@ public class GitChangeSetTruncateTest {
 
     private ObjectId commitOneFile(GitClient gitClient, final String commitSummary) throws Exception {
         String path = "One-File.txt";
-        String content = String.format("A random UUID: %s\n", UUID.randomUUID());
+        String content = "A random UUID: %s\n".formatted(UUID.randomUUID());
         /* randomize whether commit message is single line or multi-line */
         String commitMessageBody = random.nextBoolean() ? "\n\n" + "committing " + path + " with content:\n\n" + content : "";
         String commitMessage = commitSummary + commitMessageBody;

@@ -10,6 +10,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.*;
 
 /**
@@ -103,6 +104,7 @@ public class InverseBuildChooser extends BuildChooser {
         }
     }
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
 }

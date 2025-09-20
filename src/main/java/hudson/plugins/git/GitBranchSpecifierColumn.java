@@ -8,7 +8,7 @@ import hudson.views.ListViewColumnDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.triggers.SCMTriggerItem;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -26,8 +26,7 @@ public class GitBranchSpecifierColumn extends ListViewColumn {
         SCMTriggerItem s = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(item);
         if(s != null) {
             for(SCM scm : s.getSCMs()) {
-                if (scm instanceof GitSCM) {
-                    GitSCM gitScm = (GitSCM)scm;
+                if (scm instanceof GitSCM gitScm) {
                     for(BranchSpec spec : gitScm.getBranches()) {
                         branchSpec.add(spec.getName());
                     }

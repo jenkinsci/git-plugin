@@ -104,7 +104,7 @@ import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
 import jenkins.security.FIPS140;
 import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
@@ -252,8 +252,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public List<GitSCMExtension> getExtensions() {
         List<GitSCMExtension> extensions = new ArrayList<>();
         for (SCMSourceTrait t : getTraits()) {
-            if (t instanceof GitSCMExtensionTrait) {
-                extensions.add(((GitSCMExtensionTrait) t).getExtension());
+            if (t instanceof GitSCMExtensionTrait<?> trait) {
+                extensions.add(trait.getExtension());
             }
         }
         return Collections.unmodifiableList(extensions);
@@ -400,6 +400,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             client.setRemoteUrl(remoteName, getRemote());
             listener.getLogger().println((prune ? "Fetching & pruning " : "Fetching ") + remoteName + "...");
             FetchCommand fetch = client.fetch_();
+            if (!GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT) {
+                fetch.tags(context.wantTags());
+            }
             fetch = fetch.prune(prune);
 
             URIish remoteURI = null;
@@ -441,25 +444,25 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
-                                  if (head instanceof GitTagSCMHead) {
+                                  if (head instanceof GitTagSCMHead mHead) {
                                       try {
                                           ObjectId objectId = client.revParse(Constants.R_TAGS + head.getName());
-                                          return new GitTagSCMRevision((GitTagSCMHead) head, objectId.name());
+                                          return new GitTagSCMRevision(mHead, objectId.name());
                                       } catch (GitException e) {
                                           // tag does not exist
                                           return null;
                                       }
-                                  } else if (head instanceof GitBranchSCMHead) {
+                                  } else if (head instanceof GitBranchSCMHead mHead) {
                                       for (Branch b : client.getRemoteBranches()) {
                                           String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                                           if (branchName.equals(head.getName())) {
-                                              return new GitBranchSCMRevision((GitBranchSCMHead)head, b.getSHA1String());
+                                              return new GitBranchSCMRevision(mHead, b.getSHA1String());
                                           }
                                       }
-                                  } else if (head instanceof GitRefSCMHead) {
+                                  } else if (head instanceof GitRefSCMHead mHead) {
                                       try {
-                                          ObjectId objectId = client.revParse(((GitRefSCMHead) head).getRef());
-                                          return new GitRefSCMRevision((GitRefSCMHead)head, objectId.name());
+                                          ObjectId objectId = client.revParse(mHead.getRef());
+                                          return new GitRefSCMRevision(mHead, objectId.name());
                                       } catch (GitException e) {
                                           // ref could not be found
                                           return null;
@@ -1253,8 +1256,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     protected List<Action> retrieveActions(@NonNull SCMHead head, @CheckForNull SCMHeadEvent event,
                                            @NonNull TaskListener listener) throws IOException, InterruptedException {
         SCMSourceOwner owner = getOwner();
-        if (owner instanceof Actionable) {
-            for (GitRemoteHeadRefAction a: ((Actionable) owner).getActions(GitRemoteHeadRefAction.class)) {
+        if (owner instanceof Actionable actionable) {
+            for (GitRemoteHeadRefAction a: actionable.getActions(GitRemoteHeadRefAction.class)) {
                 if (getRemote().equals(a.getRemote())) {
                     if (head.getName().equals(a.getName())) {
                         return Collections.singletonList(new PrimaryInstanceMetadataAction());
@@ -1552,11 +1555,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      *
      * @since 3.6.1
      */
-    @SuppressFBWarnings(value = { "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE",
-                                  "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                                  "NP_LOAD_OF_KNOWN_NULL_VALUE"
-                                },
-                        justification = "Java 11 generated code causes redundant nullcheck")
     private static class TreeWalkingSCMProbe extends SCMProbe {
         private final String name;
         private final long lastModified;

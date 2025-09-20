@@ -168,8 +168,8 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         public Map<String, Object> customInstantiate(Map<String, Object> arguments) {
             Map<String, Object> r = new HashMap<>(arguments);
             Object mergeStrategy = r.get("mergeStrategy");
-            if (mergeStrategy instanceof String) {
-                r.put("mergeStrategy", ((String) mergeStrategy).toUpperCase(Locale.ROOT));
+            if (mergeStrategy instanceof String string) {
+                r.put("mergeStrategy", string.toUpperCase(Locale.ROOT));
             }
             return r;
         }

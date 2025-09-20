@@ -1,7 +1,5 @@
 package hudson.plugins.git.util;
 
-import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -24,6 +22,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.*;
@@ -34,7 +33,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class GitUtils implements Serializable {
     
-    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
     @NonNull
     GitClient git;
     @NonNull
@@ -198,7 +196,6 @@ public class GitUtils implements Serializable {
      * @return filtered tip branches
      * @throws InterruptedException when interrupted
      */
-    @WithBridgeMethods(Collection.class)
     public List<Revision> filterTipBranches(final Collection<Revision> revisions) throws GitException, InterruptedException {
         // If we have 3 branches that we might want to build
         // ----A--.---.--- B
@@ -365,8 +362,7 @@ public class GitUtils implements Serializable {
         List<? extends Action> buildActions = b.getAllActions();
         for (Action action : buildActions) {
             // most importantly, ParametersAction will be processed here (for parameterized builds)
-            if (action instanceof ParametersAction) {
-                ParametersAction envAction = (ParametersAction) action;
+            if (action instanceof ParametersAction envAction) {
                 envAction.buildEnvironment(b, env);
             }
         }
@@ -410,5 +406,6 @@ public class GitUtils implements Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

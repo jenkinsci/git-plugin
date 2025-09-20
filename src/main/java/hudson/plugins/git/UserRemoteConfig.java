@@ -23,7 +23,7 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -119,8 +119,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return new StandardListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(
-                            project instanceof Queue.Task
-                                    ? Tasks.getAuthenticationOf((Queue.Task) project)
+                            project instanceof Queue.Task t
+                                    ? Tasks.getAuthenticationOf(t)
                                     : ACL.SYSTEM,
                             project,
                             StandardUsernameCredentials.class,
@@ -155,8 +155,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 return FormValidation.ok();
             }
             for (ListBoxModel.Option o : CredentialsProvider
-                    .listCredentialsInItem(StandardUsernameCredentials.class, project, project instanceof Queue.Task
-                                    ? Tasks.getAuthenticationOf2((Queue.Task) project)
+                    .listCredentialsInItem(StandardUsernameCredentials.class, project, project instanceof Queue.Task t
+                                    ? Tasks.getAuthenticationOf2(t)
                                     : ACL.SYSTEM2,
                             GitURIRequirementsBuilder.fromUri(url).build(),
                             GitClient.CREDENTIALS_MATCHER)) {
@@ -199,8 +199,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             // get git executable on controller
             EnvVars environment;
             Jenkins jenkins = Jenkins.get();
-            if (item instanceof Job) {
-                environment = ((Job) item).getEnvironment(jenkins, TaskListener.NULL);
+            if (item instanceof Job<?,?> job) {
+                environment = job.getEnvironment(jenkins, TaskListener.NULL);
             } else {
                 Computer computer = jenkins.toComputer();
                 environment = computer == null ? new EnvVars() : computer.buildEnvironment(TaskListener.NULL);

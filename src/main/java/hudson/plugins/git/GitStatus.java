@@ -19,16 +19,16 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
 import jenkins.util.SystemProperties;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -180,7 +180,7 @@ public class GitStatus implements UnprotectedRootAction {
 
         return new HttpResponse() {
           @Override
-          public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException {
+          public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node) throws IOException {
             rsp.setStatus(SC_OK);
             rsp.setContentType("text/plain");
             for (int i = 0; i < contributors.size(); i++) {
@@ -232,7 +232,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param rsp the response.
          * @since 1.4.1
          */
-        public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+        public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
         }
 
         /**
@@ -243,7 +243,7 @@ public class GitStatus implements UnprotectedRootAction {
          * @param w   the writer.
          * @since 1.4.1
          */
-        public void writeBody(StaplerRequest req, StaplerResponse rsp, PrintWriter w) {
+        public void writeBody(StaplerRequest2 req, StaplerResponse2 rsp, PrintWriter w) {
             writeBody(w);
         }
 
@@ -430,9 +430,9 @@ public class GitStatus implements UnprotectedRootAction {
                             }
                             if (!branchFound) continue;
                             urlFound = true;
-                            if (!(project instanceof ParameterizedJobMixIn.ParameterizedJob && ((ParameterizedJobMixIn.ParameterizedJob) project).isDisabled())) {
+                            if (!(project instanceof ParameterizedJobMixIn.ParameterizedJob<?,?> job && job.isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
-                                if (project instanceof Job) {
+                                if (project instanceof Job<?,?> job) {
                                     Set<String> buildParametersNames = new HashSet<>();
                                     if (allowNotifyCommitParameters || !safeParameters.isEmpty()) {
                                         for (ParameterValue parameterValue: allBuildParameters) {
@@ -442,7 +442,7 @@ public class GitStatus implements UnprotectedRootAction {
                                         }
                                     }
 
-                                    List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
+                                    List<ParameterValue> jobParametersValues = getDefaultParametersValues(job);
                                     for (ParameterValue defaultParameterValue : jobParametersValues) {
                                         if (!buildParametersNames.contains(defaultParameterValue.getName())) {
                                             allBuildParameters.add(defaultParameterValue);
@@ -543,7 +543,7 @@ public class GitStatus implements UnprotectedRootAction {
              */
             @Override
             @SuppressWarnings("deprecation")
-            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+            public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
                 // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
                 // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());
@@ -578,7 +578,7 @@ public class GitStatus implements UnprotectedRootAction {
              */
             @Override
             @SuppressWarnings("deprecation")
-            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+            public void addHeaders(StaplerRequest2 req, StaplerResponse2 rsp) {
                 // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
                 // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());

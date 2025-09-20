@@ -16,11 +16,10 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -39,13 +38,13 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
 
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
-        String spec = String.format("commit/%s#path=%s&_a=compare", path.getChangeSet().getId(), path.getPath());
+        String spec = "commit/%s#path=%s&_a=compare".formatted(path.getChangeSet().getId(), path.getPath());
         return new URL(getRepoUrl(path.getChangeSet()), spec);
     }
 
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
-        String spec = String.format("commit/%s#path=%s&_a=history", path.getChangeSet().getId(), path.getPath());
+        String spec = "commit/%s#path=%s&_a=history".formatted(path.getChangeSet().getId(), path.getPath());
         return encodeURL(new URL(getRepoUrl(path.getChangeSet()), spec));
     }
 
@@ -93,9 +92,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
-        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+        public TFS2013GitRepositoryBrowser newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
             try {
                 req.getSubmittedForm();
             } catch (ServletException e) {

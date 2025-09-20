@@ -14,18 +14,19 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 import java.util.regex.Pattern;
 
 public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 
-	private static final long serialVersionUID = 2881872624557203410L;
+    @Serial
+    private static final long serialVersionUID = 2881872624557203410L;
 
 	@DataBoundConstructor
 	public FisheyeGitRepositoryBrowser(String repoUrl) {
@@ -38,7 +39,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 			return null; // no diff if this is not an edit change
 		String r1 = path.getChangeSet().getParentCommit();
 		String r2 = path.getChangeSet().getId();
-		return new URL(getUrl(), getPath(path) + String.format("?r1=%s&r2=%s", r1, r2));
+		return new URL(getUrl(), "%s?r1=%s&r2=%s".formatted(getPath(path), r1, r2));
 	}
 
 	@Override
@@ -77,9 +78,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 		}
 
 		@Override
-                @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                                    justification = "Inherited javadoc commits that req is non-null")
-		public FisheyeGitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+		public FisheyeGitRepositoryBrowser newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
 			return req.bindJSON(FisheyeGitRepositoryBrowser.class, jsonObject);
 		}
 

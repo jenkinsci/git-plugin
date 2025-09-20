@@ -279,8 +279,8 @@ public abstract class AbstractGitTestCase {
 
     protected EnvVars getEnvVars(FreeStyleProject project) {
         for (hudson.tasks.Builder b : project.getBuilders()) {
-            if (b instanceof CaptureEnvironmentBuilder) {
-                return ((CaptureEnvironmentBuilder)b).getEnvVars();
+            if (b instanceof CaptureEnvironmentBuilder builder) {
+                return builder.getEnvVars();
             }
         }
         return new EnvVars();

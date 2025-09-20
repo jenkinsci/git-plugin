@@ -35,6 +35,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -200,6 +201,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         }
     }
 
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = Logger.getLogger(RevisionParameterAction.class.getName());
 }

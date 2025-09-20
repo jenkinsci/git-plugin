@@ -25,6 +25,7 @@
 package hudson.plugins.git.extensions.impl;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -47,7 +48,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Prune stale local tags that do not exist on any remote.
@@ -166,7 +167,7 @@ public class PruneStaleTag extends GitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         @Override
-        public GitSCMExtension newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public GitSCMExtension newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject formData) throws FormException {
             return new PruneStaleTag(true);
         }
 

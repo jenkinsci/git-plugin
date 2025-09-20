@@ -106,6 +106,7 @@ public class MultibranchProjectTraitsTest {
                 "    browser: gogs('https://try.gogs.io/MarkEWaite/git-plugin'),\n", // Should this be gogsGit?
                 "    browser: kiln('https://kiln.example.com/MarkEWaite/git-plugin'),\n",
                 "    browser: teamFoundation('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'),\n",
+                "    browser: teamFoundation('https://dev.azure.com/MarkEWaite/_git/git-plugin'),\n",
                 "    browser: phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/'),\n",
                 "    browser: redmine('https://www.redmine.org/projects/redmine/repository'),\n",
                 "    browser: rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce'),\n",
@@ -136,6 +137,7 @@ public class MultibranchProjectTraitsTest {
                 "    browser: [$class: 'RedmineWeb', repoUrl: 'https://www.redmine.org/projects/redmine/repository'],\n",
                 "    browser: [$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin'],\n",
                 "    browser: [$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'],\n",
+                "    browser: [$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://dev.azure.com/MarkEWaite/_git/git-plugin'],\n",
                 "    browser: [$class: 'RhodeCode', repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce'],\n",
                 "    browser: [$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value'],\n", // Not likely a viewgit site, but reasonable approximation
         };

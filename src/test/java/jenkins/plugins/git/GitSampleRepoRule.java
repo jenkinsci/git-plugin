@@ -193,13 +193,13 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         final int gitMajor = Integer.parseInt(fields[0]);
         final int gitMinor = Integer.parseInt(fields[1]);
         final int gitPatch = Integer.parseInt(fields[2]);
-        if (gitMajor < 1 || gitMajor > 3) {
+        if (gitMajor < 1) {
             LOGGER.log(Level.WARNING, "Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields[0] + "'");
         }
-        if (gitMinor < 0 || gitMinor > 50) {
+        if (gitMinor < 0) {
             LOGGER.log(Level.WARNING, "Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields[1] + "'");
         }
-        if (gitPatch < 0 || gitPatch > 20) {
+        if (gitPatch < 0) {
             LOGGER.log(Level.WARNING, "Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'" + fields[2] + "'");
         }
 

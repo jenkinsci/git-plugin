@@ -21,7 +21,7 @@ import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RunWith(Theories.class)
 public class GitStatusTheoriesTest extends AbstractGitProject {
