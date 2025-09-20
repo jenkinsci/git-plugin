@@ -25,11 +25,18 @@
 
 package jenkins.plugins.git;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import hudson.EnvVars;
+import hudson.Extension;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitException;
+import hudson.util.Secret;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Collections;
@@ -47,12 +54,15 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -475,6 +485,67 @@ public class GitSCMFileSystemTest {
         GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null);
         assertEquals("master-f", result1.headName);
         assertEquals(Constants.R_HEADS, result1.prefix);
+    }
+
+    @Test
+    public void filesystem_supports_credential_contextualization() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("Jenkinsfile", "echo 'Hello, world!'");
+        sampleRepo.git("add", "Jenkinsfile");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        var store = CredentialsProvider.lookupStores(r.jenkins).iterator().next();
+        store.addCredentials(Domain.global(), new ContextualizableCredentials("my-creds"));
+        var job = r.createProject(WorkflowJob.class);
+        var scm = new GitSCM(
+                GitSCM.createRepoList(sampleRepo.toString(), "my-creds"),
+                Collections.singletonList(new BranchSpec("*/dev")),
+                null,
+                null,
+                Collections.emptyList());
+        var flowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+        flowDefinition.setLightweight(true); // Triggers use of GitSCMFileSystem
+        job.setDefinition(flowDefinition);
+        var run = r.buildAndAssertSuccess(job);
+    }
+
+    private static class ContextualizableCredentials extends BaseStandardCredentials implements StandardUsernamePasswordCredentials {
+        private final boolean contextualized;
+
+        @DataBoundConstructor
+        public ContextualizableCredentials(String id) {
+            super(id, null);
+            this.contextualized = false;
+        }
+
+        private ContextualizableCredentials(ContextualizableCredentials base) {
+            super(base.getId(), null);
+            this.contextualized = true;
+        }
+
+        @Override
+        public String getUsername() {
+            if (contextualized) {
+                return "username";
+            }
+            throw new IllegalStateException("Requires contextualization");
+        }
+
+        @Override
+        public Secret getPassword() {
+            if (contextualized) {
+                return Secret.fromString("s3cr3t");
+            }
+            throw new IllegalStateException("Requires contextualization");
+        }
+
+        @Override
+        public ContextualizableCredentials forRun(Run<?, ?> run) {
+            return new ContextualizableCredentials(this);
+        }
+
+        @Extension
+        public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {}
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
