@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
@@ -95,7 +96,8 @@ import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.security.FIPS140;
-import org.apache.commons.lang.StringUtils;
+import jenkins.util.SystemProperties;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.Symbol;
@@ -125,6 +127,29 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @CheckForNull
     private String credentialsId;
+
+    static final String IGNORE_TAG_DISCOVERY_TRAIT_PROPERTY = GitSCMSource.class.getName() + ".IGNORE_TAG_DISCOVERY_TRAIT";
+
+    /**
+     * Ignore the tag discovery trait when fetching multibranch Pipelines.
+     *
+     * Git plugin versions 5.7.0 and earlier will always fetch tags
+     * when scanning a multibranch Pipeline, whether or not the tag
+     * discovery trait had been added. Releases after git plugin 5.7.0
+     * honor the tag discovery trait when scanning a multibranch
+     * Pipeline. If the tag discovery trait has been added, then tags
+     * are fetched. If the tag discovery trait has not been added,
+     * then tags are not fetched.
+     *
+     * If honoring the tag discovery trait causes problems for a user,
+     * a Java property can be set during Jenkins startup to restore
+     * the previous (buggy) behavior.
+     *
+     * Refer to the plugin documentation for more details.
+     */
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL")
+    public static /* not final */ boolean IGNORE_TAG_DISCOVERY_TRAIT =
+            SystemProperties.getBoolean(IGNORE_TAG_DISCOVERY_TRAIT_PROPERTY);
 
     @Deprecated
     private transient String remoteName;
@@ -293,7 +318,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
     public boolean isIgnoreOnPushNotifications() {
         return SCMTrait.find(traits, IgnoreOnPushNotificationTrait.class) != null;
     }
-
 
     // For Stapler only
     @Restricted(DoNotUse.class)

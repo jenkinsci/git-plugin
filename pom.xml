@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.17</version>
+    <version>5.26</version>
     <relativePath />
   </parent>
 
@@ -35,12 +35,11 @@
     <revision>5.7.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
-    <!-- Jenkins.MANAGE is still in Beta -->
-    <useBeta>true</useBeta>
     <!-- Do not run extra reporting for pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
@@ -53,7 +52,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>4770.v9a_2b_7a_9d8b_7f</version>
+        <version>5422.v0fce72a_b_b_8cf</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -93,6 +92,10 @@
       <artifactId>workflow-scm-step</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
       <classifier>tests</classifier>
@@ -102,9 +105,6 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
       <optional>true</optional>
-      <!-- pipeline-model-definition plugins fail to start git plugin in PCT for 2.479.x and 2.492.x line -->
-      <!-- TODO: Remove once this workaround dependency downgrade is no longer required for PCT -->
-      <!-- <version>832.va_66e270d2946</version> -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -129,7 +129,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>4.0</version>
+      <version>4.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -197,13 +197,13 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
-      <version>1.21.0</version>
+      <version>1.21.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
       <artifactId>testcontainers-gitserver</artifactId>
-      <version>0.11.0</version>
+      <version>0.12.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>

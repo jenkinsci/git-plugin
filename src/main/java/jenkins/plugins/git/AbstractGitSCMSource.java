@@ -104,7 +104,7 @@ import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
 import jenkins.security.FIPS140;
 import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
@@ -400,6 +400,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             client.setRemoteUrl(remoteName, getRemote());
             listener.getLogger().println((prune ? "Fetching & pruning " : "Fetching ") + remoteName + "...");
             FetchCommand fetch = client.fetch_();
+            if (!GitSCMSource.IGNORE_TAG_DISCOVERY_TRAIT) {
+                fetch.tags(context.wantTags());
+            }
             fetch = fetch.prune(prune);
 
             URIish remoteURI = null;
