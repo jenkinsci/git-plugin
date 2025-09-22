@@ -3,11 +3,14 @@
 :toc: macro
 :toc-title:
 
++++
+<script src="images/scarf.js"></script>
++++
+
 [#introduction]
 == Introduction
 
 image::images/jenkins-and-git.png[Jenkins and Git]
-image::https://static.scarf.sh/a.png?x-pxid=e010adc8-3614-41ef-b7e8-2f42328e8962&page=git-plugin-readme[]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
@@ -1477,6 +1480,15 @@ Administrators may want to store those git repositories in another location for 
 For example, they might choose to place the cache directories in `/var/cache/jenkins`.
 
 The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
+
+[#ignoreTagDiscoveryTrait]
+=== Ignore tag discovery trait
+
+Multibranch Pipelines that use the Git branch source prior to Git plugin 5.8.0 always fetch tags from the remote repository, whether or not the tag discovery trait is set.
+That bug is fixed in Git plugin 5.8.0 and later.
+
+Administrators that depend on the old (buggy) behavior can set the property `jenkins.plugins.git.GitSCMSource.IGNORE_TAG_DISCOVERY=true`.
+When administrators detect that their multibranch Pipelines depend on that bug, they should add the tag discovery trait to the multibranch Pipeline definition.
 
 [#git-publisher]
 == Git Publisher

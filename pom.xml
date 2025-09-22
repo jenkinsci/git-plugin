@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.18</version>
+    <version>5.26</version>
     <relativePath />
   </parent>
 
@@ -35,12 +35,11 @@
     <revision>5.7.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.492</jenkins.baseline>
+    <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
-    <!-- Jenkins.MANAGE is still in Beta -->
-    <useBeta>true</useBeta>
     <!-- Do not run extra reporting for pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
@@ -53,7 +52,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5085.v05cc65a_936d3</version>
+        <version>5422.v0fce72a_b_b_8cf</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -130,7 +129,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>4.0.6</version>
+      <version>4.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
