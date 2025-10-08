@@ -38,19 +38,19 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
-public class SparseCheckoutPathsTest {
+class SparseCheckoutPathsTest {
 
-    private final SparseCheckoutPaths emptySparseCheckoutPaths;
-    private final List<SparseCheckoutPath> emptySparseCheckoutPathList;
+    private SparseCheckoutPaths emptySparseCheckoutPaths;
+    private List<SparseCheckoutPath> emptySparseCheckoutPathList;
 
-    private final SparseCheckoutPaths sparseCheckoutPaths;
-    private final List<SparseCheckoutPath> sparseCheckoutPathList;
+    private SparseCheckoutPaths sparseCheckoutPaths;
+    private List<SparseCheckoutPath> sparseCheckoutPathList;
 
     private static final String SRC_DIR_NAME = "src";
     private static final SparseCheckoutPath SRC_SPARSE_CHECKOUT_PATH = new SparseCheckoutPath(SRC_DIR_NAME);
@@ -59,7 +59,9 @@ public class SparseCheckoutPathsTest {
     private LogHandler handler;
     private int logCount = 0;
 
-    public SparseCheckoutPathsTest() {
+
+    @BeforeEach
+    void beforeEach() {
         emptySparseCheckoutPathList = new ArrayList<>();
         emptySparseCheckoutPaths = new SparseCheckoutPaths(emptySparseCheckoutPathList);
 
@@ -69,10 +71,7 @@ public class SparseCheckoutPathsTest {
 
         listener = null;
         handler = null;
-    }
 
-    @Before
-    public void createLogger() {
         Logger logger = Logger.getLogger(this.getClass().getPackage().getName() + "-" + logCount++);
         handler = new LogHandler();
         handler.setLevel(Level.ALL);
@@ -83,17 +82,17 @@ public class SparseCheckoutPathsTest {
     }
 
     @Test
-    public void testGetSparseCheckoutPaths() {
+    void testGetSparseCheckoutPaths() {
         assertThat(sparseCheckoutPaths.getSparseCheckoutPaths(), hasItem(SRC_SPARSE_CHECKOUT_PATH));
     }
 
     @Test
-    public void testGetSparseCheckoutPathsEmpty() {
+    void testGetSparseCheckoutPathsEmpty() {
         assertThat(emptySparseCheckoutPaths.getSparseCheckoutPaths(), is(empty()));
     }
 
     @Test
-    public void testDecorateCloneCommand() throws Exception {
+    void testDecorateCloneCommand() throws Exception {
         GitSCM scm = null;
         Run build = null;
         GitClient git = null;
@@ -103,7 +102,7 @@ public class SparseCheckoutPathsTest {
     }
 
     @Test
-    public void testDecorateCloneCommandEmpty() throws Exception {
+    void testDecorateCloneCommandEmpty() throws Exception {
         GitSCM scm = null;
         Run build = null;
         GitClient git = null;
@@ -113,7 +112,7 @@ public class SparseCheckoutPathsTest {
     }
 
     @Test
-    public void testDecorateCheckoutCommand() throws Exception {
+    void testDecorateCheckoutCommand() throws Exception {
         GitSCM scm = null;
         Run build = null;
         GitClient git = null;
@@ -123,23 +122,23 @@ public class SparseCheckoutPathsTest {
     }
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(SparseCheckoutPaths.class).usingGetClass().verify();
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         SparseCheckoutPaths emptySparseCheckoutPathsCopy = new SparseCheckoutPaths(emptySparseCheckoutPathList);
         assertThat(emptySparseCheckoutPaths.hashCode(), is(emptySparseCheckoutPathsCopy.hashCode()));
         assertThat(emptySparseCheckoutPaths, is(emptySparseCheckoutPathsCopy));
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         assertThat(emptySparseCheckoutPaths.toString(), is("SparseCheckoutPaths{sparseCheckoutPaths=[]}"));
     }
 
-    private class MyCheckoutCommand implements CheckoutCommand {
+    private static class MyCheckoutCommand implements CheckoutCommand {
 
         private List<String> sparsePathNames;
 

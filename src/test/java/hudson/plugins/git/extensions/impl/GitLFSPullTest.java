@@ -1,12 +1,12 @@
 package hudson.plugins.git.extensions.impl;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class GitLFSPullTest {
+class GitLFSPullTest {
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(GitLFSPull.class)
                 .usingGetClass()
                 .verify();

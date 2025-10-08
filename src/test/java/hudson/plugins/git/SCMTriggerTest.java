@@ -1,8 +1,9 @@
 package hudson.plugins.git;
 
+import static hudson.Functions.isWindows;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -17,6 +18,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -28,41 +31,39 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import jenkins.plugins.git.RandomOrder;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Stopwatch;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.OrderWith;
 
-@OrderWith(RandomOrder.class)
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
+
+@TestMethodOrder(MethodOrderer.Random.class)
 public abstract class SCMTriggerTest extends AbstractGitProject {
+
     private ZipFile namespaceRepoZip;
     private Properties namespaceRepoCommits;
     private ExecutorService singleThreadExecutor;
     protected boolean expectChanges = false;
 
-    @ClassRule
-    public static Stopwatch stopwatch = new Stopwatch();
+    private static final Instant START_TIME = Instant.now();
 
     private static final int MAX_SECONDS_FOR_THESE_TESTS = 120;
 
     private boolean isTimeAvailable() {
         String env = System.getenv("CI");
-        if (env == null || !Boolean.parseBoolean(env)) {
+        if (!Boolean.parseBoolean(env)) {
             // Run all tests when not in CI environment
             return true;
         }
-        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+        return Duration.between(START_TIME, Instant.now()).toSeconds() <= MAX_SECONDS_FOR_THESE_TESTS;
     }
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    @TempDir
+    private File tempFolder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void beforeEach() throws Exception {
         expectChanges = false;
         namespaceRepoZip = new ZipFile("src/test/resources/namespaceBranchRepo.zip");
         namespaceRepoCommits = parseLsRemote(new File("src/test/resources/namespaceBranchRepo.ls-remote"));
@@ -91,7 +92,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -105,7 +106,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -119,7 +120,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -133,7 +134,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -147,7 +148,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -161,7 +162,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -175,7 +176,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -189,7 +190,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -203,7 +204,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -217,7 +218,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -231,7 +232,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -245,7 +246,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -259,7 +260,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -273,7 +274,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -287,7 +288,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -301,7 +302,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -315,7 +316,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -329,7 +330,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         if (isWindows()) { // Low value test - skip on Windows
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         check(
                 namespaceRepoZip,
                 namespaceRepoCommits,
@@ -359,30 +360,30 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
 
         FreeStyleBuild build1 = waitForBuildFinished(project, 1, 60000);
-        assertNotNull("Job has not been triggered", build1);
+        assertNotNull(build1, "Job has not been triggered");
 
         TaskListener listener = StreamTaskListener.fromStderr();
         PollingResult poll = project.poll(listener);
-        assertFalse("Expected and actual polling results disagree", poll.hasChanges());
+        assertFalse(poll.hasChanges(), "Expected and actual polling results disagree");
 
         // Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
 
         FreeStyleBuild build2 = waitForBuildFinished(project, 2, 2000);
-        assertNull("Found build 2 although no new changes and no multi candidate build", build2);
+        assertNull(build2, "Found build 2 although no new changes and no multi candidate build");
 
         assertEquals(
-                "Unexpected GIT_COMMIT",
                 expected_GIT_COMMIT,
-                build1.getEnvironment(null).get("GIT_COMMIT"));
+                build1.getEnvironment(null).get("GIT_COMMIT"),
+                "Unexpected GIT_COMMIT");
         assertEquals(
-                "Unexpected GIT_BRANCH",
                 expected_GIT_BRANCH,
-                build1.getEnvironment(null).get("GIT_BRANCH"));
+                build1.getEnvironment(null).get("GIT_BRANCH"),
+                "Unexpected GIT_BRANCH");
     }
 
     private String prepareRepo(ZipFile repoZip) throws IOException {
-        File tempRemoteDir = tempFolder.newFolder();
+        File tempRemoteDir = newFolder(tempFolder, "junit");
         extract(repoZip, tempRemoteDir);
         return tempRemoteDir.getAbsolutePath();
     }
@@ -442,8 +443,12 @@ public abstract class SCMTriggerTest extends AbstractGitProject {
         }
     }
 
-    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
-    private boolean isWindows() {
-        return File.pathSeparatorChar == ';';
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 }

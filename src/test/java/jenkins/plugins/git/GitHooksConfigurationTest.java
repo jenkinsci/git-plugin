@@ -25,27 +25,28 @@ package jenkins.plugins.git;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
-import java.io.File;
+
 import java.util.Random;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+import static hudson.Functions.isWindows;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GitHooksConfigurationTest {
+@WithJenkins
+class GitHooksConfigurationTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
 
     private GitHooksConfiguration configuration;
     private GitClient client;
@@ -53,18 +54,17 @@ public class GitHooksConfigurationTest {
     private final Random random = new Random();
     private static final String NULL_HOOKS_PATH = isWindows() ? "NUL:" : "/dev/null";
 
-    public GitHooksConfigurationTest() {
-    }
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) throws Exception {
+        r = rule;
 
-    @Before
-    public void setUp() throws Exception {
         configuration = GitHooksConfiguration.get();
         Git git = Git.with(TaskListener.NULL, new EnvVars());
         client = git.getClient();
     }
 
-    @After
-    public void resetHooksPath() throws Exception {
+    @AfterEach
+    void afterEach() throws Exception {
         client.withRepository((repo, channel) -> {
             final StoredConfig repoConfig = repo.getConfig();
             repoConfig.unset("core", null, "hooksPath");
@@ -74,46 +74,46 @@ public class GitHooksConfigurationTest {
     }
 
     @Test
-    public void testGet() {
+    void testGet() {
         assertThat(GitHooksConfiguration.get(), is(configuration));
     }
 
     @Test
-    public void testIsAllowedOnController() {
+    void testIsAllowedOnController() {
         assertFalse(configuration.isAllowedOnController());
     }
 
     @Test
-    public void testSetAllowedOnController() {
+    void testSetAllowedOnController() {
         configuration.setAllowedOnController(true);
         assertTrue(configuration.isAllowedOnController());
     }
 
     @Test
-    public void testSetAllowedOnControllerFalse() {
+    void testSetAllowedOnControllerFalse() {
         configuration.setAllowedOnController(false);
         assertFalse(configuration.isAllowedOnController());
     }
 
     @Test
-    public void testIsAllowedOnAgents() {
+    void testIsAllowedOnAgents() {
         assertFalse(configuration.isAllowedOnAgents());
     }
 
     @Test
-    public void testSetAllowedOnAgents() {
+    void testSetAllowedOnAgents() {
         configuration.setAllowedOnAgents(true);
         assertTrue(configuration.isAllowedOnAgents());
     }
 
     @Test
-    public void testSetAllowedOnAgentsFalse() {
+    void testSetAllowedOnAgentsFalse() {
         configuration.setAllowedOnAgents(false);
         assertFalse(configuration.isAllowedOnAgents());
     }
 
     @Test
-    public void testGetCategory() {
+    void testGetCategory() {
         assertThat(GitHooksConfiguration.get().getCategory(), is(configuration.getCategory()));
     }
 
@@ -136,7 +136,7 @@ public class GitHooksConfigurationTest {
     }
 
     @Test
-    public void testConfigure_GitClient() throws Exception {
+    void testConfigure_GitClient() throws Exception {
         GitHooksConfiguration.configure(client);
 
         /* Check configured value from repository */
@@ -145,7 +145,7 @@ public class GitHooksConfigurationTest {
     }
 
     @Test
-    public void testConfigure_GitClient_boolean() throws Exception {
+    void testConfigure_GitClient_boolean() throws Exception {
         boolean allowed = true;
         GitHooksConfiguration.configure(client, allowed);
 
@@ -155,7 +155,7 @@ public class GitHooksConfigurationTest {
     }
 
     @Test
-    public void testConfigure_GitClient_booleanFalse() throws Exception {
+    void testConfigure_GitClient_booleanFalse() throws Exception {
         boolean allowed = false;
         GitHooksConfiguration.configure(client, allowed);
 
@@ -181,7 +181,7 @@ public class GitHooksConfigurationTest {
     }
 
     @Test
-    public void testConfigure_3args() throws Exception {
+    void testConfigure_3args() throws Exception {
         boolean allowedOnController = true;
 
         /* Change the hooksPath in repository */
@@ -193,7 +193,7 @@ public class GitHooksConfigurationTest {
     }
 
     @Test
-    public void testConfigure_3argsFalse() throws Exception {
+    void testConfigure_3argsFalse() throws Exception {
         boolean allowedOnController = false;
 
         /* Change the hooksPath in repository */
@@ -202,9 +202,5 @@ public class GitHooksConfigurationTest {
         /* Check configured value from repository */
         String hooksPath = getCoreHooksPath();
         assertThat(hooksPath, is(NULL_HOOKS_PATH));
-    }
-
-    private static boolean isWindows() {
-        return File.pathSeparatorChar == ';';
     }
 }

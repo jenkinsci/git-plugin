@@ -2,43 +2,45 @@ package hudson.plugins.git;
 
 import hudson.model.Result;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.File;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class Security2478Test {
+@WithJenkins
+@WithGitSampleRepo
+class Security2478Test {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
 
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    private GitSampleRepoRule sampleRepo;
 
-
-    @Before
-    public void setUpAllowNonRemoteCheckout() {
+    @BeforeEach
+    void beforeEach(JenkinsRule rule, GitSampleRepoRule repo) {
+        r = rule;
+        sampleRepo = repo;
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
 
-    @After
-    public void disallowNonRemoteCheckout() {
+    @AfterEach
+    void afterEach() {
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
 
     @Issue("SECURITY-2478")
     @Test
-    public void checkoutShouldNotAbortWhenLocalSourceAndRunningOnAgent() throws Exception {
-        assertFalse("Non Remote checkout should be disallowed", GitSCM.ALLOW_LOCAL_CHECKOUT);
+    void checkoutShouldNotAbortWhenLocalSourceAndRunningOnAgent() throws Exception {
+        assertFalse(GitSCM.ALLOW_LOCAL_CHECKOUT, "Non Remote checkout should be disallowed");
         r.createOnlineSlave();
         sampleRepo.init();
         sampleRepo.write("file", "v1");
@@ -56,8 +58,8 @@ public class Security2478Test {
 
     @Issue("SECURITY-2478")
     @Test
-    public void checkoutShouldAbortWhenSourceIsNonRemoteAndRunningOnController() throws Exception {
-        assertFalse("Non Remote checkout should be disallowed", GitSCM.ALLOW_LOCAL_CHECKOUT);
+    void checkoutShouldAbortWhenSourceIsNonRemoteAndRunningOnController() throws Exception {
+        assertFalse(GitSCM.ALLOW_LOCAL_CHECKOUT, "Non Remote checkout should be disallowed");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "pipeline");
         String workspaceDir = r.jenkins.getRootDir().getAbsolutePath();
 

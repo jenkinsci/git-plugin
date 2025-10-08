@@ -1,16 +1,18 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
+import org.junit.jupiter.api.Test;
+
 import java.util.HashMap;
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.jvnet.hudson.test.Issue;
 
 
-public class BranchSpecTest {
-    @Test
-    public void testMatch() {
+class BranchSpecTest {
 
+    @Test
+    void testMatch() {
         BranchSpec l = new BranchSpec("master");
         assertTrue(l.matches("origin/master"));
         assertFalse(l.matches("origin/something/master"));
@@ -54,9 +56,9 @@ public class BranchSpecTest {
         assertTrue(p.matches("origin/x"));
         assertFalse(p.matches("origin/my-branch/b1"));
     }
-    
+
     @Test
-    public void testMatchEnv() {
+    void testMatchEnv() {
         HashMap<String, String> envMap = new HashMap<>();
         envMap.put("master", "master");
         envMap.put("origin", "origin");
@@ -116,26 +118,28 @@ public class BranchSpecTest {
     }
 
     @Test
-    public void testEmptyName() {
+    void testEmptyName() {
     	BranchSpec branchSpec = new BranchSpec("");
     	assertEquals("**",branchSpec.getName());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNullName() {
-        BranchSpec branchSpec = new BranchSpec(null);
-    }
-    
     @Test
-    public void testNameTrimming() {
+    void testNullName() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            BranchSpec branchSpec = new BranchSpec(null);
+        });
+    }
+
+    @Test
+    void testNameTrimming() {
     	BranchSpec branchSpec = new BranchSpec(" master ");
     	assertEquals("master",branchSpec.getName());
     	branchSpec.setName(" other ");
     	assertEquals("other",branchSpec.getName());
     }
-    
+
     @Test
-    public void testUsesRefsHeads() {
+    void testUsesRefsHeads() {
     	BranchSpec m = new BranchSpec("refs/heads/j*n*");
     	assertTrue(m.matches("refs/heads/jenkins"));
     	assertTrue(m.matches("refs/heads/jane"));
@@ -144,9 +148,9 @@ public class BranchSpecTest {
     	assertFalse(m.matches("origin/jenkins"));
     	assertFalse(m.matches("remote/origin/jane"));
     }
-    
+
     @Test
-    public void testUsesJavaPatternDirectlyIfPrefixedWithColon() {
+    void testUsesJavaPatternDirectlyIfPrefixedWithColon() {
     	BranchSpec m = new BranchSpec(":^(?!(origin/prefix)).*");
     	assertTrue(m.matches("origin"));
     	assertTrue(m.matches("origin/master"));
@@ -159,7 +163,7 @@ public class BranchSpecTest {
 
     @Test
     @Issue("JENKINS-26842")
-    public void testUsesJavaPatternWithRepetition() {
+    void testUsesJavaPatternWithRepetition() {
     	// match pattern from JENKINS-26842
     	BranchSpec m = new BranchSpec(":origin/release-\\d{8}");
     	assertTrue(m.matches("origin/release-20150101"));
@@ -169,7 +173,7 @@ public class BranchSpecTest {
     }
 
     @Test
-    public void testUsesJavaPatternToExcludeMultipleBranches() {
+    void testUsesJavaPatternToExcludeMultipleBranches() {
         BranchSpec m = new BranchSpec(":^(?!origin/master$|origin/develop$).*");
         assertTrue(m.matches("origin/branch1"));
         assertTrue(m.matches("origin/branch-2"));
@@ -193,7 +197,7 @@ public class BranchSpecTest {
      */
     @Test
     @Issue("JENKINS-6856")
-    public void testUsesEnvValueWithBraces() {
+    void testUsesEnvValueWithBraces() {
         EnvVars env = createEnvMap("GIT_BRANCH", "origin/master");
 
         BranchSpec withBraces = new BranchSpec("${GIT_BRANCH}");
@@ -204,7 +208,7 @@ public class BranchSpecTest {
 
     @Test
     @Issue("JENKINS-6856")
-    public void testUsesEnvValueWithoutBraces() {
+    void testUsesEnvValueWithoutBraces() {
         EnvVars env = createEnvMap("GIT_BRANCH", "origin/master");
 
         BranchSpec withoutBraces = new BranchSpec("$GIT_BRANCH");
@@ -215,7 +219,7 @@ public class BranchSpecTest {
 
     @Test
     @Issue("JENKINS-6856")
-    public void testUsesEnvValueWithToken() {
+    void testUsesEnvValueWithToken() {
         EnvVars env = createEnvMap("GIT_BRANCH", "origin/master");
 
         BranchSpec withToken = new BranchSpec("${GIT_BRANCH,fullName=True}");
@@ -226,7 +230,7 @@ public class BranchSpecTest {
 
     @Test
     @Issue("JENKINS-6856")
-    public void testUsesEnvValueWithTokenFalse() {
+    void testUsesEnvValueWithTokenFalse() {
         EnvVars env = createEnvMap("GIT_BRANCH", "origin/master");
 
         BranchSpec withTokenFalse = new BranchSpec("${GIT_BRANCH,fullName=false}");

@@ -12,24 +12,27 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Builder;
 import hudson.tasks.Shell;
+import org.junit.jupiter.api.BeforeEach;
+
 import org.jenkinsci.plugins.gitclient.JGitTool;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.Issue;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+
+import static hudson.Functions.isWindows;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
-@RunWith(Parameterized.class)
-public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
+@ParameterizedClass(name = "{0}")
+@MethodSource("permuteRefSpecVariable")
+class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
 
     private final String refSpecName;
 
@@ -41,8 +44,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         this.refSpecName = refSpecName;
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection permuteRefSpecVariable() {
+    static Collection permuteRefSpecVariable() {
         List<Object[]> values = new ArrayList<>();
 
         String[] keys = {
@@ -66,11 +68,8 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         return new Shell("echo \"%s=${%s}\"".formatted(envVarName, envVarName));
     }
 
-    @Before
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-
+    @BeforeEach
+    void beforeEach() throws Exception {
         // Setup job beforehand to get expected value of the environment variable
         project = createFreeStyleProject();
         project.addProperty(new ParametersDefinitionProperty(
@@ -83,7 +82,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         List<String> logs = b.getLog(50);
         for (String line : logs) {
             if (line.startsWith(refSpecName + '=')) {
-                refSpecExpectedValue = line.substring(refSpecName.length() + 1, line.length());
+                refSpecExpectedValue = line.substring(refSpecName.length() + 1);
             }
         }
 
@@ -101,7 +100,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
      */
     @Test
     @Issue("JENKINS-56063")
-    public void testRefSpecWithExpandedVariables() throws Exception {
+    void testRefSpecWithExpandedVariables() throws Exception {
         if (refSpecExpectedValue == null || refSpecExpectedValue.isEmpty()) {
             /* Test does not support an empty or null expected value.
                Skip the test if the expected value is empty or null */
@@ -146,9 +145,5 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         // Check that unexpanded refspec name is not in the log
         List<String> buildLog = b.getLog(50);
         assertThat(buildLog, not(hasItem(containsString("${" + refSpecName + "}"))));
-    }
-
-    private static boolean isWindows() {
-        return File.pathSeparatorChar == ';';
     }
 }
