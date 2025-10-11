@@ -1,33 +1,35 @@
 package hudson.plugins.git.browser;
 
 import hudson.plugins.git.GitChangeSet;
+import org.junit.jupiter.api.Test;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(Parameterized.class)
-public class GitilesTest {
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
+@ParameterizedClass(name = "{0}")
+@MethodSource("permuteAuthorName")
+class GitilesTest {
 
     private final String repoUrl = "https://gwt.googlesource.com/gwt/";
 
     private final boolean useAuthorName;
     private final GitChangeSetSample sample;
 
-    public GitilesTest(String useAuthorName) {
-        this.useAuthorName = Boolean.valueOf(useAuthorName);
+    public GitilesTest(boolean useAuthorName) {
+        this.useAuthorName = useAuthorName;
         sample = new GitChangeSetSample(this.useAuthorName);
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection permuteAuthorName() {
+    static Collection permuteAuthorName() {
         List<Object[]> values = new ArrayList<>();
-        String[] allowed = {"true", "false"};
-        for (String authorName : allowed) {
+        boolean[] allowed = {true, false};
+        for (boolean authorName : allowed) {
             Object[] combination = {authorName};
             values.add(combination);
         }
@@ -35,30 +37,30 @@ public class GitilesTest {
     }
 
     @Test
-    public void testGetChangeSetLink() throws Exception {
+    void testGetChangeSetLink() throws Exception {
         URL result = (new Gitiles(repoUrl)).getChangeSetLink(sample.changeSet);
         assertEquals(new URL(repoUrl + "+/" + sample.id + "%5E%21"), result);
     }
 
     @Test
-    public void testGetDiffLink() throws Exception {
+    void testGetDiffLink() throws Exception {
         Gitiles gitiles = new Gitiles(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = gitiles.getDiffLink(path);
             URL expectedDiffLink = new URL(repoUrl + "+/" + sample.id + "%5E%21");
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + path.getEditType().getName();
-            assertEquals(msg, expectedDiffLink, diffLink);
+            assertEquals(expectedDiffLink, diffLink, msg);
         }
     }
 
     @Test
-    public void testGetFileLink() throws Exception {
+    void testGetFileLink() throws Exception {
         Gitiles gitiles = new Gitiles(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL fileLink = gitiles.getFileLink(path);
             URL expectedFileLink = new URL(repoUrl + "+blame/" + sample.id + "/" + path.getPath());
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + path.getEditType().getName();
-            assertEquals(msg, expectedFileLink, fileLink);
+            assertEquals(expectedFileLink, fileLink, msg);
         }
     }
 }

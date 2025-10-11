@@ -30,59 +30,58 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import hudson.plugins.git.GitSCM;
+
+import static hudson.Functions.isWindows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import hudson.plugins.git.util.GitUtilsTest;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestCliGitAPIImpl;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.util.LogTaskListener;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class PruneStaleTagPipelineTest {
+@WithJenkins
+class PruneStaleTagPipelineTest {
 
-    @Rule
-    public TemporaryFolder fileRule = new TemporaryFolder();
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    @TempDir
+    private File fileRule;
+
+    private JenkinsRule r;
 
     private TaskListener listener;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) throws Exception {
+        r = rule;
         listener = new LogTaskListener(Logger.getLogger("prune tags"), Level.FINEST);
-    }
 
-    @Before
-    public void allowNonRemoteCheckout() throws ConfigInvalidException, IOException {
         SystemReader.getInstance().getUserConfig().clear();
         GitSCM.ALLOW_LOCAL_CHECKOUT = true;
     }
 
-    @After
-    public void disallowNonRemoteCheckout() {
+    @AfterEach
+    void afterEach() {
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
 
     @Issue("JENKINS-61869")
     @Test
-    public void verify_that_local_tag_is_pruned_when_not_exist_on_remote_using_pipeline() throws Exception {
-        File remoteRepo = fileRule.newFolder("remote");
+    void verify_that_local_tag_is_pruned_when_not_exist_on_remote_using_pipeline() throws Exception {
+        File remoteRepo = newFolder(fileRule, "remote");
 
         // create a remote repository without one tag
         GitClient remoteClient = initRepository(remoteRepo);
@@ -90,9 +89,9 @@ public class PruneStaleTagPipelineTest {
         String tagComment = "tag comment";
         remoteClient.tag(tagName, tagComment);
 
-        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "pruneTags");
+        WorkflowJob job = r.jenkins.createProject(WorkflowJob.class, "pruneTags");
 
-        FilePath workspace = j.jenkins.getWorkspaceFor(job);
+        FilePath workspace = r.jenkins.getWorkspaceFor(job);
         String remoteURL = "file://" + remoteRepo.toURI().getPath();
 
         job.setDefinition(new CpsFlowDefinition(""
@@ -108,23 +107,23 @@ public class PruneStaleTagPipelineTest {
 
         // first run clone the repository
         WorkflowRun r = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatus(Result.SUCCESS, j.waitForCompletion(r));
+        this.r.assertBuildStatus(Result.SUCCESS, this.r.waitForCompletion(r));
         // Check JENKINS-66651 - token macro expansion in Pipeline
-        j.waitForMessage("token macro expanded branch is remotes/origin/master", r); // Unexpected but current behavior
+        this.r.waitForMessage("token macro expanded branch is remotes/origin/master", r); // Unexpected but current behavior
 
         // remove tag on remote, tag remains on local cloned repository
         remoteClient.deleteTag(tagName);
 
         // second run it should remove stale tags
         r = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatus(Result.SUCCESS, j.waitForCompletion(r));
+        this.r.assertBuildStatus(Result.SUCCESS, this.r.waitForCompletion(r));
 
         GitClient localClient = newGitClient(new File(workspace.getRemote()));
-        Assert.assertFalse("local tag has not been pruned", localClient.tagExists(tagName));
+        assertFalse(localClient.tagExists(tagName), "local tag has not been pruned");
     }
 
     private GitClient newGitClient(File localRepo) {
-        String gitExe = Functions.isWindows() ? "git.exe" : "git";
+        String gitExe = isWindows() ? "git.exe" : "git";
         return new TestCliGitAPIImpl(gitExe, localRepo, listener, GitUtilsTest.getConfigNoSystemEnvsVars());
     }
 
@@ -137,6 +136,15 @@ public class PruneStaleTagPipelineTest {
         remoteClient.add("test");
         remoteClient.commit("initial commit");
         return remoteClient;
+    }
+
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 
 }

@@ -24,6 +24,8 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,30 +33,22 @@ import java.util.Random;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
-import jenkins.plugins.git.RandomOrder;
 import jenkins.security.MasterToSlaveCallable;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
+import static hudson.Functions.isWindows;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.storage.file.UserConfigFile;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Stopwatch;
-import org.junit.rules.TestName;
-import org.junit.runner.OrderWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.jvnet.hudson.test.Issue;
 
 /**
@@ -62,22 +56,19 @@ import org.jvnet.hudson.test.Issue;
  *
  * @author Mark Waite
  */
-@OrderWith(RandomOrder.class)
-public class GitSCMSlowTest extends AbstractGitTestCase {
+@TestMethodOrder(MethodOrderer.Random.class)
+class GitSCMSlowTest extends AbstractGitTestCase {
 
     private final Random random = new Random();
     private boolean useChangelogToBranch = random.nextBoolean();
     private static boolean gpgsignEnabled = false; // set by gpgsignCheck()
 
-    @BeforeClass
-    public static void setGitDefaults() throws Exception {
+    @BeforeAll
+    static void beforeAll() throws Exception {
         SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
-    }
 
-    @BeforeClass
-    public static void gpgsignCheck() throws Exception {
         File userGitConfig = new File(System.getProperty("user.home"), ".gitconfig");
         File xdgGitConfig = userGitConfig;
         String xdgDirName = System.getenv("XDG_CONFIG_HOME");
@@ -90,20 +81,17 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
                          userConfig.getBoolean(ConfigConstants.CONFIG_TAG_SECTION, ConfigConstants.CONFIG_KEY_GPGSIGN, false);
     }
 
-    @ClassRule
-    public static Stopwatch stopwatch = new Stopwatch();
-    @Rule
-    public TestName testName = new TestName();
+    private static final Instant START_TIME = Instant.now();
 
     private static final int MAX_SECONDS_FOR_THESE_TESTS = 180;
 
     private boolean isTimeAvailable() {
         String env = System.getenv("CI");
-        if (env == null || !Boolean.parseBoolean(env)) {
+        if (!Boolean.parseBoolean(env)) {
             // Run all tests when not in CI environment
             return true;
         }
-        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+        return Duration.between(START_TIME, Instant.now()).toSeconds() <= MAX_SECONDS_FOR_THESE_TESTS;
     }
 
     private void addChangelogToBranchExtension(GitSCM scm) {
@@ -120,14 +108,14 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
      */
     @Issue("JENKINS-22604")
     @Test
-    public void testConfigRoundtripURLPreserved() throws Exception {
+    void testConfigRoundtripURLPreserved() throws Exception {
         /* Long running test of low value on Windows
          * Only run on non-Windows and approximately 50% of test runs
          * On Windows, it requires 24 seconds before test finishes */
         if (isWindows() || random.nextBoolean()) {
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/jenkins";
         GitRepositoryBrowser browser = new GithubWeb(url);
@@ -137,7 +125,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         p.setScm(scm);
         r.configRoundtrip(p);
         r.assertEqualDataBoundBeans(scm, p.getScm());
-        assertEquals("Wrong key", "git " + url, scm.getKey());
+        assertEquals("git " + url, scm.getKey(), "Wrong key");
     }
 
     private List<UserRemoteConfig> createRepoList(String url) {
@@ -151,14 +139,14 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
      */
     @Issue("JENKINS-33695")
     @Test
-    public void testConfigRoundtripExtensionsPreserved() throws Exception {
+    void testConfigRoundtripExtensionsPreserved() throws Exception {
         /* Long running test of low value on Windows
          * Only run on non-Windows and approximately 50% of test runs
          * On Windows, it requires 26 seconds before test finishes */
         if (isWindows() || random.nextBoolean()) {
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/git-plugin.git";
         GitRepositoryBrowser browser = new GithubWeb(url);
@@ -179,14 +167,14 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         p = r.configRoundtrip(p);
         List<GitSCMExtension> extensions = scm.getExtensions().toList();
         assertTrue(extensions.contains(localBranchExtension));
-        assertEquals("Wrong extension count before reload", 1, extensions.size());
+        assertEquals(1, extensions.size(), "Wrong extension count before reload");
         r.assertEqualDataBoundBeans(browser, p.getScm().getBrowser());
 
         /* Reload configuration from disc */
         p.doReload();
         GitSCM reloadedGit = (GitSCM) p.getScm();
         List<GitSCMExtension> reloadedExtensions = reloadedGit.getExtensions().toList();
-        assertEquals("Wrong extension count after reload", 1, reloadedExtensions.size());
+        assertEquals(1, reloadedExtensions.size(), "Wrong extension count after reload");
         LocalBranch reloadedLocalBranch = (LocalBranch) reloadedExtensions.get(0);
         assertEquals(localBranchExtension.getLocalBranch(), reloadedLocalBranch.getLocalBranch());
         r.assertEqualDataBoundBeans(browser, reloadedGit.getBrowser());
@@ -196,14 +184,14 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
      * Makes sure that the configuration form works.
      */
     @Test
-    public void testConfigRoundtrip() throws Exception {
+    void testConfigRoundtrip() throws Exception {
         /* Long running test of low value on Windows.
          * Only run on non-Windows and approximately 50% of test runs
          * On Windows, it requires 20 seconds before test finishes */
         if (isWindows() || random.nextBoolean()) {
             return;
         }
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject p = createFreeStyleProject();
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/jenkins");
         p.setScm(scm);
@@ -212,25 +200,19 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testBuildChooserContext() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testBuildChooserContext() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         final FreeStyleProject p = createFreeStyleProject();
         final FreeStyleBuild b = r.buildAndAssertSuccess(p);
 
         GitSCM.BuildChooserContextImpl c = new GitSCM.BuildChooserContextImpl(p, b, null);
-        c.actOnBuild(new BuildChooserContext.ContextCallable<Run<?, ?>, Object>() {
-            @Override
-            public Object invoke(Run param, VirtualChannel channel) throws IOException, InterruptedException {
-                assertSame(param, b);
-                return null;
-            }
+        c.actOnBuild((BuildChooserContext.ContextCallable<Run<?, ?>, Object>) (param, channel) -> {
+            assertSame(param, b);
+            return null;
         });
-        c.actOnProject(new BuildChooserContext.ContextCallable<Job<?, ?>, Object>() {
-            @Override
-            public Object invoke(Job param, VirtualChannel channel) throws IOException, InterruptedException {
-                assertSame(param, p);
-                return null;
-            }
+        c.actOnProject((BuildChooserContext.ContextCallable<Job<?, ?>, Object>) (param, channel) -> {
+            assertSame(param, p);
+            return null;
         });
         DumbSlave agent = r.createOnlineSlave();
         assertEquals(p.toString(), agent.getChannel().call(new GitSCMSlowTest.BuildChooserContextTestCallable(c)));
@@ -247,10 +229,11 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         @Override
         public String call() throws IOException {
             try {
+                // Can not be a lamda -> SecurityException: Rejected: java.lang.invoke.SerializedLambda; see https://jenkins.io/redirect/class-filter/
                 return c.actOnProject(new BuildChooserContext.ContextCallable<Job<?, ?>, String>() {
                     @Override
                     public String invoke(Job<?, ?> param, VirtualChannel channel) throws IOException, InterruptedException {
-                        assertTrue(channel instanceof Channel);
+                        assertInstanceOf(Channel.class, channel);
                         assertNotNull(Jenkins.getInstanceOrNull());
                         return param.toString();
                     }
@@ -262,8 +245,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeFailedWithAgent() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testMergeFailedWithAgent() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(r.createSlave().getSelfLabel());
 
@@ -287,21 +270,21 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
 
         testRepo.git.checkout("master", "topic2");
         commit(commitFile1, "other content", johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(project.poll(listener).hasChanges(), "scm polling did not detect commit2 change");
         r.buildAndAssertStatus(Result.FAILURE, project);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
     }
 
     @Test
-    public void testMergeWithAgent() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testMergeWithAgent() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(r.createSlave().getSelfLabel());
 
@@ -325,7 +308,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
@@ -333,11 +316,11 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         testRepo.git.checkout("master", "topic2");
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(project.poll(listener).hasChanges(), "scm polling did not detect commit2 change");
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         r.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
     }
 
     /**
@@ -358,8 +341,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeWithMatrixBuild() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testMergeWithMatrixBuild() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         /* The testMergeWithMatrixBuild test fails randomly on several
          * machines when commit.gpgsign and tag.gpgsign are not
          * enabled if the TestPreBuildMerge implementation is used. It
@@ -371,7 +354,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
          * Other tests in this class are able to use TestPreBuildMerge
          * without issue.
          */
-        assumeFalse("gpgsign enabled", gpgsignEnabled);
+        assumeFalse(gpgsignEnabled, "gpgsign enabled");
         //Create a matrix project and a couple of axes
         MatrixProject project = r.jenkins.createProject(MatrixProject.class, "xyz");
         project.setAxes(new AxisList(new Axis("VAR", "a", "b")));
@@ -396,7 +379,7 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         final MatrixBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
         // do what the GitPublisher would do
         testRepo.git.deleteBranch("integration");
         testRepo.git.checkout("topic1", "integration");
@@ -404,16 +387,16 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         testRepo.git.checkout("master", "topic2");
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(project.poll(listener).hasChanges(), "scm polling did not detect commit2 change");
         final MatrixBuild build2 = build(project, Result.SUCCESS, commitFile2);
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         r.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
     }
 
     @Test
-    public void testInitSparseCheckout() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testInitSparseCheckout() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("toto")));
 
         // run build first to create workspace
@@ -430,8 +413,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testInitSparseCheckoutBis() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testInitSparseCheckoutBis() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
@@ -448,8 +431,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testInitSparseCheckoutOverAgent() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testInitSparseCheckoutOverAgent() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
         project.setAssignedLabel(r.createSlave().getSelfLabel());
 
@@ -468,8 +451,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
 
     @Issue("HUDSON-7411")
     @Test
-    public void testNodeEnvVarsAvailable() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testNodeEnvVarsAvailable() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject project = setupSimpleProject("master");
         DumbSlave agent = r.createSlave();
         setVariables(agent, new EnvironmentVariablesNodeProperty.Entry("TESTKEY", "agent value"));
@@ -482,8 +465,8 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testBasicWithAgent() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void testBasicWithAgent() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(r.createSlave().getSelfLabel());
 
@@ -492,26 +475,18 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        assertTrue(project.poll(listener).hasChanges(), "scm polling did not detect commit2 change");
         //... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         final Set<User> culprits = build2.getCulprits();
-        assertEquals("The build should have only one culprit", 1, culprits.size());
-        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
+        assertEquals(1, culprits.size(), "The build should have only one culprit");
+        assertEquals(janeDoe.getName(), culprits.iterator().next().getFullName(), "");
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         r.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
-    }
-
-    /**
-     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
-     * remote classloader issue
-     */
-    private boolean isWindows() {
-        return java.io.File.pathSeparatorChar == ';';
+        assertFalse(project.poll(listener).hasChanges(), "scm polling should not detect any more changes after build");
     }
 }

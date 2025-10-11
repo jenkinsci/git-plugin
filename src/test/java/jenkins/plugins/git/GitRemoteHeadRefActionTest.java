@@ -1,12 +1,12 @@
 package jenkins.plugins.git;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class GitRemoteHeadRefActionTest {
+class GitRemoteHeadRefActionTest {
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(GitRemoteHeadRefAction.class)
                 .usingGetClass()
                 .verify();

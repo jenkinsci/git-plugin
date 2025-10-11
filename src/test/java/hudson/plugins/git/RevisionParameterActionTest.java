@@ -28,20 +28,21 @@ import hudson.model.FreeStyleProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * Tests for {@link RevisionParameterAction}
  *
  * @author Chris Johnson
  */
-public class RevisionParameterActionTest extends AbstractGitProject {
+class RevisionParameterActionTest extends AbstractGitProject {
 
     @Test
-    public void testProvidingRevision() throws Exception {
+    void testProvidingRevision() throws Exception {
 
         FreeStyleProject p1 = setupSimpleProject("master");
 

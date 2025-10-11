@@ -31,17 +31,25 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import java.util.Collections;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.junit.Test;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class PreBuildMergeOptionsTest {
+@WithJenkins
+class PreBuildMergeOptionsTest {
 
-    @Rule public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        r = rule;
+    }
 
     @Issue("JENKINS-9843")
-    @Test public void exporting() throws Exception {
+    @Test
+    void exporting() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
         p.setScm(new GitSCM(Collections.singletonList(new UserRemoteConfig("http://wherever/thing.git", "repo", null, null)), null, null, null, null, null, Collections.singletonList(new PreBuildMerge(new UserMergeOptions("repo", "master", MergeCommand.Strategy.DEFAULT.name(), MergeCommand.GitPluginFastForwardMode.FF)))));
         r.createWebClient().goToXml(p.getUrl() + "api/xml?depth=2");

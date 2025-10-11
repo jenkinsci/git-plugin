@@ -2,17 +2,21 @@ package hudson.plugins.git.browser;
 
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
+import org.junit.jupiter.api.Test;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(Parameterized.class)
-public class FisheyeGitRepositoryBrowserTest {
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
+@ParameterizedClass(name = "{0}-{1}")
+@MethodSource("permuteAuthorNameAndRepoUrl")
+class FisheyeGitRepositoryBrowserTest {
 
     private static final String projectName = "fisheyeProjectName";
 
@@ -21,20 +25,19 @@ public class FisheyeGitRepositoryBrowserTest {
     private final boolean useAuthorName;
     private final GitChangeSetSample sample;
 
-    public FisheyeGitRepositoryBrowserTest(String useAuthorName, String repoUrl) {
-        this.useAuthorName = Boolean.valueOf(useAuthorName);
+    public FisheyeGitRepositoryBrowserTest(boolean useAuthorName, String repoUrl) {
+        this.useAuthorName = useAuthorName;
         this.repoUrl = repoUrl;
         this.repoUrlNoTrailingSlash = this.repoUrl.endsWith("/") ? repoUrl.substring(0, repoUrl.length() - 1) : repoUrl;
         sample = new GitChangeSetSample(this.useAuthorName);
     }
 
-    @Parameterized.Parameters(name = "{0}-{1}")
-    public static Collection permuteAuthorNameAndRepoUrl() {
+    static Collection permuteAuthorNameAndRepoUrl() {
         List<Object[]> values = new ArrayList<>();
         String fisheyeUrl = "http://fisheye.example.com/site/browse/" + projectName;
         String[] allowedUrls = {fisheyeUrl, fisheyeUrl + "/"};
-        String[] allowed = {"true", "false"};
-        for (String authorName : allowed) {
+        boolean[] allowed = {true, false};
+        for (boolean authorName : allowed) {
             for (String repoUrl : allowedUrls) {
                 Object[] combination = {authorName, repoUrl};
                 values.add(combination);
@@ -44,13 +47,13 @@ public class FisheyeGitRepositoryBrowserTest {
     }
 
     @Test
-    public void testGetChangeSetLink() throws Exception {
+    void testGetChangeSetLink() throws Exception {
         URL result = (new FisheyeGitRepositoryBrowser(repoUrl)).getChangeSetLink(sample.changeSet);
         assertEquals(new URL(repoUrlNoTrailingSlash.replace("browse", "changelog") + "?cs=" + sample.id), result);
     }
 
     @Test
-    public void testGetDiffLink() throws Exception {
+    void testGetDiffLink() throws Exception {
         FisheyeGitRepositoryBrowser fisheye = new FisheyeGitRepositoryBrowser(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = fisheye.getDiffLink(path);
@@ -61,12 +64,12 @@ public class FisheyeGitRepositoryBrowserTest {
                 expectedDiffLink = null;
             }
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
-            assertEquals(msg, expectedDiffLink, diffLink);
+            assertEquals(expectedDiffLink, diffLink, msg);
         }
     }
 
     @Test
-    public void testGetFileLink() throws Exception {
+    void testGetFileLink() throws Exception {
         FisheyeGitRepositoryBrowser fisheye = new FisheyeGitRepositoryBrowser(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL fileLink = fisheye.getFileLink(path);
@@ -81,7 +84,7 @@ public class FisheyeGitRepositoryBrowserTest {
                 fail("Unexpected edit type " + editType.getName());
             }
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
-            assertEquals(msg, expectedFileLink, fileLink);
+            assertEquals(expectedFileLink, fileLink, msg);
         }
     }
 }

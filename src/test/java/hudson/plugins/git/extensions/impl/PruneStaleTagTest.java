@@ -23,11 +23,13 @@
  *
  */
 package hudson.plugins.git.extensions.impl;
-
+import static hudson.Functions.isWindows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,33 +37,30 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestCliGitAPIImpl;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import hudson.EnvVars;
-import hudson.Functions;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.util.LogTaskListener;
 
-public class PruneStaleTagTest {
+class PruneStaleTagTest {
 
-    @Rule
-    public TemporaryFolder fileRule = new TemporaryFolder();
+    @TempDir
+    private File fileRule;
 
     private TaskListener listener;
     private Run<?, ?> run;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         listener = new LogTaskListener(Logger.getLogger("prune tags"), Level.FINEST);
 
         run = mock(Run.class);
@@ -74,8 +73,8 @@ public class PruneStaleTagTest {
      * exists - differ | exists - differ
      */
     @Test
-    public void verify_local_tag_is_pruned_if_different_than_on_remote() throws Exception {
-        File remoteRepo = fileRule.newFolder("remote");
+    void verify_local_tag_is_pruned_if_different_than_on_remote() throws Exception {
+        File remoteRepo = newFolder(fileRule, "remote");
 
         // create a remote repository without one tag
         GitClient remoteClient = initRepository(remoteRepo);
@@ -99,10 +98,10 @@ public class PruneStaleTagTest {
         localClient.deleteTag(tagName);
         localClient.tag(tagName, tagComment);
         String localHashTag = localClient.getTags().stream().filter(t -> tagName.equals(t.getName())).findFirst().get().getSHA1String();
-        Assert.assertNotEquals("pre validation failed, local tag must not be the same than remote", remoteTagHash, localHashTag);
+        assertNotEquals(remoteTagHash, localHashTag, "pre validation failed, local tag must not be the same than remote");
 
         extension.decorateFetchCommand(scm, run, localClient, listener, null);
-        Assert.assertFalse("local tag differ from remote tag and is not pruned", localClient.tagExists(tagName));
+        assertFalse(localClient.tagExists(tagName), "local tag differ from remote tag and is not pruned");
     }
 
     /*
@@ -111,8 +110,8 @@ public class PruneStaleTagTest {
      * not exists      | exists
      */
     @Test
-    public void verify_do_nothing_when_remote_tag_do_not_exist_locally() throws Exception {
-        File remoteRepo = fileRule.newFolder("remote");
+    void verify_do_nothing_when_remote_tag_do_not_exist_locally() throws Exception {
+        File remoteRepo = newFolder(fileRule, "remote");
 
         // create a remote repository without one tag
         GitClient remoteClient = initRepository(remoteRepo);
@@ -128,7 +127,7 @@ public class PruneStaleTagTest {
         String tagComment = "tag comment";
         remoteClient.tag(tagName, tagComment);
         extension.decorateFetchCommand(scm, run, localClient, listener, null);
-        Assert.assertFalse("new tags should not be fetched", localClient.tagExists(tagName));
+        assertFalse(localClient.tagExists(tagName), "new tags should not be fetched");
     }
 
     /*
@@ -137,8 +136,8 @@ public class PruneStaleTagTest {
      * exists - same   | exists - same
      */
     @Test
-    public void verify_that_local_tag_is_not_pruned_when_exist_on_remote() throws Exception {
-        File remoteRepo = fileRule.newFolder("remote");
+    void verify_that_local_tag_is_not_pruned_when_exist_on_remote() throws Exception {
+        File remoteRepo = newFolder(fileRule, "remote");
 
         // create a remote repository without one tag
         GitClient remoteClient = initRepository(remoteRepo);
@@ -153,7 +152,7 @@ public class PruneStaleTagTest {
         PruneStaleTag extension = new PruneStaleTag(true);
 
         extension.decorateFetchCommand(scm, run, localClient, listener, null);
-        Assert.assertTrue("local tags must not be pruned when exists on remote", localClient.tagExists(tagName));
+        assertTrue(localClient.tagExists(tagName), "local tags must not be pruned when exists on remote");
     }
 
     /*
@@ -162,8 +161,8 @@ public class PruneStaleTagTest {
      * exists          | not exists
      */
     @Test
-    public void verify_that_local_tag_is_pruned_when_not_exist_on_remote() throws Exception {
-        File remoteRepo = fileRule.newFolder("remote");
+    void verify_that_local_tag_is_pruned_when_not_exist_on_remote() throws Exception {
+        File remoteRepo = newFolder(fileRule, "remote");
 
         // create a remote repository without one tag
         GitClient remoteClient = initRepository(remoteRepo);
@@ -180,12 +179,12 @@ public class PruneStaleTagTest {
         // remove tag on remote, tag remains on local cloned repository
         remoteClient.deleteTag(tagName);
         extension.decorateFetchCommand(scm, run, localClient, listener, null);
-        Assert.assertFalse("local tag has not been pruned", localClient.tagExists(tagName));
+        assertFalse(localClient.tagExists(tagName), "local tag has not been pruned");
     }
 
     @Test
-    public void verify_fetch_do_not_prune_local_branches() throws Exception {
-        File remoteRepo = fileRule.newFolder("remote");
+    void verify_fetch_do_not_prune_local_branches() throws Exception {
+        File remoteRepo = newFolder(fileRule, "remote");
 
         // create a remote repository without one tag
         initRepository(remoteRepo);
@@ -202,17 +201,17 @@ public class PruneStaleTagTest {
         PruneStaleTag extension = new PruneStaleTag(true);
         extension.decorateFetchCommand(scm, run, localClient, listener, null);
 
-        Assert.assertTrue("Local branches must not be pruned", localClient.getBranches().stream().anyMatch(b -> branchName.equals(b.getName())));
+        assertTrue(localClient.getBranches().stream().anyMatch(b -> branchName.equals(b.getName())), "Local branches must not be pruned");
     }
 
     private GitClient newGitClient(File localRepo) {
-        String gitExe = Functions.isWindows() ? "git.exe" : "git";
+        String gitExe = isWindows() ? "git.exe" : "git";
         GitClient localClient = new TestCliGitAPIImpl(gitExe, localRepo, listener, new EnvVars());
         return localClient;
     }
 
     private GitClient cloneRepository(File remoteRepository) throws Exception {
-        File localRepo = fileRule.newFolder("local");
+        File localRepo = newFolder(fileRule, "local");
         GitClient localClient = newGitClient(localRepo);
         /*
          * Workaround because File.toURI.toURL returns always one slash after
@@ -238,24 +237,24 @@ public class PruneStaleTagTest {
     }
 
     @Test
-    public void testGetPruneTags() {
+    void testGetPruneTags() {
         PruneStaleTag pruneEnabled = new PruneStaleTag(true);
         assertThat(pruneEnabled.getPruneTags(), is(true));
     }
 
     @Test
-    public void testGetPruneTagsDisabled() {
+    void testGetPruneTagsDisabled() {
         PruneStaleTag pruneEnabled = new PruneStaleTag(false);
         assertThat(pruneEnabled.getPruneTags(), is(false));
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         EqualsVerifier.forClass(PruneStaleTag.class).usingGetClass().verify();
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         PruneStaleTag enabledOne = new PruneStaleTag(true);
         PruneStaleTag enabledTwo = new PruneStaleTag(true);
         assertThat(enabledOne.equals(enabledTwo), is(true));
@@ -273,14 +272,23 @@ public class PruneStaleTagTest {
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         PruneStaleTag enabled = new PruneStaleTag(true);
         assertThat(enabled.toString(), is("PruneStaleTag { true }"));
     }
 
     @Test
-    public void testToStringDisabled() {
+    void testToStringDisabled() {
         PruneStaleTag disabled = new PruneStaleTag(false);
         assertThat(disabled.toString(), is("PruneStaleTag { false }"));
+    }
+
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 }

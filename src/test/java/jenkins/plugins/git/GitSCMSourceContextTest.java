@@ -1,12 +1,12 @@
 package jenkins.plugins.git;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class GitSCMSourceContextTest {
+class GitSCMSourceContextTest {
 
     @Test
-    public void equalsContract_RefNameMapping() {
+    void equalsContract_RefNameMapping() {
         EqualsVerifier.forClass(GitSCMSourceContext.RefNameMapping.class)
                 .usingGetClass()
                 .verify();

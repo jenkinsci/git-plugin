@@ -10,23 +10,26 @@ import jenkins.model.ParameterizedJobMixIn;
 import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+
+import java.io.File;
+import org.junit.jupiter.api.AfterEach;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-
-import static org.junit.Assert.assertNotNull;
-
+@WithJenkins
 public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & ParameterizedJobMixIn.ParameterizedJob<J, R>, R extends Run<J, R> & Queue.Executable> {
 
-    @Rule public final JenkinsRule r = new JenkinsRule();
+    protected JenkinsRule r;
 
-    @Rule public final TemporaryFolder repoDir = new TemporaryFolder();
+    @TempDir
+    protected File repoDir;
 
-    private GitClient repo;
+    protected GitClient repo;
 
     /**
      * @param refSpec The refspec to check out.
@@ -44,26 +47,24 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     /** Asserts that the given build exported tag information, or not, if {@code null}. */
     protected abstract void assertBuildEnvironment(R run, String expectedName, String expectedMessage) throws Exception;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    protected void beforeEach(JenkinsRule rule) throws Exception {
+        r = rule;
         SystemReader.getInstance().getUserConfig().clear();
         // Set up a temporary git repository for each test case
-        repo = Git.with(r.createTaskListener(), GitUtilsTest.getConfigNoSystemEnvsVars()).in(repoDir.getRoot()).getClient();
+        repo = Git.with(r.createTaskListener(), GitUtilsTest.getConfigNoSystemEnvsVars()).in(repoDir).getClient();
         repo.init();
-    }
 
-    @Before
-    public void allowNonRemoteCheckout() {
         GitSCM.ALLOW_LOCAL_CHECKOUT = true;
     }
 
-    @After
-    public void disallowNonRemoteCheckout() {
+    @AfterEach
+    protected void afterEach() {
         GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
 
     @Test
-    public void commitWithoutTagShouldNotExportMessage() throws Exception {
+    void commitWithoutTagShouldNotExportMessage() throws Exception {
         // Given a git repo without any tags
         repo.commit("commit 1");
 
@@ -76,7 +77,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     }
 
     @Test
-    public void commitWithEmptyTagMessageShouldNotExportMessage() throws Exception {
+    void commitWithEmptyTagMessageShouldNotExportMessage() throws Exception {
         // Given a git repo which has been tagged, but without a message
         repo.commit("commit 1");
         repo.tag("release-1.0", null);
@@ -90,7 +91,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     }
 
     @Test
-    public void commitWithTagShouldExportMessage() throws Exception {
+    void commitWithTagShouldExportMessage() throws Exception {
         // Given a git repo which has been tagged
         repo.commit("commit 1");
         repo.tag("release-1.0", "This is the first release. ");
@@ -104,7 +105,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     }
 
     @Test
-    public void commitWithMultipleTagsShouldExportMessage() throws Exception {
+    void commitWithMultipleTagsShouldExportMessage() throws Exception {
         // Given a commit with multiple tags pointing to it
         repo.commit("commit 1");
         repo.tag("release-candidate-1.0", "This is the first release candidate.");
@@ -120,7 +121,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     }
 
     @Test
-    public void jobWithMatchingTagShouldExportThatTagMessage() throws Exception {
+    void jobWithMatchingTagShouldExportThatTagMessage() throws Exception {
         // Given a commit with multiple tags pointing to it
         repo.commit("commit 1");
         repo.tag("alpha/1", "Alpha #1");
@@ -137,7 +138,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     }
 
     @Test
-    public void commitWithTagOnPreviousCommitWithConfigurationOptInShouldExportThatTagMessage() throws Exception {
+    void commitWithTagOnPreviousCommitWithConfigurationOptInShouldExportThatTagMessage() throws Exception {
         // Given a git repo which has been tagged on a previous commit
         repo.commit("commit 1");
         repo.tag("release-1.0", "This is the first release");
@@ -152,7 +153,7 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
     }
 
     @Test
-    public void commitWithMultipleTagsOnPreviousCommitWithConfigurationOptInShouldExportThatTagMessage() throws Exception {
+    void commitWithMultipleTagsOnPreviousCommitWithConfigurationOptInShouldExportThatTagMessage() throws Exception {
         // Given a git repo which has been tagged on a previous commit with multiple tags
         repo.commit("commit 1");
         repo.tag("release-candidate-1.0", "This is the first release candidate.");

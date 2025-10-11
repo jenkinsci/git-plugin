@@ -14,21 +14,28 @@ import java.util.TreeSet;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.Jenkins;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Rule;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class UserRemoteConfigTest {
+@WithJenkins
+class UserRemoteConfigTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        r = rule;
+    }
 
     @Issue("JENKINS-38048")
     @Test
-    public void credentialsDropdown() throws Exception {
+    void credentialsDropdown() throws Exception {
         SystemCredentialsProvider.getInstance().getCredentials().add(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "mycreds", null, "jenkins", "s3cr3t-that-needs-to-be-long"));
         SystemCredentialsProvider.getInstance().save();
         FreeStyleProject p1 = r.createFreeStyleProject("p1");
@@ -57,8 +64,8 @@ public class UserRemoteConfigTest {
                 actual.add(option.value);
             }
         });
-        assertEquals("expected completions on " + project + " as " + user + " starting with " + currentCredentialsId,
-                new TreeSet<>(Arrays.asList(expectedCredentialsIds)), actual);
+        assertEquals(new TreeSet<>(Arrays.asList(expectedCredentialsIds)),
+                actual, "expected completions on " + project + " as " + user + " starting with " + currentCredentialsId);
     }
 
 }
