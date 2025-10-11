@@ -71,6 +71,7 @@ import org.kohsuke.stapler.export.Exported;
 
 import jakarta.servlet.ServletException;
 
+import java.util.HashMap;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -750,13 +751,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         }
                     }
 
+                    Map<BranchSpec, String> headMatches = new HashMap<>();
                     for (BranchSpec branchSpec : getBranches()) {
                         for (Entry<String, ObjectId> entry : heads.entrySet()) {
                             final String head = entry.getKey();
                             // head is "refs/(heads|tags|whatever)/branchName
 
+                            // Use pollEnv here to include Parameters from lastBuild.
                             // first, check the a canonical git reference is configured
-                            if (!branchSpec.matches(head, environment)) {
+                            if (!branchSpec.matches(head, pollEnv)) {
 
                                 // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
                                 String name;
@@ -764,7 +767,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                 if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
                                 else name = remote + "/" + head;
 
-                                if (!branchSpec.matches(name, environment)) continue;
+                                // Use pollEnv here to include Parameters from lastBuild.
+                                // Record which branches in the spec we have found a match for so we can alert users when branches are ignored.
+                                if (branchSpec.matches(name, pollEnv)){
+                                    headMatches.put(branchSpec, name);
+                                } else {
+                                    continue;
+                                }
                             }
 
                             final ObjectId sha1 = entry.getValue();
@@ -774,8 +783,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                 continue;
                             }
 
+                            listener.getLogger().println(MessageFormat.format("[poll] pollEnv {0}", pollEnv));
                             listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName());
                             return BUILD_NOW;
+                        }
+                    }
+                    // Tell users if there are branches in the spec that are ignored.
+                    for (BranchSpec branchSpec : getBranches()) {
+                        // If there is a branch in the spec that doesn't exist in the remote, tell the users (as this could means they aren't building something they expect to).
+                        if (!headMatches.containsKey(branchSpec)) {
+                            // If the branchSpec gets expanded using variables in the environment then print the original and expanded versions.
+                            String branchSpecString = branchSpec.toString();
+                            String expandedBranchSpec = branchSpec.getExpandedName(pollEnv);
+                            String branchMessageString = branchSpecString.equals(expandedBranchSpec) ? String.format("'%s'", branchSpecString) : String.format("'%s' (%s)", branchSpecString, expandedBranchSpec);
+                            listener.getLogger().println("[poll] Could not find remote head for branch in spec " + branchMessageString);
                         }
                     }
                 }
