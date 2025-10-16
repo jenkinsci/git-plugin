@@ -3,12 +3,11 @@ package jenkins.plugins.git;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
-import java.util.ArrayList;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 import java.util.Collections;
 import java.util.List;
 import jenkins.model.details.Detail;
 import jenkins.model.details.DetailFactory;
-import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
 
@@ -25,17 +24,19 @@ public final class GitDetailFactory extends DetailFactory<Run> {
     public List<? extends Detail> createFor(@NonNull Run target) {
         SCMSource src = SCMSource.SourceByItem.findSource(target.getParent());
 
-        // Don't add details for non-Git SCM sources
-        if (!(src instanceof AbstractGitSCMSource)) {
+        if (src instanceof AbstractGitSCMSource gitSource) {
+            SCMRevisionAction scmRevisionAction = target.getAction(SCMRevisionAction.class);
+
+            GitRepositoryBrowser repositoryBrowser = gitSource.guessBrowser();
+
+            if (scmRevisionAction == null) {
+                return Collections.emptyList();
+            }
+
+            return List.of(new GitCommitDetail(target, repositoryBrowser));
+        } else {
+            // Don't add details for non-Git SCM sources
             return Collections.emptyList();
         }
-
-        SCMRevisionAction scmRevisionAction = target.getAction(SCMRevisionAction.class);
-
-        if (scmRevisionAction == null) {
-            return Collections.emptyList();
-        }
-
-        return List.of(new GitCommitDetail(target));
     }
 }
