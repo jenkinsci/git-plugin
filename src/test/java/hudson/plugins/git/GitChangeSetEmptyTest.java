@@ -1,100 +1,99 @@
 package hudson.plugins.git;
 
 import java.util.ArrayList;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
-public class GitChangeSetEmptyTest {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class GitChangeSetEmptyTest {
 
     private GitChangeSet changeSet = null;
 
-    public GitChangeSetEmptyTest() {
-    }
-
-    @Before
-    public void createEmptyChangeSet() {
+    @BeforeEach
+    void beforeEach() {
         changeSet = new GitChangeSet(new ArrayList<>(), false);
     }
 
     @Test
-    public void testGetDate() {
+    void testGetDate() {
         assertNull(changeSet.getDate());
     }
 
     @Test
-    public void testGetTimestamp() {
+    void testGetTimestamp() {
         assertEquals(-1L, changeSet.getTimestamp());
     }
 
     @Test
-    public void testGetCommitId() {
+    void testGetCommitId() {
         assertNull(changeSet.getCommitId());
     }
 
     @Test
-    public void testSetParent() {
+    void testSetParent() {
         changeSet.setParent(null);
         assertNull(changeSet.getParent());
     }
 
     @Test
-    public void testGetParentCommit() {
+    void testGetParentCommit() {
         assertNull(changeSet.getParentCommit());
     }
 
     @Test
-    public void testGetAffectedPaths() {
+    void testGetAffectedPaths() {
         assertTrue(changeSet.getAffectedPaths().isEmpty());
     }
 
     @Test
-    public void testGetPaths() {
+    void testGetPaths() {
         assertTrue(changeSet.getPaths().isEmpty());
     }
 
     @Test
-    public void testGetAffectedFiles() {
+    void testGetAffectedFiles() {
         assertTrue(changeSet.getAffectedFiles().isEmpty());
     }
 
     @Test
-    public void testGetAuthorName() {
+    void testGetAuthorName() {
         assertNull(changeSet.getAuthorName());
     }
 
     @Test
-    public void testGetMsg() {
+    void testGetMsg() {
         assertNull(changeSet.getMsg());
     }
 
     @Test
-    public void testGetId() {
+    void testGetId() {
         assertNull(changeSet.getId());
     }
 
     @Test
-    public void testGetRevision() {
+    void testGetRevision() {
         assertNull(changeSet.getRevision());
     }
 
     @Test
-    public void testGetComment() {
+    void testGetComment() {
         assertNull(changeSet.getComment());
     }
 
     @Test
-    public void testGetBranch() {
+    void testGetBranch() {
         assertNull(changeSet.getBranch());
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         assertTrue(changeSet.hashCode() != 0);
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         assertEquals(changeSet, changeSet);
         assertNotEquals(changeSet, GitChangeSetUtil.genChangeSet(true, true));
     }

@@ -6,15 +6,16 @@ import java.util.logging.LogRecord;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertTrue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Mark Waite
  */
-public class BuildDataLoggingTest {
+class BuildDataLoggingTest {
 
     private BuildData data;
 
@@ -23,13 +24,10 @@ public class BuildDataLoggingTest {
 
     private LogHandler handler = null;
 
-    @Before
-    public void createTestData() throws Exception {
+    @BeforeEach
+    void beforeEach() {
         data = new BuildData();
-    }
 
-    @Before
-    public void reconfigureLogging() throws Exception {
         handler = new LogHandler();
         handler.setLevel(Level.ALL);
         BuildData.LOGGER.setUseParentHandlers(false);
@@ -37,8 +35,8 @@ public class BuildDataLoggingTest {
         BuildData.LOGGER.setLevel(Level.ALL);
     }
 
-    @After
-    public void restoreLogging() throws Exception {
+    @AfterEach
+    void afterEach() throws Exception {
         BuildData.LOGGER.removeHandler(handler);
         BuildData.LOGGER.setUseParentHandlers(ORIGINAL_USE_PARENT_HANDLERS);
         BuildData.LOGGER.setLevel(ORIGINAL_LEVEL);
@@ -46,18 +44,18 @@ public class BuildDataLoggingTest {
 
     /* Confirm URISyntaxException is logged at FINEST on invalid URL */
     @Test
-    public void testSimilarToInvalidHttpsRemoteURL() {
+    void testSimilarToInvalidHttpsRemoteURL() {
         final String INVALID_URL = "https://github.com/jenkinsci/git-plugin?s=^IXIC";
         BuildData invalid = new BuildData();
         invalid.addRemoteUrl(INVALID_URL);
-        assertTrue("Invalid URL not similar to itself " + INVALID_URL, invalid.similarTo(invalid));
+        assertTrue(invalid.similarTo(invalid), "Invalid URL not similar to itself " + INVALID_URL);
 
         String expectedMessage = "URI syntax exception on " + INVALID_URL;
         assertThat(handler.checkMessage(), is(expectedMessage));
         assertThat(handler.checkLevel(), is(Level.FINEST));
     }
 
-    class LogHandler extends Handler {
+    static class LogHandler extends Handler {
 
         private Level lastLevel = Level.INFO;
         private String lastMessage = "";

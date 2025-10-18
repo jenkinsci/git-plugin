@@ -7,27 +7,29 @@ import org.htmlunit.util.NameValuePair;
 import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.Collection;
 import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ApiTokenPropertyConfigurationTest {
+@WithJenkins
+class ApiTokenPropertyConfigurationTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        r = rule;
+
         r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
         MockAuthorizationStrategy authorizationStrategy = new MockAuthorizationStrategy();
         authorizationStrategy.grant(Jenkins.ADMINISTER).everywhere().to("alice");
@@ -36,7 +38,7 @@ public class ApiTokenPropertyConfigurationTest {
     }
 
     @Test
-    public void testAdminPermissionRequiredToGenerateNewApiTokens() throws Exception {
+    void testAdminPermissionRequiredToGenerateNewApiTokens() throws Exception {
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("bob");
             WebRequest req = new WebRequest(
@@ -52,7 +54,7 @@ public class ApiTokenPropertyConfigurationTest {
     }
 
     @Test
-    public void adminPermissionsRequiredToRevokeApiTokens() throws Exception {
+    void adminPermissionsRequiredToRevokeApiTokens() throws Exception {
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("bob");
             WebRequest req = new WebRequest(wc.createCrumbedUrl(ApiTokenPropertyConfiguration.get().getDescriptorUrl() + "/revoke"), HttpMethod.POST);
@@ -66,7 +68,7 @@ public class ApiTokenPropertyConfigurationTest {
     }
 
     @Test
-    public void testBasicGenerationAndRevocation() throws Exception {
+    void testBasicGenerationAndRevocation() throws Exception {
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             wc.login("alice");
             WebRequest generateReq = new WebRequest(
@@ -113,7 +115,7 @@ public class ApiTokenPropertyConfigurationTest {
     }
 
     @Test
-    public void isValidApiTokenReturnsTrueIfGivenApiTokenExists() {
+    void isValidApiTokenReturnsTrueIfGivenApiTokenExists() {
         JSONObject json = ApiTokenPropertyConfiguration.get().generateApiToken("test");
 
         assertTrue(ApiTokenPropertyConfiguration.get().isValidApiToken(json.getString("value")));

@@ -1,41 +1,39 @@
 package hudson.plugins.git;
 
 import hudson.scm.EditType;
+import org.junit.jupiter.api.BeforeEach;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(Parameterized.class)
-public class GitChangeSetSimpleTest {
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
+@ParameterizedClass(name = "{0},{1}")
+@MethodSource("permuteAuthorNameAndLegacyLayout")
+class GitChangeSetSimpleTest {
 
     private GitChangeSet changeSet = null;
     private final boolean useAuthorName;
     private final boolean useLegacyFormat;
 
-    public GitChangeSetSimpleTest(String useAuthorName, String useLegacyFormat) {
-        this.useAuthorName = Boolean.valueOf(useAuthorName);
-        this.useLegacyFormat = Boolean.valueOf(useLegacyFormat);
+    public GitChangeSetSimpleTest(boolean useAuthorName, boolean useLegacyFormat) {
+        this.useAuthorName = useAuthorName;
+        this.useLegacyFormat = useLegacyFormat;
     }
 
-    @Parameterized.Parameters(name = "{0},{1}")
-    public static Collection permuteAuthorNameAndLegacyLayout() {
+    static Collection permuteAuthorNameAndLegacyLayout() {
         List<Object[]> values = new ArrayList<>();
-        String[] allowed = {"true", "false"};
-        for (String authorName : allowed) {
-            for (String legacyFormat : allowed) {
+        boolean[] allowed = {true, false};
+        for (boolean authorName : allowed) {
+            for (boolean legacyFormat : allowed) {
                 Object[] combination = {authorName, legacyFormat};
                 values.add(combination);
             }
@@ -43,13 +41,13 @@ public class GitChangeSetSimpleTest {
         return values;
     }
 
-    @Before
-    public void createSimpleChangeSet() {
+    @BeforeEach
+    void beforeEach() {
         changeSet = GitChangeSetUtil.genChangeSet(useAuthorName, useLegacyFormat);
     }
 
     @Test
-    public void testChangeSetDetails() {
+    void testChangeSetDetails() {
         assertEquals(GitChangeSetUtil.ID, changeSet.getId());
         assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
         assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
@@ -104,75 +102,75 @@ public class GitChangeSetSimpleTest {
     }
 
     @Test
-    public void testGetCommitId() {
+    void testGetCommitId() {
         assertEquals(GitChangeSetUtil.ID, changeSet.getCommitId());
     }
 
     @Test
-    public void testSetParent() {
+    void testSetParent() {
         changeSet.setParent(null);
         assertNull(changeSet.getParent());
     }
 
     @Test
-    public void testGetParentCommit() {
+    void testGetParentCommit() {
         assertEquals(GitChangeSetUtil.PARENT, changeSet.getParentCommit());
     }
 
     @Test
-    public void testGetAffectedFiles() {
+    void testGetAffectedFiles() {
         assertEquals(6, changeSet.getAffectedFiles().size());
     }
 
     @Test
-    public void testGetAuthorName() {
+    void testGetAuthorName() {
         assertEquals(useAuthorName ? GitChangeSetUtil.AUTHOR_NAME : GitChangeSetUtil.COMMITTER_NAME, changeSet.getAuthorName());
     }
 
     @Test
-    public void testGetDate() {
+    void testGetDate() {
         assertEquals(useAuthorName ? GitChangeSetUtil.AUTHOR_DATE_FORMATTED : GitChangeSetUtil.COMMITTER_DATE_FORMATTED, changeSet.getDate());
     }
 
     @Test
-    public void testGetMsg() {
+    void testGetMsg() {
         assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
     }
 
     @Test
-    public void testGetId() {
+    void testGetId() {
         assertEquals(GitChangeSetUtil.ID, changeSet.getId());
     }
 
     @Test
-    public void testGetRevision() {
+    void testGetRevision() {
         assertEquals(GitChangeSetUtil.ID, changeSet.getRevision());
     }
 
     @Test
-    public void testGetComment() {
+    void testGetComment() {
         String changeComment = changeSet.getComment();
-        assertTrue("Comment '" + changeComment + "' does not start with '" + GitChangeSetUtil.COMMENT + "'", changeComment.startsWith(GitChangeSetUtil.COMMENT));
+        assertTrue(changeComment.startsWith(GitChangeSetUtil.COMMENT), "Comment '" + changeComment + "' does not start with '" + GitChangeSetUtil.COMMENT + "'");
     }
 
     @Test
-    public void testGetBranch() {
+    void testGetBranch() {
         assertNull(changeSet.getBranch());
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         assertTrue(changeSet.hashCode() != 0);
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         assertEquals(changeSet, changeSet);
-        assertNotEquals(changeSet, new GitChangeSet(new ArrayList<>(), false));
+        assertNotEquals(new GitChangeSet(new ArrayList<>(), false), changeSet);
     }
 
     @Test
-    public void testChangeSetExceptionMessage() {
+    void testChangeSetExceptionMessage() {
         final String expectedLineContent = "commit ";
         ArrayList<String> lines = new ArrayList<>();
         lines.add(expectedLineContent);

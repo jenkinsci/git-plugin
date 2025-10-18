@@ -33,9 +33,10 @@ import java.util.List;
 import java.util.Random;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
 import org.jenkinsci.plugins.workflow.steps.scm.GenericSCMStep;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Test workflow snippet generation for the checkout step. Workflow
@@ -44,10 +45,10 @@ import org.jvnet.hudson.test.JenkinsRule;
  *
  * @author Mark Waite
  */
-public class CheckoutStepSnippetizerTest {
+@WithJenkins
+class CheckoutStepSnippetizerTest {
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
     private final Random random = new Random();
     private final SnippetizerTester tester = new SnippetizerTester(r);
@@ -75,10 +76,13 @@ public class CheckoutStepSnippetizerTest {
     /* Tested values common to many tests */
     private final String remoteConfig = "userRemoteConfigs: [[url: '" + url + "']]";
 
-    public CheckoutStepSnippetizerTest() throws Exception {}
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
 
     @Test
-    public void checkoutSimplest() throws Exception {
+    void checkoutSimplest() throws Exception {
         tester.assertRoundTrip(checkoutStep, "checkout scmGit("
                 + junkBranches
                 + junkExtensions
@@ -91,7 +95,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutNoPoll() throws Exception {
+    void checkoutNoPoll() throws Exception {
         checkoutStep.setPoll(false);
         tester.assertRoundTrip(checkoutStep, "checkout poll: false, scm: scmGit("
                 + junkBranches
@@ -105,7 +109,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutNoChangelog() throws Exception {
+    void checkoutNoChangelog() throws Exception {
         checkoutStep.setChangelog(false);
         tester.assertRoundTrip(checkoutStep, "checkout changelog: false, scm: scmGit("
                 + junkBranches
@@ -119,7 +123,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutCredentials() throws Exception {
+    void checkoutCredentials() throws Exception {
         String myCredential = "my-credential";
         UserRemoteConfig config = new UserRemoteConfig(url, remoteName, remoteRefspec, myCredential);
         List<UserRemoteConfig> configList = new ArrayList(List.of(config));
@@ -137,7 +141,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutBranch() throws Exception {
+    void checkoutBranch() throws Exception {
         String branch = "4.10.x";
         List<BranchSpec> branchList = new ArrayList(List.of(new BranchSpec(branch)));
         GitSCM gitSCM = new GitSCM(userRemoteConfigList, branchList, browser, gitTool, extensionList);
@@ -154,7 +158,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutSubmoduleSimplest() throws Exception {
+    void checkoutSubmoduleSimplest() throws Exception {
         GitSCM gitSCM = new GitSCM(url);
         List<GitSCMExtension> extensions = gitSCM.getExtensions();
         extensions.add(new SubmoduleOption());
@@ -171,7 +175,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutSubmoduleOldConstructorMinimalArgs() throws Exception {
+    void checkoutSubmoduleOldConstructorMinimalArgs() throws Exception {
         GitSCM gitSCM = new GitSCM(url);
         List<GitSCMExtension> extensions = gitSCM.getExtensions();
         boolean disableSubmodules = false;
@@ -194,7 +198,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutSubmoduleOldConstructorReferenceRepo() throws Exception {
+    void checkoutSubmoduleOldConstructorReferenceRepo() throws Exception {
         GitSCM gitSCM = new GitSCM(url);
         List<GitSCMExtension> extensions = gitSCM.getExtensions();
         boolean disableSubmodules = false;
@@ -217,7 +221,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutSubmoduleOldConstructorDisableSubmodules() throws Exception {
+    void checkoutSubmoduleOldConstructorDisableSubmodules() throws Exception {
         GitSCM gitSCM = new GitSCM(url);
         List<GitSCMExtension> extensions = gitSCM.getExtensions();
         boolean disableSubmodules = true; // Only change from default values
@@ -240,7 +244,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutTimeoutCheckoutDefault() throws Exception {
+    void checkoutTimeoutCheckoutDefault() throws Exception {
         GitSCM gitSCM = new GitSCM(url);
         List<GitSCMExtension> extensions = gitSCM.getExtensions();
         Integer timeout = null;
@@ -258,7 +262,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutTimeoutCheckoutNonDefault() throws Exception {
+    void checkoutTimeoutCheckoutNonDefault() throws Exception {
         GitSCM gitSCM = new GitSCM(url);
         List<GitSCMExtension> extensions = gitSCM.getExtensions();
         Integer timeout = 347;
@@ -276,7 +280,7 @@ public class CheckoutStepSnippetizerTest {
     }
 
     @Test
-    public void checkoutLargeFileSupport() throws Exception {
+    void checkoutLargeFileSupport() throws Exception {
         GitSCM gitSCM = new GitSCM(url);
         List<GitSCMExtension> extensions = gitSCM.getExtensions();
         extensions.add(new GitLFSPull());

@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.gittagmessage;
 
-import hudson.Functions;
 import hudson.Util;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -13,6 +12,7 @@ import hudson.tasks.Shell;
 
 import java.util.Collections;
 
+import static hudson.Functions.isWindows;
 import static org.jenkinsci.plugins.gittagmessage.GitTagMessageAction.ENV_VAR_NAME_MESSAGE;
 import static org.jenkinsci.plugins.gittagmessage.GitTagMessageAction.ENV_VAR_NAME_TAG;
 
@@ -27,7 +27,7 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
     protected FreeStyleProject configureGitTagMessageJob(String refSpec, String branchSpec, boolean useMostRecentTag) throws Exception {
         GitTagMessageExtension extension = new GitTagMessageExtension();
         extension.setUseMostRecentTag(useMostRecentTag);
-        UserRemoteConfig remote = new UserRemoteConfig(repoDir.getRoot().getAbsolutePath(), "origin", refSpec, null);
+        UserRemoteConfig remote = new UserRemoteConfig(repoDir.getAbsolutePath(), "origin", refSpec, null);
         GitSCM scm = new GitSCM(
                 Collections.singletonList(remote),
                 Collections.singletonList(new BranchSpec(branchSpec)),
@@ -50,7 +50,7 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
     }
 
     private static Builder createEnvEchoBuilder(String key, String envVarName) {
-        if (Functions.isWindows()) {
+        if (isWindows()) {
             return new BatchFile("echo %s='%%%s%%'".formatted(key, envVarName));
         }
         return new Shell("echo \"%s='${%s}'\"".formatted(key, envVarName));

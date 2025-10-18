@@ -11,8 +11,9 @@ import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.util.InverseBuildChooser;
 import java.util.Collections;
 import jenkins.scm.api.SCMHead;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.Test;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
@@ -24,7 +25,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class GitSCMBuilderTest {
+class GitSCMBuilderTest {
 
     private GitSCMBuilder<?> instance = new GitSCMBuilder<>(
             new SCMHead("master"),
@@ -33,7 +34,7 @@ public class GitSCMBuilderTest {
             null);
 
     @Test
-    public void build() throws Exception {
+    void build() throws Exception {
         GitSCM scm = instance.build();
         assertThat(scm.getBrowser(), is(nullValue()));
         assertThat(scm.getUserRemoteConfigs(), contains(allOf(
@@ -50,7 +51,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withRevision() throws Exception {
+    void withRevision() throws Exception {
         instance.withExtension(new BuildChooserSetting(new InverseBuildChooser()));
         GitSCM scm = instance.build();
         assertThat(scm.getExtensions().get(BuildChooserSetting.class), notNullValue());
@@ -77,7 +78,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withBrowser() throws Exception {
+    void withBrowser() throws Exception {
         instance.withBrowser(new GithubWeb("http://git.test/repo.git"));
         assertThat(instance.browser(), is(instanceOf(GithubWeb.class)));
         GitSCM scm = instance.build();
@@ -96,7 +97,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withCredentials() throws Exception {
+    void withCredentials() throws Exception {
         instance.withCredentials("example-id");
         assertThat(instance.credentialsId(), is("example-id"));
         GitSCM scm = instance.build();
@@ -115,7 +116,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withExtension() throws Exception {
+    void withExtension() throws Exception {
         instance.withExtension(new AuthorInChangelog());
         assertThat(instance.extensions(), contains(instanceOf(AuthorInChangelog.class)));
         GitSCM scm = instance.build();
@@ -179,7 +180,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withExtensions() throws Exception {
+    void withExtensions() throws Exception {
         instance.withExtensions(new AuthorInChangelog());
         assertThat(instance.extensions(), contains(instanceOf(AuthorInChangelog.class)));
         GitSCM scm = instance.build();
@@ -268,7 +269,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withGitTool() throws Exception {
+    void withGitTool() throws Exception {
         instance.withGitTool("git");
         assertThat(instance.gitTool(), is("git"));
         GitSCM scm = instance.build();
@@ -287,7 +288,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withRefSpecAndCloneOption() throws Exception {
+    void withRefSpecAndCloneOption() throws Exception {
         instance.withRefSpec("+refs/heads/master:refs/remotes/@{remote}/master");
         instance.withExtension(new CloneOption(false, false, null, null));
         assertThat(instance.refSpecs(), contains("+refs/heads/master:refs/remotes/@{remote}/master"));
@@ -307,7 +308,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withRefSpec() throws Exception {
+    void withRefSpec() throws Exception {
         instance.withRefSpec("+refs/heads/master:refs/remotes/@{remote}/master");
         assertThat(instance.refSpecs(), contains("+refs/heads/master:refs/remotes/@{remote}/master"));
         GitSCM scm = instance.build();
@@ -398,7 +399,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withRefSpecs() throws Exception {
+    void withRefSpecs() throws Exception {
         instance.withRefSpecs(Collections.singletonList("+refs/heads/master:refs/remotes/@{remote}/master"));
         assertThat(instance.refSpecs(), contains("+refs/heads/master:refs/remotes/@{remote}/master"));
         GitSCM scm = instance.build();
@@ -463,7 +464,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withoutRefSpecs() throws Exception {
+    void withoutRefSpecs() throws Exception {
         instance.withRefSpecs(Collections.singletonList("+refs/heads/feature:refs/remotes/@{remote}/feature"));
         if (instance.refSpecs().contains("+refs/heads/*:refs/remotes/@{remote}/*")) {
             return;
@@ -487,7 +488,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withRemote() throws Exception {
+    void withRemote() throws Exception {
         instance.withRemote("http://git.test/my-repo.git");
         assertThat(instance.remote(), is("http://git.test/my-repo.git"));
         GitSCM scm = instance.build();
@@ -506,7 +507,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withRemoteName() throws Exception {
+    void withRemoteName() throws Exception {
         instance.withRemoteName("my-remote");
         assertThat(instance.remoteName(), is("my-remote"));
         GitSCM scm = instance.build();
@@ -525,7 +526,7 @@ public class GitSCMBuilderTest {
     }
 
     @Test
-    public void withAdditionalRemote() throws Exception {
+    void withAdditionalRemote() throws Exception {
         instance.withAdditionalRemote("upstream", "http://git.test/upstream.git",
                 "+refs/heads/master:refs/remotes/@{remote}/master");
         assertThat(instance.additionalRemoteNames(), contains("upstream"));

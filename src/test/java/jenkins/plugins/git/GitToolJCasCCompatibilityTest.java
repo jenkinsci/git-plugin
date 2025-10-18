@@ -10,8 +10,9 @@ import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
 import hudson.tools.ZipExtractionInstaller;
 import hudson.util.DescribableList;
-import io.jenkins.plugins.casc.misc.RoundTripAbstractTest;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.AbstractRoundTripTest;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
@@ -20,13 +21,15 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class GitToolJCasCCompatibilityTest extends RoundTripAbstractTest {
+@WithJenkins
+class GitToolJCasCCompatibilityTest extends AbstractRoundTripTest {
+
     @Override
-    protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
-        final ToolDescriptor descriptor = (ToolDescriptor) restartableJenkinsRule.j.jenkins.getDescriptor(GitTool.class);
+    protected void assertConfiguredAsExpected(JenkinsRule rule, String s) {
+        final ToolDescriptor descriptor = (ToolDescriptor) rule.jenkins.getDescriptor(GitTool.class);
         final ToolInstallation[] installations = descriptor.getInstallations();
         assertThat(installations, arrayWithSize(1));
         assertEquals("Default", installations[0].getName());

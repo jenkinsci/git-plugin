@@ -8,6 +8,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,13 +26,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.*;
-import org.junit.Before;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class AncestryBuildChooserTest extends AbstractGitRepository {
+class AncestryBuildChooserTest extends AbstractGitRepository {
     
     private String rootCommit = null;
     private String ancestorCommit = null;
@@ -54,8 +54,8 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
      * 
      * Creates a small repository of 5 commits with different branches and ages.
      */
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         Set<String> prevBranches = stringifyBranches(testGitClient.getBranches());
         
         testGitClient.commit("Root Commit");
@@ -157,9 +157,9 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         
         return candidateSha1s;
     }
-    
+
     @Test
-    public void testFilterRevisionsNoRestriction() throws Exception {
+    void testFilterRevisionsNoRestriction() throws Exception {
         final Integer maxAgeInDays = null;
         final String ancestorCommitSha1 = null;
         
@@ -170,9 +170,9 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         assertTrue(candidateSha1s.contains(tenDaysAgoCommit));
         assertTrue(candidateSha1s.contains(twentyDaysAgoCommit));
     }
-    
+
     @Test
-    public void testFilterRevisionsZeroDate() throws Exception {
+    void testFilterRevisionsZeroDate() throws Exception {
         final Integer maxAgeInDays = 0;
         final String ancestorCommitSha1 = null;
         
@@ -180,9 +180,9 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         
         assertEquals(0, candidateSha1s.size());
     }
-    
+
     @Test
-    public void testFilterRevisionsTenDays() throws Exception {
+    void testFilterRevisionsTenDays() throws Exception {
         final Integer maxAgeInDays = 10;
         final String ancestorCommitSha1 = null;
         
@@ -191,9 +191,9 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         assertEquals(1, candidateSha1s.size());
         assertTrue(candidateSha1s.contains(fiveDaysAgoCommit));
     }
-    
+
     @Test
-    public void testFilterRevisionsThirtyDays() throws Exception {
+    void testFilterRevisionsThirtyDays() throws Exception {
         final Integer maxAgeInDays = 30;
         final String ancestorCommitSha1 = null;
         
@@ -204,9 +204,9 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         assertTrue(candidateSha1s.contains(tenDaysAgoCommit));
         assertTrue(candidateSha1s.contains(twentyDaysAgoCommit));
     }
-    
+
     @Test
-    public void testFilterRevisionsBlankAncestor() throws Exception {
+    void testFilterRevisionsBlankAncestor() throws Exception {
         final Integer maxAgeInDays = null;
         final String ancestorCommitSha1 = "";
         
@@ -217,18 +217,18 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         assertTrue(candidateSha1s.contains(tenDaysAgoCommit));
         assertTrue(candidateSha1s.contains(twentyDaysAgoCommit));
     }
-    
+
     @Test
-    public void testFilterRevisionsNonExistingAncestor() throws Exception {
+    void testFilterRevisionsNonExistingAncestor() throws Exception {
         final Integer maxAgeInDays = null;
         final String ancestorCommitSha1 = "This commit sha1 does not exist.";
 
-        assertThrows("Invalid sha1 should throw GitException.", GitException.class,
-                () -> getFilteredTestCandidates(maxAgeInDays, ancestorCommitSha1));
+        assertThrows(GitException.class, () -> getFilteredTestCandidates(maxAgeInDays, ancestorCommitSha1),
+                "Invalid sha1 should throw GitException.");
     }
-    
+
     @Test
-    public void testFilterRevisionsExistingAncestor() throws Exception {
+    void testFilterRevisionsExistingAncestor() throws Exception {
         final Integer maxAgeInDays = null;
         final String ancestorCommitSha1 = ancestorCommit;
         

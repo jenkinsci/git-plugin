@@ -10,27 +10,31 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
+
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.mockito.Mockito;
 
-public class CandidateRevisionsTest extends AbstractGitRepository {
+@WithGitSampleRepo
+class CandidateRevisionsTest extends AbstractGitRepository {
 
     private File testGitDir2;
     private GitClient testGitClient2;
 
-    @Rule
-    public GitSampleRepoRule testGitRepo2 = new GitSampleRepoRule();
+    private GitSampleRepoRule testGitRepo2;
 
-    @Before
-    public void createSecondGitRepository() throws Exception {
+    @BeforeEach
+    void setUp(GitSampleRepoRule repo) throws Exception {
+        testGitRepo2 = repo;
         testGitRepo2.init();
         testGitDir2 = testGitRepo2.getRoot();
         TaskListener listener = StreamTaskListener.fromStderr();
@@ -62,7 +66,7 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
      * revisions would also include the master branch.
      */
     @Test
-    public void testChooseWithMultipleTag() throws Exception {
+    void testChooseWithMultipleTag() throws Exception {
         commitNewFile("file-1-in-repo-1");
         ObjectId commit1 = testGitClient.revParse("HEAD");
         assertEquals(commit1, testGitClient.revParse("master"));
@@ -111,14 +115,6 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
         Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "tag/*", testGitClient2, null, buildData, context);
         assertEquals(1, candidateRevisions.size());
         String name = candidateRevisions.iterator().next().getBranches().iterator().next().getName();
-        assertTrue("Expected .*/tags/b or .*/tags/c, was '" + name + "'", name.matches("(origin|refs)/tags/tag/[bc]"));
-    }
-
-    /**
-     * Inline ${@link hudson.Functions#isWindows()} to prevent a transient
-     * remote classloader issue.
-     */
-    private boolean isWindows() {
-        return File.pathSeparatorChar == ';';
+        assertTrue(name.matches("(origin|refs)/tags/tag/[bc]"), "Expected .*/tags/b or .*/tags/c, was '" + name + "'");
     }
 }

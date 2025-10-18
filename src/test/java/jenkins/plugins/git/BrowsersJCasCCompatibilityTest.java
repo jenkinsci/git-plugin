@@ -23,12 +23,13 @@ import hudson.plugins.git.browser.Stash;
 import hudson.plugins.git.browser.TFS2013GitRepositoryBrowser;
 import hudson.plugins.git.browser.ViewGitWeb;
 import hudson.scm.SCM;
-import io.jenkins.plugins.casc.misc.RoundTripAbstractTest;
+import io.jenkins.plugins.casc.misc.junit.jupiter.AbstractRoundTripTest;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.LibraryRetriever;
 import org.jenkinsci.plugins.workflow.libs.SCMRetriever;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,13 +39,15 @@ import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
+@WithJenkins
+class BrowsersJCasCCompatibilityTest extends AbstractRoundTripTest {
+
     @Override
-    protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
+    protected void assertConfiguredAsExpected(JenkinsRule rule, String s) {
         final List<LibraryConfiguration> libraries = GlobalLibraries.get().getLibraries();
         assertThat(libraries, containsInAnyOrder(
                 allOf(
@@ -137,7 +140,7 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
             final SCM scm =  ((SCMRetriever) retriever).getScm();
             assertThat(errorMessage, scm, instanceOf(GitSCM.class));
             final GitSCM gitSCM = (GitSCM)scm;
-            assertNotNull(errorMessage, gitSCM.getBrowser());
+            assertNotNull(gitSCM.getBrowser(), errorMessage);
             browsers.add(gitSCM.getBrowser());
         }
 

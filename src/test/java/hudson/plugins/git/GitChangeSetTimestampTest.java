@@ -7,9 +7,10 @@ import java.util.List;
 import java.util.Random;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.Issue;
 
 /**
@@ -20,8 +21,9 @@ import org.jvnet.hudson.test.Issue;
  *
  * @author Mark Waite
  */
-@RunWith(Parameterized.class)
-public class GitChangeSetTimestampTest {
+@ParameterizedClass(name = "{0}")
+@MethodSource("createSampleChangeSets")
+class GitChangeSetTimestampTest {
 
     private final String normalizedTimestamp;
     private final long millisecondsSinceEpoch;
@@ -34,8 +36,7 @@ public class GitChangeSetTimestampTest {
         changeSet = genChangeSet(timestamp);
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection createSampleChangeSets() {
+    static Collection createSampleChangeSets() {
         Object[][] samples = {
             /* git log dates from various time zones, months, & days */
             {"2015-10-06 19:29:47 +0300", null, 1444148987000L},
@@ -68,13 +69,13 @@ public class GitChangeSetTimestampTest {
     }
 
     @Test
-    public void testChangeSetDate() {
+    void testChangeSetDate() {
         assertThat(changeSet.getDate(), is(normalizedTimestamp));
     }
 
     @Test
     @Issue("JENKINS-30073")
-    public void testChangeSetTimeStamp() {
+    void testChangeSetTimeStamp() {
         assertThat(changeSet.getTimestamp(), is(millisecondsSinceEpoch));
     }
 
