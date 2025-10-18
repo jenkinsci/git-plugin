@@ -14,6 +14,9 @@ public class GitSCMJCasCCompatibilityTest extends RoundTripAbstractTest {
         GitSCM.DescriptorImpl gitSCM = (GitSCM.DescriptorImpl) restartableJenkinsRule.j.jenkins.getScm(GitSCM.class.getSimpleName());
         assertEquals("user_name", gitSCM.getGlobalConfigName());
         assertEquals("me@mail.com", gitSCM.getGlobalConfigEmail());
+        assertEquals("Global URL RegEx not configured correctly",
+                "(.*github.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)",
+                gitSCM.getGlobalUrlRegEx());
         assertTrue("Allow second fetch setting not honored", gitSCM.isAllowSecondFetch());
         assertTrue("Show entire commit summary setting not honored", gitSCM.isShowEntireCommitSummaryInChanges());
         assertTrue("Hide credentials setting not honored", gitSCM.isHideCredentials());
