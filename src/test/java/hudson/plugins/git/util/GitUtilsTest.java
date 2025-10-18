@@ -98,7 +98,7 @@ public class GitUtilsTest {
     private GitUtils gitUtils;
     private static GitClient gitClient;
 
-    private static final Random RANDOM = new Random();
+    private static final Random random = new Random();
 
     @BeforeClass
     public static void createSampleOriginRepo() throws Exception {
@@ -121,14 +121,14 @@ public class GitUtilsTest {
         priorBranchSpecList.add(new BranchSpec(OLDER_BRANCH_NAME));
 
         originRepo.git("checkout", "master");
-        originRepo.write(fileName, "This is the " + HEAD_TAG_NAME_0 + " README file " + RANDOM.nextInt());
+        originRepo.write(fileName, "This is the " + HEAD_TAG_NAME_0 + " README file " + random.nextInt());
         originRepo.git("add", fileName);
         originRepo.git("commit", "-m", "Adding " + fileName + " tagged " + HEAD_TAG_NAME_0, fileName);
         originRepo.git("tag", HEAD_TAG_NAME_0);
         headTag0Id = ObjectId.fromString(originRepo.head());
         headTag0Revision = new Revision(headTag0Id);
 
-        originRepo.write(fileName, "This is the README file " + RANDOM.nextInt());
+        originRepo.write(fileName, "This is the README file " + random.nextInt());
         originRepo.git("add", fileName);
         originRepo.git("commit", "-m", "Adding " + fileName, fileName);
         originRepo.git("tag", HEAD_TAG_NAME_1);
