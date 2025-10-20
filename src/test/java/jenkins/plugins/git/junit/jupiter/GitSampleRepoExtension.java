@@ -36,11 +36,14 @@ public class GitSampleRepoExtension implements ParameterResolver, AfterEachCallb
 
     @Override
     public GitSampleRepoRule resolveParameter(@NonNull ParameterContext parameterContext, @NonNull ExtensionContext context) {
-        var rule = context.getStore(NAMESPACE).computeIfAbsent(KEY + counter++, key -> new GitSampleRepoRule(), GitSampleRepoRule.class);
-        try {
-            rule.before();
-        } catch (Throwable t) {
-            throw new ParameterResolutionException(t.getMessage(), t);
+        // TODO: Replace with non-deprecated method once consumers upgraded to JUnit 6.x
+        var rule = context.getStore(NAMESPACE).getOrComputeIfAbsent(KEY + counter++, key -> new GitSampleRepoRule(), GitSampleRepoRule.class);
+        if (rule != null) {
+            try {
+                rule.before();
+            } catch (Throwable t) {
+                throw new ParameterResolutionException(t.getMessage(), t);
+            }
         }
         return rule;
     }
