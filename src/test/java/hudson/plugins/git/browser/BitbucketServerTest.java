@@ -29,6 +29,10 @@ public class BitbucketServerTest {
     private static final String BITBUCKET_URL = "http://bitbucket-server:7990/USER/REPO";
     private final BitbucketServer bitbucketServer = new BitbucketServer(BITBUCKET_URL);
 
+    private final String path1StrEncoded = "src%2Fmain%2Fjava%2Fhudson%2Fplugins%2Fgit%2Fbrowser%2FGithubWeb.java";
+    private final String path1StrEncodedPath = "src%252Fmain%252Fjava%252Fhudson%252Fplugins%252Fgit%252Fbrowser%252FGithubWeb.java";
+    private final String path2StrEncoded = "src%2Ftest%2Fjava%2Fhudson%2Fplugins%2Fgit%2Fbrowser%2FGithubWebTest.java";
+
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(bitbucketServer.getUrl()), BITBUCKET_URL + "/");
@@ -51,11 +55,11 @@ public class BitbucketServerTest {
         final String path1Str = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
         final Path path1 = pathMap.get(path1Str);
 
-        assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#" + path1Str, bitbucketServer.getDiffLink(path1).toString());
-
+        assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#" + path1StrEncoded, bitbucketServer.getDiffLink(path1).toString());
+        
         final String path2Str = "src/test/java/hudson/plugins/git/browser/GithubWebTest.java";
         final Path path2 = pathMap.get(path2Str);
-        assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#" + path2Str, bitbucketServer.getDiffLink(path2).toString());
+        assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#" + path2StrEncoded, bitbucketServer.getDiffLink(path2).toString());
         final String path3Str = "src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file";
         final Path path3 = pathMap.get(path3Str);
         assertNull("Do not return a diff link for added files.", bitbucketServer.getDiffLink(path3));
@@ -66,7 +70,7 @@ public class BitbucketServerTest {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = bitbucketServer.getFileLink(path);
-        assertEquals(BITBUCKET_URL + "/browse/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
+        assertEquals(BITBUCKET_URL + "/browse/" + path1StrEncodedPath, String.valueOf(fileLink));
     }
 
     @Test
