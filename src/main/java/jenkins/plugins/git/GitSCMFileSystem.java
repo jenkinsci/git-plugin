@@ -381,6 +381,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                                 GitClient.CREDENTIALS_MATCHER
                             )
                         );
+                    if (_build != null && credential != null && credential.forRun(_build) instanceof StandardCredentials standardCredential) {
+                        credential = standardCredential;
+                    }
                     client.addDefaultCredentials(credential);
                     CredentialsProvider.track(owner, credential);
                 }
