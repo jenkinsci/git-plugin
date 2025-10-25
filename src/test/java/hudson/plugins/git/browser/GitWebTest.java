@@ -5,6 +5,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -16,34 +18,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class GitWebTest {
+class GitWebTest {
 
     private static final String GITWEB_URL = "https://SERVER/gitweb?repo.git";
     private final GitWeb gitwebWeb = new GitWeb(GITWEB_URL);
 
     @Test
-    public void testGetUrl() throws IOException {
-        assertEquals(String.valueOf(gitwebWeb.getUrl()), GITWEB_URL);
+    void testGetUrl() throws IOException {
+        assertEquals(GITWEB_URL, String.valueOf(gitwebWeb.getUrl()));
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = gitwebWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITWEB_URL + "&a=commit&h=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(GITWEB_URL + "&a=blobdiff&f=src/main/java/hudson/plugins/git/browser/GithubWeb.java&fp=src/main/java/hudson/plugins/git/browser/GithubWeb.java&h=3f28ad75f5ecd5e0ea9659362e2eef18951bd451&hp=2e0756cd853dccac638486d6aab0e74bc2ef4041&hb=396fc230a3db05c427737aa5c2eb7856ba72b05d&hpb=f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff", gitwebWeb.getDiffLink(modified1).toString());
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = gitwebWeb.getFileLink(path);
@@ -51,7 +52,7 @@ public class GitWebTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = gitwebWeb.getFileLink(path);

@@ -7,10 +7,10 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
 /**
@@ -19,13 +19,10 @@ import org.jvnet.hudson.test.Issue;
  *
  * @author Mark Waite
  */
-public class PruneStaleBranchTraitTest {
-
-    public PruneStaleBranchTraitTest() {
-    }
+class PruneStaleBranchTraitTest {
 
     @Test
-    public void testDecorateContextWithGitSCMSourceContent() {
+    void testDecorateContextWithGitSCMSourceContent() {
         GitSCMSourceContext context = new GitSCMSourceContext(null, null);
         assertThat(context.pruneRefs(), is(false));
         PruneStaleBranchTrait pruneStaleBranchTrait = new PruneStaleBranchTrait();
@@ -35,7 +32,7 @@ public class PruneStaleBranchTraitTest {
 
     @Test
     @Issue("JENKINS-57683")
-    public void testDecorateContextWithNonGitSCMSourceContent() {
+    void testDecorateContextWithNonGitSCMSourceContent() {
         SCMSourceContext context = new FakeSCMSourceContext(null, null);
         PruneStaleBranchTrait pruneStaleBranchTrait = new PruneStaleBranchTrait();
         pruneStaleBranchTrait.decorateContext(context);

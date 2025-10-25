@@ -5,6 +5,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -16,32 +18,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RhodeCodeTest {
+class RhodeCodeTest {
 
     private static final String RHODECODE_URL = "https://SERVER/r/PROJECT";
     private final RhodeCode rhodecode = new RhodeCode(RHODECODE_URL);
 
     @Test
-    public void testGetUrl() throws IOException {
-        assertEquals(String.valueOf(rhodecode.getUrl()), RHODECODE_URL  + "/");
+    void testGetUrl() throws IOException {
+        assertEquals(RHODECODE_URL  + "/", String.valueOf(rhodecode.getUrl()));
     }
 
     @Test
-    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
-        assertEquals(String.valueOf(new RhodeCode(RHODECODE_URL + "/").getUrl()), RHODECODE_URL  + "/");
+    void testGetUrlForRepoWithTrailingSlash() throws IOException {
+        assertEquals(RHODECODE_URL  + "/", String.valueOf(new RhodeCode(RHODECODE_URL + "/").getUrl()));
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = rhodecode.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(RHODECODE_URL + "/changeset/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(RHODECODE_URL + "/diff/src/main/java/hudson/plugins/git/browser/GithubWeb.java?diff2=f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff&diff1=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff=diff+to+revision", rhodecode.getDiffLink(modified1).toString());
@@ -51,7 +52,7 @@ public class RhodeCodeTest {
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = rhodecode.getFileLink(path);
@@ -59,7 +60,7 @@ public class RhodeCodeTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = rhodecode.getFileLink(path);

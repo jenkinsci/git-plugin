@@ -3,9 +3,10 @@ package hudson.plugins.git;
 import hudson.model.User;
 import hudson.tasks.Mailer;
 import hudson.tasks.Mailer.UserProperty;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.MockedStatic;
 import org.springframework.security.authentication.DisabledException;
 
@@ -15,21 +16,24 @@ import java.util.Random;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
-public class GitChangeSetTest {
+@WithJenkins
+class GitChangeSetTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
 
     private final Random random = new Random();
 
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        r = rule;
+    }
+
     @Test
-    public void testFindOrCreateUser() {
+    void testFindOrCreateUser() {
         final GitChangeSet committerCS = GitChangeSetUtil.genChangeSet(false, false);
         final String email = "jauthor@nospam.com";
         final boolean createAccountBasedOnEmail = true;
@@ -50,7 +54,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserNullAuthorEmail() {
+    void testFindOrCreateUserNullAuthorEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = true;
         final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
@@ -61,7 +65,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserEmptyAuthorEmail() {
+    void testFindOrCreateUserEmptyAuthorEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = true;
         final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
@@ -72,7 +76,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserEmptyAuthorEmailDoNotCreateAccountBasedOnEmail() {
+    void testFindOrCreateUserEmptyAuthorEmailDoNotCreateAccountBasedOnEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = false;
         final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
@@ -83,7 +87,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserEmptyAuthorDoNotCreateAccountBasedOnEmail() {
+    void testFindOrCreateUserEmptyAuthorDoNotCreateAccountBasedOnEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = false;
         final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
@@ -94,7 +98,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserBadAuthorEmailDoNotCreateAccountBasedOnEmail() {
+    void testFindOrCreateUserBadAuthorEmailDoNotCreateAccountBasedOnEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = false;
         final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
@@ -105,7 +109,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserOKAuthorEmailDoNotCreateAccountBasedOnEmail() {
+    void testFindOrCreateUserOKAuthorEmailDoNotCreateAccountBasedOnEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = false;
         final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
@@ -116,7 +120,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserBlankAuthorEmail() {
+    void testFindOrCreateUserBlankAuthorEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = true;
         final boolean useExistingAccountBasedOnEmail = false;
@@ -127,7 +131,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserBlankAuthorEmailUseExistingAccountBasedOnEmail() {
+    void testFindOrCreateUserBlankAuthorEmailUseExistingAccountBasedOnEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = true;
         final boolean useExistingAccountBasedOnEmail = true;
@@ -138,7 +142,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserValidAuthorEmailUseExistingAccountBasedOnEmail() {
+    void testFindOrCreateUserValidAuthorEmailUseExistingAccountBasedOnEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = true;
         final boolean useExistingAccountBasedOnEmail = true;
@@ -149,7 +153,7 @@ public class GitChangeSetTest {
     }
 
     @Test
-    public void testFindOrCreateUserUseExistingAuthorEmailUseExistingAccountBasedOnEmail() {
+    void testFindOrCreateUserUseExistingAuthorEmailUseExistingAccountBasedOnEmail() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = true;
         final boolean useExistingAccountBasedOnEmail = true;
@@ -162,8 +166,8 @@ public class GitChangeSetTest {
         assertThat(existing, is(user));
     }
 
-	@Test
-	public void testFindOrCreateUserHandlesAuthenticationException() {
+    @Test
+    void testFindOrCreateUserHandlesAuthenticationException() {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         // TODO this only test one code path, there are several code paths using User.get()
         final boolean createAccountBasedOnEmail = false;
@@ -189,9 +193,10 @@ public class GitChangeSetTest {
         }
 	}
 
+    // Test deprecated User.get()
     @Test
-    @Deprecated // Test deprecated User.get()
-    public void testFindOrCreateUserBasedOnExistingUsersEmail() throws IOException {
+    @Deprecated
+    void testFindOrCreateUserBasedOnExistingUsersEmail() throws IOException {
         final GitChangeSet committerCS = GitChangeSetUtil.genChangeSet(true, false);
         final String existingUserId = "An existing user";
         final String existingUserFullName = "Some FullName";
@@ -208,8 +213,8 @@ public class GitChangeSetTest {
 
         User user = committerCS.findOrCreateUser(GitChangeSetUtil.COMMITTER_NAME, email, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
         assertNotNull(user);
-        assertEquals(user.getId(), existingUserId);
-        assertEquals(user.getFullName(), existingUserFullName);
+        assertEquals(existingUserId, user.getId());
+        assertEquals(existingUserFullName, user.getFullName());
 
         UserProperty property = user.getProperty(Mailer.UserProperty.class);
         assertNotNull(property);
@@ -222,9 +227,10 @@ public class GitChangeSetTest {
         assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, email, true, useExistingAccountBasedOnEmail));
     }
 
+    // Testing deprecated User.get
     @Test
-    @Deprecated // Testing deprecated User.get
-    public void findOrCreateByFullName() throws Exception {
+    @Deprecated
+    void findOrCreateByFullName() throws Exception {
         GitChangeSet cs = GitChangeSetUtil.genChangeSet(false, false);
         User user = User.get("john");
         user.setFullName(GitChangeSetUtil.COMMITTER_NAME);

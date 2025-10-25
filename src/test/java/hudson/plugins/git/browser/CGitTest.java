@@ -2,33 +2,36 @@ package hudson.plugins.git.browser;
 
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
+import org.junit.jupiter.api.Test;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(Parameterized.class)
-public class CGitTest {
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
+@ParameterizedClass(name = "{0}")
+@MethodSource("permuteAuthorName")
+class CGitTest {
 
     private final String repoUrl = "http://cgit.example.com/";
 
     private final boolean useAuthorName;
     private final GitChangeSetSample sample;
 
-    public CGitTest(String useAuthorName) {
-        this.useAuthorName = Boolean.valueOf(useAuthorName);
+    public CGitTest(boolean useAuthorName) {
+        this.useAuthorName = useAuthorName;
         sample = new GitChangeSetSample(this.useAuthorName);
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection permuteAuthorName() {
+    static Collection permuteAuthorName() {
         List<Object[]> values = new ArrayList<>();
-        String[] allowed = {"true", "false"};
-        for (String authorName : allowed) {
+        boolean[] allowed = {true, false};
+        for (boolean authorName : allowed) {
             Object[] combination = {authorName};
             values.add(combination);
         }
@@ -36,13 +39,13 @@ public class CGitTest {
     }
 
     @Test
-    public void testGetChangeSetLink() throws Exception {
+    void testGetChangeSetLink() throws Exception {
         URL result = (new CGit(repoUrl)).getChangeSetLink(sample.changeSet);
         assertEquals(new URL(repoUrl + "commit/?id=" + sample.id), result);
     }
 
     @Test
-    public void testGetDiffLink() throws Exception {
+    void testGetDiffLink() throws Exception {
         CGit cgit = new CGit(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = cgit.getDiffLink(path);
@@ -57,12 +60,12 @@ public class CGitTest {
                 fail("Unexpected edit type " + editType.getName());
             }
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
-            assertEquals(msg, expectedDiffLink, diffLink);
+            assertEquals(expectedDiffLink, diffLink, msg);
         }
     }
 
     @Test
-    public void testGetFileLink() throws Exception {
+    void testGetFileLink() throws Exception {
         CGit cgit = new CGit(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL fileLink = cgit.getFileLink(path);
@@ -76,7 +79,7 @@ public class CGitTest {
                 fail("Unexpected edit type " + editType.getName());
             }
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
-            assertEquals(msg, expectedFileLink, fileLink);
+            assertEquals(expectedFileLink, fileLink, msg);
         }
     }
 

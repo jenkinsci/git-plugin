@@ -9,6 +9,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -19,34 +21,34 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  */
-public class BitbucketServerTest {
+class BitbucketServerTest {
 
     private static final String BITBUCKET_URL = "http://bitbucket-server:7990/USER/REPO";
     private final BitbucketServer bitbucketServer = new BitbucketServer(BITBUCKET_URL);
 
     @Test
-    public void testGetUrl() throws IOException {
-        assertEquals(String.valueOf(bitbucketServer.getUrl()), BITBUCKET_URL + "/");
+    void testGetUrl() throws IOException {
+        assertEquals(BITBUCKET_URL + "/", String.valueOf(bitbucketServer.getUrl()));
     }
 
     @Test
-    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
-        assertEquals(String.valueOf(new BitbucketServer(BITBUCKET_URL + "/").getUrl()), BITBUCKET_URL + "/");
+    void testGetUrlForRepoWithTrailingSlash() throws IOException {
+        assertEquals(BITBUCKET_URL + "/", String.valueOf(new BitbucketServer(BITBUCKET_URL + "/").getUrl()));
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = bitbucketServer.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final String path1Str = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
         final Path path1 = pathMap.get(path1Str);
@@ -58,11 +60,11 @@ public class BitbucketServerTest {
         assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#" + path2Str, bitbucketServer.getDiffLink(path2).toString());
         final String path3Str = "src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file";
         final Path path3 = pathMap.get(path3Str);
-        assertNull("Do not return a diff link for added files.", bitbucketServer.getDiffLink(path3));
+        assertNull(bitbucketServer.getDiffLink(path3), "Do not return a diff link for added files.");
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = bitbucketServer.getFileLink(path);
@@ -70,7 +72,7 @@ public class BitbucketServerTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = bitbucketServer.getFileLink(path);
