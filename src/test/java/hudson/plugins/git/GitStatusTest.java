@@ -17,9 +17,7 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
 import java.io.File;
 import java.io.PrintWriter;
-import java.net.URISyntaxException;
 import java.util.*;
-import org.eclipse.jgit.transport.URIish;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.kohsuke.stapler.HttpResponses;
@@ -606,4 +604,20 @@ public class GitStatusTest extends AbstractGitProject {
         assertNotNull(lastBuild);
         assertEquals(lastBuild.getNumber(), 1);
     }
+
+    @Test
+    public void testDoNotifyCommitWithSshAzureDevopsPath() throws Exception { /* No parameters */
+        this.repoURL = "git@ssh.dev.azure.com:v3/myorg/PROJECT/reponame";
+        FreeStyleProject project = setupNotifyProject();
+        final String differingUrl = "https://myorg@dev.azure.com/myorg/PROJECT/_git/reponame";
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, differingUrl, branch, sha1, notifyCommitApiToken);
+        assertEquals("URL: " + differingUrl
+                + " SHA1: " + sha1
+                + " Branches: " + branch, this.gitStatus.toString());
+
+        r.waitUntilNoActivity();
+        FreeStyleBuild lastBuild = project.getLastBuild();
+        assertNotNull(lastBuild);
+    }
+
 }
