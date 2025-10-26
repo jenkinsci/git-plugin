@@ -7,6 +7,7 @@ import hudson.model.Action;
 import hudson.model.Api;
 import hudson.model.Run;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 
@@ -28,10 +29,13 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import static hudson.Util.fixNull;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Captures the Git related information for a build.
@@ -295,6 +299,88 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     public boolean hasBeenReferenced(String remoteUrl) {
         return remoteUrls.contains(remoteUrl);
+    }
+
+    protected GitSCM.DescriptorImpl getDescriptorImpl(){
+        return new GitSCM.DescriptorImpl();
+    }
+    /**
+     * Extracts the repository name from a given Git remote URL.
+     * This method uses a global regular expression defined in the Jenkins Git plugin
+     * configuration (GitSCM.DescriptorImpl). If the global regex is not defined or empty,
+     * it defaults to the plugin's default regular expression. The method checks if the regex
+     * pattern contains a named capturing group 'repo' and attempts to extract it.
+     *
+     * @param remoteUrl The Git remote URL to parse.
+     * @return The repository name if matched and extracted successfully; otherwise, null.
+     */
+    public String getRepoName(String remoteUrl) throws MalformedURLException {
+       GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
+       String globalRegex = descriptor.getGlobalUrlRegEx();
+
+       if (globalRegex == null || globalRegex.isEmpty()) {
+           globalRegex = descriptor.getDefaultGlobalUrlRegEx();
+       }
+       String[] regexps = globalRegex.split("&&&");
+       for (String regex : regexps) {
+           Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(remoteUrl);
+
+        if (matcher.matches()) {
+            if (regex.contains("(?<repo>")) { // Check if regex contains the 'repo' named group
+                try {
+                    return matcher.group("repo");
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                    // Return null if there is an error extracting the 'repo' group
+                    return null;
+                }
+            } else {
+                // Return null if regex does not contain the 'repo' named group
+                return null;
+            }
+        }
+       }
+       // Return null if no matching repository name is found in the URL
+       return null;
+    }
+    /**
+     * Extracts the repository name from a given Git remote URL.
+     * This method uses a global regular expression defined in the Jenkins Git plugin
+     * configuration (GitSCM.DescriptorImpl). If the global regex is not defined or empty,
+     * it defaults to the plugin's default regular expression. The method checks if the regex
+     * pattern contains a named capturing group 'repo' and attempts to extract it.
+     *
+     * @param remoteUrl The Git remote URL to parse.
+     * @return The repository name if matched and extracted successfully; otherwise, null.
+     */
+    public String getOrganizationName(String remoteUrl) {
+        GitSCM.DescriptorImpl descriptor = getDescriptorImpl();
+        String globalRegex = descriptor.getGlobalUrlRegEx();
+        if (globalRegex == null || globalRegex.isEmpty()) {
+            globalRegex = descriptor.getDefaultGlobalUrlRegEx();
+        }
+        String[] regexps = globalRegex.split("&&&");
+        for (String regex : regexps) {
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(remoteUrl);
+
+            if (matcher.matches()) {
+                // Check if the pattern includes the 'org' group
+                if (regex.contains("(?<org>")) {
+                    try {
+                        return matcher.group("org");
+                    } catch (IllegalArgumentException | IllegalStateException e) {
+                        // Return null if there is an error extracting the 'org' group
+                        return null;
+                    }
+                } else {
+                    // Return null if regex does not contain the 'org' named group
+                    return null;
+                }
+            }
+        }
+        // Return null if no matching org name is found in the URL
+        return null;
     }
 
     @Override

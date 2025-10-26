@@ -8,3 +8,4 @@ unclassified:
     addGitTagAction: true
     showEntireCommitSummaryInChanges: true
     useExistingAccountWithSameEmail: false
+    globalUrlRegEx: "(.*github.*?[/:](?<org>[^/]+)/(?<repo>[^/]+?)(?:\\.git)?$)"
