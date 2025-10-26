@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -25,15 +26,18 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 
-@RunWith(Parameterized.class)
-public class GitChangeSetPluginHistoryTest {
+@ParameterizedClass(name = "{2}-{1}")
+@MethodSource("generateData")
+@WithGitSampleRepo
+class GitChangeSetPluginHistoryTest {
 
     private static final long FIRST_COMMIT_TIMESTAMP = 1198029565000L;
     private static final long NOW = System.currentTimeMillis();
@@ -42,8 +46,7 @@ public class GitChangeSetPluginHistoryTest {
 
     private final GitChangeSet changeSet;
 
-    @ClassRule
-    public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    private static GitSampleRepoRule sampleRepo;
 
     public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, String sha1String) throws Exception {
         this.sha1 = ObjectId.fromString(sha1String);
@@ -51,6 +54,11 @@ public class GitChangeSetPluginHistoryTest {
         git.changelog().includes(sha1).max(1).to(stringWriter).execute();
         List<String> changeLogStrings = new ArrayList<>(Arrays.asList(stringWriter.toString().split("\n")));
         changeSet = new GitChangeSet(changeLogStrings, authorOrCommitter);
+    }
+
+    @BeforeAll
+    static void beforeAll(GitSampleRepoRule repo) {
+        sampleRepo = repo;
     }
 
     /**
@@ -74,8 +82,7 @@ public class GitChangeSetPluginHistoryTest {
         return nonMergeChanges;
     }
 
-    @Parameterized.Parameters(name = "{2}-{1}")
-    public static Collection<Object[]> generateData() throws Exception {
+    static Collection<Object[]> generateData() throws Exception {
         List<Object[]> args = new ArrayList<>();
         String[] implementations = new String[]{"git", "jgit"};
         boolean[] choices = {true, false};
@@ -99,7 +106,7 @@ public class GitChangeSetPluginHistoryTest {
     }
 
     @Test
-    public void timestampInRange() {
+    void timestampInRange() {
         long timestamp = changeSet.getTimestamp();
         assertThat(timestamp, is(greaterThanOrEqualTo(FIRST_COMMIT_TIMESTAMP)));
         assertThat(timestamp, is(lessThan(NOW)));

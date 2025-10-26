@@ -1,20 +1,20 @@
 package hudson.plugins.git;
 
 import hudson.util.FormValidation;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class UserRemoteConfigRefSpecTest {
+class UserRemoteConfigRefSpecTest {
 
     @Issue("JENKINS-57660")
     @Test
-    public void testdoCheckRefspecSuccessWithoutWildcards(){
+    void testdoCheckRefspecSuccessWithoutWildcards(){
         String url = "git://git.example.com/repository-that-does-not-exist";
         String name = "origin";
         List<String> refSpec = new ArrayList<>();
@@ -31,7 +31,7 @@ public class UserRemoteConfigRefSpecTest {
 
     @Issue("JENKINS-57660")
     @Test
-    public void testdoCheckRefspecSuccessWithMatchedWildCards(){
+    void testdoCheckRefspecSuccessWithMatchedWildCards(){
         String url = "git://git.example.com/repository-that-does-not-exist";
         String name = "origin";
         List<String> refSpec = new ArrayList<>();
@@ -46,7 +46,7 @@ public class UserRemoteConfigRefSpecTest {
 
     @Issue("JENKINS-57660")
     @Test
-    public void testdoCheckRefspecFailureWithUnMatchedWildCards(){
+    void testdoCheckRefspecFailureWithUnMatchedWildCards(){
         String url = "git://git.example.com/repository-that-does-not-exist";
         String name = "origin";
         List<String> refSpec = new ArrayList<>();
@@ -62,7 +62,7 @@ public class UserRemoteConfigRefSpecTest {
 
     @Issue("JENKINS-57660")
     @Test
-    public void testdoCheckRefspecSuccessWithEmptyString(){
+    void testdoCheckRefspecSuccessWithEmptyString(){
         String url = "git://git.example.com/repository-that-does-not-exist";
         String name = "origin";
         List<String> refSpec = new ArrayList<>();
@@ -77,7 +77,7 @@ public class UserRemoteConfigRefSpecTest {
 
     @Issue("JENKINS-57660")
     @Test
-    public void testdoCheckRefspecSuccessWithPartialGlobs(){
+    void testdoCheckRefspecSuccessWithPartialGlobs(){
         String url = "git://git.example.com/repository-that-does-not-exist";
         String name = "origin";
         List<String> refSpec = new ArrayList<>();
@@ -91,7 +91,7 @@ public class UserRemoteConfigRefSpecTest {
 
     @Issue("JENKINS-57660")
     @Test
-    public void testdoCheckRefspecSuccessWithEnvironmentVariable(){
+    void testdoCheckRefspecSuccessWithEnvironmentVariable(){
         String url = "git://git.example.com/repository-that-does-not-exist";
         String name = "origin";
         List<String> refSpec = new ArrayList<>();

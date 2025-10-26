@@ -3,14 +3,18 @@ package hudson.plugins.git;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
-public class GitChangeSetEuroTest {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
+@ParameterizedClass(name = "{0}")
+@MethodSource("permuteAuthorNameAndLegacyLayout")
+class GitChangeSetEuroTest {
 
     private final String id = "1567861636cd854f4dd6fa40bf94c0c657681dd5";
     private final String parent = "e74a24e995305bd67a180f0ebc57927e2b8783ce";
@@ -23,23 +27,22 @@ public class GitChangeSetEuroTest {
     private GitChangeSet changeSet = null;
     private final boolean useAuthorName;
 
-    public GitChangeSetEuroTest(String useAuthorName) {
-        this.useAuthorName = Boolean.valueOf(useAuthorName);
+    public GitChangeSetEuroTest(boolean useAuthorName) {
+        this.useAuthorName = useAuthorName;
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection permuteAuthorNameAndLegacyLayout() {
+    static Collection permuteAuthorNameAndLegacyLayout() {
         List<Object[]> values = new ArrayList<>();
-        String[] allowed = {"true", "false"};
-        for (String authorName : allowed) {
+        boolean[] allowed = {true, false};
+        for (boolean authorName : allowed) {
             Object[] combination = {authorName};
             values.add(combination);
         }
         return values;
     }
 
-    @Before
-    public void createEuroChangeSet() {
+    @BeforeEach
+    void beforeEach() {
         ArrayList<String> gitChangeLog = new ArrayList<>();
         gitChangeLog.add("commit " + id);
         gitChangeLog.add("tree 66236cf9a1ac0c589172b450ed01f019a5697c49");
@@ -64,83 +67,83 @@ public class GitChangeSetEuroTest {
     }
 
     @Test
-    public void testGetCommitId() {
+    void testGetCommitId() {
         assertEquals(id, changeSet.getCommitId());
     }
 
     @Test
-    public void testSetParent() {
+    void testSetParent() {
         changeSet.setParent(null);
         assertNull(changeSet.getParent());
     }
 
     @Test
-    public void testGetParentCommit() {
+    void testGetParentCommit() {
         assertEquals(parent, changeSet.getParentCommit());
     }
 
     @Test
-    public void testGetAffectedPaths() {
+    void testGetAffectedPaths() {
         assertTrue(changeSet.getAffectedPaths().isEmpty());
     }
 
     @Test
-    public void testGetPaths() {
+    void testGetPaths() {
         assertTrue(changeSet.getPaths().isEmpty());
     }
 
     @Test
-    public void testGetAffectedFiles() {
+    void testGetAffectedFiles() {
         assertTrue(changeSet.getAffectedFiles().isEmpty());
     }
 
     @Test
-    public void testGetAuthorName() {
+    void testGetAuthorName() {
         assertEquals(useAuthorName ? authorName : committerName, changeSet.getAuthorName());
     }
 
     @Test
-    public void testGetMsg() {
+    void testGetMsg() {
         assertEquals(msg, changeSet.getMsg());
     }
 
     @Test
-    public void testGetId() {
+    void testGetId() {
         assertEquals(id, changeSet.getId());
     }
 
     @Test
-    public void testGetRevision() {
+    void testGetRevision() {
         assertEquals(id, changeSet.getRevision());
     }
 
     @Test
-    public void testGetComment() {
+    void testGetComment() {
         assertTrue(changeSet.getComment().startsWith(commentStartText));
     }
 
     @Test
-    public void testGetBranch() {
+    void testGetBranch() {
         assertNull(changeSet.getBranch());
     }
 
     @Test
-    public void testGetDate() {
+    void testGetDate() {
         assertEquals(useAuthorName ? "2013-03-21T15:16:44+0100" : "2013-03-25T08:18:59-0400", changeSet.getDate());
     }
 
     @Test
-    public void testGetTimestamp() {
+    void testGetTimestamp() {
         assertEquals(useAuthorName ? 1363875404000L : 1364213939000L, changeSet.getTimestamp());
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         assertTrue(changeSet.hashCode() != 0);
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         assertEquals(changeSet, changeSet);
 
         assertEquals(GitChangeSetUtil.genChangeSet(false, false), GitChangeSetUtil.genChangeSet(false, false));

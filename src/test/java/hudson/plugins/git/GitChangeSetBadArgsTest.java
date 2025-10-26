@@ -4,16 +4,22 @@ import java.util.ArrayList;
 
 import hudson.model.User;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Rule;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class GitChangeSetBadArgsTest {
+@WithJenkins
+class GitChangeSetBadArgsTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        r = rule;
+    }
 
     private GitChangeSet createChangeSet(boolean authorOrCommitter, String name, String email) {
         String dataSource = authorOrCommitter ? "Author" : "Committer";
@@ -49,7 +55,7 @@ public class GitChangeSetBadArgsTest {
     private static final String DEGENERATE_EMAIL_ADDRESS = "@";
 
     @Test
-    public void testFindOrCreateUserAuthorBadEmail() {
+    void testFindOrCreateUserAuthorBadEmail() {
         String authorName = "Bad Author Test 1";
         GitChangeSet changeSet = createAuthorChangeSet(authorName, DEGENERATE_EMAIL_ADDRESS);
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser(authorName, DEGENERATE_EMAIL_ADDRESS, false, false));
@@ -58,7 +64,7 @@ public class GitChangeSetBadArgsTest {
     }
 
     @Test
-    public void testFindOrCreateUserCommitterBadEmail() {
+    void testFindOrCreateUserCommitterBadEmail() {
         String committerName = "Bad Committer Test 2";
         GitChangeSet changeSet = createCommitterChangeSet(committerName, DEGENERATE_EMAIL_ADDRESS);
         assertEquals(User.getUnknown(), changeSet.findOrCreateUser(committerName, DEGENERATE_EMAIL_ADDRESS, false, false));
@@ -67,7 +73,7 @@ public class GitChangeSetBadArgsTest {
     }
 
     @Test
-    public void testFindOrCreateUserEmptyAuthor() {
+    void testFindOrCreateUserEmptyAuthor() {
         String emptyAuthorName = "";
         String incompleteAuthorEmail = "@test3.example.com";
         GitChangeSet changeSet = createAuthorChangeSet(emptyAuthorName, incompleteAuthorEmail);
@@ -77,7 +83,7 @@ public class GitChangeSetBadArgsTest {
     }
 
     @Test
-    public void testFindOrCreateEmptyCommitter() {
+    void testFindOrCreateEmptyCommitter() {
         String emptyCommitterName = "";
         String incompleteCommitterEmail = "@test4.example.com";
         GitChangeSet changeSet = createCommitterChangeSet(emptyCommitterName, incompleteCommitterEmail);
@@ -87,7 +93,7 @@ public class GitChangeSetBadArgsTest {
     }
 
     @Test
-    public void testFindOrCreateUserEmptyAuthorEmail() {
+    void testFindOrCreateUserEmptyAuthorEmail() {
         String authorName = "Author Test 5";
         String emptyAuthorEmail = "";
         GitChangeSet changeSet = createAuthorChangeSet(authorName, emptyAuthorEmail);
@@ -96,7 +102,7 @@ public class GitChangeSetBadArgsTest {
     }
 
     @Test
-    public void testFindOrCreateUserNullAuthorEmail() {
+    void testFindOrCreateUserNullAuthorEmail() {
         String authorName = "Author Test 6";
         String emptyAuthorEmail = "";
         GitChangeSet changeSet = createAuthorChangeSet(authorName, emptyAuthorEmail);
@@ -105,7 +111,7 @@ public class GitChangeSetBadArgsTest {
     }
 
     @Test
-    public void testFindOrCreateUserEmptyCommitterEmail() {
+    void testFindOrCreateUserEmptyCommitterEmail() {
         String committerName = "Committer Test 7";
         String emptyCommitterEmail = "";
         GitChangeSet changeSet = createCommitterChangeSet(committerName, emptyCommitterEmail);
@@ -114,7 +120,7 @@ public class GitChangeSetBadArgsTest {
     }
 
     @Test
-    public void testFindOrCreateUserNullCommitterEmail() {
+    void testFindOrCreateUserNullCommitterEmail() {
         String committerName = "Committer Test 8";
         String emptyCommitterEmail = "";
         GitChangeSet changeSet = createCommitterChangeSet(committerName, emptyCommitterEmail);

@@ -27,9 +27,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Random;
 import jenkins.plugins.git.GitStep;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Test workflow snippet generation for the git step. Workflow snippets should not
@@ -37,16 +38,21 @@ import org.jvnet.hudson.test.JenkinsRule;
  *
  * @author Mark Waite
  */
-public class GitStepSnippetizerTest {
+@WithJenkins
+class GitStepSnippetizerTest {
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
     private final Random random = new Random();
     private final SnippetizerTester tester = new SnippetizerTester(r);
 
     private final String url = "https://github.com/jenkinsci/git-plugin.git";
     private final GitStep gitStep = new GitStep(url);
+
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
 
     /* Adding the default values to the step should not alter the output of the
      * round trip.
@@ -68,13 +74,13 @@ public class GitStepSnippetizerTest {
 
     /* Check that a minimal `git '..url..'` step is correctly parsed */
     @Test
-    public void gitSimplest() throws Exception {
+    void gitSimplest() throws Exception {
         addRandomDefaultValues(gitStep, "");
         tester.assertRoundTrip(gitStep, "git '" + url + "'");
     }
 
     @Test
-    public void gitCredentials() throws Exception {
+    void gitCredentials() throws Exception {
         String credentialsId = "my-credential";
         gitStep.setCredentialsId(credentialsId);
         addRandomDefaultValues(gitStep, "credentialsId");
@@ -82,7 +88,7 @@ public class GitStepSnippetizerTest {
     }
 
     @Test
-    public void gitBranch() throws Exception {
+    void gitBranch() throws Exception {
         String branch = "4.10.x";
         gitStep.setBranch(branch);
         addRandomDefaultValues(gitStep, "branch");
@@ -90,14 +96,14 @@ public class GitStepSnippetizerTest {
     }
 
     @Test
-    public void gitNoPoll() throws Exception {
+    void gitNoPoll() throws Exception {
         gitStep.setPoll(false);
         addRandomDefaultValues(gitStep, "poll");
         tester.assertRoundTrip(gitStep, "git poll: false, url: '" + url + "'");
     }
 
     @Test
-    public void gitNoChangelog() throws Exception {
+    void gitNoChangelog() throws Exception {
         gitStep.setChangelog(false);
         addRandomDefaultValues(gitStep, "changelog");
         tester.assertRoundTrip(gitStep, "git changelog: false, url: '" + url + "'");
