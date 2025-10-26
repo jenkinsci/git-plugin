@@ -1,0 +1,64 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:st="jelly:stapler"
+         xmlns:t="/lib/hudson">
+    <!--    <st:adjunct includes="io.jenkins.plugins.data-tables"/>-->
+    <l:layout norefresh="true" type="one-column" title="Git Plugin" permission="${app.ADMINISTER}">
+        <l:main-panel>
+            <div>
+                <h1>Maintenance Tasks</h1>
+                <p><b><u>Git Version</u>: </b>${it.getGitVersion()}</p>
+                <p style="color:red;">${it.updateGitVersionHelperText()}</p>
+                <p>Enter cron syntax to execute maintenance tasks periodically</p>
+                <f:form action="save" method="post" name="save">
+                <j:forEach var="task" items="${it.getMaintenanceTasks()}">
+                    <div name="${task.getTaskType()}">
+                        <f:entry title="${task.getTaskName()}" field="cronSyntax">
+                            <f:checkbox name="my.isApplied" checked="${task.getIsTaskConfigured()}"/>
+                            <f:textbox name="my.cronSyntax" default="${task.getCronSyntax()}" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
+                        </f:entry>
+                    </div>
+                </j:forEach>
+                    <button type="submit" class="jenkins-button">Save</button>
+                </f:form>
+
+                <j:if test="${it.getIsGitMaintenanceRunning() == 'false'}">
+                    <f:form method="post" action="executeMaintenanceTask" class="jenkins-!-margin-top-2" name="execute-maintenance-task">
+                            <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
+                    </f:form>
+                </j:if>
+                <j:if test="${it.getIsGitMaintenanceRunning() == 'true'}">
+                    <f:form method="post" action="terminateMaintenanceTask" class="jenkins-!-margin-top-2" name="terminate-maintenance-task">
+                            <button type="submit" class="jenkins-button jenkins-button--destructive">Terminate</button>
+                    </f:form>
+                </j:if>
+            </div>
+
+            <st:bind var="a" value="${it}"/>
+
+            <hr/>
+
+            <div>
+                <h1>Maintenance Records</h1>
+<!--            Importing Table from table.jelly file-->
+               <st:include page="table.jelly" it="${it}" optional="false" />
+            </div>
+            <script>
+
+                // To display notification after submitting data from form.
+                a.getNotification(function (t) {
+                    var notificationData = t.responseObject();
+                    if (notificationData['msg']) {
+                        if (notificationData.msg.length > 0) {
+                            var msg = notificationData['msg'];
+                            if (notificationData.type == "OK")
+                                notificationBar.show(msg, notificationBar.OK);
+                            else if (notificationData.type == "ERROR")
+                                notificationBar.show(msg, notificationBar.ERROR);
+                            a.setNotification("", "");
+                        }
+                    }
+                })
+            </script>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

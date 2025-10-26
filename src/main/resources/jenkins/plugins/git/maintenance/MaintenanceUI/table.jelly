@@ -1,0 +1,153 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core"  xmlns:st="jelly:stapler" xmlns:fa="/font-awesome">
+    <style>
+        .font-awesome-icon{
+            height:30px;
+            width: 30px;
+        }
+    </style>
+        <st:adjunct includes="io.jenkins.plugins.data-tables"/>
+
+                <div class="fluid-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped display" id="fixed">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>${%Cache Name}</th>
+                                    <th>${%Cache Size} (MB)</th>
+                                    <th>${%Task}</th>
+                                    <th>${%Time}</th>
+                                    <th>${%Status}</th>
+                                    <th>${%Execution Time} (mmm:ss:SSS)</th>
+                                    <th>Expand</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <j:forEach var="record" items="${it.getMaintenanceRecords()}" varStatus="loop">
+                                    <tr>
+                                        <td>
+                                            ${loop.count}
+                                        </td>
+                                        <td>
+                                            ${record.getRepoName()}
+                                        </td>
+                                        <td>
+<!--                                            Converting Bytes to MB-->
+                                            ${record.getRepoSize()/1000000}
+                                        </td>
+                                        <td>
+                                            ${record.getMaintenanceType()}
+                                        </td>
+                                        <td>
+                                            ${record.getTimeOfExecution()}
+                                        </td>
+                                        <td>
+                                            <j:if test="${record.getExecutionStatus()}">
+                                                <fa:svg-icon name="check" class="font-awesome-icon" ></fa:svg-icon>
+                                            </j:if>
+                                            <j:if test="${!record.getExecutionStatus()}">
+                                                <fa:svg-icon name="xmark" class="font-awesome-icon" ></fa:svg-icon>
+                                            </j:if>
+                                        </td>
+                                        <td>
+                                            ${record.getExecutionDuration()}
+                                        </td>
+                                        <td class="expand">
+                                            Expand
+                                        </td>
+                                    </tr>
+                                </j:forEach>
+                            </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th>#</th>
+                                    <th>${%Cache Name}</th>
+                                    <th>${%Cache Size} (MB)</th>
+                                    <th>${%Task}</th>
+                                    <th>${%Time}</th>
+                                    <th>${%Status}</th>
+                                    <th>${%Execution Time} (mmm:ss:SSS)</th>
+                                    <th>Expand</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+
+    <script>
+        function format(maintenanceRecords) {
+            let tableData = "";
+            let index = 1;
+            for(let record of maintenanceRecords){
+                row = '<tr>';
+                row+= '<td>' + index++ + '</td>>'
+
+                for(let key in record){
+                    row+= '<td>' + record[key] + '</td>'
+                }
+                row += '</tr>';
+                tableData += row;
+            }
+
+
+            return (
+                '<table cellpadding="5" cellspacing="10" border="0" style="padding-left:50px;" id="allCacheRecords">' +
+                '<thead><th>#</th><th>Task</th><th>Time</th><th>Status</th><th>Duration (ms)</th><th>RepoSize</th></thead>' +
+                        tableData +
+                '</table>'
+            );
+        }
+
+        jQuery(document).ready(function(){
+
+            var table = jQuery('#fixed').DataTable({
+                pagingType: 'numbers',// Page number button only,
+                columnDefs: [
+                { "type": "execution-time",targets:[6]}
+                ],
+            });
+
+            jQuery('#fixed').on('click','.expand',function(){
+                var tr = jQuery(this).closest('tr');
+                var row = table.row(tr);
+                if (row.child.isShown()) {
+                    // This row is already open - close it
+                    row.child.hide();
+                    tr.removeClass('shown');
+                } else {
+                    // Open this row
+                        a.getRecordsForSingleCache(row.data()[1],function (t){
+                        var allMaintenanceRecords = t.responseObject()['maintenanceData']; // fetches all records when clicking expand button.
+                        row.child(format(allMaintenanceRecords)).show();
+                        tr.addClass('shown');
+                     });
+                }
+            })
+
+        // Sorting execution time data in ascending order
+        jQuery().extend( jQuery().dataTable.ext.type.order, {
+        "execution-time-asc": function (val_1, val_2) {
+        // your sorting code here - or a call to a function
+            let time1 = Number.parseInt(val_1.split(":").join(""));
+            let time2 = Number.parseInt(val_2.split(":").join(""));
+            return time1 > time2 ? 1 : time1 === time2 ? 0 : -1;
+        }
+        } );
+
+        // Sorting execution time data in descending order
+        jQuery().extend( jQuery().dataTable.ext.type.order, {
+        "execution-time-desc": function (val_1, val_2) {
+        // your sorting code here - or a call to a function
+            let time1 = Number.parseInt(val_1.split(":").join(""));
+            let time2 = Number.parseInt(val_2.split(":").join(""));
+
+            return time1 > time2 ? -1 : time1 === time2 ? 0 : 1;
+        }
+        } );
+        });
+
+    </script>
+</j:jelly>
