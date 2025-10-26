@@ -56,7 +56,7 @@ public class BitbucketServerTest {
         final Path path1 = pathMap.get(path1Str);
 
         assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#" + path1StrEncoded, bitbucketServer.getDiffLink(path1).toString());
-        
+
         final String path2Str = "src/test/java/hudson/plugins/git/browser/GithubWebTest.java";
         final Path path2 = pathMap.get(path2Str);
         assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#" + path2StrEncoded, bitbucketServer.getDiffLink(path2).toString());
