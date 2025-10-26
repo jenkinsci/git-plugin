@@ -8,4 +8,7 @@
     <f:entry title="${%Git Tool Name}" field="gitToolName">
         <f:select />
     </f:entry>
+    <f:entry title="${%Hostname}" field="hostName">
+        <f:textbox/>
+    </f:entry>
 </j:jelly>

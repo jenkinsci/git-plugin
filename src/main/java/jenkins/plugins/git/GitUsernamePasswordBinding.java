@@ -37,17 +37,23 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     final static private String GIT_USERNAME_KEY = "GIT_USERNAME";
     final static private String GIT_PASSWORD_KEY = "GIT_PASSWORD";
     final private String gitToolName;
+    final private String hostName;
     private transient boolean unixNodeType;
 
     @DataBoundConstructor
-    public GitUsernamePasswordBinding(String gitToolName, String credentialsId) {
+    public GitUsernamePasswordBinding(String gitToolName, String credentialsId, String hostName) {
         super(credentialsId);
         this.gitToolName = gitToolName;
+        this.hostName = hostName;
         //Variables could be added if needed
     }
 
     public String getGitToolName(){
         return this.gitToolName;
+    }
+
+    public String getHostName(){
+        return this.hostName;
     }
 
     private void setUnixNodeType(boolean value) {
@@ -80,6 +86,15 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
                                                   this.unixNodeType);
             FilePath gitTempFile = gitScript.write(credentials, unbindTempDir.getDirPath());
             secretValues.put("GIT_ASKPASS", gitTempFile.getRemote());
+            if (this.hostName != null) {
+                GenerateGitStore gitStore = new GenerateGitStore(
+                                                            credentials.getUsername(),
+                                                            credentials.getPassword().getPlainText(),
+                                                            this.hostName,
+                                                            credentials.getId());
+                FilePath gitStoreTempFile = gitStore.write(credentials, unbindTempDir.getDirPath());
+                secretValues.put("GIT_CREDENTIAL_STORE", gitStoreTempFile.getRemote());
+            }
             return new MultiEnvironment(secretValues, publicValues, unbindTempDir.getUnbinder());
         } else {
             taskListener.getLogger().println("JGit and JGitApache type Git tools are not supported by this binding");
@@ -195,6 +210,36 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             }
             /* Ensure backslashes since cmd doesn't work with slashes as path separators */
             return "\"" + filename.replace("/", "\\") + "\"";
+        }
+    }
+
+    protected static final class GenerateGitStore extends AbstractOnDiskBinding<StandardUsernamePasswordCredentials> {
+
+        private final String userVariable;
+        private final String passVariable;
+        private final String hostVariable;
+
+        protected GenerateGitStore(String gitUsername, String gitPassword,
+                                   String hostname, String credentialId) {
+            super(gitUsername + ":" + gitPassword, credentialId);
+            this.userVariable = gitUsername;
+            this.passVariable = gitPassword;
+            this.hostVariable = hostname;
+        }
+
+        @Override
+        protected FilePath write(StandardUsernamePasswordCredentials credentials, FilePath workspace)
+                throws IOException, InterruptedException {
+            FilePath gitStore;
+            gitStore = workspace.createTempFile("git_store", "");
+            gitStore.write("https://" + this.userVariable + ":" + this.passVariable + "@" + this.hostVariable + "\n", null);
+            gitStore.chmod(0500);
+            return gitStore;
+        }
+
+        @Override
+        protected Class<StandardUsernamePasswordCredentials> type() {
+            return StandardUsernamePasswordCredentials.class;
         }
     }
 
