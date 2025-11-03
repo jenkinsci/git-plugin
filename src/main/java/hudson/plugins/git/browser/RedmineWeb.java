@@ -9,11 +9,11 @@ import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 
 /**
@@ -23,6 +23,7 @@ import java.net.URL;
  */
 public class RedmineWeb extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
@@ -93,9 +94,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
-        public RedmineWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+        public RedmineWeb newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(RedmineWeb.class, jsonObject);
         }
     }

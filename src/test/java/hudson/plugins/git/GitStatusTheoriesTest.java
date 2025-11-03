@@ -9,22 +9,20 @@ import java.io.File;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
+
+import static hudson.Functions.isWindows;
 import static org.mockito.Mockito.mock;
 
-import static org.junit.Assert.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.FromDataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-@RunWith(Theories.class)
-public class GitStatusTheoriesTest extends AbstractGitProject {
+class GitStatusTheoriesTest extends AbstractGitProject {
 
     private GitStatus gitStatus;
     private HttpServletRequest requestWithNoParameter;
@@ -34,8 +32,8 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
     private String sha1;
     private String notifyCommitApiToken;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         GitStatus.setAllowNotifyCommitParameters(false);
         GitStatus.setSafeParametersForTest(null);
         this.gitStatus = new GitStatus();
@@ -49,14 +47,14 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
         }
     }
 
-    @After
-    public void resetAllowNotifyCommitParameters() throws Exception {
+    @AfterEach
+    @Override
+    void afterEach() throws Exception {
+        super.afterEach();
+
         GitStatus.setAllowNotifyCommitParameters(false);
         GitStatus.setSafeParametersForTest(null);
-    }
 
-    @After
-    public void waitForAllJobsToComplete() throws Exception {
         // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
         if (r != null && r.jenkins != null) {
             r.jenkins.doQuietDown();
@@ -93,33 +91,37 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
         });
     }
 
-    @DataPoints("branchSpecPrefixes")
-    public static final String[] BRANCH_SPEC_PREFIXES = new String[] {
-            "",
-            "refs/remotes/",
-            "refs/heads/",
-            "origin/",
-            "remotes/origin/"
-    };
+    static String[] branchSpecPrefixes() {
+         return new String[]{
+                 "",
+                 "refs/remotes/",
+                 "refs/heads/",
+                 "origin/",
+                 "remotes/origin/"
+         };
+    }
 
-    @Theory
-    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+    @ParameterizedTest
+    @MethodSource("branchSpecPrefixes")
+    void testDoNotifyCommitBranchWithSlash(String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "feature/awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
         Mockito.verify(trigger).run();
     }
 
-    @Theory
-    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+    @ParameterizedTest
+    @MethodSource("branchSpecPrefixes")
+    void testDoNotifyCommitBranchWithoutSlash(String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null, notifyCommitApiToken);
 
         Mockito.verify(trigger).run();
     }
 
-    @Theory
-    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+    @ParameterizedTest
+    @MethodSource("branchSpecPrefixes")
+    void testDoNotifyCommitBranchByBranchRef(String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null, notifyCommitApiToken);
 
@@ -144,11 +146,4 @@ public class GitStatusTheoriesTest extends AbstractGitProject {
         if (trigger != null) project.addTrigger(trigger);
     }
 
-    /**
-     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
-     * remote classloader issue
-     */
-    private boolean isWindows() {
-        return File.pathSeparatorChar == ';';
-    }
 }

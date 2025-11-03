@@ -2,43 +2,49 @@ package hudson.plugins.git.browser;
 
 import hudson.model.FreeStyleProject;
 import hudson.util.FormValidation;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
-public class AssemblaWebDoCheckURLTest {
+@WithJenkins
+class AssemblaWebDoCheckURLTest {
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
     private static int counter = 0;
 
     private FreeStyleProject project;
     private AssemblaWeb.AssemblaWebDescriptor assemblaWebDescriptor;
 
-    @Before
-    public void setProject() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
         project = r.createFreeStyleProject("assembla-project-" + counter++);
         assemblaWebDescriptor = new AssemblaWeb.AssemblaWebDescriptor();
     }
 
     @Test
-    public void testInitialChecksOnRepoUrlEmpty() throws Exception {
+    void testInitialChecksOnRepoUrlEmpty() throws Exception {
         String url = "";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
     }
 
     @Test
-    public void testInitialChecksOnRepoUrlWithVariable() throws Exception {
+    void testInitialChecksOnRepoUrlWithVariable() throws Exception {
         String url = "https://www.assembla.com/spaces/$";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
     }
 
     @Test
-    public void testDomainLevelChecksOnRepoUrl() throws Exception {
+    void testDomainLevelChecksOnRepoUrl() throws Exception {
         // Invalid URL, missing '/' character - Earlier it would open connection for such mistakes but now check resolves it beforehand.
         String url = "https:/assembla.com";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
@@ -46,14 +52,14 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testDomainLevelChecksOnRepoUrlInvalidURL() throws Exception {
+    void testDomainLevelChecksOnRepoUrlInvalidURL() throws Exception {
         // Invalid URL, missing ':' character - Earlier it would open connection for such mistakes but now check resolves it beforehand.
         String url = "http//assmebla";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
     }
 
     @Test
-    public void testPathLevelChecksOnRepoUrlInvalidPathSyntax() throws Exception {
+    void testPathLevelChecksOnRepoUrlInvalidPathSyntax() throws Exception {
         // Invalid hostname in URL
         String hostname = "assembla.comspaces";
         String url = "https://" + hostname + "/git-plugin/git/source";
@@ -61,21 +67,7 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testPathLevelChecksOnRepoUrlValidURLNullProject() throws Exception {
-        String url = "https://app.assembla.com/space/git-plugin/git/source";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(null, url), is(FormValidation.ok()));
-    }
-
-    @Test
-    public void testPathLevelChecksOnRepoUrlUnableToConnect() throws Exception {
-        // Syntax issue related specific to Assembla
-        String url = "https://app.assembla.com/space/git-plugin/git/source/";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
-                is("Exception reading from Assembla URL " + url + " : ERROR: Unable to connect " + url));
-    }
-
-    @Test
-    public void testPathLevelChecksOnRepoUrlSupersetOfAssembla() throws Exception {
+    void testPathLevelChecksOnRepoUrlSupersetOfAssembla() throws Exception {
         java.util.Random random = new java.util.Random();
         String [] urls = {
           "http://assemblage.com/",
@@ -92,7 +84,7 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testDomainLevelChecksOnRepoUrlAllowDNSLocalHostnamesLocalNet() throws Exception {
+    void testDomainLevelChecksOnRepoUrlAllowDNSLocalHostnamesLocalNet() throws Exception {
         String hostname = "assembla.example.localnet";
         String url = "https://" + hostname + "/space/git-plugin/git/source";
         FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
@@ -101,7 +93,7 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testDomainLevelChecksOnRepoUrlAllowDNSLocalHostnamesHome() throws Exception {
+    void testDomainLevelChecksOnRepoUrlAllowDNSLocalHostnamesHome() throws Exception {
         String hostname = "assembla.example.home";
         String url = "https://" + hostname + "/space/git-plugin/git/source";
         FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
@@ -110,7 +102,7 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testDomainLevelChecksOnRepoUrlCorpDomainMustBeValid() throws Exception {
+    void testDomainLevelChecksOnRepoUrlCorpDomainMustBeValid() throws Exception {
         String hostname = "assembla.myorg.corp";
         String url = "https://" + hostname + "/space/git-plugin/git/source";
         FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);

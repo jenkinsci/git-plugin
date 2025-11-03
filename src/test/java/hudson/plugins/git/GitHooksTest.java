@@ -3,7 +3,6 @@ package hudson.plugins.git;
 import hudson.FilePath;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
-import hudson.tools.ToolProperty;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitHooksConfiguration;
 import org.eclipse.jgit.util.SystemReader;
@@ -11,15 +10,13 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.LoggerRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.jvnet.hudson.test.LogRecorder;
+import org.jvnet.hudson.test.junit.jupiter.BuildWatcherExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,36 +28,36 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import static hudson.Functions.isWindows;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class GitHooksTest extends AbstractGitTestCase {
+class GitHooksTest extends AbstractGitTestCase {
 
-    @Rule
-    public LoggerRule lr = new LoggerRule();
-    @ClassRule
-    public static BuildWatcher watcher = new BuildWatcher();
+    private final LogRecorder lr = new LogRecorder();
+
+    @SuppressWarnings("unused")
+    @RegisterExtension
+    private static final BuildWatcherExtension BUILD_WATCHER = new BuildWatcherExtension();
 
     private static final String JENKINS_URL = System.getenv("JENKINS_URL") != null
             ? System.getenv("JENKINS_URL")
             : "http://localhost:8080/";
 
-    @BeforeClass
-    public static void setGitDefaults() throws Exception {
+    @BeforeAll
+    static void beforeAll() throws Exception {
         SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
     }
 
-    @Before
-    public void setGitTool() throws IOException {
+    @BeforeEach
+    void beforeEach() throws IOException {
         lr.record(GitHooksConfiguration.class.getName(), Level.ALL).capture(1024);
-        GitTool tool = new GitTool("my-git", "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", "git", Collections.emptyList());
         r.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
         //Jenkins 2.308 changes the default label to "built-in" causing test failures when testing with newer core
         // e.g. java 17 testing
@@ -68,15 +65,15 @@ public class GitHooksTest extends AbstractGitTestCase {
         r.jenkins.setNumExecutors(3); //In case this changes in the future as well.
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void afterEach() {
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         assertThat(lr.getMessages(), not(hasItem(startsWith("core.hooksPath explicitly set to "))));
     }
 
     @Test
-    public void testPipelineFromScm() throws Exception {
+    void testPipelineFromScm() throws Exception {
         if (isWindows() && JENKINS_URL.contains("ci.jenkins.io")) {
             /*
              * The test works on Windows, but for unknown reason does not work
@@ -84,6 +81,7 @@ public class GitHooksTest extends AbstractGitTestCase {
              */
             return;
         }
+
         GitHooksConfiguration.get().setAllowedOnController(true);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         final DumbSlave agent = r.createOnlineSlave(Label.get("somewhere"));
@@ -110,10 +108,9 @@ public class GitHooksTest extends AbstractGitTestCase {
 
         final FilePath jobWorkspace = agent.getWorkspaceFor(job);
         assertNotNull(jobWorkspace);
-        TemporaryFolder tf = new TemporaryFolder();
-        tf.create();
-        final File postCheckoutOutput1 = new File(tf.newFolder(), "svn-git-fun-post-checkout-1");
-        final File postCheckoutOutput2 = new File(tf.newFolder(), "svn-git-fun-post-checkout-2");
+        File tf = Files.createTempDirectory("junit").toFile();
+        final File postCheckoutOutput1 = new File(tf,"svn-git-fun-post-checkout-1");
+        final File postCheckoutOutput2 = new File(tf,"svn-git-fun-post-checkout-2");
 
         //Add hook on agent workspace
         FilePath hook = jobWorkspace.child(".git/hooks/post-checkout");
@@ -146,11 +143,6 @@ public class GitHooksTest extends AbstractGitTestCase {
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         run = r.buildAndAssertSuccess(job);
         r.assertLogContains("Hello Pipeline", run);
-        if (!sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            return;
-        }
         assertFalse(postCheckoutOutput1.exists());
         assertFalse(postCheckoutOutput2.exists());
 
@@ -191,15 +183,15 @@ public class GitHooksTest extends AbstractGitTestCase {
     }
 
     private void checkFileOutput(final File postCheckoutOutput, final Instant before, final Instant after) throws IOException {
-        assertTrue("Output file should exist", postCheckoutOutput.exists());
+        assertTrue(postCheckoutOutput.exists(), "Output file should exist");
         final String s = Files.readString(postCheckoutOutput.toPath(), Charset.defaultCharset()).trim();
         final Instant when = Instant.ofEpochSecond(Integer.parseInt(s));
-        assertTrue("Sometime else", when.isAfter(before) && when.isBefore(after));
+        assertTrue(when.isAfter(before) && when.isBefore(after), "Sometime else");
         Files.delete(postCheckoutOutput.toPath());
     }
 
     @Test
-    public void testPipelineCheckoutController() throws Exception {
+    void testPipelineCheckoutController() throws Exception {
         if (isWindows() && JENKINS_URL.contains("ci.jenkins.io")) {
             /*
              * The test works on Windows, but for unknown reason does not work
@@ -213,24 +205,16 @@ public class GitHooksTest extends AbstractGitTestCase {
         commit("Commit3", janeDoe, "Commit number 3");
         GitHooksConfiguration.get().setAllowedOnController(true);
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogContains("h4xor3d", run);
-        }
+        r.assertLogContains("h4xor3d", run);
         GitHooksConfiguration.get().setAllowedOnController(false);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         commit("Commit4", janeDoe, "Commit number 4");
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogNotContains("h4xor3d", run);
-        }
+        r.assertLogNotContains("h4xor3d", run);
     }
 
     @Test
-    public void testPipelineCheckoutAgent() throws Exception {
+    void testPipelineCheckoutAgent() throws Exception {
         if (isWindows() && JENKINS_URL.contains("ci.jenkins.io")) {
             /*
              * The test works on Windows, but for unknown reason does not work
@@ -245,20 +229,12 @@ public class GitHooksTest extends AbstractGitTestCase {
         commit("Commit3", janeDoe, "Commit number 3");
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogContains("h4xor3d", run);
-        }
+        r.assertLogContains("h4xor3d", run);
         GitHooksConfiguration.get().setAllowedOnAgents(false);
         GitHooksConfiguration.get().setAllowedOnController(true);
         commit("Commit4", janeDoe, "Commit number 4");
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogNotContains("h4xor3d", run);
-        }
+        r.assertLogNotContains("h4xor3d", run);
     }
 
     private WorkflowJob setupAndRunPipelineCheckout(String node) throws Exception {
@@ -289,11 +265,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         final String commitFile2 = "commitFile2";
         commit(commitFile2, janeDoe, "Commit number 2");
         run = r.buildAndAssertSuccess(job);
-        if (sampleRepo.gitVersionAtLeast(2, 0)) {
-            // Git 1.8 does not output hook text in this case
-            // Not important enough to research the difference
-            r.assertLogNotContains("h4xor3d", run);
-        }
+        r.assertLogNotContains("h4xor3d", run);
         return job;
     }
 
@@ -305,10 +277,5 @@ public class GitHooksTest extends AbstractGitTestCase {
      */
     private static String lines(String... lines) {
         return String.join("\n", lines);
-    }
-
-    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
-    private boolean isWindows() {
-        return java.io.File.pathSeparatorChar==';';
     }
 }

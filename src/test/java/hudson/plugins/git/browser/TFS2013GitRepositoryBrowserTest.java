@@ -4,27 +4,28 @@ import hudson.model.*;
 import hudson.plugins.git.*;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
+import org.junit.jupiter.api.BeforeAll;
+
 import org.jenkinsci.plugins.gitclient.JGitTool;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TFS2013GitRepositoryBrowserTest {
+class TFS2013GitRepositoryBrowserTest {
 
     private static final String repoUrl = "http://tfs/tfs/project/_git/repo";
     private static final GitChangeSetSample sample = new GitChangeSetSample(false);
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void beforeAll() throws Exception {
         GitSCM scm = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
                 new ArrayList<>(),
@@ -42,50 +43,50 @@ public class TFS2013GitRepositoryBrowserTest {
     }
 
     @Test
-    public void testResolveURLFromSCM() throws Exception {
+    void testResolveURLFromSCM() throws Exception {
         TFS2013GitRepositoryBrowser browser = new TFS2013GitRepositoryBrowser("");
         assertThat(browser.getRepoUrl(sample.changeSet).toString(), is("http://tfs/tfs/project/_git/repo/"));
     }
 
     @Test
-    public void testResolveURLFromConfig() throws Exception {
+    void testResolveURLFromConfig() throws Exception {
         TFS2013GitRepositoryBrowser browser = new TFS2013GitRepositoryBrowser("http://url/repo");
         assertThat(browser.getRepoUrl(sample.changeSet).toString(), is("http://url/repo/"));
     }
 
     @Test
-    public void testResolveURLFromConfigWithTrailingSlash() throws Exception {
+    void testResolveURLFromConfigWithTrailingSlash() throws Exception {
         TFS2013GitRepositoryBrowser browser = new TFS2013GitRepositoryBrowser("http://url/repo/");
         assertThat(browser.getRepoUrl(sample.changeSet).toString(), is("http://url/repo/"));
     }
 
     @Test
-    public void testGetChangeSetLink() throws Exception {
+    void testGetChangeSetLink() throws Exception {
         URL result = new TFS2013GitRepositoryBrowser(repoUrl).getChangeSetLink(sample.changeSet);
         assertThat(result.toString(), is("http://tfs/tfs/project/_git/repo/commit/" + sample.id));
     }
 
     @Test
-    public void testGetDiffLink() throws Exception {
+    void testGetDiffLink() throws Exception {
         TFS2013GitRepositoryBrowser browser = new TFS2013GitRepositoryBrowser(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = browser.getDiffLink(path);
             EditType editType = path.getEditType();
             URL expectedDiffLink = new URL("http://tfs/tfs/project/_git/repo/commit/" + sample.id + "#path=" + path.getPath() + "&_a=compare");
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
-            assertEquals(msg, expectedDiffLink, diffLink);
+            assertEquals(expectedDiffLink, diffLink, msg);
         }
     }
 
     @Test
-    public void testGetFileLink() throws Exception {
+    void testGetFileLink() throws Exception {
         TFS2013GitRepositoryBrowser browser = new TFS2013GitRepositoryBrowser(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL fileLink = browser.getFileLink(path);
             EditType editType = path.getEditType();
             URL expectedFileLink = new URL("http://tfs/tfs/project/_git/repo/commit/" + sample.id + "#path=" + path.getPath() + "&_a=history");
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
-            assertEquals(msg, expectedFileLink, fileLink);
+            assertEquals(expectedFileLink, fileLink, msg);
         }
     }
 }

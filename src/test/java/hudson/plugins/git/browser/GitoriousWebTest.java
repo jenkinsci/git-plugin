@@ -5,6 +5,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -16,32 +18,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class GitoriousWebTest {
+class GitoriousWebTest {
 
     private static final String GITORIOUS_URL = "https://SERVER/PROJECT";
     private final GitoriousWeb gitoriousWeb = new GitoriousWeb(GITORIOUS_URL);
 
     @Test
-    public void testGetUrl() throws IOException {
-        assertEquals(String.valueOf(gitoriousWeb.getUrl()), GITORIOUS_URL  + "/");
+    void testGetUrl() throws IOException {
+        assertEquals(GITORIOUS_URL  + "/", String.valueOf(gitoriousWeb.getUrl()));
     }
 
     @Test
-    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
-        assertEquals(String.valueOf(new GitoriousWeb(GITORIOUS_URL + "/").getUrl()), GITORIOUS_URL  + "/");
+    void testGetUrlForRepoWithTrailingSlash() throws IOException {
+        assertEquals(GITORIOUS_URL  + "/", String.valueOf(new GitoriousWeb(GITORIOUS_URL + "/").getUrl()));
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = gitoriousWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d/diffs?diffmode=sidebyside&fragment=1#src/main/java/hudson/plugins/git/browser/GithubWeb.java", gitoriousWeb.getDiffLink(modified1).toString());
@@ -51,7 +52,7 @@ public class GitoriousWebTest {
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = gitoriousWeb.getFileLink(path);
@@ -59,7 +60,7 @@ public class GitoriousWebTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = gitoriousWeb.getFileLink(path);

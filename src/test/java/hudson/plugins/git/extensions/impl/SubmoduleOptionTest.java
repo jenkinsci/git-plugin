@@ -11,21 +11,20 @@ import java.io.IOException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
+import org.junit.jupiter.api.BeforeEach;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SubmoduleOptionTest {
+class SubmoduleOptionTest {
 
     private SubmoduleOption submoduleOption;
 
@@ -45,14 +44,14 @@ public class SubmoduleOptionTest {
                 USE_PARENT_CREDENTIALS_FALSE);
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         submoduleOption = newSubmoduleOption();
     }
 
     @Issue("JENKINS-31934")
     @Test
-    public void testSubmoduleUpdateThrowsIOException() throws Exception {
+    void testSubmoduleUpdateThrowsIOException() throws Exception {
         // In order to verify that the submodule option correctly converts
         // GitExceptions into IOExceptions, setup a SubmoduleOption, and run
         // it's onCheckoutCompleted extension point with a mocked git client
@@ -73,12 +72,12 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testOnCheckoutCompleted() throws Exception {
+    void testOnCheckoutCompleted() throws Exception {
         /* See testSubmoduleUpdateThrowsIOException */
     }
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(SubmoduleOption.class)
                 .usingGetClass()
                 .suppress(Warning.NONFINAL_FIELDS)
@@ -86,12 +85,12 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testIsDisableSubmodules() {
+    void testIsDisableSubmodules() {
         assertThat(submoduleOption.isDisableSubmodules(), is(false));
     }
 
     @Test
-    public void testIsDisableSubmodulesTrue() {
+    void testIsDisableSubmodulesTrue() {
         submoduleOption = new SubmoduleOption(true,
                 RECURSIVE_SUBMODULES_FALSE,
                 TRACKING_SUBMODULES_FALSE,
@@ -102,12 +101,12 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testIsRecursiveSubmodules() {
+    void testIsRecursiveSubmodules() {
         assertThat(submoduleOption.isRecursiveSubmodules(), is(false));
     }
 
     @Test
-    public void testIsRecursiveSubmodulesTrue() {
+    void testIsRecursiveSubmodulesTrue() {
         submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
                 true,
                 TRACKING_SUBMODULES_FALSE,
@@ -118,12 +117,12 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testIsTrackingSubmodules() {
+    void testIsTrackingSubmodules() {
         assertThat(submoduleOption.isTrackingSubmodules(), is(false));
     }
 
     @Test
-    public void testIsTrackingSubmodulesTrue() {
+    void testIsTrackingSubmodulesTrue() {
         submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
                 true,
@@ -134,12 +133,12 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testIsParentCredentials() {
+    void testIsParentCredentials() {
         assertThat(submoduleOption.isParentCredentials(), is(false));
     }
 
     @Test
-    public void testIsParentCredentialsTrue() {
+    void testIsParentCredentialsTrue() {
         submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
                 TRACKING_SUBMODULES_FALSE,
@@ -150,12 +149,12 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testGetReference() {
+    void testGetReference() {
         assertThat(submoduleOption.getReference(), is(nullValue()));
     }
 
     @Test
-    public void testGetReferenceNotNull() {
+    void testGetReferenceNotNull() {
         final String referenceRepoDirName = "/repo.git";
         submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
@@ -167,12 +166,12 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testGetTimeout() {
+    void testGetTimeout() {
         assertThat(submoduleOption.getTimeout(), is(nullValue()));
     }
 
     @Test
-    public void testGetTimeoutNotNull() {
+    void testGetTimeoutNotNull() {
         Integer timeout = 3;
         submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
                 RECURSIVE_SUBMODULES_FALSE,
@@ -184,13 +183,13 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testSetShallow() {
+    void testSetShallow() {
         submoduleOption.setShallow(true);
         assertThat(submoduleOption.getShallow(), is(true));
     }
 
     @Test
-    public void testGetShallow() {
+    void testGetShallow() {
         assertThat(submoduleOption.getShallow(), is(false));
     }
 
@@ -204,31 +203,31 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testSetDepth() {
+    void testSetDepth() {
         Integer depthValue = randomSmallNonNegativeIntegerOrNull();
         submoduleOption.setDepth(depthValue);
         assertThat(submoduleOption.getDepth(), is(depthValue));
     }
 
     @Test
-    public void testGetDepth() {
+    void testGetDepth() {
         assertThat(submoduleOption.getDepth(), is(nullValue()));
     }
 
     @Test
-    public void testGetThreads() {
+    void testGetThreads() {
         assertThat(submoduleOption.getThreads(), is(nullValue()));
     }
 
     @Test
-    public void testSetThreads() {
+    void testSetThreads() {
         Integer threads = randomSmallNonNegativeIntegerOrNull();
         submoduleOption.setThreads(threads);
         assertThat(submoduleOption.getThreads(), is(threads));
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         assertThat(submoduleOption.toString(), is("SubmoduleOption{"
                 + "disableSubmodules=false"
                 + ", recursiveSubmodules=false"
@@ -243,7 +242,7 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testToStringDataBoundConstructor() {
+    void testToStringDataBoundConstructor() {
         submoduleOption = new SubmoduleOption();
         assertThat(submoduleOption.toString(), is("SubmoduleOption{"
                 + "disableSubmodules=false"
@@ -260,7 +259,7 @@ public class SubmoduleOptionTest {
 
     @Test
     @Issue("JENKINS-64382")
-    public void testDetermineSupportForJGit() {
+    void testDetermineSupportForJGit() throws Exception {
         /* JGit was incorrectly used when submodule option was added with no items checked. */
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
         scm.getExtensions().add(submoduleOption);
@@ -271,7 +270,7 @@ public class SubmoduleOptionTest {
 
     @Test
     @Issue("JENKINS-64382")
-    public void testDetermineSupportForJGitRecursiveSubmodules() {
+    void testDetermineSupportForJGitRecursiveSubmodules() throws Exception {
         /* JGit was incorrectly used when submodule option was added with only recursive submodule checked. */
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
         submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
@@ -287,7 +286,7 @@ public class SubmoduleOptionTest {
     }
 
     @Test
-    public void testDetermineSupportForJGitThreads() {
+    void testDetermineSupportForJGitThreads() throws Exception {
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
         Integer threads = randomSmallNonNegativeIntegerOrNull();
         submoduleOption.setThreads(threads);

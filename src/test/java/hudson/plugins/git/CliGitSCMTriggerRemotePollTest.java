@@ -9,7 +9,7 @@ import hudson.plugins.git.extensions.impl.EnforceGitClient;
  * The isChangeExpected() method adjusts the tests to the difference between
  * local and remote polling.
  */
-public class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest {
+class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest {
 
     @Override
     protected EnforceGitClient getGitClient()

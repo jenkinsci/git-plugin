@@ -16,7 +16,6 @@ import java.util.Random;
 import java.util.Set;
 
 import hudson.EnvVars;
-import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
@@ -25,30 +24,30 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 
+import static hudson.Functions.isWindows;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Test git tag action. Low value test that was created as part of
@@ -61,7 +60,9 @@ import javax.servlet.ServletException;
  *
  * @author Mark Waite
  */
-public class GitTagActionTest {
+@WithJenkins
+@WithGitSampleRepo
+class GitTagActionTest {
 
     private static GitTagAction noTagAction;
     private static GitTagAction tagOneAction;
@@ -71,17 +72,9 @@ public class GitTagActionTest {
 
     private static final String NO_BRANCHES = "tagRevision-with-no-branches";
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
-    @ClassRule
-    public static TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    @ClassRule
-    public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
-
-    public GitTagActionTest() {
-    }
+    private static GitSampleRepoRule sampleRepo;
 
     private static FreeStyleProject p;
     private static GitClient workspaceGitClient = null;
@@ -94,11 +87,16 @@ public class GitTagActionTest {
     private static String sampleRepoHead = null;
     private static DescriptorImpl gitSCMDescriptor = null;
 
-    @BeforeClass
-    public static void deleteMatchingTags() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule, GitSampleRepoRule repo) throws  Exception {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
+
+        r = rule;
+        sampleRepo = repo;
+
         /* Remove tags from working repository that start with TAG_PREFIX and don't contain TAG_SUFFIX */
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars())
                 .in(new File("."))
@@ -109,13 +107,7 @@ public class GitTagActionTest {
                 gitClient.deleteTag(tag.getName());
             }
         }
-    }
 
-    @BeforeClass
-    public static void createThreeGitTagActions() throws Exception {
-        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
-            return;
-        }
         sampleRepo.init();
         sampleRepo.write("file", INITIAL_COMMIT_MESSAGE);
         sampleRepo.git("commit", "--all", "--message=" + INITIAL_COMMIT_MESSAGE);
@@ -160,8 +152,8 @@ public class GitTagActionTest {
         assertThat(tagNullBranchesAction, is(not(nullValue())));
     }
 
-    @AfterClass
-    public static void disableAddGitTagAction() {
+    @AfterAll
+    static void afterAll() {
         /* Do not add git tag action to builds for other tests */
         if (gitSCMDescriptor != null) {
             gitSCMDescriptor.setAddGitTagAction(false);
@@ -239,7 +231,7 @@ public class GitTagActionTest {
                 foundMasterBranch = true;
             }
         }
-        assertTrue("master branch not found, last branch name was " + lastBranchName, foundMasterBranch);
+        assertTrue(foundMasterBranch, "master branch not found, last branch name was " + lastBranchName);
 
         /* Create the GitTagAction */
         GitTagAction tagAction;
@@ -290,8 +282,12 @@ public class GitTagActionTest {
             @Override
             protected GitClient getGitClient(TaskListener listener, EnvVars environment, FilePath workspace) throws IOException, InterruptedException {
                 GitClient gitClient = super.getGitClient(listener, environment, workspace);
-                gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
-                gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+                try {
+                    gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+                    gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+                } catch (GitException x) {
+                    throw new IOException(x);
+                }
                 return gitClient;
             }
         }
@@ -321,7 +317,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testDoPost() throws Exception {
+    void testDoPost() throws Exception {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -336,7 +332,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetDescriptor() {
+    void testGetDescriptor() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -346,7 +342,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testIsNotTagged() {
+    void testIsNotTagged() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -355,7 +351,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetDisplayNameNoTagAction() {
+    void testGetDisplayNameNoTagAction() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -364,7 +360,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetIconFileName() {
+    void testGetIconFileName() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -373,7 +369,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetTagsNoTagAction() {
+    void testGetTagsNoTagAction() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -385,7 +381,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetTagsOneTagAction() {
+    void testGetTagsOneTagAction() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -397,7 +393,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetTagsTwoTagAction() {
+    void testGetTagsTwoTagAction() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -409,7 +405,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetTagInfo() {
+    void testGetTagInfo() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -418,7 +414,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetTooltipNoTagAction() {
+    void testGetTooltipNoTagAction() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -427,7 +423,7 @@ public class GitTagActionTest {
     }
 
     @Test
-    public void testGetPermission() {
+    void testGetPermission() {
         if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
             /* Do not distract warnings system by using assumeThat to skip tests */
             return;
@@ -440,11 +436,4 @@ public class GitTagActionTest {
         return random.nextBoolean() ? "git" : "jgit";
     }
 
-    /**
-     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
-     * remote classloader issue
-     */
-    private static boolean isWindows() {
-        return File.pathSeparatorChar == ';';
-    }
 }

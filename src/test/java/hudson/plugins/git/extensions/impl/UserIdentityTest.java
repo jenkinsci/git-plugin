@@ -9,21 +9,25 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.GitUtilsTest;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.Test;
 import org.jvnet.hudson.test.WithoutJenkins;
+
+import java.io.File;
+import java.io.IOException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-public class UserIdentityTest extends GitSCMExtensionTest  {
+class UserIdentityTest extends GitSCMExtensionTest  {
 
-    TestGitRepo repo;
-    GitClient git;
+    private TestGitRepo repo;
+    private GitClient git;
 
     @Override
-    public void before() {
+    protected void before() {
         // do nothing
     }
 
@@ -33,8 +37,8 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
     }
 
     @Test
-    public void testUserIdentity() throws Exception {
-        repo = new TestGitRepo("repo", tmp.newFolder(), listener);
+    void testUserIdentity() throws Exception {
+        repo = new TestGitRepo("repo", newFolder(tmp, "junit"), listener);
         git = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(repo.gitDir).getClient();
 
         FreeStyleProject projectWithMaster = setupBasicProject(repo);
@@ -48,7 +52,7 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
 
     @Test
     @WithoutJenkins
-    public void testGetNameAndEmail(){
+    void testGetNameAndEmail(){
         UserIdentity userIdentity = new UserIdentity("Jane Doe", "janeDoe@xyz.com");
 
         assertThat("Jane Doe", is(userIdentity.getName()));
@@ -57,9 +61,18 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
 
     @Test
     @WithoutJenkins
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(UserIdentity.class)
                 .usingGetClass()
                 .verify();
+    }
+
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 }

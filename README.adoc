@@ -21,7 +21,7 @@ Prior release notes are recorded in the git plugin repository link:https://githu
 
 == Pipelines
 
-The git plugin provides an SCM implementation to be used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step].
+The link:https://www.jenkins.io/doc/pipeline/steps/params/scmgit/[`scmGit` parameter] of the git plugin is used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step] to checkout git repositories into Pipeline workspaces.
 The link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] guides the user to select checkout options.
 
 The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] below introduces the Pipeline Syntax Snippet Generator and shows how it is used to generate steps for the Jenkins Pipeline.
@@ -159,7 +159,7 @@ This removes remote tracking branches and tags from the local workspace if they 
 ----
 checkout scmGit(
     branches: [[name: 'master']],
-    extensions: [pruneStaleBranch(), pruneTags(true)],
+    extensions: [ pruneStaleBranch(), pruneTags(true) ],
     userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
@@ -227,7 +227,7 @@ withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',
 [#using-repositories]
 === Repositories
 
-image:/images/git-repository-configuration.png[Repository Configuration]
+image:images/git-repository-configuration.png[Repository Configuration]
 
 The git plugin fetches commits from one or more remote repositories and performs a checkout in the agent workspace.
 Repositories and their related information include:
@@ -294,7 +294,7 @@ Other credential types will not work with the ssh protocol.
 To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changes to the repository.
 Refer to webhook documentation for your repository:
 
-* link:https://plugins.jenkins.io/github#GitHubPlugin-GitHubhooktriggerforGITScmpolling[GitHub]
+* link:https://plugins.jenkins.io/github/#plugin-content-github-hook-trigger-for-gitscm-polling[GitHub]
 * link:https://plugins.jenkins.io/bitbucket[Bitbucket]
 * link:https://plugins.jenkins.io/gitlab-branch-source[GitLab]
 * link:https://github.com/jenkinsci/gitea-plugin/blob/master/docs/README.md[Gitea]
@@ -324,6 +324,8 @@ If polling finds a change worthy of a build, a build will be triggered.
 This allows a notify script to remain the same for all Jenkins jobs.
 Or if you have multiple repositories under a single repository host application (such as Gitosis), you can share a single post-receive hook script with all the repositories.
 
+When notifyCommit is successful, the list of triggered projects is returned.
+
 The `token` parameter is required by default as a security measure, but can be disabled by the following link:https://www.jenkins.io/doc/book/managing/system-properties/[system property]:
 
 ....
@@ -337,18 +339,38 @@ It has two modes:
 * `disabled` - Fully disables the access token mechanism and allows all requests to `notifyCommit`
 to be unauthenticated. *This option is insecure and is not recommended.*
 
-When notifyCommit is successful, the list of triggered projects is returned.
+You can set the `NOTIFY_COMMIT_ACCESS_CONTROL` value with either a link:https://www.jenkins.io/doc/book/managing/system-properties/[system property] or a link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/[Groovy hook script].
+
+[[using-a-system-property-push-notification]]
+Using a system property::
+
+The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set from the command line that starts Jenkins.
+This method is useful for environments where initial Jenkins settings are managed with command line arguments.
++
+....
+java -Dhudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL=disabled-for-polling -jar jenkins.war
+....
+
+[[using-a-groovy-script-push-notification]]
+ Using a Groovy script::
+
+The `NOTIFY_COMMIT_ACCESS_CONTROL` value can be set using a Groovy script placed in the `init.groovy.d` subdirectory of the Jenkins home directory.
+This method is useful for environments where Jenkins settings are managed with link:https://www.jenkins.io/doc/book/managing/groovy-hook-scripts/#post-initialization-script-init-hook[Groovy post-initialization scripts].
++
+----
+hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL='disabled-for-polling'
+----
 
 [#enabling-jgit]
 === Enabling JGit
 
-See the link:https://plugins.jenkins.io/git-client/#enabling-jgit[git client plugin documentation] for instructions to enable JGit.
+See the link:https://plugins.jenkins.io/git-client/#plugin-content-enabling-jgit[git client plugin documentation] for instructions to enable JGit.
 JGit becomes available throughout Jenkins once it has been enabled.
 
 [#global-configuration]
 === [[GitPlugin-Configuration]]Global Configuration
 
-image:/images/git-global-configuration.png[Global Configuration]
+image:images/git-global-configuration.png[Global Configuration]
 
 In the `Configure System` page, the Git Plugin provides the following options:
 
@@ -430,6 +452,10 @@ An example configuration might look like this:
 
 [,yaml]
 ----
+security:
+  gitHooks:
+    allowedOnAgents: false
+    allowedOnController: false
 unclassified:
   scmGit:
     addGitTagAction: false
@@ -473,7 +499,7 @@ See link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks["Customizing G
 [#repository-browser]
 === Repository Browser
 
-image:/images/git-repository-browser.png[Repository Browser]
+image:images/git-repository-browser.png[Repository Browser]
 
 A Repository Browser adds links in "changes" views within Jenkins to an external system for browsing the details of those changes.
 The "Auto" selection attempts to infer the repository browser from the "Repository URL" and can detect cloud versions of GitHub, Bitbucket and GitLab.
@@ -483,7 +509,7 @@ Repository browsers include:
 [#assemblaweb-repository-browser]
 ==== AssemblaWeb
 
-image:/images/git-repository-browser-assemblaweb.png[Assembla Repository Browser]
+image:images/git-repository-browser-assemblaweb.png[Assembla Repository Browser]
 
 Repository browser for git repositories hosted by link:https://www.assembla.com/home[Assembla].
 Options include:
@@ -497,7 +523,7 @@ Assembla Git URL::
 [#fisheye-repository-browser]
 ==== FishEye
 
-image:/images/git-repository-browser-fisheye.png[FishEye Repository Browser]
+image:images/git-repository-browser-fisheye.png[FishEye Repository Browser]
 
 Repository browser for git repositories hosted by link:https://www.atlassian.com/software/fisheye[Atlassian Fisheye].
 Options include:
@@ -511,7 +537,7 @@ URL::
 [#kiln-repository-browser]
 ==== Kiln
 
-image:/images/git-repository-browser-kiln.png[Kiln Repository Browser]
+image:images/git-repository-browser-kiln.png[Kiln Repository Browser]
 
 Repository browser for git repositories hosted by link:http://www.fogbugz.com/version-control[Kiln].
 Options include:
@@ -525,7 +551,7 @@ URL::
 [#visual-studio-team-services-repository-browser]
 ==== Microsoft Team Foundation Server/Visual Studio Team Services
 
-image:/images/git-repository-browser-microsoft.png[Microsoft Repository Browser]
+image:images/git-repository-browser-microsoft.png[Microsoft Repository Browser]
 
 Repository browser for git repositories hosted by link:https://azure.microsoft.com/en-us/solutions/devops/[Azure DevOps].
 Options include:
@@ -534,12 +560,12 @@ Options include:
 URL or name::
 
   Root URL serving this Azure DevOps repository.
-  For example, `\https://example.visualstudio.com/_git/my-project.`
+  For example, `\https://dev.azure.com/example/_git/my-project`
 
 [bitbucketweb-repository-browser]
 ==== bitbucketweb
 
-image:/images/git-repository-browser-bitbucket.png[Bitbucket Repository Browser]
+image:images/git-repository-browser-bitbucket.png[Bitbucket Repository Browser]
 
 Repository browser for git repositories hosted by link:https://bitbucket.org/[Bitbucket].
 Options include:
@@ -553,7 +579,7 @@ URL::
 [bitbucketserver-repository-browser]
 ==== bitbucketserver
 
-image:/images/git-repository-browser-bitbucketserver.png[Bitbucket Server Repository Browser]
+image:images/git-repository-browser-bitbucketserver.png[Bitbucket Server Repository Browser]
 
 Repository browser for git repositories hosted by an on-premises Bitbucket Server installation.
 Options include:
@@ -567,7 +593,7 @@ URL::
 [#cgit-repository-browser]
 ==== cgit
 
-image:/images/git-repository-browser-cgit.png[CGit Repository Browser]
+image:images/git-repository-browser-cgit.png[CGit Repository Browser]
 
 Repository browser for git repositories hosted by link:https://git.zx2c4.com/cgit/[cgit].
 Options include:
@@ -581,7 +607,7 @@ URL::
 [#gitblit-repository-browser]
 ==== gitblit
 
-image:/images/git-repository-browser-gitblit.png[GitBlit Repository Browser]
+image:images/git-repository-browser-gitblit.png[GitBlit Repository Browser]
 
 [[gitblit-url]]
 GitBlit root url::
@@ -598,7 +624,7 @@ Project name in GitBlit::
 [#githubweb-repository-browser]
 ==== githubweb
 
-image:/images/git-repository-browser-github.png[GitHub Repository Browser]
+image:images/git-repository-browser-github.png[GitHub Repository Browser]
 
 Repository browser for git repositories hosted by link:https://github.com//[GitHub].
 Options include:
@@ -612,7 +638,7 @@ URL::
 [#gitiles-repository-browser]
 ==== gitiles
 
-image:/images/git-repository-browser-gitiles.png[Gitiles Repository Browser]
+image:images/git-repository-browser-gitiles.png[Gitiles Repository Browser]
 
 Repository browser for git repositories hosted by link:https://gerrit.googlesource.com/gitiles/[Gitiles].
 Options include:
@@ -627,7 +653,7 @@ gitiles root url::
 [#gitlab-com-repository-browser]
 ==== gitlab
 
-image:/images/git-repository-browser-gitlab.png[GitLab Repository Browser]
+image:images/git-repository-browser-gitlab.png[GitLab Repository Browser]
 
 Repository browser for git repositories hosted by link:https://gitlab.com/[GitLab].
 Options include:
@@ -648,7 +674,7 @@ Version::
 [#gitlist-repository-browser]
 ==== gitlist
 
-image:/images/git-repository-browser-gitlist.png[Gitlist Repository Browser]
+image:images/git-repository-browser-gitlist.png[Gitlist Repository Browser]
 
 Repository browser for git repositories hosted by link:https://gitlist.org/[GitList].
 Options include:
@@ -674,7 +700,7 @@ URL::
 [#gitweb-repository-browser]
 ==== gitweb
 
-image:/images/git-repository-browser-gitweb.png[Gitweb Repository Browser]
+image:images/git-repository-browser-gitweb.png[Gitweb Repository Browser]
 
 Repository browser for git repositories hosted by link:https://git-scm.com/docs/gitweb[GitWeb].
 Options include:
@@ -688,7 +714,7 @@ URL::
 [#gogs-repository-browser]
 ==== gogs
 
-image:/images/git-repository-browser-gogs.png[Gogs Repository Browser]
+image:images/git-repository-browser-gogs.png[Gogs Repository Browser]
 
 Repository browser for git repositories hosted by link:https://gogs.io/[Gogs].
 Options include:
@@ -720,7 +746,7 @@ Repository name in Phab::
 [#redmineweb-repository-browser]
 ==== redmineweb
 
-image:/images/git-repository-browser-redmine.png[Redmine Repository Browser]
+image:images/git-repository-browser-redmine.png[Redmine Repository Browser]
 
 Repository browser for git repositories hosted by link:https://www.redmine.org/[Redmine].
 Options include:
@@ -734,7 +760,7 @@ URL::
 [#rhodecode-repository-browser]
 ==== rhodecode
 
-image:/images/git-repository-browser-rhodecode.png[RhodeCode Repository Browser]
+image:images/git-repository-browser-rhodecode.png[RhodeCode Repository Browser]
 
 Repository browser for git repositories hosted by link:https://thodecode.com/[RhodeCode].
 Options include:
@@ -748,7 +774,7 @@ URL::
 [#stash-repository-browser]
 ==== stash
 
-image:/images/git-repository-browser-stash.png[Stash Repository Browser]
+image:images/git-repository-browser-stash.png[Stash Repository Browser]
 
 Stash is now called *BitBucket Server*.
 Repository browser for git repositories hosted by link:https://www.atlassian.com/software/bitbucket[BitBucket Server].
@@ -763,7 +789,7 @@ URL::
 [#viewgit-repository-browser]
 ==== viewgit
 
-image:/images/git-repository-browser-viewgit.png[Viewgit Repository Browser]
+image:images/git-repository-browser-viewgit.png[Viewgit Repository Browser]
 
 Repository browser for git repositories hosted by link:https://www.openhub.net/p/viewgit[viewgit].
 Options include:
@@ -824,7 +850,7 @@ The extensions can adjust the amount of history retrieved, how long the retrieva
 [#advanced-clone-behaviours]
 ==== Advanced clone behaviours
 
-image:/images/git-advanced-clone-behaviours.png[Advanced clone behaviours]
+image:images/git-advanced-clone-behaviours.png[Advanced clone behaviours]
 
 Advanced clone behaviors modify the `link:https://git-scm.com/docs/git-clone[git clone]` and `link:https://git-scm.com/docs/git-fetch[git fetch]` commands.
 They control:
@@ -871,7 +897,7 @@ Fetch tags::
 [#prune-stale-remote-tracking-branches]
 ==== Prune stale remote tracking branches
 
-image:/images/git-prune-stale-remote-tracking-branches.png[Prune stale remote tracking branches]
+image:images/git-prune-stale-remote-tracking-branches.png[Prune stale remote tracking branches]
 
 Removes remote tracking branches from the local workspace if they no longer exist on the remote.
 See `link:https://git-scm.com/docs/git-remote#Documentation/git-remote.txt-empruneem[git remote prune]` and `link:https://git-scm.com/docs/git-fetch#_pruning[git fetch --prune]` for more details.
@@ -879,7 +905,7 @@ See `link:https://git-scm.com/docs/git-remote#Documentation/git-remote.txt-empru
 [#prune-stale-tags]
 ==== Prune stale tags
 
-image:/images/git-prune-stale-tags.png[Prune stale tags]
+image:images/git-prune-stale-tags.png[Prune stale tags]
 
 Removes tags from the local workspace before fetch if they no longer exist on the remote.
 If stale tags are not pruned, deletion of a remote tag will not remove the local tag in the workspace.
@@ -895,7 +921,7 @@ The extensions can adjust the maximum duration of the checkout operation, the us
 [#advanced-checkout-behaviors]
 ==== Advanced checkout behaviors
 
-image:/images/git-advanced-checkout-behaviors.png[Advanced checkout behaviors]
+image:images/git-advanced-checkout-behaviors.png[Advanced checkout behaviors]
 
 Advanced checkout behaviors modify the `link:https://git-scm.com/docs/git-checkout[git checkout]` command.
 Advanced checkout behaviors include
@@ -909,7 +935,7 @@ Timeout (in minutes) for checkout operation::
 [#advanced-sub-modules-behaviours]
 ==== Advanced sub-modules behaviours
 
-image:/images/git-advanced-sub-modules-behaviours.png[Advanced sub-modules behaviours]
+image:images/git-advanced-sub-modules-behaviours.png[Advanced sub-modules behaviours]
 
 Advanced sub-modules behaviors modify the `link:https://git-scm.com/docs/git-submodule[git submodule]` commands.
 They control:
@@ -974,7 +1000,7 @@ Shallow clone depth::
 [#checkout-to-a-sub-directory]
 ==== Checkout to a sub-directory
 
-image:/images/git-checkout-to-a-sub-directory.png[Checkout to a sub-directory]
+image:images/git-checkout-to-a-sub-directory.png[Checkout to a sub-directory]
 
 Checkout to a subdirectory of the workspace instead of using the workspace root.
 
@@ -990,7 +1016,7 @@ Local subdirectory for repo::
 [#checkout-to-specific-local-branch]
 ==== Checkout to specific local branch
 
-image:/images/git-checkout-to-specific-local-branch.png[Checkout to specific local branch]
+image:images/git-checkout-to-specific-local-branch.png[Checkout to specific local branch]
 
 Branch name::
 
@@ -1002,7 +1028,7 @@ Branch name::
 [#wipe-out-repository-and-force-clone]
 ==== Wipe out repository and force clone
 
-image:/images/git-wipe-out-repository-and-force-clone.png[Wipe out repository and force clone]
+image:images/git-wipe-out-repository-and-force-clone.png[Wipe out repository and force clone]
 
 Delete the contents of the workspace before build and before checkout.
 Deletes the git repository inside the workspace and will force a full clone.
@@ -1010,7 +1036,7 @@ Deletes the git repository inside the workspace and will force a full clone.
 [clean-after-checkout]
 ==== Clean after checkout
 
-image:/images/git-clean-after-checkout.png[Clean after checkout]
+image:images/git-clean-after-checkout.png[Clean after checkout]
 
 Clean the workspace *after* every checkout by deleting all untracked files and directories, including those which are specified in `.gitignore`.
 Resets all tracked files to their versioned state.
@@ -1028,7 +1054,7 @@ Delete untracked nested repositories::
 [#clean-before-checkout]
 ==== Clean before checkout
 
-image:/images/git-clean-before-checkout.png[Clean before checkout]
+image:images/git-clean-before-checkout.png[Clean before checkout]
 
 Clean the workspace *before* every checkout by deleting all untracked files and directories, including those which are specified in .gitignore.
 Resets all tracked files to their versioned state.
@@ -1046,7 +1072,7 @@ Delete untracked nested repositories::
 [#sparse-checkout-paths]
 ==== Sparse checkout paths
 
-image:/images/git-sparse-checkout-paths.png[Sparse checkout paths]
+image:images/git-sparse-checkout-paths.png[Sparse checkout paths]
 
 Specify the paths that you'd like to sparse checkout.
 This may be used for saving space (Think about a reference repository).
@@ -1058,10 +1084,20 @@ Path::
 
   File or directory to be included in the checkout
 
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [
+        sparseCheckout(sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']])
+    ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
 [#git-lfs-pull-after-checkout]
 ==== Git LFS pull after checkout
 
-image:/images/git-lfs-pull-after-checkout.png[Git LFS pull after checkout]
+image:images/git-lfs-pull-after-checkout.png[Git LFS pull after checkout]
 
 Enable https://git-lfs.github.com/[git large file support] for the workspace by pulling large files after the checkout completes.
 Requires that the controller and each agent performing an LFS checkout have installed `git lfs`.
@@ -1075,7 +1111,7 @@ Changelog extensions adapt the changelog calculations for different cases.
 [#calculate-changelog-against-a-specific-branch]
 ==== Calculate changelog against a specific branch
 
-image:/images/git-calculate-changelog-against-a-specific-branch.png[Calculate changelog against a specific branch]
+image:images/git-calculate-changelog-against-a-specific-branch.png[Calculate changelog against a specific branch]
 
 'Calculate changelog against a specific branch' uses the specified branch to compute the changelog instead of computing it based on the previous build.
 This extension can be useful for computing changes related to a known base branch, especially in environments which do not have the concept of a "pull request".
@@ -1091,7 +1127,7 @@ Name of branch::
 [#use-commit-author-in-changelog]
 ==== Use commit author in changelog
 
-image:/images/git-use-commit-author-in-changelog.png[Use commit author in changelog]
+image:images/git-use-commit-author-in-changelog.png[Use commit author in changelog]
 
 The default behavior is to use the Git commit's "Committer" value in build changesets.
 If this option is selected, the git commit's "Author" value is used instead.
@@ -1104,7 +1140,7 @@ Tagging extensions allow the plugin to apply tags in the current workspace.
 [#create-a-tag-for-every-build]
 ==== Create a tag for every build
 
-image:/images/git-create-a-tag-for-every-build.png[Create a tag for every build]
+image:images/git-create-a-tag-for-every-build.png[Create a tag for every build]
 
 Create a tag in the workspace for every build to unambiguously mark the commit that was built.
 You can combine this with Git publisher to push the tags to the remote repository.
@@ -1119,14 +1155,14 @@ They can ignore notifications of a change or force a deeper evaluation of the co
 [#dont-trigger-a-build-on-commit-notifications]
 ==== Don't trigger a build on commit notifications
 
-image:/images/git-do-not-trigger-a-build-on-commit-notifications.png[Do not trigger a build on commit notifications]
+image:images/git-do-not-trigger-a-build-on-commit-notifications.png[Do not trigger a build on commit notifications]
 
 If checked, this repository will be ignored when the notifyCommit URL is accessed whether the repository matches or not.
 
 [#force-polling-using-workspace]
 ==== Force polling using workspace
 
-image:/images/git-force-polling-using-workspace.png[Force polling using workspace]
+image:images/git-force-polling-using-workspace.png[Force polling using workspace]
 
 The git plugin polls remotely using `ls-remote` when configured with a single branch (no wildcards!).
 When this extension is enabled, the polling is performed from a cloned copy of the workspace instead of using `ls-remote`.
@@ -1140,7 +1176,7 @@ In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable comman
 [#polling-ignores-commits-from-certain-users]
 ==== Polling ignores commits from certain users
 
-image:/images/git-polling-ignores-commits-from-certain-users.png[Polling ignores commits from certain users]
+image:images/git-polling-ignores-commits-from-certain-users.png[Polling ignores commits from certain users]
 
 These options allow you to perform a merge to a particular branch before building.
 For example, you could specify an integration branch to be built, and to merge to master.
@@ -1160,7 +1196,7 @@ Excluded Users::
 [#polling-ignores-commits-in-certain-paths]
 ==== Polling ignores commits in certain paths
 
-image:/images/git-polling-ignores-commits-in-certain-paths.png[Polling ignores commits in certain paths]
+image:images/git-polling-ignores-commits-in-certain-paths.png[Polling ignores commits in certain paths]
 
 If set and Jenkins is configured to poll for changes, Jenkins will pay attention to included and/or excluded files and/or folders when determining if a build needs to be triggered.
 
@@ -1181,7 +1217,7 @@ Excluded Regions::
 [#polling-ignores-commits-with-certain-messages]
 ==== Polling ignores commits with certain messages
 
-image:/images/git-polling-ignores-commits-with-certain-messages.png[Polling ignores commits with certain messages]
+image:images/git-polling-ignores-commits-with-certain-messages.png[Polling ignores commits with certain messages]
 
 Excluded Messages::
 
@@ -1192,7 +1228,7 @@ Excluded Messages::
 [#strategy-for-choosing-what-to-build]
 ==== Strategy for choosing what to build
 
-image:/images/git-strategy-for-choosing-what-to-build.png[Strategy for choosing what to build]
+image:images/git-strategy-for-choosing-what-to-build.png[Strategy for choosing what to build]
 
 When you are interested in using a job to build multiple branches, you can choose how Jenkins chooses the branches to build and the order they should be built.
 
@@ -1220,6 +1256,23 @@ Inverse::
   This is useful, for example, when you have jobs building your master and various release branches and you want a second job which builds all new feature branches.
   For example, branches which do not match these patterns without redundantly building master and the release branches again each time they change.
 
+[#first-build-changelog]
+==== First build changelog
+
+image:/images/git-extension-for-first-build.png[First build changelog]
+
+The Jenkins git plugin provides an option to trigger a Pipeline build on the first commit on a branch.
+By default, no changelog is generated for the first build because the first build has no predecessor build for comparison.
+When the first build changelog option is enabled, the most recent commit will be used as the changelog of the first build.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: 'master']],
+    extensions: [ firstBuildChangelog() ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
 [#merge-extensions]
 === Merge Extensions
 
@@ -1229,7 +1282,7 @@ Merge extensions control the source branch for the merge and the options applied
 [#merge-before-build]
 ==== Merge before build
 
-image:/images/git-merge-before-build.png[Merge before build]
+image:images/git-merge-before-build.png[Merge before build]
 
 These options allow you to perform a merge to a particular branch before building.
 For example, you could specify an integration branch to be built, and to merge to master.
@@ -1268,7 +1321,7 @@ Fast-forward mode::
 [#custom-user-name-e-mail-address]
 ==== Custom user name/e-mail address
 
-image:/images/git-custom-user-name-e-mail-address.png[Custom user name/e-mail address]
+image:images/git-custom-user-name-e-mail-address.png[Custom user name/e-mail address]
 
 user.name::
 
@@ -1423,6 +1476,15 @@ Administrators may want to store those git repositories in another location for 
 For example, they might choose to place the cache directories in `/var/cache/jenkins`.
 
 The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
+
+[#ignoreTagDiscoveryTrait]
+=== Ignore tag discovery trait
+
+Multibranch Pipelines that use the Git branch source prior to Git plugin 5.8.0 always fetch tags from the remote repository, whether or not the tag discovery trait is set.
+That bug is fixed in Git plugin 5.8.0 and later.
+
+Administrators that depend on the old (buggy) behavior can set the property `jenkins.plugins.git.GitSCMSource.IGNORE_TAG_DISCOVERY=true`.
+When administrators detect that their multibranch Pipelines depend on that bug, they should add the tag discovery trait to the multibranch Pipeline definition.
 
 [#git-publisher]
 == Git Publisher
@@ -1590,7 +1652,7 @@ for (job in allItems) {
   def counter = 0;
   for (build in job.getBuilds()) {
     // It is possible for a build to have multiple BuildData actions
-    // since we can use the Mulitple SCM plugin.
+    // since we can use the Multiple SCM plugin.
     def gitActions = build.getActions(hudson.plugins.git.util.BuildData.class)
     if (gitActions != null) {
       for (action in gitActions) {

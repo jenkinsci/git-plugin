@@ -7,20 +7,23 @@ import java.util.HashSet;
 
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
+import org.junit.jupiter.api.Test;
+
 import org.eclipse.jgit.lib.ObjectId;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Arnout Engelen
  */
-public class DefaultBuildChooserTest extends AbstractGitRepository {
+class DefaultBuildChooserTest extends AbstractGitRepository {
+
     @Test
-    public void testChooseGitRevisionToBuildByShaHash() throws Exception {
+    void testChooseGitRevisionToBuildByShaHash() throws Exception {
         testGitClient.commit("Commit 1");
         String shaHashCommit1 = testGitClient.getBranches().iterator().next().getSHA1String();
         testGitClient.commit("Commit 2");
@@ -40,7 +43,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
 
     /* RegExp patterns prefixed with : should pass through to DefaultBuildChooser.getAdvancedCandidateRevisions */
     @Test
-    public void testIsAdvancedSpec() throws Exception {
+    void testIsAdvancedSpec() throws Exception {
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
         assertFalse(buildChooser.isAdvancedSpec("origin/master"));
@@ -54,7 +57,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
     /* always failed before fix */
     @Issue("JENKINS-37263")
     @Test
-    public void testPreferRemoteBranchInCandidateRevisionsWithWrongOrderInHashSet() throws Exception {
+    void testPreferRemoteBranchInCandidateRevisionsWithWrongOrderInHashSet() throws Exception {
         String branchName = "feature/42";
         String localRef = "refs/heads/" + branchName;
         String remoteRef = "refs/remotes/origin/" + branchName;
@@ -73,7 +76,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
     /* was successful also before fix */
     @Issue("JENKINS-37263")
     @Test
-    public void testPreferRemoteBranchInCandidateRevisionsWithCorrectOrderInHashSet() throws Exception {
+    void testPreferRemoteBranchInCandidateRevisionsWithCorrectOrderInHashSet() throws Exception {
         String branchName = "feature/42";
         String localRef = "refs/heads/" + branchName;
         String remoteRef = "refs/remotes/origin/" + branchName;
@@ -92,7 +95,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
     /* was successful also before fix */
     @Issue("JENKINS-37263")
     @Test
-    public void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommit() throws Exception {
+    void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommit() throws Exception {
         String branchName = "feature/42";
         String localRef = "refs/heads/" + branchName;
         String remoteRef = "refs/remotes/origin/" + branchName;
@@ -109,7 +112,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
     /* was successful also before fix */
     @Issue("JENKINS-37263")
     @Test
-    public void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithOriginPrefix() throws Exception {
+    void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithOriginPrefix() throws Exception {
         String baseBranchName = "feature/42";
         String branchName = "origin/" + baseBranchName;
         String localRef = "refs/heads/" + baseBranchName;
@@ -126,7 +129,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
     /* was successful also before fix */
     @Issue("JENKINS-37263")
     @Test
-    public void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithRemotesOriginPrefix() throws Exception {
+    void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithRemotesOriginPrefix() throws Exception {
         String baseBranchName = "feature/42";
         String branchName = "remotes/origin/" + baseBranchName;
         String localRef = "refs/heads/" + baseBranchName;
@@ -143,7 +146,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
     /* was successful also before fix */
     @Issue("JENKINS-37263")
     @Test
-    public void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithRefsHeadsPrefix() throws Exception {
+    void testSingleCandidateRevisionWithLocalAndRemoteRefsOnSameCommitWithRefsHeadsPrefix() throws Exception {
         String baseBranchName = "feature/42";
         String branchName = "refs/heads/" + baseBranchName;
         String localRef = "refs/heads/" + baseBranchName;
@@ -157,7 +160,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         assertThat(candidateRevisions, hasSize(1));
     }
 
-    private void createRefsWithPredefinedOrderInHashSet(String ref1, String ref2) throws InterruptedException {
+    private void createRefsWithPredefinedOrderInHashSet(String ref1, String ref2) throws Exception {
         ObjectId commit1 = testGitClient.revParse("HEAD");
         testGitClient.ref(ref1);
         testGitClient.commit("Commit");

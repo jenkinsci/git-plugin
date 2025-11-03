@@ -38,20 +38,22 @@ import java.util.Collections;
 import java.util.List;
 
 import jenkins.MasterToSlaveFileCallable;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -60,12 +62,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Kohsuke Kawaguchi
  * @author ishaaq
  */
+@WithJenkins
+@WithGitSampleRepo
 public abstract class AbstractGitTestCase {
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
 
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    protected JenkinsRule r;
+
+    protected GitSampleRepoRule sampleRepo;
 
     protected TaskListener listener;
 
@@ -78,8 +81,11 @@ public abstract class AbstractGitTestCase {
     protected FilePath workspace; // aliases "gitDirPath"
     protected GitClient git;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    protected void beforeEach(JenkinsRule rule, GitSampleRepoRule repo) throws Exception {
+        r = rule;
+        sampleRepo = repo;
+
         SystemReader.getInstance().getUserConfig().clear();
         listener = StreamTaskListener.fromStderr();
 
@@ -246,7 +252,7 @@ public abstract class AbstractGitTestCase {
     protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+            assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists(), expectedNewlyCommittedFile + " file not found in workspace");
         }
         if(expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
@@ -268,7 +274,7 @@ public abstract class AbstractGitTestCase {
     protected MatrixBuild build(final MatrixProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final MatrixBuild build = project.scheduleBuild2(0).get();
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+            assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists(), expectedNewlyCommittedFile + " file not found in workspace");
         }
         if(expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
@@ -279,8 +285,8 @@ public abstract class AbstractGitTestCase {
 
     protected EnvVars getEnvVars(FreeStyleProject project) {
         for (hudson.tasks.Builder b : project.getBuilders()) {
-            if (b instanceof CaptureEnvironmentBuilder) {
-                return ((CaptureEnvironmentBuilder)b).getEnvVars();
+            if (b instanceof CaptureEnvironmentBuilder builder) {
+                return builder.getEnvVars();
             }
         }
         return new EnvVars();
@@ -294,19 +300,19 @@ public abstract class AbstractGitTestCase {
     }
 
     protected String getHeadRevision(AbstractBuild build, final String branch) throws IOException, InterruptedException {
-        return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
-                public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-                    try {
-                        @SuppressWarnings("deprecation") // Local repository reference
-                        org.eclipse.jgit.lib.Repository repo = Git.with(null, null).in(f).getClient().getRepository();
-                        ObjectId oid = repo.resolve("refs/heads/" + branch);
-                        return oid.name();
-                    } catch (GitException e) {
-                        throw new RuntimeException(e);
-                    }
+        return build.getWorkspace().act(new MasterToSlaveFileCallable<>() {
+            public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+                try {
+                    @SuppressWarnings("deprecation") // Local repository reference
+                    org.eclipse.jgit.lib.Repository repo = Git.with(null, null).in(f).getClient().getRepository();
+                    ObjectId oid = repo.resolve("refs/heads/" + branch);
+                    return oid.name();
+                } catch (GitException e) {
+                    throw new RuntimeException(e);
                 }
+            }
 
-            });
+        });
     }
 
     public static class HasCredentialBuilder extends Builder {

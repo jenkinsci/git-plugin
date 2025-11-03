@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package jenkins.plugins.git;
+package hudson.plugins.git;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -31,79 +31,101 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Label;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTagAction;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
+
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
+
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import jenkins.util.VirtualFile;
+import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.GitStep;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Stopwatch;
-import org.junit.rules.TestName;
-import org.junit.runner.OrderWith;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-@OrderWith(RandomOrder.class)
-public class GitStepTest {
+@TestMethodOrder(MethodOrderer.Random.class)
+@WithJenkins
+@WithGitSampleRepo
+class GitStepTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
-    @Rule
-    public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
+    private JenkinsRule r;
 
-    @BeforeClass
-    public static void setGitDefaults() throws Exception {
+    private GitSampleRepoRule sampleRepo;
+    private GitSampleRepoRule otherRepo;
+
+    @BeforeAll
+    static void beforeAll() throws Exception {
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
     }
 
-    @ClassRule
-    public static Stopwatch stopwatch = new Stopwatch();
-    @Rule
-    public TestName testName = new TestName();
+    @BeforeEach
+    void beforeEach(JenkinsRule rule, GitSampleRepoRule repo1, GitSampleRepoRule repo2) {
+        r = rule;
+        sampleRepo = repo1;
+        otherRepo = repo2;
+    }
+
+    private static final Instant START_TIME = Instant.now();
 
     private static final int MAX_SECONDS_FOR_THESE_TESTS = 200;
 
     private boolean isTimeAvailable() {
         String env = System.getenv("CI");
-        if (env == null || !Boolean.parseBoolean(env)) {
+        if (!Boolean.parseBoolean(env)) {
             // Run all tests when not in CI environment
             return true;
         }
-        return stopwatch.runtime(SECONDS) <= MAX_SECONDS_FOR_THESE_TESTS;
+        return Duration.between(START_TIME, Instant.now()).toSeconds() <= MAX_SECONDS_FOR_THESE_TESTS;
+    }
+
+    private static String NOTIFY_COMMIT_ACCESS_CONTROL_ORIGINAL = GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL;
+
+    @AfterEach
+    void afterEach() {
+        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = NOTIFY_COMMIT_ACCESS_CONTROL_ORIGINAL;
     }
 
     @Test
-    public void roundtrip() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void roundtrip() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         GitStep step = new GitStep("git@github.com:jenkinsci/workflow-plugin.git");
         Step roundtrip = new StepConfigTester(r).configRoundTrip(step);
         r.assertEqualDataBoundBeans(step, roundtrip);
     }
 
     @Test
-    public void roundtrip_withcredentials() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
-        IdCredentials c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "user", "pass");
+    void roundtrip_withcredentials() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        IdCredentials c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "user", "password-needs-to-be-14");
         CredentialsProvider.lookupStores(r.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
         GitStep step = new GitStep("git@github.com:jenkinsci/workflow-plugin.git");
@@ -113,8 +135,8 @@ public class GitStepTest {
     }
 
     @Test
-    public void basicCloneAndUpdate() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void basicCloneAndUpdate() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         r.createOnlineSlave(Label.get("remote"));
@@ -137,8 +159,8 @@ public class GitStepTest {
     }
 
     @Test
-    public void changelogAndPolling() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void changelogAndPolling() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
@@ -174,8 +196,8 @@ public class GitStepTest {
     }
 
     @Test
-    public void multipleSCMs() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void multipleSCMs() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         sampleRepo.init();
         otherRepo.init();
         otherRepo.write("otherfile", "");
@@ -239,8 +261,8 @@ public class GitStepTest {
 
     @Issue("JENKINS-29326")
     @Test
-    public void identicalGitSCMs() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void identicalGitSCMs() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         sampleRepo.init();
         otherRepo.init();
         otherRepo.write("firstfile", "");
@@ -274,8 +296,8 @@ public class GitStepTest {
     }
 
     @Test
-    public void commitToWorkspace() throws Exception {
-        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+    void commitToWorkspace() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
@@ -290,6 +312,61 @@ public class GitStepTest {
             "}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("+edited by build", b);
+    }
+
+    private WorkflowJob createJob() throws Exception {
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
+        p.setDefinition(new CpsFlowDefinition(
+            """
+            node {
+                error('this should never be called')
+            }
+            """, true));
+        return p;
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    void testDoNotifyCommitWithInvalidApiToken() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        createJob();
+        String response = sampleRepo.notifyCommitWithResults(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN);
+        assertThat(response, containsString("Invalid access token"));
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    void testDoNotifyCommitWithAllowModeRandomValue() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        createJob();
+        String response = sampleRepo.notifyCommitWithResults(r, null);
+        assertThat(response, containsString("An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details."));
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    void testDoNotifyCommitWithSha1AndAllowModePollWithInvalidToken() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
+        createJob();
+        /* sha1 is ignored because invalid access token is provided */
+        String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
+        String response = sampleRepo.notifyCommitWithResults(r, GitSampleRepoRule.INVALID_NOTIFY_COMMIT_TOKEN, sha1);
+        assertThat(response, containsString("Invalid access token"));
+    }
+
+    @Test
+    @Issue("SECURITY-284")
+    void testDoNotifyCommitWithSha1AndAllowModePoll() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
+        createJob();
+        /* sha1 is ignored because no access token is provided */
+        String sha1 = "4b714b66959463a98e9dfb1983db5a39a39fa6d6";
+        String response = sampleRepo.notifyCommitWithResults(r, null, sha1);
+        assertThat(response, containsString("An access token is required when using the sha1 parameter"));
     }
 
 }

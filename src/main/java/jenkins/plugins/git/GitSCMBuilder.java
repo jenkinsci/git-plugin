@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.UserRemoteConfig;
@@ -50,7 +51,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMBuilder;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 
 /**
@@ -498,22 +499,26 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             extensions.add(new GitSCMSourceDefaults(head() instanceof TagSCMHead));
         }
         SCMRevision revision = revision();
-        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
+        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl impl) {
             // remove any conflicting BuildChooserSetting if present
             extensions.removeIf(gitSCMExtension -> gitSCMExtension instanceof BuildChooserSetting);
             extensions.add(new BuildChooserSetting(new AbstractGitSCMSource.SpecificRevisionBuildChooser(
-                    (AbstractGitSCMSource.SCMRevisionImpl) revision)));
+                    impl)));
         }
         SCMHead scmHead = head();
-        if (scmHead instanceof GitRefSCMHead) {
-            GitRefSCMHead gitHead = (GitRefSCMHead) scmHead;
+        if (scmHead instanceof GitRefSCMHead gitHead) {
             withRefSpec(gitHead.getRef());
         }
-        return new GitSCM(
-                asRemoteConfigs(),
-                Collections.singletonList(new BranchSpec(head().getName())),
-                browser(), gitTool(),
-                extensions);
+        try {
+            return new GitSCM(
+                    asRemoteConfigs(),
+                    Collections.singletonList(new BranchSpec(head().getName())),
+                    browser(), gitTool(),
+                    extensions);
+        } catch (GitException x) {
+            // TODO interface defines no checked exception
+            throw new IllegalStateException(x);
+        }
     }
 
     /**

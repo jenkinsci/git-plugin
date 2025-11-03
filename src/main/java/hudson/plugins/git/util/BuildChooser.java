@@ -16,6 +16,7 @@ import hudson.plugins.git.Revision;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -259,6 +260,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
         return result;
     }
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

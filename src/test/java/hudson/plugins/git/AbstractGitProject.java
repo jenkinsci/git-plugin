@@ -48,31 +48,40 @@ import java.util.Collections;
 import java.util.List;
 
 import jenkins.MasterToSlaveFileCallable;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.eclipse.jgit.lib.Repository;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 
-import static org.junit.Assert.assertTrue;
-
-import org.junit.Rule;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
-import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Abstract class that provides convenience methods to configure projects.
  * @author Mark Waite
  */
-public class AbstractGitProject extends AbstractGitRepository {
+@WithJenkins
+class AbstractGitProject extends AbstractGitRepository {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    protected JenkinsRule r;
 
-    @Rule
-    public FlagRule<String> notifyCommitAccessControl =
-            new FlagRule<>(() -> GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL, x -> GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = x);
+    private String notifyCommitAccessControl;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        r = rule;
+        notifyCommitAccessControl = GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL;
+    }
+
+    @AfterEach
+    void afterEach() throws Exception {
+        GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = notifyCommitAccessControl;
+    }
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter) throws Exception {
         FreeStyleProject project = r.createFreeStyleProject();
@@ -208,7 +217,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+            assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists(), expectedNewlyCommittedFile + " file not found in workspace");
         }
         if (expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
@@ -230,7 +239,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     protected MatrixBuild build(final MatrixProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
         final MatrixBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+            assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists(), expectedNewlyCommittedFile + " file not found in workspace");
         }
         if (expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
@@ -239,7 +248,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected String getHeadRevision(AbstractBuild build, final String branch) throws IOException, InterruptedException {
-        return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
+        return build.getWorkspace().act(new MasterToSlaveFileCallable<>() {
             @Override
             public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                 try (@SuppressWarnings("deprecation") // Local repository reference
@@ -254,8 +263,8 @@ public class AbstractGitProject extends AbstractGitRepository {
 
     protected EnvVars getEnvVars(FreeStyleProject project) {
         for (hudson.tasks.Builder b : project.getBuilders()) {
-            if (b instanceof CaptureEnvironmentBuilder) {
-                return ((CaptureEnvironmentBuilder) b).getEnvVars();
+            if (b instanceof CaptureEnvironmentBuilder builder) {
+                return builder.getEnvVars();
             }
         }
         return new EnvVars();

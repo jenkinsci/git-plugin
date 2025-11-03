@@ -6,29 +6,36 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class GitSCMExtensionTraitTest {
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class GitSCMExtensionTraitTest {
+
+    private static JenkinsRule r;
+
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
 
     public List<GitSCMExtensionTraitDescriptor> descriptors() {
         List<GitSCMExtensionTraitDescriptor> list = new ArrayList<>();
         for (Descriptor<SCMSourceTrait> d : SCMSourceTrait.all()) {
-            if (d instanceof GitSCMExtensionTraitDescriptor) {
-                list.add((GitSCMExtensionTraitDescriptor) d);
+            if (d instanceof GitSCMExtensionTraitDescriptor descriptor) {
+                list.add(descriptor);
             }
         }
         return list;
     }
 
     @Test
-    public void extensionClassesOverrideEquals() {
+    void extensionClassesOverrideEquals() {
         for (GitSCMExtensionTraitDescriptor d : descriptors()) {
             assertThat(d.getExtensionClass().getName() + " overrides equals(Object)",
                     Util.isOverridden(GitSCMExtension.class, d.getExtensionClass(), "equals", Object.class),
@@ -37,7 +44,7 @@ public class GitSCMExtensionTraitTest {
     }
 
     @Test
-    public void extensionClassesOverrideHashCode() {
+    void extensionClassesOverrideHashCode() {
         for (GitSCMExtensionTraitDescriptor d : descriptors()) {
             assertThat(d.getExtensionClass().getName() + " overrides hashCode()",
                     Util.isOverridden(GitSCMExtension.class, d.getExtensionClass(), "hashCode"),
@@ -46,7 +53,7 @@ public class GitSCMExtensionTraitTest {
     }
 
     @Test
-    public void extensionClassesOverrideToString() {
+    void extensionClassesOverrideToString() {
         for (GitSCMExtensionTraitDescriptor d : descriptors()) {
             assertThat(d.getExtensionClass().getName() + " overrides toString()",
                     Util.isOverridden(GitSCMExtension.class, d.getExtensionClass(), "toString"),

@@ -36,17 +36,24 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.ClassRule;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class GitUtilsJenkinsRuleTest {
+@WithJenkins
+class GitUtilsJenkinsRuleTest {
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
+
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
 
     @Test
-    public void testWorkspaceToNode() throws Exception {
+    void testWorkspaceToNode() throws Exception {
         String labelString = "label-" + UUID.randomUUID();
         Label label = new LabelAtom(labelString);
         DumbSlave agent = r.createOnlineSlave(label);
@@ -58,17 +65,17 @@ public class GitUtilsJenkinsRuleTest {
     }
 
     @Test
-    public void testWorkspaceToNodeRootPath() {
+    void testWorkspaceToNodeRootPath() {
         assertThat(GitUtils.workspaceToNode(r.getInstance().getRootPath()), is(r.getInstance()));
     }
 
     @Test
-    public void testWorkspaceToNodeNullWorkspace() {
+    void testWorkspaceToNodeNullWorkspace() {
         assertThat(GitUtils.workspaceToNode(null), is(r.getInstance()));
     }
 
     @Test
-    public void testResolveGitTool() {
+    void testResolveGitTool() {
         TaskListener listener = StreamTaskListener.NULL;
         String gitTool = "Default";
         GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
@@ -76,7 +83,7 @@ public class GitUtilsJenkinsRuleTest {
     }
 
     @Test
-    public void testResolveGitToolNull() {
+    void testResolveGitToolNull() {
         TaskListener listener = StreamTaskListener.NULL;
         String gitTool = null;
         GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
@@ -84,7 +91,7 @@ public class GitUtilsJenkinsRuleTest {
     }
 
     @Test
-    public void testResolveGitToolNonExistentTool() {
+    void testResolveGitToolNonExistentTool() {
         TaskListener listener = StreamTaskListener.NULL;
         String gitTool = "non-existent-tool";
         GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
@@ -92,7 +99,7 @@ public class GitUtilsJenkinsRuleTest {
     }
 
     @Test
-    public void testResolveGitToolBuiltOnNull() {
+    void testResolveGitToolBuiltOnNull() {
         TaskListener listener = StreamTaskListener.NULL;
         String gitTool = null;
         Node builtOn = null;
@@ -102,7 +109,7 @@ public class GitUtilsJenkinsRuleTest {
     }
 
     @Test
-    public void testResolveGitToolBuiltOnAgent() throws Exception {
+    void testResolveGitToolBuiltOnAgent() throws Exception {
         TaskListener listener = StreamTaskListener.NULL;
         String gitTool = "/opt/my-non-existing-git/bin/git";
         String labelString = "label-" + UUID.randomUUID();

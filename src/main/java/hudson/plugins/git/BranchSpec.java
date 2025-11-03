@@ -6,6 +6,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 @ExportedBean
 public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements Serializable {
+    @Serial
     private static final long serialVersionUID = -6177158367915899356L;
 
     private String name;

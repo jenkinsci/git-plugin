@@ -26,45 +26,43 @@ package hudson.plugins.git;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
+import org.junit.jupiter.api.BeforeEach;
+
 import org.eclipse.jgit.lib.ObjectId;
-import org.junit.Test;
-import org.junit.Before;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class GitRevisionTokenMacroTest {
+class GitRevisionTokenMacroTest {
 
     private GitRevisionTokenMacro tokenMacro;
 
-    public GitRevisionTokenMacroTest() {
-    }
-
-    @Before
-    public void createTokenMacro() {
+    @BeforeEach
+    void beforeEach() {
         tokenMacro = new GitRevisionTokenMacro();
     }
 
     @Test
-    public void testAcceptsMacroName() {
+    void testAcceptsMacroName() {
         assertTrue(tokenMacro.acceptsMacroName("GIT_REVISION"));
     }
 
     @Test
-    public void testAcceptsMacroNameFalse() {
+    void testAcceptsMacroNameFalse() {
         assertFalse(tokenMacro.acceptsMacroName("NOT_A_GIT_REVISION"));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testEvaluate() throws Exception {
-        // Real test in GitSCMTest#testBasicRemotePoll
-        tokenMacro.evaluate(null, TaskListener.NULL, "GIT_REVISION");
+    @Test
+    void testEvaluate() throws Exception {
+        assertThrows(NullPointerException.class, () ->
+            // Real test in GitSCMTest#testBasicRemotePoll
+            tokenMacro.evaluate(null, TaskListener.NULL, "GIT_REVISION"));
     }
 
     @Test
-    public void testEvaluateMockBuildNull() throws Exception {
+    void testEvaluateMockBuildNull() throws Exception {
         // Real test in GitSCMTest#testBasicRemotePoll
         AbstractBuild build = Mockito.mock(AbstractBuild.class);
         Mockito.when(build.getAction(BuildData.class)).thenReturn(null);
@@ -72,7 +70,7 @@ public class GitRevisionTokenMacroTest {
     }
 
     @Test
-    public void testEvaluateMockBuildDataNull() throws Exception {
+    void testEvaluateMockBuildDataNull() throws Exception {
         // Real test in GitSCMTest#testBasicRemotePoll
         BuildData buildData = Mockito.mock(BuildData.class);
         Mockito.when(buildData.getLastBuiltRevision()).thenReturn(null);
@@ -82,7 +80,7 @@ public class GitRevisionTokenMacroTest {
     }
 
     @Test
-    public void testEvaluateMockBuildData() throws Exception {
+    void testEvaluateMockBuildData() throws Exception {
         // Real test in GitSCMTest#testBasicRemotePoll
         Revision revision = new Revision(ObjectId.fromString("42ab63c2d69c012122d9b373450404244cc58e81"));
         BuildData buildData = Mockito.mock(BuildData.class);
@@ -93,7 +91,7 @@ public class GitRevisionTokenMacroTest {
     }
 
     @Test
-    public void testEvaluateMockBuildDataLength() throws Exception {
+    void testEvaluateMockBuildDataLength() throws Exception {
         // Real test in GitSCMTest#testBasicRemotePoll
         Revision revision = new Revision(ObjectId.fromString("42ab63c2d69c012122d9b373450404244cc58e81"));
         BuildData buildData = Mockito.mock(BuildData.class);

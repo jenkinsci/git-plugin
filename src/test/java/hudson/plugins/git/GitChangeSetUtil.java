@@ -16,7 +16,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import junit.framework.TestCase;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /** Utility class to support GitChangeSet testing. */
 public class GitChangeSetUtil {
@@ -77,10 +80,10 @@ public class GitChangeSetUtil {
     }
 
     static void assertChangeSet(GitChangeSet changeSet) {
-        TestCase.assertEquals("123abc456def", changeSet.getId());
-        TestCase.assertEquals("Commit title.", changeSet.getMsg());
-        TestCase.assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
-        TestCase.assertEquals("Commit title.\nCommit extended description.\n".replace("\n", "<br>"), changeSet.getCommentAnnotated());
+        assertEquals("123abc456def", changeSet.getId());
+        assertEquals("Commit title.", changeSet.getMsg());
+        assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
+        assertEquals("Commit title.\nCommit extended description.\n".replace("\n", "<br>"), changeSet.getCommentAnnotated());
         HashSet<String> expectedAffectedPaths = new HashSet<>(7);
         expectedAffectedPaths.add("src/test/add.file");
         expectedAffectedPaths.add("src/test/deleted.file");
@@ -88,49 +91,49 @@ public class GitChangeSetUtil {
         expectedAffectedPaths.add("src/test/renamedFrom.file");
         expectedAffectedPaths.add("src/test/renamedTo.file");
         expectedAffectedPaths.add("src/test/copyOf.file");
-        TestCase.assertEquals(expectedAffectedPaths, changeSet.getAffectedPaths());
+        assertEquals(expectedAffectedPaths, changeSet.getAffectedPaths());
         Collection<GitChangeSet.Path> actualPaths = changeSet.getPaths();
-        TestCase.assertEquals(6, actualPaths.size());
+        assertEquals(6, actualPaths.size());
         for (GitChangeSet.Path path : actualPaths) {
             if (null != path.getPath()) switch (path.getPath()) {
                 case "src/test/add.file":
-                    TestCase.assertEquals(EditType.ADD, path.getEditType());
-                    TestCase.assertNull(path.getSrc());
-                    TestCase.assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
+                    assertEquals(EditType.ADD, path.getEditType());
+                    assertNull(path.getSrc());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
                     break;
                 case "src/test/deleted.file":
-                    TestCase.assertEquals(EditType.DELETE, path.getEditType());
-                    TestCase.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                    TestCase.assertNull(path.getDst());
+                    assertEquals(EditType.DELETE, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertNull(path.getDst());
                     break;
                 case "src/test/modified.file":
-                    TestCase.assertEquals(EditType.EDIT, path.getEditType());
-                    TestCase.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                    TestCase.assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                    assertEquals(EditType.EDIT, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
                     break;
                 case "src/test/renamedFrom.file":
-                    TestCase.assertEquals(EditType.DELETE, path.getEditType());
-                    TestCase.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                    TestCase.assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                    assertEquals(EditType.DELETE, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
                     break;
                 case "src/test/renamedTo.file":
-                    TestCase.assertEquals(EditType.ADD, path.getEditType());
-                    TestCase.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                    TestCase.assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                    assertEquals(EditType.ADD, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
                     break;
                 case "src/test/copyOf.file":
-                    TestCase.assertEquals(EditType.ADD, path.getEditType());
-                    TestCase.assertEquals("bc234def567abc890def123abc456def789abc01", path.getSrc());
-                    TestCase.assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
+                    assertEquals(EditType.ADD, path.getEditType());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getSrc());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
                     break;
                 default:
-                    TestCase.fail("Unrecognized path.");
+                    fail("Unrecognized path.");
                     break;
             }
         }
     }
 
-    public static GitChangeSet genChangeSet(ObjectId sha1, String gitImplementation, boolean authorOrCommitter) throws IOException, InterruptedException {
+    public static GitChangeSet genChangeSet(ObjectId sha1, String gitImplementation, boolean authorOrCommitter) throws GitException, IOException, InterruptedException {
         EnvVars envVars = new EnvVars();
         TaskListener listener = StreamTaskListener.fromStdout();
         GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(gitImplementation).getClient();

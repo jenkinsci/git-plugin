@@ -18,12 +18,12 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 
 public class ViewGitWeb extends GitRepositoryBrowser {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final String projectName;
@@ -89,9 +90,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         }
 
         @Override
-        @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
-                            justification = "Inherited javadoc commits that req is non-null")
-        public ViewGitWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+        public ViewGitWeb newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(ViewGitWeb.class, jsonObject);
         }
 
@@ -107,7 +106,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {
-                protected FormValidation check() throws IOException, ServletException {
+                protected FormValidation check() throws IOException {
                     String v = cleanUrl;
                     if (!v.endsWith("/"))
                         v += '/';
@@ -119,7 +118,11 @@ public class ViewGitWeb extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it doesn't look like ViewGit");
                         }
                     } catch (IOException e) {
-                        return handleIOException(v, e);
+                        if (e.getMessage().equals(v)) {
+                            return FormValidation.error("Unable to connect " + v, e);
+                        } else {
+                            return FormValidation.error(e.getMessage(), e);
+                        }
                     }
                 }
             }.check();

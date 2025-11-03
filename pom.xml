@@ -5,13 +5,14 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.79</version>
+    <version>5.28</version>
     <relativePath />
   </parent>
 
   <artifactId>git</artifactId>
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
+
   <name>Git plugin</name>
   <url>https://github.com/${gitHubRepo}</url>
   <inceptionYear>2007</inceptionYear>
@@ -23,44 +24,6 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <id>markewaite</id>
-      <name>Mark Waite</name>
-      <email>mark.earl.waite@gmail.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>rsandell</id>
-      <name>Robert Sandell</name>
-      <email>rsandell@cloudbees.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <url>http://rsandell.com</url>
-    </developer>
-    <developer>
-      <id>mramonleon</id>
-      <name>M Ramon Leon</name>
-      <email>rleon@cloudbees.com</email>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>olamy</id>
-      <name>Olivier Lamy</name>
-      <email>olamy@apache.org</email>
-      <url>https://about.me/olamy</url>
-      <timezone>Australia/Brisbane</timezone>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-  </developers>
-
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
@@ -69,26 +32,28 @@
   </scm>
 
   <properties>
-    <revision>5.2.2</revision>
+    <revision>5.8.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.414.3</jenkins.version>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
+    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+    <jenkins.baseline>2.504</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
-    <!-- Jenkins.MANAGE is still in Beta -->
-    <useBeta>true</useBeta>
-    <!-- Do not run extra reporting for checkstyle or pmd -->
+    <!-- Do not run extra reporting for pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
+    <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
   </properties>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.414.x</artifactId>
-        <version>2907.vcb_35d6f2f7de</version>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
+        <version>5622.vc9c3051619f5</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -128,6 +93,10 @@
       <artifactId>workflow-scm-step</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
       <classifier>tests</classifier>
@@ -144,16 +113,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
@@ -161,16 +120,14 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.15.8</version>
+      <version>4.2.1</version>
       <scope>test</scope>
     </dependency>
-    <!--Credential Binding Plugin-->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials-binding</artifactId>
     </dependency>
     <dependency>
-      <!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
       <optional>true</optional>
@@ -183,7 +140,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>3.11</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -229,7 +185,18 @@
       <version>1.7.1</version>
       <scope>test</scope>
     </dependency>
-    <!-- JCasC compatibility -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>2.0.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
+      <artifactId>testcontainers-gitserver</artifactId>
+      <version>0.12.0</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
@@ -260,19 +227,5 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.3.1</version>
-        <configuration>
-          <configLocation>google_checks.xml</configLocation>
-          <failOnViolation>true</failOnViolation>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>

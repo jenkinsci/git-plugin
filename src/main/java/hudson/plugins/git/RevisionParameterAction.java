@@ -35,6 +35,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,11 +88,11 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     }   
 
     @Deprecated
-    public Revision toRevision(IGitAPI git) throws InterruptedException {
+    public Revision toRevision(IGitAPI git) throws GitException, InterruptedException {
         return toRevision((GitClient) git);
     }
 
-    public Revision toRevision(GitClient git) throws InterruptedException {
+    public Revision toRevision(GitClient git) throws GitException, InterruptedException {
     	if (revision != null) {
     		return revision;
     	}
@@ -200,6 +201,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         }
     }
 
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = Logger.getLogger(RevisionParameterAction.class.getName());
 }

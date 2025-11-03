@@ -1,9 +1,6 @@
 package hudson.plugins.git;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +11,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import hudson.plugins.git.util.GitUtilsTest;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 
@@ -26,22 +24,23 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.Issue;
 
-@RunWith(Parameterized.class)
-public class GitChangeSetTruncateTest {
+@ParameterizedClass(name = "{0} \"{1}\" --->>> \"{2}\"")
+@MethodSource("gitObjects")
+@WithGitSampleRepo
+class GitChangeSetTruncateTest {
 
-    @ClassRule
-    public static TemporaryFolder tempFolder = new TemporaryFolder();
+    @TempDir
+    private static File tempFolder;
 
-    @ClassRule
-    public static GitSampleRepoRule versionCheckRepo = new GitSampleRepoRule();
+    private static GitSampleRepoRule versionCheckRepo;
 
     private static File repoRoot = null;
 
@@ -59,8 +58,8 @@ public class GitChangeSetTruncateTest {
 
     private static class TestData {
 
-        final public String testDataCommitSummary;
-        final public String testDataTruncatedSummary;
+        public final String testDataCommitSummary;
+        public final String testDataTruncatedSummary;
 
         TestData(String commitSummary, String truncatedSummary) {
             this.testDataCommitSummary = commitSummary;
@@ -70,10 +69,10 @@ public class GitChangeSetTruncateTest {
 
     //                                                    1         2         3         4         5         6         7
     //                                           1234567890123456789012345678901234567890123456789012345678901234567890
-    private final static String SEVENTY_CHARS = "[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0";
-    private final static String EIGHTY_CHARS  = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+    private static final String SEVENTY_CHARS = "[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0";
+    private static final String EIGHTY_CHARS  = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
 
-    private final static TestData[] TEST_DATA = {
+    private static final TestData[] TEST_DATA = {
         new TestData(EIGHTY_CHARS,                         EIGHTY_CHARS), // surprising that longer than 72 is returned
         new TestData(EIGHTY_CHARS + " A B C",              EIGHTY_CHARS), // surprising that longer than 72 is returned
         new TestData(SEVENTY_CHARS,                        SEVENTY_CHARS),
@@ -106,8 +105,13 @@ public class GitChangeSetTruncateTest {
         changeSetTruncatedSummary = new GitChangeSet(changeLogList, random.nextBoolean(), false);
     }
 
-    @Parameterized.Parameters(name = "{0} \"{1}\" --->>> \"{2}\"")
-    public static Collection gitObjects() {
+
+    @BeforeAll
+    static void beforeAll(GitSampleRepoRule repo) {
+        versionCheckRepo = repo;
+    }
+
+    static Collection gitObjects() {
         String[] bothGitImplementations = {"git", "jgit"};
         List<Object[]> arguments = new ArrayList<>();
         for (String implementation : bothGitImplementations) {
@@ -120,10 +124,10 @@ public class GitChangeSetTruncateTest {
         return arguments;
     }
 
-    @BeforeClass
-    public static void createRepo() throws Exception {
+    @BeforeAll
+    static void beforeAll() throws Exception {
         SystemReader.getInstance().getUserConfig().clear();
-        repoRoot = tempFolder.newFolder();
+        repoRoot = newFolder(tempFolder, "junit");
         String initialImpl = random.nextBoolean() ? "git" : "jgit";
 
         GitClient gitClient = Git.with(TaskListener.NULL, GitUtilsTest.getConfigNoSystemEnvsVars())
@@ -142,7 +146,7 @@ public class GitChangeSetTruncateTest {
 
     private ObjectId commitOneFile(GitClient gitClient, final String commitSummary) throws Exception {
         String path = "One-File.txt";
-        String content = String.format("A random UUID: %s\n", UUID.randomUUID());
+        String content = "A random UUID: %s\n".formatted(UUID.randomUUID());
         /* randomize whether commit message is single line or multi-line */
         String commitMessageBody = random.nextBoolean() ? "\n\n" + "committing " + path + " with content:\n\n" + content : "";
         String commitMessage = commitSummary + commitMessageBody;
@@ -169,9 +173,10 @@ public class GitChangeSetTruncateTest {
         }
     }
 
+    // CLI git truncates first line of commit message in Changes page, JGit doesn't
     @Test
-    @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page, JGit doesn't
-    public void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
+    @Issue("JENKINS-29977")
+    void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
         /*
          * Before git plugin 4.0, calls to GitChangeSet(x, y) truncated CLI git, did not truncate JGit.
          * After git plugin 4.0, calls to GitChangeSet(x, y) truncates CLI git, truncates JGit.
@@ -182,13 +187,22 @@ public class GitChangeSetTruncateTest {
 
     @Test
     @Issue("JENKINS-29977")
-    public void summaryAlwaysTruncatedAtLastWord72CharactersOrLess() throws Exception {
+    void summaryAlwaysTruncatedAtLastWord72CharactersOrLess() throws Exception {
         assertThat(changeSetTruncatedSummary.getMsg(), is(truncatedSummary));
     }
 
     @Test
     @Issue("JENKINS-29977")
-    public void summaryNotTruncatedAtLastWord72CharactersOrLess() throws Exception {
+    void summaryNotTruncatedAtLastWord72CharactersOrLess() throws Exception {
         assertThat(changeSetFullSummary.getMsg(), is(commitSummary));
+    }
+
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 }

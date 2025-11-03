@@ -28,13 +28,15 @@ import org.jenkinsci.plugins.gitclient.PushCommand;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.kohsuke.stapler.*;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GitPublisher extends Recorder implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -153,7 +155,7 @@ public class GitPublisher extends Recorder implements Serializable {
             EnvVars environment,
             AbstractBuild<?, ?> build,
             UnsupportedCommand cmd)
-            throws IOException, InterruptedException {
+            throws GitException, IOException, InterruptedException {
         return gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
     }
     
@@ -190,7 +192,12 @@ public class GitPublisher extends Recorder implements Serializable {
 
             UnsupportedCommand cmd = new UnsupportedCommand();
             cmd.gitPublisher(true);
-            final GitClient git  = getGitClient(gitSCM, listener, environment, build, cmd);
+            final GitClient git;
+            try {
+                git = getGitClient(gitSCM, listener, environment, build, cmd);
+            } catch (GitException x) {
+                throw new IOException(x);
+            }
 
             URIish remoteURI;
 
@@ -332,15 +339,15 @@ public class GitPublisher extends Recorder implements Serializable {
                      
             if (isPushNotes()) {
                 for (final NoteToPush b : notesToPush) {
-                    if (b.getnoteMsg() == null)
+                    if (b.getNoteMsg() == null)
                         throw new AbortException("No note to push defined");
 
                     b.setEmptyTargetRepoToOrigin();
-                    String noteMsgTmp = environment.expand(b.getnoteMsg());
+                    String noteMsgTmp = environment.expand(b.getNoteMsg());
                     final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, build);
-                    final String noteNamespace = environment.expand(b.getnoteNamespace());
+                    final String noteNamespace = environment.expand(b.getNoteNamespace());
                     final String targetRepo = environment.expand(b.getTargetRepoName());
-                    final boolean noteReplace = b.getnoteReplace();
+                    final boolean noteReplace = b.getNoteReplace();
                     
                     try {
                     	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
@@ -432,7 +439,7 @@ public class GitPublisher extends Recorder implements Serializable {
         }
         
         public FormValidation doCheckRemote(
-                @AncestorInPath AbstractProject project, StaplerRequest req)
+                @AncestorInPath AbstractProject project, StaplerRequest2 req)
                 throws IOException, ServletException {
             String remote = req.getParameter("value");
             boolean isMerge = req.getParameter("isMerge") != null;
@@ -477,6 +484,7 @@ public class GitPublisher extends Recorder implements Serializable {
     }
 
     public static abstract class PushConfig extends AbstractDescribableImpl<PushConfig> implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
         
         private String targetRepoName;
@@ -579,16 +587,31 @@ public class GitPublisher extends Recorder implements Serializable {
         private String noteNamespace;
         private boolean noteReplace;
 
+        @Deprecated
         public String getnoteMsg() {
             return noteMsg;
         }
         
+        @Deprecated
         public String getnoteNamespace() {
         	return noteNamespace;
         }
         
+        @Deprecated
         public boolean getnoteReplace() {
         	return noteReplace;
+        }
+
+        public String getNoteMsg() {
+            return noteMsg;
+        }
+
+        public String getNoteNamespace() {
+            return noteNamespace;
+        }
+
+        public boolean getNoteReplace() {
+            return noteReplace;
         }
 
         @DataBoundConstructor

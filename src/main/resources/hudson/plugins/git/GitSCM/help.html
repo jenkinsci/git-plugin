@@ -5,7 +5,7 @@
   </p>
 
   <p>
-  The git plugin provides an SCM implementation to be used with the Pipeline SCM <a href="https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step"><code>checkout</code></a> step.
+  The <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>scmGit</code> parameter</a> of the git plugin is used with the Pipeline SCM <a href="https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/"><code>checkout</code> step</a> to checkout git repositories into Pipeline workspaces.
   The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator"><strong>Pipeline Syntax Snippet Generator</strong></a> guides the user to select git plugin checkout options and provides online help for each of the options.
   </p>
 
@@ -23,7 +23,7 @@
     </p>
 
     <p>
-    The <code>checkout</code> step provides access to all the Pipeline capabilities provided by the git plugin:
+    The <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>scmGit</code> parameter</a> of the <code>checkout</code> step provides access to all the Pipeline capabilities provided by the git plugin:
 <pre>
 checkout scmGit(userRemoteConfigs: [
                     [ url: 'https://github.com/jenkinsci/git-plugin' ]
@@ -34,14 +34,14 @@ checkout scmGit(userRemoteConfigs: [
     <hr>
 
     <p>
-    <strong>NOTE:</strong> The <code>checkout</code> step is the <strong>preferred SCM checkout method</strong>.
+    <strong>NOTE:</strong> The <code>checkout</code> step with the <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>scmGit</code> parameter</a> is the <strong>preferred SCM checkout method</strong>.
     For simpler cases that do not require all the capabilities of the git plugin, the <code>git</code> step can also be used.
     </p>
     <p>Use the <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> to generate a sample pipeline script for the checkout step.
     </p>
     <p>
-    The <code>checkout</code> step can be used in many cases where the <code>git</code> step cannot be used.
-    Refer to the <a href="https://plugins.jenkins.io/git#extensions">git plugin documentation</a> for detailed descriptions of options available to the checkout step.
+    The <code>checkout</code> step with the <a href="https://www.jenkins.io/doc/pipeline/steps/params/scmgit/"><code>scmGit</code> parameter</a> can be used in many cases where the <code>git</code> step cannot be used.
+    Refer to the <a href="https://plugins.jenkins.io/git/#plugin-content-extensions">git plugin documentation</a> for detailed descriptions of options available to the checkout step.
     For example, the <code>checkout</code> step supports:
     <ul>
       <li>SHA-1 checkout</li>
@@ -61,7 +61,7 @@ checkout scmGit(userRemoteConfigs: [
 
     <hr>
 
-    <strong><a id="checkout-step-with-defaults">Example: Checkout step with defaults</a></strong>
+    <strong id="checkout-step-with-defaults">Example: Checkout step with defaults</strong>
     <p>
     Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
@@ -72,7 +72,7 @@ checkout scmGit(userRemoteConfigs: [
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-https-and-branch">Example: Checkout step with https and a specific branch</a></strong>
+    <strong id="checkout-step-with-https-and-branch">Example: Checkout step with https and a specific branch</strong>
     <p>
     Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.289).
     </p>
@@ -85,7 +85,7 @@ checkout scmGit(branches: [[name: 'stable-2.289']],
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-ssh-and-credential">Example: Checkout step with ssh and a private key credential</a></strong>
+    <strong id="checkout-step-with-ssh-and-credential">Example: Checkout step with ssh and a private key credential</strong>
     <p>
     Checkout from the git client plugin source repository using ssh protocol, private key credentials, and the master branch.
     The credential must be a private key credential if the remote git repository is accessed with the ssh protocol.
@@ -96,11 +96,11 @@ checkout changelog: false,
          scm: scmGit(userRemoteConfigs: [
                          [ credentialsId: 'my-private-key-credential-id',
                            url: 'git@github.com:jenkinsci/git-client-plugin.git' ]
-                         ])
+                     ])
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-https-and-changelog">Example: Checkout step with https and changelog disabled</a></strong>
+    <strong id="checkout-step-with-https-and-changelog">Example: Checkout step with https and changelog disabled</strong>
     <p>
     Checkout from the Jenkins source repository using https protocol, no credentials, the master branch, and changelog calculation disabled.
     If changelog is <code>false</code>, then the changelog will not be computed for this job.
@@ -109,13 +109,13 @@ checkout changelog: false,
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 checkout changelog: false,
-         scmGit(userRemoteConfigs: [
-                    [ url: 'https://github.com/jenkinsci/credentials-plugin' ]
-                ])
+         scm: scmGit(userRemoteConfigs: [
+                         [ url: 'https://github.com/jenkinsci/credentials-plugin' ]
+                     ])
 </pre>
     </p>
 
-    <strong><a id="checkout-step-with-git-and-polling">Example: Checkout step with git protocol and polling disabled</a></strong>
+    <strong id="checkout-step-with-git-and-polling">Example: Checkout step with git protocol and polling disabled</strong>
     <p>
     Checkout from the command line git repository using git protocol, no credentials, the master branch, and no polling for changes.
     If poll is <code>false</code>, then the remote repository will not be polled for changes.
@@ -124,15 +124,15 @@ checkout changelog: false,
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 checkout poll: false,
-         scmGit(userRemoteConfigs: [
-                    [ url: 'git://git.kernel.org/pub/scm/git/git.git ]
-                ])
+         scm: scmGit(userRemoteConfigs: [
+                         [ url: 'git://git.kernel.org/pub/scm/git/git.git' ]
+                     ])
 </pre>
     </p>
 
     <hr>
 
-    <strong><a id="argument-descriptions">Argument Descriptions</a></strong>
+    <strong id="argument-descriptions">Argument Descriptions</strong>
     <!-- Automatically generated argument docs inserted here -->
     <!-- See https://jenkins.io/doc/pipeline/steps/workflow-scm-step/ -->
     <!-- See also https://jenkins-url/pipeline-syntax/html#argument-descriptions -->

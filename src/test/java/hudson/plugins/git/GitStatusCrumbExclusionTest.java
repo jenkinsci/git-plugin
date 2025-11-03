@@ -6,12 +6,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -19,30 +19,35 @@ import static org.hamcrest.Matchers.is;
 /**
  * Check that no crumb is required for successful calls to notifyCommit.
  */
-public class GitStatusCrumbExclusionTest {
+@WithJenkins
+class GitStatusCrumbExclusionTest {
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
     private static final String GIT_REPO_URL = "https://github.com/jenkinsci/git-client-plugin";
 
-    private final URL notifyCommitURL;
-    private final URL manageURL; // Valid URL that is not notifyCommit
-    private final URL invalidURL; // Jenkins internal URL that reports page not found
+    private static URL notifyCommitURL;
+    private static URL manageURL; // Valid URL that is not notifyCommit
+    private static URL invalidURL; // Jenkins internal URL that reports page not found
 
-    private final String urlArgument;
-    private final byte[] urlArgumentBytes;
+    private static String urlArgument;
+    private static byte[] urlArgumentBytes;
 
-    private final String separator;
-    private final byte[] separatorBytes;
+    private static String separator;
+    private static byte[] separatorBytes;
 
-    private final String branchArgument;
-    private final byte[] branchArgumentBytes;
+    private static String branchArgument;
+    private static byte[] branchArgumentBytes;
 
-    private final String notifyCommitApiToken;
-    private final byte[] notifyCommitApiTokenBytes;
+    private static String notifyCommitApiToken;
+    private static byte[] notifyCommitApiTokenBytes;
 
-    public GitStatusCrumbExclusionTest() throws Exception {
+    private HttpURLConnection connectionPOST;
+
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) throws Exception {
+        r = rule;
+
         String jenkinsUrl = r.getURL().toExternalForm();
         if (!jenkinsUrl.endsWith("/")) {
             jenkinsUrl = jenkinsUrl + "/";
@@ -64,18 +69,16 @@ public class GitStatusCrumbExclusionTest {
         notifyCommitApiTokenBytes = notifyCommitApiToken.getBytes(StandardCharsets.UTF_8);
     }
 
-    private HttpURLConnection connectionPOST;
-
-    @Before
-    public void connectWithPOST() throws IOException {
+    @BeforeEach
+    void beforeEach() throws IOException {
         URL postURL = notifyCommitURL;
         connectionPOST = (HttpURLConnection) postURL.openConnection();
         connectionPOST.setRequestMethod("POST");
         connectionPOST.setDoOutput(true);
     }
 
-    @After
-    public void disconnectFromPOST() {
+    @AfterEach
+    void afterEach() {
         connectionPOST.disconnect();
     }
 
@@ -83,13 +86,13 @@ public class GitStatusCrumbExclusionTest {
      * POST tests.
      */
     @Test
-    public void testPOSTValidPathNoArgument() throws Exception {
+    void testPOSTValidPathNoArgument() throws Exception {
         assertThat(connectionPOST.getResponseCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
         assertThat(connectionPOST.getResponseMessage(), is("Server Error"));
     }
 
     @Test
-    public void testPOSTValidPathMandatoryArgument() throws Exception {
+    void testPOSTValidPathMandatoryArgument() throws Exception {
         try (OutputStream os = connectionPOST.getOutputStream()) {
             os.write(urlArgumentBytes);
             os.write(separatorBytes);
@@ -100,7 +103,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTValidPathEmptyMandatoryArgument() throws Exception {
+    void testPOSTValidPathEmptyMandatoryArgument() throws Exception {
         try (OutputStream os = connectionPOST.getOutputStream()) {
             String urlEmptyArgument = "url="; // Empty argument is not a valid URL
             byte[] urlEmptyArgumentBytes = urlEmptyArgument.getBytes(StandardCharsets.UTF_8);
@@ -113,7 +116,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTValidPathBadURLInMandatoryArgument() throws Exception {
+    void testPOSTValidPathBadURLInMandatoryArgument() throws Exception {
         try (OutputStream os = connectionPOST.getOutputStream()) {
             String urlBadArgument = "url=" + "http://256.256.256.256/"; // Not a valid URI per Java 8 javadoc
             byte[] urlBadArgumentBytes = urlBadArgument.getBytes(StandardCharsets.UTF_8);
@@ -126,7 +129,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTValidPathMandatoryAndOptionalArgument() throws Exception {
+    void testPOSTValidPathMandatoryAndOptionalArgument() throws Exception {
         try (OutputStream os = connectionPOST.getOutputStream()) {
             os.write(urlArgumentBytes);
             os.write(separatorBytes);
@@ -139,7 +142,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTValidPathOnlyOptionalArgument() throws Exception {
+    void testPOSTValidPathOnlyOptionalArgument() throws Exception {
         try (OutputStream os = connectionPOST.getOutputStream()) {
             os.write(branchArgumentBytes);
         }
@@ -148,7 +151,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTInvalidPathNoArgument() throws Exception {
+    void testPOSTInvalidPathNoArgument() throws Exception {
         URL invalidPathURL = invalidURL;
         HttpURLConnection invalidPathConnection = (HttpURLConnection) invalidPathURL.openConnection();
         invalidPathConnection.setRequestMethod("POST");
@@ -159,7 +162,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTInvalidPathMandatoryArgument() throws Exception {
+    void testPOSTInvalidPathMandatoryArgument() throws Exception {
         URL invalidPathURL = invalidURL;
         HttpURLConnection invalidPathConnection = (HttpURLConnection) invalidPathURL.openConnection();
         invalidPathConnection.setRequestMethod("POST");
@@ -173,7 +176,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTInvalidPathMandatoryAndOptionalArgument() throws Exception {
+    void testPOSTInvalidPathMandatoryAndOptionalArgument() throws Exception {
         URL invalidPathURL = invalidURL;
         HttpURLConnection invalidPathConnection = (HttpURLConnection) invalidPathURL.openConnection();
         invalidPathConnection.setRequestMethod("POST");
@@ -189,7 +192,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTManageNoArgument() throws Exception {
+    void testPOSTManageNoArgument() throws Exception {
         URL postURL = manageURL;
         HttpURLConnection manageConnection = (HttpURLConnection) postURL.openConnection();
         manageConnection.setRequestMethod("POST");
@@ -200,7 +203,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTManageMandatoryArgument() throws Exception {
+    void testPOSTManageMandatoryArgument() throws Exception {
         URL postURL = manageURL;
         HttpURLConnection manageConnection = (HttpURLConnection) postURL.openConnection();
         manageConnection.setRequestMethod("POST");
@@ -214,7 +217,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testPOSTManageMandatoryAndOptionalArgument() throws Exception {
+    void testPOSTManageMandatoryAndOptionalArgument() throws Exception {
         URL postURL = manageURL;
         HttpURLConnection manageConnection = (HttpURLConnection) postURL.openConnection();
         manageConnection.setRequestMethod("POST");
@@ -233,7 +236,7 @@ public class GitStatusCrumbExclusionTest {
      * GET tests.
      */
     @Test
-    public void testGETValidPathNoArgument() throws Exception {
+    void testGETValidPathNoArgument() throws Exception {
         URL getURL = notifyCommitURL;
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
@@ -244,7 +247,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testGETValidPathMandatoryArgument() throws Exception {
+    void testGETValidPathMandatoryArgument() throws Exception {
         URL getURL = new URL(notifyCommitURL + "?" + urlArgument + separator + notifyCommitApiToken);
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
@@ -255,7 +258,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testGETValidPathMandatoryAndOptionalArgument() throws Exception {
+    void testGETValidPathMandatoryAndOptionalArgument() throws Exception {
         URL getURL = new URL(notifyCommitURL + "?" + urlArgument + separator + branchArgument + separator + notifyCommitApiToken);
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
@@ -266,7 +269,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testGETInvalidPath() throws Exception {
+    void testGETInvalidPath() throws Exception {
         URL getURL = invalidURL;
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
@@ -277,7 +280,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testGETInvalidPathWithArgument() throws Exception {
+    void testGETInvalidPathWithArgument() throws Exception {
         URL getURL = new URL(invalidURL + "?" + urlArgument);
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
@@ -288,7 +291,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testGETManagePath() throws Exception {
+    void testGETManagePath() throws Exception {
         URL getURL = manageURL;
         HttpURLConnection connectionGET = (HttpURLConnection) getURL.openConnection();
         connectionGET.setRequestMethod("GET");
@@ -299,7 +302,7 @@ public class GitStatusCrumbExclusionTest {
     }
 
     @Test
-    public void testGETManagePathWithArgument() throws Exception {
+    void testGETManagePathWithArgument() throws Exception {
         URL getURL = new URL(manageURL + "?" + urlArgument);
         HttpURLConnection connection = (HttpURLConnection) getURL.openConnection();
         connection.setRequestMethod("GET");

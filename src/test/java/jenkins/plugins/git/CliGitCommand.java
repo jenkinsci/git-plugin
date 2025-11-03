@@ -41,8 +41,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.lib.Repository;
 import static org.hamcrest.Matchers.hasItems;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.Assert;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -60,11 +62,11 @@ public class CliGitCommand {
     private String[] output;
     private ArgumentListBuilder args;
 
-    public CliGitCommand(GitClient client, String... arguments) {
+    public CliGitCommand(GitClient client, String... arguments) throws GitException {
         this(client, GitUtilsTest.getConfigNoSystemEnvsVars(), arguments);
     }
 
-    public CliGitCommand(GitClient client, EnvVars envVars, String... arguments) {
+    public CliGitCommand(GitClient client, EnvVars envVars, String... arguments) throws GitException {
         args = new ArgumentListBuilder("git");
         args.add(arguments);
         listener = StreamTaskListener.NULL;
@@ -105,7 +107,7 @@ public class CliGitCommand {
         }
         output = result.split("[\\n\\r]");
         if (assertProcessStatus) {
-            Assert.assertEquals(args.toString() + " command failed and reported '" + Arrays.toString(output) + "'", 0, status);
+            assertEquals(0, status, args.toString() + " command failed and reported '" + Arrays.toString(output) + "'");
         }
         return output;
     }
@@ -113,12 +115,12 @@ public class CliGitCommand {
     public void assertOutputContains(String... expectedRegExes) {
         List<String> notFound = new ArrayList<>();
         boolean modified = notFound.addAll(Arrays.asList(expectedRegExes));
-        Assert.assertTrue("Missing regular expressions in assertion", modified);
+        assertTrue(modified, "Missing regular expressions in assertion");
         for (String line : output) {
             notFound.removeIf(line::matches);
         }
         if (!notFound.isEmpty()) {
-            Assert.fail(Arrays.toString(output) + " did not match all strings in notFound: " + Arrays.toString(expectedRegExes));
+            fail(Arrays.toString(output) + " did not match all strings in notFound: " + Arrays.toString(expectedRegExes));
         }
     }
 

@@ -51,6 +51,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
 import jenkins.scm.api.SCMFileSystem;
@@ -65,37 +67,40 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.acegisecurity.AccessDeniedException;
-import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.hamcrest.MatcherAssert.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.ClassRule;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+@WithGitSampleRepo
+class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     private final StandardCredentials credentials = null;
 
     /* REPO can be allocated once for the whole test suite so long as nothing changes it */
-    @ClassRule
-    static public final GitSampleRepoRule READ_ONLY_REPO = new GitSampleRepoRule();
+    private static GitSampleRepoRule readOnlyRepo;
 
-    private final String remote;
+    private static String remote;
     private GitSCMTelescope telescope;
 
-    public GitSCMTelescopeTest() {
-        remote = READ_ONLY_REPO.fileUrl();
+    @BeforeAll
+    static void beforeAll(GitSampleRepoRule repo) {
+        readOnlyRepo = repo;
+        remote = readOnlyRepo.fileUrl();
     }
 
-    @Before
-    public void createTelescopeForRemote() {
+    @BeforeEach
+    void beforeEach() {
         telescope = new GitSCMTelescopeImpl(remote);
     }
 
     @Test
-    public void testOf_GitSCM() {
+    void testOf_GitSCM() throws Exception {
         /* Testing GitSCMTelescope.of() for non null return needs JenkinsRule */
         GitSCM multiBranchSource = new GitSCM(remote);
         GitSCMTelescope telescopeOfMultiBranchSource = GitSCMTelescope.of(multiBranchSource);
@@ -103,25 +108,25 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testOf_AbstractGitSCMSource() {
+    void testOf_AbstractGitSCMSource() {
         AbstractGitSCMSource source = new AbstractGitSCMSourceImpl();
         GitSCMTelescope telescopeOfAbstractGitSCMSource = GitSCMTelescope.of(source);
         assertThat(telescopeOfAbstractGitSCMSource, is(nullValue()));
     }
 
     @Test
-    public void testSupports_StringFalse() {
+    void testSupports_StringFalse() {
         GitSCMTelescope telescopeWithoutRemote = new GitSCMTelescopeImpl();
         assertFalse(telescopeWithoutRemote.supports(remote));
     }
 
     @Test
-    public void testSupports_String() {
+    void testSupports_String() {
         assertTrue(telescope.supports(remote));
     }
 
     @Test
-    public void testValidate() throws Exception {
+    void testValidate() throws Exception {
         telescope.validate(remote, credentials);
     }
 
@@ -133,7 +138,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
      * @param repoUrl URL to the repository for the returned GitSCM
      * @return GitSCM with a single branch in its definition
      */
-    private GitSCM getSingleBranchSource(String repoUrl) {
+    private GitSCM getSingleBranchSource(String repoUrl) throws Exception {
         UserRemoteConfig remoteConfig = new UserRemoteConfig(
                 repoUrl,
                 "origin",
@@ -156,28 +161,28 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testSupports_SCM() throws Exception {
+    void testSupports_SCM() throws Exception {
         GitSCM singleBranchSource = getSingleBranchSource(remote);
         // single branch source is supported by telescope
         assertTrue(telescope.supports(singleBranchSource));
     }
 
     @Test
-    public void testSupports_SCMNullSCM() throws Exception {
+    void testSupports_SCMNullSCM() throws Exception {
         NullSCM nullSCM = new NullSCM();
         // NullSCM is not supported by telescope
         assertFalse(telescope.supports(nullSCM));
     }
 
     @Test
-    public void testSupports_SCMMultiBranchSource() throws Exception {
+    void testSupports_SCMMultiBranchSource() throws Exception {
         GitSCM multiBranchSource = new GitSCM(remote);
         // Multi-branch source is not supported by telescope
         assertFalse(telescope.supports(multiBranchSource));
     }
 
     @Test
-    public void testSupports_SCMSource() {
+    void testSupports_SCMSource() {
         SCMSource source = new GitSCMSource(remote);
         SCMSourceOwner sourceOwner = new SCMSourceOwnerImpl();
         source.setOwner(sourceOwner);
@@ -185,44 +190,44 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testSupports_SCMSourceNoOwner() {
+    void testSupports_SCMSourceNoOwner() {
         SCMSource source = new GitSCMSource(remote);
         // SCMSource without an owner not supported by telescope
         assertFalse(telescope.supports(source));
     }
 
     @Test
-    public void testSupports_SCMSourceNullSource() {
+    void testSupports_SCMSourceNullSource() {
         SCMSource source = new SCMSourceImpl();
         // Non AbstractGitSCMSource is not supported by telescope
         assertFalse(telescope.supports(source));
     }
 
     @Test
-    public void testGetTimestamp_3args_1() throws Exception {
+    void testGetTimestamp_3args_1() throws Exception {
         String refOrHash = "master";
         assertThat(telescope.getTimestamp(remote, credentials, refOrHash), is(12345L));
     }
 
     @Test
-    public void testGetTimestamp_3args_2Tag() throws Exception {
+    void testGetTimestamp_3args_2Tag() throws Exception {
         SCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
         assertThat(telescope.getTimestamp(remote, credentials, head), is(12345L));
     }
 
     @Test
-    public void testGetTimestamp_3args_2() throws Exception {
+    void testGetTimestamp_3args_2() throws Exception {
         SCMHead head = new SCMHead("git-tag-name");
         assertThat(telescope.getTimestamp(remote, credentials, head), is(12345L));
     }
 
     @Test
-    public void testGetDefaultTarget() throws Exception {
+    void testGetDefaultTarget() throws Exception {
         assertThat(telescope.getDefaultTarget(remote, null), is(""));
     }
 
     @Test
-    public void testBuild_3args_1() throws Exception {
+    void testBuild_3args_1() throws Exception {
         SCMSource source = new GitSCMSource(remote);
         SCMSourceOwner sourceOwner = new SCMSourceOwnerImpl();
         source.setOwner(sourceOwner);
@@ -235,7 +240,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testBuild_3args_1NoOwner() throws Exception {
+    void testBuild_3args_1NoOwner() throws Exception {
         SCMSource source = new GitSCMSource(remote);
         SCMHead head = new SCMHead("some-name");
         SCMRevision rev = null;
@@ -244,7 +249,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testBuild_3args_2() throws Exception {
+    void testBuild_3args_2() throws Exception {
         Item owner = new ItemImpl();
         SCM scm = getSingleBranchSource(remote);
         SCMHead head = new SCMHead("some-name");
@@ -256,7 +261,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testBuild_4args() throws Exception {
+    void testBuild_4args() throws Exception {
         SCMHead head = new SCMHead("some-name");
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
         SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
@@ -267,7 +272,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testGetRevision_3args_1() throws Exception {
+    void testGetRevision_3args_1() throws Exception {
         SCMHead head = new SCMHead("some-name");
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
         SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
@@ -277,7 +282,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testGetRevision_3args_2() throws Exception {
+    void testGetRevision_3args_2() throws Exception {
         SCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
         SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
@@ -286,7 +291,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testGetRevisions_3args() throws Exception {
+    void testGetRevisions_3args() throws Exception {
         Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
         Iterable<SCMRevision> revisions = telescope.getRevisions(remote, credentials, referenceTypes);
         assertThat(revisions, is(notNullValue()));
@@ -294,7 +299,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testGetRevisions_3argsWithRev() throws Exception {
+    void testGetRevisions_3argsWithRev() throws Exception {
         Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
         SCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
@@ -308,7 +313,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     }
 
     @Test
-    public void testGetRevisions_String_StandardCredentials() throws Exception {
+    void testGetRevisions_String_StandardCredentials() throws Exception {
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
         SCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
         SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);

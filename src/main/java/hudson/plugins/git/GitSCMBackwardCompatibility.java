@@ -13,6 +13,7 @@ import hudson.scm.SCM;
 import hudson.util.DescribableList;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -486,5 +487,6 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     }
 
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

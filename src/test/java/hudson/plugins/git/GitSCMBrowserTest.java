@@ -27,18 +27,21 @@ import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
-public class GitSCMBrowserTest {
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
+@ParameterizedClass(name = "{0}")
+@MethodSource("permuteRepositoryURL")
+class GitSCMBrowserTest {
 
     private final String gitURI;
     private final Class<? extends GitRepositoryBrowser> expectedClass;
@@ -81,8 +84,7 @@ public class GitSCMBrowserTest {
 
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection permuteRepositoryURL() {
+    static Collection permuteRepositoryURL() {
         /* Systematically formed test URLs */
         String[] protocols = {"https", "ssh", "git"};
         String[] usernames = {"git:password@", "git@", "bob@", ""};
@@ -126,7 +128,7 @@ public class GitSCMBrowserTest {
     }
 
     @Test
-    public void guessedBrowser() {
+    void guessedBrowser() throws Exception {
         GitSCM gitSCM = new GitSCM(gitURI);
         GitRepositoryBrowser browser = (GitRepositoryBrowser) gitSCM.guessBrowser();
         if (expectedClass == null || expectedURI == null) {

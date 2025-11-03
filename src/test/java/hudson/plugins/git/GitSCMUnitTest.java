@@ -23,7 +23,6 @@
  */
 package hudson.plugins.git;
 
-import hudson.AbortException;
 import hudson.EnvVars;
 import static hudson.plugins.git.GitSCM.createRepoList;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -33,6 +32,8 @@ import hudson.plugins.git.util.AncestryBuildChooser;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.RepositoryBrowser;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,33 +41,28 @@ import java.util.List;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
-import org.junit.Test;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.jvnet.hudson.test.Issue;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
-public class GitSCMUnitTest {
+class GitSCMUnitTest {
 
     private final String gitDir = ".";
     private final GitSCM gitSCM = new GitSCM(gitDir);
     private final String repoURL = "https://github.com/jenkinsci/git-plugin";
 
-    public GitSCMUnitTest() {
-    }
-
     @Test
     @Deprecated
-    public void testGetSubmoduleCfg() {
+    void testGetSubmoduleCfg() {
         Collection<SubmoduleConfig> emptySubmoduleConfigList = new ArrayList<>();
         assertThat(gitSCM.getSubmoduleCfg(), is(emptySubmoduleConfigList));
     }
 
     @Test
     @Deprecated
-    public void testSetSubmoduleCfg() {
+    void testSetSubmoduleCfg() {
         Collection<SubmoduleConfig> emptySubmoduleConfigList = new ArrayList<>();
         Collection<SubmoduleConfig> submoduleConfigList = new ArrayList<>();
         SubmoduleConfig config = new SubmoduleConfig();
@@ -76,7 +72,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testCreateRepoList() {
+    void testCreateRepoList() {
         String name = null;
         String refspec = null;
         String credentialsId = null;
@@ -98,38 +94,38 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testGetBrowser() {
+    void testGetBrowser() {
         assertThat(gitSCM.getBrowser(), is(nullValue()));
     }
 
     @Test
-    public void testSetBrowser() {
+    void testSetBrowser() {
         GitRepositoryBrowser browser = new GithubWeb(repoURL);
         gitSCM.setBrowser(browser);
         assertThat(gitSCM.getBrowser(), is(browser));
     }
 
     @Test
-    public void testGuessBrowser() {
+    void testGuessBrowser() {
         /* Well tested in other classes */
         RepositoryBrowser result = gitSCM.guessBrowser();
         assertThat(result, is(nullValue()));
     }
 
     @Test
-    public void testGetBuildChooser() {
+    void testGetBuildChooser() {
         assertThat(gitSCM.getBuildChooser(), is(instanceOf(DefaultBuildChooser.class)));
     }
 
     @Test
-    public void testSetBuildChooser() throws Exception {
+    void testSetBuildChooser() throws Exception {
         BuildChooser ancestryBuildChooser = new AncestryBuildChooser(1, "string");
         gitSCM.setBuildChooser(ancestryBuildChooser);
         assertThat(gitSCM.getBuildChooser(), is(ancestryBuildChooser));
     }
 
     @Test
-    public void testSetBuildChooserDefault() throws Exception {
+    void testSetBuildChooserDefault() throws Exception {
         BuildChooser ancestryBuildChooser = new AncestryBuildChooser(1, "string");
         gitSCM.setBuildChooser(ancestryBuildChooser);
         BuildChooser defaultBuildChooser = new DefaultBuildChooser();
@@ -138,7 +134,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testGetRepositoryByName() throws Exception {
+    void testGetRepositoryByName() throws Exception {
         RemoteConfig expected = new RemoteConfig(new Config(), "origin");
         expected.addURI(new URIish(gitDir));
         assertRemoteConfigEquals(gitSCM.getRepositoryByName("origin"), expected);
@@ -157,22 +153,22 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testGetRepositoryByNameNoSuchName() {
+    void testGetRepositoryByNameNoSuchName() {
         assertThat(gitSCM.getRepositoryByName("no-such-name"), is(nullValue()));
     }
 
     @Test
-    public void testGetRepositoryByNameEmptyName() {
+    void testGetRepositoryByNameEmptyName() {
         assertThat(gitSCM.getRepositoryByName(""), is(nullValue()));
     }
 
     @Test
-    public void testGetRepositoryByNameNullName() {
+    void testGetRepositoryByNameNullName() {
         assertThat(gitSCM.getRepositoryByName(null), is(nullValue()));
     }
 
     @Test
-    public void testGetUserRemoteConfigs() {
+    void testGetUserRemoteConfigs() {
         String name = null;
         String refspec = null;
         String credentialsId = null;
@@ -183,7 +179,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testGetRepositories() throws Exception {
+    void testGetRepositories() throws Exception {
         List<RemoteConfig> expectedRemoteConfigList = new ArrayList<>();
         RemoteConfig remoteConfig = new RemoteConfig(new Config(), "origin");
         remoteConfig.addURI(new URIish(gitDir));
@@ -192,7 +188,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testDeriveLocalBranchName() {
+    void testDeriveLocalBranchName() {
         assertThat(gitSCM.deriveLocalBranchName("origin/master"), is("master"));
         assertThat(gitSCM.deriveLocalBranchName("master"), is("master"));
         assertThat(gitSCM.deriveLocalBranchName("origin/feature/xyzzy"), is("feature/xyzzy"));
@@ -200,12 +196,12 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testGetGitTool() {
+    void testGetGitTool() {
         assertThat(gitSCM.getGitTool(), is(nullValue()));
     }
 
     @Test
-    public void testGetParameterString() {
+    void testGetParameterString() {
         String original = "${A}/${B} ${A}/${C}";
         EnvVars env = new EnvVars();
         env.put("A", "A-value");
@@ -214,13 +210,13 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPolling() {
+    void testRequiresWorkspaceForPolling() {
         /* Assumes workspace is required */
         assertTrue(gitSCM.requiresWorkspaceForPolling());
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranch() {
+    void testRequiresWorkspaceForPollingSingleBranch() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
@@ -229,7 +225,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranchWithRemoteName() {
+    void testRequiresWorkspaceForPollingSingleBranchWithRemoteName() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("origin/master")),
@@ -238,7 +234,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardRemoteName() {
+    void testRequiresWorkspaceForPollingSingleBranchWithWildcardRemoteName() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("*/master")),
@@ -247,7 +243,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardSuffix() {
+    void testRequiresWorkspaceForPollingSingleBranchWithWildcardSuffix() throws Exception {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master*")),
@@ -256,7 +252,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingMultiBranch() {
+    void testRequiresWorkspaceForPollingMultiBranch() throws Exception {
         /* Multi-branch use case */
         List<BranchSpec> branches = new ArrayList<>();
         branches.add(new BranchSpec("master"));
@@ -268,7 +264,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingEmptyBranchName() {
+    void testRequiresWorkspaceForPollingEmptyBranchName() throws Exception {
         /* Multi-branch use case */
         EnvVars env = new EnvVars();
         env.put("A", "");
@@ -279,19 +275,19 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testCreateChangeLogParser() {
+    void testCreateChangeLogParser() {
         assertThat(gitSCM.createChangeLogParser(), is(instanceOf(GitChangeLogParser.class)));
     }
 
     @Test
     @Deprecated
-    public void testIsDoGenerateSubmoduleConfigurations() {
+    void testIsDoGenerateSubmoduleConfigurations() {
         assertFalse(gitSCM.isDoGenerateSubmoduleConfigurations());
     }
 
     @Test
     @Deprecated
-    public void testIsDoGenerateSubmoduleConfigurationsTrue() {
+    void testIsDoGenerateSubmoduleConfigurationsTrue() throws Exception {
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null, Collections.emptyList());
@@ -299,7 +295,7 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testGetBranches() {
+    void testGetBranches() {
         List<BranchSpec> expectedBranchList = new ArrayList<>();
         expectedBranchList.add(new BranchSpec("**"));
         assertBranchSpecListEquals(gitSCM.getBranches(), expectedBranchList);
@@ -314,13 +310,13 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testGetKey() {
+    void testGetKey() {
         assertThat(gitSCM.getKey(), is("git " + gitDir));
     }
 
     @Test
     @Deprecated
-    public void testGetMergeOptions() throws Exception {
+    void testGetMergeOptions() throws Exception {
         PreBuildMergeOptions expectedMergeOptions = new PreBuildMergeOptions();
         PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
         assertThat(mergeOptions.getRemoteBranchName(), is(expectedMergeOptions.getRemoteBranchName()));
@@ -329,13 +325,13 @@ public class GitSCMUnitTest {
 
     @Test
     @Deprecated
-    public void testGetDoGenerateSubmoduleConfigurations() {
+    void testGetDoGenerateSubmoduleConfigurations() {
         assertFalse(gitSCM.getDoGenerateSubmoduleConfigurations());
     }
 
     @Test
     @Deprecated
-    public void testSetDoGenerateSubmoduleConfigurations() {
+    void testSetDoGenerateSubmoduleConfigurations() {
         gitSCM.setDoGenerateSubmoduleConfigurations(true);
         /* Confirms the passed value `true` is ignored */
         assertFalse(gitSCM.getDoGenerateSubmoduleConfigurations());
@@ -343,14 +339,10 @@ public class GitSCMUnitTest {
 
     @Issue("JENKINS-68562")
     @Test
-    public void testAbortIfSourceIsLocal() {
+    void testAbortIfSourceIsLocal() throws Exception {
         GitSCM gitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null, Collections.emptyList());
-        try {
-            gitSCM.abortIfSourceIsLocal();
-        } catch (AbortException e) {
-            fail("https remote URLs should always be valid");
-        }
+        assertDoesNotThrow(gitSCM::abortIfSourceIsLocal, "https remote URLs should always be valid");
     }
 }

@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.*;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.Descriptor.FormException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,34 +12,38 @@ import java.util.List;
 import java.util.Random;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
 
-public class CredentialsUserRemoteConfigTest {
+@WithJenkins
+@WithGitSampleRepo
+class CredentialsUserRemoteConfigTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
 
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    private GitSampleRepoRule sampleRepo;
 
     private CredentialsStore store = null;
     private boolean useSymbolForGitSCM = true;
     private Random random = new Random();
     private String credential = "undefined-credential";
 
-    @Before
-    public void enableSystemCredentialsProvider() {
+    @BeforeEach
+    void beforeEach(JenkinsRule rule, GitSampleRepoRule repo) throws Exception {
+        r = rule;
+        sampleRepo = repo;
+
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Collections.emptyList()));
         for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
@@ -48,23 +53,14 @@ public class CredentialsUserRemoteConfigTest {
             }
         }
         assertThat("The system credentials provider is enabled", store, notNullValue());
-    }
 
-    @Before
-    public void chooseSymbolForGitSCM() {
         /* Use the 'scmGit' symbol instead of '$class: GitSCM */
         useSymbolForGitSCM = random.nextBoolean();
-    }
 
-    @Before
-    public void generateCredentialID() {
         credential = "credential-id-" + (100 + random.nextInt(900));
-    }
 
-    @Before
-    public void initSampleRepo() throws Exception {
         sampleRepo.init();
-        assertTrue("Failed to create src dir in sample repo", sampleRepo.mkdirs("src"));
+        assertTrue(sampleRepo.mkdirs("src"), "Failed to create src dir in sample repo");
         sampleRepo.write("src/sample.txt", "Contents of src/sample.txt");
         sampleRepo.git("add", "src/sample.txt");
         sampleRepo.git("commit", "-m", "Add src/sample.txt to sample repo");
@@ -163,6 +159,7 @@ public class CredentialsUserRemoteConfigTest {
             "pruneTags()",
             "pruneTags(false)",
             "pruneTags(true)",
+            "sparseCheckout(sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']])",
             "submodule(disableSubmodules: true)",
             "submodule(depth: 1, shallow: true)",
             "submodule(parentCredentials: true, recursiveSubmodules: true, threads: 13)",
@@ -225,6 +222,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'RhodeCode', repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce']",
             "[$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
             "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin']",
+            "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://dev.azure.com/MarkEWaite/git-plugin/_git/git-plugin']",
             "[$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value']",
             // Assembla now requires login to access their URLs
             // "assembla('https://app.assembla.com/spaces/git-plugin/git/source')",
@@ -240,6 +238,7 @@ public class CredentialsUserRemoteConfigTest {
             "gogs('https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?
             "kiln('https://kiln.example.com/MarkEWaite/git-plugin')",
             "teamFoundation('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
+            "teamFoundation('https://dev.azure.com/MarkEWaite/git-plugin/_git/git-plugin')",
             "phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/')",
             "redmine('https://www.redmine.org/projects/redmine/repository')",
             "rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce')",
@@ -265,7 +264,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithValidCredentials() throws Exception {
+    void checkoutWithValidCredentials() throws Exception {
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, credential));
         store.save();
 
@@ -276,7 +275,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithDifferentCredentials() throws Exception {
+    void checkoutWithDifferentCredentials() throws Exception {
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "other"));
         store.save();
 
@@ -296,7 +295,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithInvalidCredentials() throws Exception {
+    void checkoutWithInvalidCredentials() throws Exception {
         String systemCredential = "system-credential-" + (100 + random.nextInt(900));
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.SYSTEM, systemCredential));
         store.save();
@@ -316,7 +315,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithNoCredentialsStoredButUsed() throws Exception {
+    void checkoutWithNoCredentialsStoredButUsed() throws Exception {
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
                 "node {\n"
@@ -332,7 +331,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithNoCredentialsSpecified() throws Exception {
+    void checkoutWithNoCredentialsSpecified() throws Exception {
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
                 "node {\n"
@@ -346,7 +345,7 @@ public class CredentialsUserRemoteConfigTest {
         r.waitForMessage("No credentials specified", b);
     }
 
-    private StandardCredentials createCredential(CredentialsScope scope, String id) {
-        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
+    private StandardCredentials createCredential(CredentialsScope scope, String id) throws FormException {
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password-longer-than-14");
     }
 }
