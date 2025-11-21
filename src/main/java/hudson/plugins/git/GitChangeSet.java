@@ -480,6 +480,14 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         } else {
+            if (useExistingAccountWithSameEmail && hasMailerPlugin()) {
+                for(User existingUser : User.getAll()) {
+                    if (csAuthorEmail.equalsIgnoreCase(getMail(existingUser))) {
+                        return existingUser;
+                    }
+                }
+            }
+
             if (csAuthor.isEmpty()) {
                 // Avoid exception from User.get("", false)
                 return User.getUnknown();
