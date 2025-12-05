@@ -94,6 +94,14 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     @NonNull
     private String remoteName = AbstractGitSCMSource.DEFAULT_REMOTE_NAME;
+    /**
+     * Perform shallow clone
+     */
+    private boolean shallow;
+    /**
+     * Shallow clone depth
+     */
+    private Integer depth;
 
     /**
      * Constructor.
@@ -190,6 +198,24 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public final String remoteName() {
         return remoteName;
+    }
+
+    /**
+     * Returns {@code true} if perform shallow clone
+     *
+     * @return {@code true} if perform shallow clone
+     */
+    public final boolean wantShallow() {
+        return shallow;
+    }
+
+    /**
+     * Returns shallow clone depth
+     *
+     * @return shallow clone depth
+     */
+    public final Integer depth() {
+        return depth;
     }
 
     /**
@@ -356,6 +382,32 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
             ));
         }
         return result;
+    }
+
+    /**
+     * Configures perform shallow clone
+     *
+     * @param shallow {@code true} to perform shallow clone
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public final C shallow(boolean shallow) {
+        this.shallow = shallow;
+        return (C) this;
+    }
+
+    /**
+     * Configures shallow clone depth
+     *
+     * @param depth count atest commits of a repository
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public final C depth(Integer depth) {
+        this.depth = depth;
+        return (C) this;
     }
 
     /**
