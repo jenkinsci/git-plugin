@@ -1661,7 +1661,7 @@ for (job in allItems) {
         hudson.plugins.git.Revision r = action.getLastBuiltRevision();
         if (r != null) {
           for (branch in r.getBranches()) {
-            action.buildsByBranchName.put(fixNull(branch.getName()), action.lastBuild)
+            action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
           }
         }
         build.actions.remove(action)
@@ -1680,7 +1680,7 @@ for (job in allItems) {
             hudson.plugins.git.Revision r = action.getLastBuiltRevision();
             if (r != null) {
               for (branch in r.getBranches()) {
-                action.buildsByBranchName.put(fixNull(branch.getName()), action.lastBuild)
+                action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
               }
             }
             run.actions.remove(action)
