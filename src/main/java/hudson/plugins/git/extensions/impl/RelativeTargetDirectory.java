@@ -38,6 +38,10 @@ public class RelativeTargetDirectory extends GitSCMExtension {
         if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
             return workspace;
         }
+       //fixing issue : #3068 : Warn if used in Pipeline
+        if ( context != null && context.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob")){
+            listener.getLogger().println("[Warning] 'Check out to a sub-directory' is not intended for use with Pipeline jobs. Please use the 'dir' step instead. ");
+        }
         return workspace.child(environment.expand(relativeTargetDir));
     }
 
