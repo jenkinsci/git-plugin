@@ -404,6 +404,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 fetch.tags(context.wantTags());
             }
             fetch = fetch.prune(prune);
+            fetch = fetch.shallow(context.wantShallow()).depth(context.depth());
 
             URIish remoteURI = null;
             try {

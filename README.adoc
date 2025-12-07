@@ -136,6 +136,17 @@ checkout scmGit(
     userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
+[source,groovy]
+----
+resolveScm(
+  source: gitSource(
+    credentialsId: 'git-cred',
+    traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
+    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
+    targets: ['main', 'master']
+)
+----
+
 ==== Checkout with a narrow refspec
 
 Checkout from the workspace cleanup plugin source repository using https without credentials, the `master` branch, and with a refspec specific to the master branch.
