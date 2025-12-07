@@ -51,8 +51,10 @@ public class CloneOptionTrait extends GitSCMExtensionTrait<CloneOption> {
 
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        CloneOption extension = getExtension();
-        ((GitSCMSourceContext<?, ?>) context).shallow(extension.isShallow()).depth(extension.getDepth());
+        if (context instanceof GitSCMSourceContext gitContext) {
+            CloneOption extension = getExtension();
+            gitContext.shallow(extension.isShallow()).depth(extension.getDepth());
+        }
     }
 
     /**
