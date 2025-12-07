@@ -138,13 +138,14 @@ checkout scmGit(
 
 [source,groovy]
 ----
-resolveScm(
+def resolvedSCMBranch = resolveScm(
   source: gitSource(
     credentialsId: 'git-cred',
     traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
     remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
     targets: ['main', 'master']
 )
+checkout resolvedSCMBranch
 ----
 
 ==== Checkout with a narrow refspec
