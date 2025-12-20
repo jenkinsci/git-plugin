@@ -161,9 +161,21 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws GitException on git error
      */
     public void beforeCheckout(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
-        if (build != null && build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.") && requiresWorkspaceForPolling()) {
-            listener.getLogger().println("WARNING: This Git extension is deprecated for Pipeline jobs and forces workspace polling. " + "Use Pipeline-native SCM polling instead.");
+        boolean isPipeline =  build != null && build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.");
+
+        if (isPipeline) {
+
+            // Case 1: MessageExclusion (special-case, higher priority)
+            if (this.getClass().getName().equals("hudson.plugins.git.extensions.impl.MessageExclusion")) {
+                listener.getLogger().println("WARNING: Message exclusion is deprecated for Pipeline jobs. " + "Use the Pipeline SCM trait instead.");
+
+                // Case 2: Polling-related deprecated extensions
+            } else if (requiresWorkspaceForPolling()) {
+
+                listener.getLogger().println("WARNING: This Git extension is deprecated for Pipeline jobs and forces workspace polling. " + "Use Pipeline-native SCM polling instead.");
+            }
         }
+
         if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
             beforeCheckout(scm, abstractBuild, git, buildListener);
         }
