@@ -23,6 +23,7 @@ import java.io.IOException;
  */
 public class RelativeTargetDirectory extends GitSCMExtension {
     private String relativeTargetDir;
+    private transient boolean warned;
 
     @DataBoundConstructor
     public RelativeTargetDirectory(String relativeTargetDir) {
@@ -35,7 +36,14 @@ public class RelativeTargetDirectory extends GitSCMExtension {
 
     @Override
     public FilePath getWorkingDirectory(GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
-        if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
+        boolean isPipeline = context != null && context.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.");
+
+        if (isPipeline && !warned) {
+            warned = true;
+            listener.getLogger().println("WARNING: Relative target directory is deprecated for Pipeline jobs. " + "Use the 'dir' step instead.");
+        }
+
+        if (relativeTargetDir == null || relativeTargetDir.isEmpty() || relativeTargetDir.equals(".")) {
             return workspace;
         }
         return workspace.child(environment.expand(relativeTargetDir));
