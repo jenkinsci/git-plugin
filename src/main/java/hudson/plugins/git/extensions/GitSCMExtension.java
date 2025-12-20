@@ -167,12 +167,12 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
 
             // Case 1: MessageExclusion (special-case, higher priority)
             if (this.getClass().getName().equals("hudson.plugins.git.extensions.impl.MessageExclusion")) {
-                listener.getLogger().println("WARNING: Message exclusion is deprecated for Pipeline jobs. " + "Use the Pipeline SCM trait instead.");
+                listener.getLogger().println("DEPRECATED: Message exclusion is deprecated for Pipeline jobs. " + "Use the Pipeline SCM trait instead.");
 
                 // Case 2: Polling-related deprecated extensions
             } else if (requiresWorkspaceForPolling()) {
 
-                listener.getLogger().println("WARNING: This Git extension is deprecated for Pipeline jobs and forces workspace polling. " + "Use Pipeline-native SCM polling instead.");
+                listener.getLogger().println("DEPRECATED: This Git extension is deprecated for Pipeline jobs and forces workspace polling. " + "Use Pipeline-native SCM polling instead.");
             }
         }
 

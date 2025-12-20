@@ -40,7 +40,7 @@ public class RelativeTargetDirectory extends GitSCMExtension {
 
         if (isPipeline && !warned) {
             warned = true;
-            listener.getLogger().println("WARNING: Relative target directory is deprecated for Pipeline jobs. " + "Use the 'dir' step instead.");
+            listener.getLogger().println("DEPRECATED: Relative target directory is deprecated for Pipeline jobs. " + "Use the 'dir' step instead.");
         }
 
         if (relativeTargetDir == null || relativeTargetDir.isEmpty() || relativeTargetDir.equals(".")) {
