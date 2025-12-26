@@ -55,7 +55,11 @@ public class PreBuildMerge extends GitSCMExtension {
 
     @Override
     public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev) throws GitException, IOException, InterruptedException {
-        if (build != null && build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.")) {
+
+        if ( build == null){
+            return rev;
+        }
+        if (build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.")) {
 
             listener.getLogger().println("DEPRECATED: The 'Merge before build' extension is deprecated for Pipeline jobs. " + "Pipeline users should perform merges explicitly using shell steps (e.g. sh 'git merge').");
         }
