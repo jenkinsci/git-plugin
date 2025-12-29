@@ -56,7 +56,7 @@ public class PreBuildMerge extends GitSCMExtension {
     @Override
     public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev) throws GitException, IOException, InterruptedException {
 
-        if ( build == null){
+        if (build == null) {
             return rev;
         }
         if (build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.")) {
