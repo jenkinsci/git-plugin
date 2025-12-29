@@ -18,12 +18,12 @@ class PreBuildMergeWorkflowTest {
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
-                "node {\n"
-                        + "  checkout(\n"
-                        + "    [$class: 'GitSCM', extensions: [[$class: 'PreBuildMerge', options: [mergeRemote: 'origin', mergeTarget: 'master']]],\n"
-                        + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
-                        + "  )\n"
-                        + "}",
+                """
+                node {
+                  checkout(scmGit(extensions: [[$class: 'PreBuildMerge', options: [mergeRemote: 'origin', mergeTarget: 'master']]], 
+                                  userRemoteConfigs: [[url: $/%s/$]]))
+                }
+                """.formatted(sampleRepo),
                 true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("DEPRECATED:", b);
