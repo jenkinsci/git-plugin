@@ -60,7 +60,7 @@ public class PreBuildMerge extends GitSCMExtension {
             return rev;
         }
         if (build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.")) {
-
+            // Check class name string rather than instanceof to avoid run time dependency on workflow job
             listener.getLogger().println("DEPRECATED: The 'Merge before build' extension is deprecated for Pipeline jobs. " + "Pipeline users should perform merges explicitly using shell steps (e.g. sh 'git merge').");
         }
 
