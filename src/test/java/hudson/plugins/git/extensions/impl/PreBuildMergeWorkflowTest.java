@@ -26,7 +26,7 @@ class PreBuildMergeWorkflowTest {
                 """.formatted(sampleRepo),
                 true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
-        r.waitForMessage("DEPRECATED:", b);
+        r.waitForMessage("DEPRECATED: The 'Merge before build' extension is deprecated for Pipeline jobs", b);
         r.waitForMessage("git merge", b);
     }
 }
