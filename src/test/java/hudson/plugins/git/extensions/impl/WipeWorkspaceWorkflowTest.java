@@ -37,7 +37,7 @@ class WipeWorkspaceWorkflowTest {
                             )
                           )
                         }
-                        """.formatted(sampleRepo),
+                        """.formatted(sampleRepo.toString().replace("\\", "/")),
                         true
                 ));
 

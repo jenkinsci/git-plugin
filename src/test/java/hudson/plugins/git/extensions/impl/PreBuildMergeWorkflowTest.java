@@ -41,7 +41,7 @@ class PreBuildMergeWorkflowTest {
                     )
                   )
                 }
-                """.formatted(sampleRepo),
+                """.formatted(sampleRepo.toString().replace("\\", "/")),
                 true
         ));
 
