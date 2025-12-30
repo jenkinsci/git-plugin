@@ -37,7 +37,7 @@ class DeprecatedPollingExtensionsWorkflowTest {
                             )
                           )
                         }
-                        """.formatted(sampleRepo.toString().replace("\\", "/")),
+                        """.formatted(sampleRepo.toString().replace("\\", "\\\\")),
                         true
                 ));
 
