@@ -14,19 +14,39 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 class WipeWorkspaceWorkflowTest {
 
         @Test
-        void wipeWorkspaceDeprecationWarning(JenkinsRule r, GitSampleRepoRule sampleRepo) throws Exception {
+        void wipeWorkspaceTriggersDeprecatedWarning(
+                JenkinsRule r,
+                GitSampleRepoRule sampleRepo
+        ) throws Exception {
+
                 sampleRepo.init();
-                WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
-                p.setDefinition(new CpsFlowDefinition(
-                                "node {\n"
-                                                + "  checkout(\n"
-                                                + "    [$class: 'GitSCM', extensions: [[$class: 'WipeWorkspace']],\n"
-                                                + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
-                                                + "  )\n"
-                                                + "}",
-                                true));
-                WorkflowRun b = r.buildAndAssertSuccess(p);
-                r.waitForMessage("DEPRECATED:", b);
-                r.waitForMessage("deleteDir()", b);
+
+                WorkflowJob job =
+                        r.jenkins.createProject(WorkflowJob.class,
+                                "wipe-workspace-deprecated-warning");
+
+                job.setDefinition(new CpsFlowDefinition(
+                        """
+                        node {
+                          checkout(
+                            scmGit(
+                              extensions: [[
+                                $class: 'WipeWorkspace'
+                              ]],
+                              userRemoteConfigs: [[url: '%s']]
+                            )
+                          )
+                        }
+                        """.formatted(sampleRepo),
+                        true
+                ));
+
+                WorkflowRun run = r.buildAndAssertSuccess(job);
+
+                r.waitForMessage(
+                        "DEPRECATED: The 'Wipe out repository & force clone' extension is deprecated for Pipeline jobs. "
+                                + "Pipeline users should use the deleteDir() step instead.",
+                        run
+                );
         }
 }

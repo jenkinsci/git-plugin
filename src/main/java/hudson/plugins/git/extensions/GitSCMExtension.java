@@ -160,29 +160,25 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
-    public void beforeCheckout(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
-        boolean isPipeline =  build != null && build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.");
-
+    public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
+        boolean isPipeline = build != null && build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.");
         if (isPipeline) {
-
+            String extensionClassName = getClass().getName();
             // Case 1: MessageExclusion (special-case, higher priority)
-            if (this.getClass().getName().equals("hudson.plugins.git.extensions.impl.MessageExclusion")) {
-                listener.getLogger().println("DEPRECATED: Message exclusion is deprecated for Pipeline jobs. " + "Use the Pipeline SCM trait instead.");
-
-                // Case 2: Polling-related deprecated extensions
+            if (extensionClassName.equals("hudson.plugins.git.extensions.impl.MessageExclusion")) {
+                listener.getLogger().println("DEPRECATED: Message exclusion during polling is deprecated for Pipeline jobs. " + "Use the Pipeline SCM trait instead.");
             } else if (requiresWorkspaceForPolling()) {
-
-                listener.getLogger().println("DEPRECATED: This Git extension is deprecated for Pipeline jobs and forces workspace polling. " + "Use Pipeline-native SCM polling instead.");
+                // Case 2: Polling-related deprecated extensions
+                listener.getLogger().println("DEPRECATED: The extension that requires a workspace for polling is deprecated for Pipeline jobs. " + "Use Pipeline-native SCM polling instead.");
             }
         }
-
-        if (build instanceof AbstractBuild<?,?> abstractBuild && listener instanceof BuildListener buildListener) {
+        if (build instanceof AbstractBuild<?, ?> abstractBuild && listener instanceof BuildListener buildListener) {
             beforeCheckout(scm, abstractBuild, git, buildListener);
         }
     }
 
     @Deprecated
-    public void beforeCheckout(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+    public void beforeCheckout(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
         if (Util.isOverridden(GitSCMExtension.class, getClass(), "beforeCheckout", GitSCM.class, Run.class, GitClient.class, TaskListener.class)) {
             beforeCheckout(scm, (Run) build, git, listener);
         }

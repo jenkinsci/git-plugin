@@ -14,19 +14,43 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 class PreBuildMergeWorkflowTest {
 
     @Test
-    void preBuildMergeDeprecationWarning(JenkinsRule r, GitSampleRepoRule sampleRepo) throws Exception {
+    void preBuildMergeTriggersDeprecatedWarning(
+            JenkinsRule r,
+            GitSampleRepoRule sampleRepo
+    ) throws Exception {
+
         sampleRepo.init();
-        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
-        p.setDefinition(new CpsFlowDefinition(
+
+        WorkflowJob job =
+                r.jenkins.createProject(WorkflowJob.class,
+                        "pre-build-merge-deprecated-warning");
+
+        job.setDefinition(new CpsFlowDefinition(
                 """
                 node {
-                  checkout(scmGit(extensions: [[$class: 'PreBuildMerge', options: [mergeRemote: 'origin', mergeTarget: 'master']]], 
-                                  userRemoteConfigs: [[url: $/%s/$]]))
+                  checkout(
+                    scmGit(
+                      extensions: [[
+                        $class: 'PreBuildMerge',
+                        options: [
+                          mergeRemote: 'origin',
+                          mergeTarget: 'master'
+                        ]
+                      ]],
+                      userRemoteConfigs: [[url: '%s']]
+                    )
+                  )
                 }
                 """.formatted(sampleRepo),
-                true));
-        WorkflowRun b = r.buildAndAssertSuccess(p);
-        r.waitForMessage("DEPRECATED: The 'Merge before build' extension is deprecated for Pipeline jobs", b);
-        r.waitForMessage("git merge", b);
+                true
+        ));
+
+        WorkflowRun run = r.buildAndAssertSuccess(job);
+
+        r.waitForMessage(
+                "DEPRECATED: The 'Merge before build' extension is deprecated for Pipeline jobs. "
+                        + "Pipeline users should perform merges explicitly using shell steps (e.g. sh 'git merge').",
+                run
+        );
     }
 }

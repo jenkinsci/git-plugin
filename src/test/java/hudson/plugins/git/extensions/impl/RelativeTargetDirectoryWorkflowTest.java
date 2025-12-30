@@ -14,19 +14,40 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 class RelativeTargetDirectoryWorkflowTest {
 
     @Test
-    void relativeTargetDirectoryDeprecationWarning(JenkinsRule r, GitSampleRepoRule sampleRepo) throws Exception {
+    void relativeTargetDirectoryTriggersDeprecatedWarning(
+            JenkinsRule r,
+            GitSampleRepoRule sampleRepo
+    ) throws Exception {
+
         sampleRepo.init();
-        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
-        p.setDefinition(new CpsFlowDefinition(
-                "node {\n"
-                        + "  checkout(\n"
-                        + "    [$class: 'GitSCM', extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'subdir']],\n"
-                        + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
-                        + "  )\n"
-                        + "}",
-                true));
-        WorkflowRun b = r.buildAndAssertSuccess(p);
-        r.waitForMessage("DEPRECATED:", b);
-        r.waitForMessage("dir", b);
+
+        WorkflowJob job =
+                r.jenkins.createProject(WorkflowJob.class,
+                        "relative-target-directory-deprecated-warning");
+
+        job.setDefinition(new CpsFlowDefinition(
+                """
+                node {
+                  checkout(
+                    scmGit(
+                      extensions: [[
+                        $class: 'RelativeTargetDirectory',
+                        relativeTargetDir: 'subdir'
+                      ]],
+                      userRemoteConfigs: [[url: '%s']]
+                    )
+                  )
+                }
+                """.formatted(sampleRepo),
+                true
+        ));
+
+        WorkflowRun run = r.buildAndAssertSuccess(job);
+
+        r.waitForMessage(
+                "DEPRECATED: Relative target directory is deprecated for Pipeline jobs. "
+                        + "Use the 'dir' step instead.",
+                run
+        );
     }
 }

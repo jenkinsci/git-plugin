@@ -14,20 +14,39 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 class DeprecatedPollingExtensionsWorkflowTest {
 
         @Test
-        void pollingExtensionsDeprecationWarning(JenkinsRule r, GitSampleRepoRule sampleRepo) throws Exception {
+        void disableRemotePollTriggersDeprecatedWarning(
+                JenkinsRule r,
+                GitSampleRepoRule sampleRepo
+        ) throws Exception {
+
                 sampleRepo.init();
-                WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
-                // Using DisableRemotePoll as the representative extension for the centralized
-                // warning logic
-                p.setDefinition(new CpsFlowDefinition(
-                                "node {\n"
-                                                + "  checkout(\n"
-                                                + "    [$class: 'GitSCM', extensions: [[$class: 'DisableRemotePoll']],\n"
-                                                + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
-                                                + "  )\n"
-                                                + "}",
-                                true));
-                WorkflowRun b = r.buildAndAssertSuccess(p);
-                r.waitForMessage("DEPRECATED:", b);
+
+                WorkflowJob job =
+                        r.jenkins.createProject(WorkflowJob.class,
+                                "disable-remote-poll-deprecated-warning");
+
+                job.setDefinition(new CpsFlowDefinition(
+                        """
+                        node {
+                          checkout(
+                            scmGit(
+                              extensions: [[
+                                $class: 'DisableRemotePoll'
+                              ]],
+                              userRemoteConfigs: [[url: '%s']]
+                            )
+                          )
+                        }
+                        """.formatted(sampleRepo),
+                        true
+                ));
+
+                WorkflowRun run = r.buildAndAssertSuccess(job);
+
+                r.waitForMessage(
+                        "DEPRECATED: The extension that requires a workspace for polling is deprecated for Pipeline jobs. "
+                                + "Use Pipeline-native SCM polling instead.",
+                        run
+                );
         }
 }
