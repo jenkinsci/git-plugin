@@ -53,6 +53,7 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
+import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import java.io.File;
@@ -75,6 +76,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
@@ -221,6 +223,34 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public GitRepositoryBrowser getBrowser() {
         GitBrowserSCMSourceTrait trait = SCMTrait.find(getTraits(), GitBrowserSCMSourceTrait.class);
         return trait != null ? trait.getBrowser() : null;
+    }
+
+    @CheckForNull
+    public GitRepositoryBrowser guessBrowser() {
+        GitBrowserSCMSourceTrait trait = SCMTrait.find(getTraits(), GitBrowserSCMSourceTrait.class);
+        if (trait != null) {
+            return trait.getBrowser();
+        }
+
+        Set<String> webUrls = new HashSet<>();
+        String remote = getRemote();
+        if (remote != null) {
+            for (Pattern p : GitSCM.URL_PATTERNS) {
+                Matcher m = p.matcher(remote);
+                if (m.matches()) {
+                    webUrls.add("https://" + m.group(1) + "/" + m.group(2) + "/");
+                }
+            }
+        }
+        if (webUrls.isEmpty()) {
+            return null;
+        }
+        if (webUrls.size() == 1) {
+            String url = webUrls.iterator().next();
+            return GitSCM.guessBrowser(url);
+        }
+        LOGGER.log(Level.INFO, "Multiple browser guess matches for {0}", remote);
+        return null;
     }
 
     /**
