@@ -27,6 +27,8 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.CloneOption;
+import jenkins.plugins.git.GitSCMSourceContext;
+import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -45,6 +47,14 @@ public class CloneOptionTrait extends GitSCMExtensionTrait<CloneOption> {
     @DataBoundConstructor
     public CloneOptionTrait(CloneOption extension) {
         super(extension);
+    }
+
+    @Override
+    protected void decorateContext(SCMSourceContext<?, ?> context) {
+        if (context instanceof GitSCMSourceContext gitContext) {
+            CloneOption extension = getExtension();
+            gitContext.shallow(extension.isShallow()).depth(extension.getDepth());
+        }
     }
 
     /**
