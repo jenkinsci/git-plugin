@@ -57,12 +57,11 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- TODO: Remove this dependency override when BOM is updated -->
+      <!-- TODO until in BOM -->
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>credentials</artifactId>
-        <!-- TODO: Update this version when upstream PR is released -->
-        <version>1469.vb_13b_4cfb_391d</version>
+        <version>1480.v2246fd131e83</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
