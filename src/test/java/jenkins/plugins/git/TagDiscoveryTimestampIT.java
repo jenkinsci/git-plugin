@@ -13,10 +13,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
 
 /**
@@ -25,10 +24,10 @@ import org.jvnet.hudson.test.JenkinsRule;
  */
 public class TagDiscoveryTimestampIT {
 
-    @Rule
+    @RegisterExtension
     public JenkinsRule r = new JenkinsRule();
 
-    @ClassRule
+    @RegisterExtension
     public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     private final TaskListener listener = StreamTaskListener.fromStderr();
@@ -37,7 +36,7 @@ public class TagDiscoveryTimestampIT {
     private static final String NEW_COMMIT_TAG = "tag-on-new-commit";
     private static final String LIGHTWEIGHT_TAG = "lightweight-tag";
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpRepo() throws Exception {
         sampleRepo.init();
 
