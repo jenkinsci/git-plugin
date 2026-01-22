@@ -110,6 +110,7 @@ import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTag;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.RefSpec;
@@ -422,6 +423,28 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             throw new IOException(x);
         } finally {
             cacheLock.unlock();
+        }
+    }
+
+    /**
+     * Gets the timestamp for a tag.
+     * <p>
+     * For annotated tags, returns the tag creation time.
+     * For lightweight tags, returns the commit time.
+     *
+     * @param walk the RevWalk to use for parsing
+     * @param objectId the ObjectId of the tag
+     * @return the timestamp in milliseconds
+     * @throws IOException if an I/O error occurs
+     */
+    private long getTagTimestamp(RevWalk walk, ObjectId objectId) throws IOException {
+        try {
+            RevTag tag = walk.parseTag(objectId);
+            return tag.getTaggerIdent().getWhen().getTime();
+        } catch (Exception e) {
+            // Lightweight tag, use commit time
+            RevCommit commit = walk.parseCommit(objectId);
+            return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
         }
     }
 
@@ -786,8 +809,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                     count++;
                     final String tagName = StringUtils.removeStart(ref.getKey(), Constants.R_TAGS);
-                    RevCommit commit = walk.parseCommit(ref.getValue());
-                    final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                    final long lastModified = getTagTimestamp(walk, ref.getValue());
                     if (request.process(new GitTagSCMHead(tagName, lastModified),
                             new SCMSourceRequest.IntermediateLambda<ObjectId>() {
                                 @Nullable
@@ -804,7 +826,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                                                       @Nullable ObjectId revisionInfo)
                                         throws IOException, InterruptedException {
                                     RevCommit commit = walk.parseCommit(revisionInfo);
-                                    final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                                    final long lastModified = getTagTimestamp(walk, revisionInfo);
                                     final RevTree tree = commit.getTree();
                                     return new TreeWalkingSCMProbe(tagName, lastModified, repository, tree);
                                 }
@@ -1012,8 +1034,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                            final Repository repository = client.getRepository();
                                            RevWalk walk = new RevWalk(repository)) {
                                           ObjectId ref = client.revParse(tagRef);
-                                          RevCommit commit = walk.parseCommit(ref);
-                                          long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                                          long lastModified = getTagTimestamp(walk, ref);
                                           listener.getLogger().printf("Resolved tag %s revision %s%n", revision,
                                                   ref.getName());
                                           return new GitTagSCMRevision(new GitTagSCMHead(revision, lastModified),

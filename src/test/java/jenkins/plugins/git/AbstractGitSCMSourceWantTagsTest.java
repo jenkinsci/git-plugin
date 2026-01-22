@@ -3,6 +3,7 @@ package jenkins.plugins.git;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -170,6 +171,25 @@ public class AbstractGitSCMSourceWantTagsTest {
                 heads.stream().map(p -> p.getName()).collect(Collectors.toList()),
                 containsInAnyOrder(BRANCH_NAME, "master", LIGHTWEIGHT_TAG_NAME, ANNOTATED_TAG_NAME));
         assertTrue(tagsFetched);
+    }
+
+    @Test
+    public void tagTimestampsAreValid() throws Exception {
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
+        Set<SCMHead> heads = source.fetch(LISTENER);
+
+        Set<GitTagSCMHead> tags = heads.stream()
+                .filter(h -> h instanceof GitTagSCMHead)
+                .map(h -> (GitTagSCMHead) h)
+                .collect(Collectors.toSet());
+
+        assertThat("Should discover both tags", tags.size(), is(2));
+
+        long year2000 = 946684800000L; // Jan 1, 2000
+        for (GitTagSCMHead tag : tags) {
+            assertThat("Tag " + tag.getName() + " should have valid timestamp",
+                    tag.getTimestamp(), greaterThan(year2000));
+        }
     }
 
     static boolean tagsFetched;
