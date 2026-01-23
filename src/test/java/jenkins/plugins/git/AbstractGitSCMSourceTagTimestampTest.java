@@ -3,7 +3,7 @@ package jenkins.plugins.git;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -13,9 +13,9 @@ import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTag;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 /**
  * Unit tests for {@link AbstractGitSCMSource#getTagTimestamp(RevWalk, ObjectId)}.
@@ -23,14 +23,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  */
 public class AbstractGitSCMSourceTagTimestampTest {
 
-    @RegisterExtension
+    @ClassRule
     public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     private static String annotatedTagName;
     private static String lightweightTagName;
     private static String oldCommitSha;
 
-    @BeforeAll
+    @BeforeClass
     public static void setUp() throws Exception {
         sampleRepo.init();
 
@@ -69,8 +69,8 @@ public class AbstractGitSCMSourceTagTimestampTest {
 
             long actualTimestamp = callGetTagTimestamp(walk, tagId);
 
-            assertEquals(expectedTimestamp, actualTimestamp,
-                    "Annotated tag should return tagger timestamp");
+            assertEquals("Annotated tag should return tagger timestamp",
+                    expectedTimestamp, actualTimestamp);
         }
     }
 
@@ -86,8 +86,8 @@ public class AbstractGitSCMSourceTagTimestampTest {
 
             long actualTimestamp = callGetTagTimestamp(walk, tagId);
 
-            assertEquals(expectedTimestamp, actualTimestamp,
-                    "Lightweight tag should return commit timestamp");
+            assertEquals("Lightweight tag should return commit timestamp",
+                    expectedTimestamp, actualTimestamp);
         }
     }
 
