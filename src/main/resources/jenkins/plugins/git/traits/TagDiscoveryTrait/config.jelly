@@ -2,9 +2,9 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:c="/lib/credentials"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:entry field="atLeastDays" title="${%Ignore tags newer than}">
-        <f:number default=""/>
+        <f:number min="0"/>
     </f:entry>
     <f:entry field="atMostDays" title="${%Ignore tags older than}">
-        <f:number default="7"/>
+        <f:number min="0"/>
     </f:entry>
 </j:jelly>
