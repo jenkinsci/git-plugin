@@ -796,13 +796,19 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     if (atLeastMillis >= 0L || atMostMillis >= 0L) {
                         if (atMostMillis >= 0L && atLeastMillis > atMostMillis) {
                             /* Invalid. It's impossible for any tag to satisfy this. */
+                            listener.getLogger().format("  Skipping tag %s: invalid age range (min > max)%n", tagName);
                             continue;
                         }
-                        long tagAge = System.currentTimeMillis() - lastModified;
-                        if (atMostMillis >= 0L && tagAge > atMostMillis) {
+                        long tagAgeMillis = System.currentTimeMillis() - lastModified;
+                        long tagAgeDays = TimeUnit.MILLISECONDS.toDays(tagAgeMillis);
+                        if (atMostMillis >= 0L && tagAgeMillis > atMostMillis) {
+                            listener.getLogger().format("  Skipping tag %s: too old (%d days, max %d days)%n",
+                                    tagName, tagAgeDays, TimeUnit.MILLISECONDS.toDays(atMostMillis));
                             continue;
                         }
-                        if (atLeastMillis >= 0L && tagAge < atLeastMillis) {
+                        if (atLeastMillis >= 0L && tagAgeMillis < atLeastMillis) {
+                            listener.getLogger().format("  Skipping tag %s: too new (%d days, min %d days)%n",
+                                    tagName, tagAgeDays, TimeUnit.MILLISECONDS.toDays(atLeastMillis));
                             continue;
                         }
                     }
