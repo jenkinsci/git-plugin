@@ -109,7 +109,9 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTag;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -428,18 +430,24 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     private long getTagTimestamp(RevWalk walk, ObjectId objectId) throws IOException {
         try {
-            // Annotated tag object
-            RevTag tag = walk.parseTag(objectId);
+            RevObject target = walk.parseAny(objectId);
 
-            if (tag.getTaggerIdent() != null
-                    && tag.getTaggerIdent().getWhen() != null) {
-                return tag.getTaggerIdent().getWhen().getTime();
+            // If the first hash is an annotated tag, prefer its tag time
+            if (target instanceof RevTag) {
+                RevTag tag = walk.parseTag((RevTag) target);
+                PersonIdent tagger = tag.getTaggerIdent();
+                if (tagger != null && tagger.getWhen() != null) {
+                    return tagger.getWhen().getTime();
+                }
+                target = tag.getObject(); // walk to commit if needed
             }
 
-            // No tagger ident (or weird tag) — walk the tag chain to a commit, if any
-            Object target = tag.getObject();
-            for (int i = 0; i < 32 && target instanceof RevTag; i++) {
-                target = ((RevTag) target).getObject();
+            // Walk until we reach a commit (or give up)
+            target = walk.parseAny(target);
+            for (int i = 0; i < 32 && !(target instanceof RevCommit); i++) { //32 is to guard against inf loop
+                if (!(target instanceof RevTag)) break;
+                RevTag tag = walk.parseTag((RevTag) target);
+                target = walk.parseAny(tag.getObject());
             }
 
             if (target instanceof RevCommit) {
@@ -453,6 +461,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
         }
     }
+
 
     /**
      * {@inheritDoc}
