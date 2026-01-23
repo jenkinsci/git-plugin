@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
@@ -289,6 +290,31 @@ class AbstractGitSCMSourceTest {
         assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
         // And reuse cache:
         assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
+    }
+
+    @Issue("JENKINS-64810")
+    @Test
+    void retrieveHeadsSupportsTagDiscovery_withTagAgeRestrictions() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        sampleRepo.init();
+        sampleRepo.write("file", "initial");
+        sampleRepo.git("commit", "--all", "--message=initial");
+        sampleRepo.git("tag", "test-tag");
+        
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        TaskListener listener = StreamTaskListener.fromStderr();
+
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
+        assertThat(source.fetch(listener).stream().map(SCMHead::getName).collect(Collectors.toSet()), contains("test-tag"));
+
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait(null, "0")));
+        assertThat(source.fetch(listener).stream().map(SCMHead::getName).collect(Collectors.toSet()), not(contains("test-tag")));
+
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait("1", null)));
+        assertThat(source.fetch(listener).stream().map(SCMHead::getName).collect(Collectors.toSet()), not(contains("test-tag")));
+
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait("1", "0")));
+        assertThat(source.fetch(listener), empty());
     }
 
     @Issue("JENKINS-45953")
