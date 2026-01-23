@@ -9,18 +9,23 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.ClassRule;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-@RunWith(Parameterized.class)
-public class UserMergeOptionsTest {
+@ParameterizedClass(name = "{0}+{1}+{2}+{3}")
+@MethodSource("mergeOptionVariants")
+@WithJenkins
+class UserMergeOptionsTest {
 
-    public static @ClassRule JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
     private final UserMergeOptions options;
     private final UserMergeOptions deprecatedOptions;
@@ -29,6 +34,11 @@ public class UserMergeOptionsTest {
     private final String expectedMergeTarget;
     private final MergeCommand.Strategy expectedMergeStrategy;
     private final MergeCommand.GitPluginFastForwardMode expectedFastForwardMode;
+
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
 
     @Deprecated
     private UserMergeOptions defineDeprecatedOptions(String mergeRemote, String mergeTarget, MergeCommand.Strategy mergeStrategy) {
@@ -55,8 +65,7 @@ public class UserMergeOptionsTest {
         deprecatedOptions = defineDeprecatedOptions(mergeRemote, mergeTarget, mergeStrategy);
     }
 
-    @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}")
-    public static Collection mergeOptionVariants() {
+    static Collection mergeOptionVariants() {
         List<Object[]> mergeOptions = new ArrayList<>();
         String[] remotes = new String[]{null, "src_remote"};
         String[] targets = new String[]{null, "dst_remote"};
@@ -89,32 +98,32 @@ public class UserMergeOptionsTest {
     }
 
     @Test
-    public void testGetMergeRemote() {
+    void testGetMergeRemote() {
         assertEquals(expectedMergeRemote, options.getMergeRemote());
     }
 
     @Test
-    public void testGetMergeTarget() {
+    void testGetMergeTarget() {
         assertEquals(expectedMergeTarget, options.getMergeTarget());
     }
 
     @Test
-    public void testGetRef() {
+    void testGetRef() {
         assertEquals(expectedMergeRemote + "/" + expectedMergeTarget, options.getRef());
     }
 
     @Test
-    public void testGetMergeStrategy() {
+    void testGetMergeStrategy() {
         assertEquals(expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy, options.getMergeStrategy());
     }
 
     @Test
-    public void testGetFastForwardMode() {
+    void testGetFastForwardMode() {
         assertEquals(expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode, options.getFastForwardMode());
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         final String expected = "UserMergeOptions{"
                 + "mergeRemote='" + expectedMergeRemote + "', "
                 + "mergeTarget='" + expectedMergeTarget + "', "
@@ -125,7 +134,7 @@ public class UserMergeOptionsTest {
     }
 
     @Test
-    public void testEqualsSymmetric() {
+    void testEqualsSymmetric() {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
@@ -136,7 +145,7 @@ public class UserMergeOptionsTest {
     }
 
     @Test
-    public void testEqualsReflexive() {
+    void testEqualsReflexive() {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
@@ -148,7 +157,7 @@ public class UserMergeOptionsTest {
     }
 
     @Test
-    public void testEqualsTransitive() {
+    void testEqualsTransitive() {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
@@ -165,7 +174,7 @@ public class UserMergeOptionsTest {
     }
 
     @Test
-    public void testEqualsDeprecatedConstructor() {
+    void testEqualsDeprecatedConstructor() {
         if (this.expectedFastForwardMode == MergeCommand.GitPluginFastForwardMode.FF) {
             assertEquals(options, deprecatedOptions);
         } else {
@@ -174,7 +183,7 @@ public class UserMergeOptionsTest {
     }
 
     @Test
-    public void testNotEquals() {
+    void testNotEquals() {
         UserMergeOptions notExpected1 = new UserMergeOptions(
                 "x" + this.expectedMergeRemote,
                 this.expectedMergeTarget,
@@ -187,11 +196,11 @@ public class UserMergeOptionsTest {
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         assertNotEquals(notExpected2, options);
-        assertNotEquals(options, "A different data type");
+        assertNotEquals("A different data type", options);
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
@@ -202,17 +211,18 @@ public class UserMergeOptionsTest {
     }
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(UserMergeOptions.class)
                 .usingGetClass()
                 .suppress(Warning.NONFINAL_FIELDS)
                 .verify();
     }
 
+    // Testing deprecated method instantiate
     @Issue({"JENKINS-51638", "JENKINS-34070"})
     @Test
-    @Deprecated // Testing deprecated method instantiate
-    public void mergeStrategyCase() throws Exception {
+    @Deprecated
+    void mergeStrategyCase() throws Exception {
         Map<String, Object> args = new HashMap<>();
         if (expectedMergeTarget != null) {
             args.put("mergeTarget", expectedMergeTarget);

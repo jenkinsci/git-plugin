@@ -10,15 +10,17 @@ import java.util.List;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.eclipse.jgit.transport.RefSpec;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 
-import static org.junit.Assert.*;
-import org.junit.Before;
+import org.eclipse.jgit.transport.RefSpec;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.*;
 
-public class AbstractGitSCMSourceTrivialTest {
+class AbstractGitSCMSourceTrivialTest {
 
     private AbstractGitSCMSource gitSCMSource = null;
 
@@ -32,8 +34,8 @@ public class AbstractGitSCMSourceTrivialTest {
     private final String expectedRefSpec = "+refs/heads/*:refs/remotes/origin/*";
     private final List<RefSpec> expectedRefSpecs = new ArrayList<>();
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         if (expectedRefSpecs.isEmpty()) {
             expectedRefSpecs.add(new RefSpec(expectedRefSpec));
         }
@@ -42,7 +44,7 @@ public class AbstractGitSCMSourceTrivialTest {
 
     @Test
     @Deprecated
-    public void basicTestIsExcluded() {
+    void basicTestIsExcluded() {
         AbstractGitSCMSource abstractGitSCMSource = mock(AbstractGitSCMSource.class);
 
         when(abstractGitSCMSource.getIncludes()).thenReturn("*master release* fe?ture");
@@ -69,42 +71,42 @@ public class AbstractGitSCMSourceTrivialTest {
     }
 
     @Test
-    public void testGetCredentialsId() {
+    void testGetCredentialsId() {
         assertEquals(expectedCredentialsId, gitSCMSource.getCredentialsId());
     }
 
     @Test
-    public void testGetRemote() {
+    void testGetRemote() {
         assertEquals(expectedRemote, gitSCMSource.getRemote());
     }
 
     @Test
     @Deprecated
-    public void testGetIncludes() {
+    void testGetIncludes() {
         assertEquals(expectedIncludes, gitSCMSource.getIncludes());
     }
 
     @Test
     @Deprecated
-    public void testGetExcludes() {
+    void testGetExcludes() {
         assertEquals(expectedExcludes, gitSCMSource.getExcludes());
     }
 
     @Test
     @Deprecated
-    public void testGetRemoteName() {
+    void testGetRemoteName() {
         assertEquals(expectedRemote, gitSCMSource.getRemoteName());
     }
 
     @Test
     @Deprecated
-    public void testGetRefSpecs() {
+    void testGetRefSpecs() {
         assertEquals(expectedRefSpecs, gitSCMSource.getRefSpecs());
     }
 
     @Test
     @Deprecated
-    public void testIsExcluded() {
+    void testIsExcluded() {
         assertFalse(gitSCMSource.isExcluded("master"));
         assertFalse(gitSCMSource.isExcluded("remote/master"));
         assertFalse(gitSCMSource.isExcluded("release/X.Y"));
@@ -129,15 +131,15 @@ public class AbstractGitSCMSourceTrivialTest {
 
     @Test
     @Deprecated
-    public void testGetRemoteConfigs() {
+    void testGetRemoteConfigs() {
         List<UserRemoteConfig> remoteConfigs = gitSCMSource.getRemoteConfigs();
         assertEquals(expectedRemote, remoteConfigs.get(0).getName());
         assertEquals(expectedRefSpec, remoteConfigs.get(0).getRefspec());
-        assertEquals("Wrong number of entries in remoteConfigs", 1, remoteConfigs.size());
+        assertEquals(1, remoteConfigs.size(), "Wrong number of entries in remoteConfigs");
     }
 
     @Test
-    public void testBuild() {
+    void testBuild() {
         final String expectedBranchName = "origin/master";
         SCMHead head = new SCMHead(expectedBranchName);
         SCMRevision revision = new SCMRevisionImpl(head);
@@ -146,15 +148,15 @@ public class AbstractGitSCMSourceTrivialTest {
         List<UserRemoteConfig> remoteConfigs = gitSCM.getUserRemoteConfigs();
         assertEquals(expectedRemote, remoteConfigs.get(0).getName());
         assertEquals(expectedRefSpec, remoteConfigs.get(0).getRefspec());
-        assertEquals("Wrong number of entries in remoteConfigs", 1, remoteConfigs.size());
+        assertEquals(1, remoteConfigs.size(), "Wrong number of entries in remoteConfigs");
 
         List<BranchSpec> branches = gitSCM.getBranches();
         assertEquals(expectedBranchName, branches.get(0).getName());
-        assertEquals("Wrong number of branches", 1, branches.size());
+        assertEquals(1, branches.size(), "Wrong number of branches");
     }
 
     @Test
-    public void equalsContractSCMRevisionImpl() {
+    void equalsContractSCMRevisionImpl() {
         EqualsVerifier.forClass(AbstractGitSCMSource.SCMRevisionImpl.class)
                 .usingGetClass()
                 .verify();
@@ -193,7 +195,7 @@ public class AbstractGitSCMSourceTrivialTest {
         }
     }
 
-    private class SCMRevisionImpl extends SCMRevision {
+    private static class SCMRevisionImpl extends SCMRevision {
 
         protected SCMRevisionImpl(@NonNull SCMHead scmh) {
             super(scmh);

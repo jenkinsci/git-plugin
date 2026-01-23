@@ -19,7 +19,8 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 public class TestGitRepo {
-	protected String name; // The name of this repository.
+
+    protected String name; // The name of this repository.
 	protected TaskListener listener;
 	
 	/**

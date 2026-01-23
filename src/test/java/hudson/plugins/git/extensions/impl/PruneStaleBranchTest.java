@@ -1,12 +1,12 @@
 package hudson.plugins.git.extensions.impl;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class PruneStaleBranchTest {
+class PruneStaleBranchTest {
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(PruneStaleBranch.class)
                 .usingGetClass()
                 .verify();

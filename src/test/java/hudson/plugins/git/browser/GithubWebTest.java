@@ -24,32 +24,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import jenkins.scm.api.SCMHead;
+import org.junit.jupiter.api.Test;
+
 import org.eclipse.jgit.transport.RefSpec;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.jvnet.hudson.test.Issue;
 
 /**
  * @author mirko
  */
-public class GithubWebTest {
+class GithubWebTest {
 
     private static final String GITHUB_URL = "http://github.com/USER/REPO";
     private final GithubWeb githubWeb = new GithubWeb(GITHUB_URL);
 
     @Test
-    public void testGetUrl() throws IOException {
-        assertEquals(String.valueOf(githubWeb.getUrl()), GITHUB_URL  + "/");
+    void testGetUrl() throws IOException {
+        assertEquals(GITHUB_URL  + "/", String.valueOf(githubWeb.getUrl()));
     }
 
     @Test
-    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
-        assertEquals(String.valueOf(new GithubWeb(GITHUB_URL + "/").getUrl()), GITHUB_URL  + "/");
+    void testGetUrlForRepoWithTrailingSlash() throws IOException {
+        assertEquals(GITHUB_URL  + "/", String.valueOf(new GithubWeb(GITHUB_URL + "/").getUrl()));
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = githubWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITHUB_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
 
@@ -61,18 +64,18 @@ public class GithubWebTest {
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(GITHUB_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#diff-0", githubWeb.getDiffLink(path1).toString());
         final Path path2 = pathMap.get("src/test/java/hudson/plugins/git/browser/GithubWebTest.java");
         assertEquals(GITHUB_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#diff-1", githubWeb.getDiffLink(path2).toString());
         final Path path3 = pathMap.get("src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file");
-        assertNull("Do not return a diff link for added files.", githubWeb.getDiffLink(path3));
+        assertNull(githubWeb.getDiffLink(path3), "Do not return a diff link for added files.");
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -81,15 +84,16 @@ public class GithubWebTest {
 
     @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathWithEscape() throws Exception {
+    void testGetFileLinkPathWithEscape() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
         final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%.txt");
         final URL fileLink = githubWeb.getFileLink(path);
         assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%25.txt", String.valueOf(fileLink));
     }
+
     @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathWithWindowsUnescapeChar() throws Exception {
+    void testGetFileLinkPathWithWindowsUnescapeChar() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
         final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf^%.txt");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -98,7 +102,7 @@ public class GithubWebTest {
 
     @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathWithDoubleEscape() throws Exception {
+    void testGetFileLinkPathWithDoubleEscape() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
         final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%%.txt");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -107,7 +111,7 @@ public class GithubWebTest {
 
     @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathWithWindowsEnvironmentalVariable() throws Exception {
+    void testGetFileLinkPathWithWindowsEnvironmentalVariable() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
         final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%abc%.txt");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -116,7 +120,7 @@ public class GithubWebTest {
 
     @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathWithSpaceInName() throws Exception {
+    void testGetFileLinkPathWithSpaceInName() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
         final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/config file.txt");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -124,7 +128,7 @@ public class GithubWebTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -136,13 +140,13 @@ public class GithubWebTest {
     }
 
     @Test
-    public void testGuessBrowser() throws Exception {
+    void testGuessBrowser() throws Exception {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");
         assertGuessURL("https://github.com/kohsuke/msv/", "https://github.com/kohsuke/msv/");
         assertGuessURL("https://github.com/kohsuke/msv", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@github.com:kohsuke/msv.git", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@git.apache.org:whatever.git", null);
-        final boolean allowed [] = { Boolean.TRUE, Boolean.FALSE };
+        final boolean[] allowed = { Boolean.TRUE, Boolean.FALSE };
         for (final boolean add_git_suffix : allowed) {
             for (final boolean add_slash_suffix : allowed) {
                 assertGuessURL(repoUrl("git@github.com:kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
@@ -156,12 +160,12 @@ public class GithubWebTest {
     private void assertGuessURL(String repo, String web) throws Exception {
         RepositoryBrowser<?> guess = new GitSCM(repo).guessBrowser();
         String actual = guess instanceof GithubWeb gw ? gw.getRepoUrl() : null;
-        assertEquals("For repo '" + repo + "':", web, actual);
+        assertEquals(web, actual, "For repo '" + repo + "':");
     }
 
     @Issue("JENKINS-33409")
     @Test
-    public void guessBrowserSCMSource() throws Exception {
+    void guessBrowserSCMSource() throws Exception {
         // like GitSCMSource:
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/", "+refs/heads/*:refs/remotes/origin/*");
         // like GitHubSCMSource:

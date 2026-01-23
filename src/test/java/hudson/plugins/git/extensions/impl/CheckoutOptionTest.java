@@ -8,37 +8,37 @@ import hudson.plugins.git.GitSCM;
 import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
+import org.junit.jupiter.api.BeforeEach;
+
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
 
-public class CheckoutOptionTest {
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class CheckoutOptionTest {
 
     private CheckoutOption option;
     private static final int INITIAL_TIMEOUT = 10;
 
-    public CheckoutOptionTest() {
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void beforeEach() {
         option = new CheckoutOption(INITIAL_TIMEOUT);
     }
 
     @Test
-    public void testGetTimeout() {
+    void testGetTimeout() {
         assertEquals(INITIAL_TIMEOUT, (int) option.getTimeout());
     }
 
     @Test
-    public void testRequiresWorkspaceForPolling() {
+    void testRequiresWorkspaceForPolling() {
         assertFalse(option.requiresWorkspaceForPolling());
     }
 
     @Test
-    public void testDecorateCheckoutCommand() throws Exception {
+    void testDecorateCheckoutCommand() throws Exception {
         final int NEW_TIMEOUT = 13;
 
         CheckoutCommandImpl cmd = new CheckoutCommandImpl();
@@ -55,7 +55,7 @@ public class CheckoutOptionTest {
     }
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(CheckoutOption.class)
                 .usingGetClass()
                 .suppress(Warning.NONFINAL_FIELDS)
@@ -63,11 +63,11 @@ public class CheckoutOptionTest {
     }
 
     @Test
-    public void checkToString() {
+    void checkToString() {
         assertEquals("CheckoutOption{timeout=" + INITIAL_TIMEOUT + "}", option.toString());
     }
 
-    public class CheckoutCommandImpl implements CheckoutCommand {
+    public static class CheckoutCommandImpl implements CheckoutCommand {
 
         private int timeout = INITIAL_TIMEOUT;
 

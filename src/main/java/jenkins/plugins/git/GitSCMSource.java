@@ -435,7 +435,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return traits;
     }
 
-    @Symbol("git")
+    @Symbol({"gitSource", "git"})
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor {
 

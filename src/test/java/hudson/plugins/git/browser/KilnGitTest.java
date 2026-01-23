@@ -5,6 +5,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -16,46 +18,46 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Klaiber (cklaiber@gmail.com)
  */
-public class KilnGitTest {
+class KilnGitTest {
 
     private static final String KILN_URL = "http://USER.kilnhg.com/Code/PROJECT/Group/REPO";
     private final KilnGit kilnGit = new KilnGit(KILN_URL);
 
     @Test
-    public void testGetUrl() throws IOException {
-        assertEquals(String.valueOf(kilnGit.getUrl()), KILN_URL  + "/");
+    void testGetUrl() throws IOException {
+        assertEquals(KILN_URL  + "/", String.valueOf(kilnGit.getUrl()));
     }
 
     @Test
-    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
-        assertEquals(String.valueOf(new KilnGit(KILN_URL + "/").getUrl()), KILN_URL  + "/");
+    void testGetUrlForRepoWithTrailingSlash() throws IOException {
+        assertEquals(KILN_URL  + "/", String.valueOf(new KilnGit(KILN_URL + "/").getUrl()));
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = kilnGit.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(KILN_URL + "/History/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(KILN_URL + "/History/396fc230a3db05c427737aa5c2eb7856ba72b05d#diff-1", kilnGit.getDiffLink(path1).toString());
         final Path path2 = pathMap.get("src/test/java/hudson/plugins/git/browser/GithubWebTest.java");
         assertEquals(KILN_URL + "/History/396fc230a3db05c427737aa5c2eb7856ba72b05d#diff-2", kilnGit.getDiffLink(path2).toString());
         final Path path3 = pathMap.get("src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file");
-        assertNull("Do not return a diff link for added files.", kilnGit.getDiffLink(path3));
+        assertNull(kilnGit.getDiffLink(path3), "Do not return a diff link for added files.");
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = kilnGit.getFileLink(path);
@@ -63,7 +65,7 @@ public class KilnGitTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = kilnGit.getFileLink(path);

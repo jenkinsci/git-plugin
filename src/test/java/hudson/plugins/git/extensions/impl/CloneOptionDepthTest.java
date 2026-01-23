@@ -15,20 +15,22 @@ import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
-@RunWith(Parameterized.class)
-public class CloneOptionDepthTest {
+@ParameterizedClass(name = "depth: configured={0}, used={1}")
+@MethodSource("depthCombinations")
+@WithJenkins
+class CloneOptionDepthTest {
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
     private GitSCM scm;
     private Run<?, ?> build;
@@ -43,13 +45,17 @@ public class CloneOptionDepthTest {
         this.usedDepth = usedDepth;
     }
 
-    @Parameterized.Parameters(name = "depth: configured={0}, used={1}")
-    public static Object[][] depthCombinations() {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
+
+    static Object[][] depthCombinations() {
         return new Object[][] { { 0, 1 }, { 1, 1 }, { 2, 2 } };
     }
 
-    @Before
-    public void mockDependencies() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         scm = mock(GitSCM.class);
         build = mock(Run.class);
         git = mock(GitClient.class);
@@ -63,7 +69,7 @@ public class CloneOptionDepthTest {
 
     @Issue("JENKINS-53050")
     @Test
-    public void decorateCloneCommandShouldUseValidShallowDepth() throws Exception {
+    void decorateCloneCommandShouldUseValidShallowDepth() throws Exception {
         CloneCommand cloneCommand = mock(CloneCommand.class, Mockito.RETURNS_SELF);
 
         PrintStream logger = mock(PrintStream.class);
@@ -82,7 +88,7 @@ public class CloneOptionDepthTest {
     @Issue("JENKINS-53050")
     @Test
     @Deprecated
-    public void decorateFetchCommandShouldUseValidShallowDepth() throws Exception {
+    void decorateFetchCommandShouldUseValidShallowDepth() throws Exception {
         FetchCommand fetchCommand = mock(FetchCommand.class, Mockito.RETURNS_SELF);
 
         PrintStream logger = mock(PrintStream.class);

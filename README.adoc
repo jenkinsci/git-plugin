@@ -7,7 +7,6 @@
 == Introduction
 
 image::images/jenkins-and-git.png[Jenkins and Git]
-image::https://static.scarf.sh/a.png?x-pxid=e010adc8-3614-41ef-b7e8-2f42328e8962&page=git-plugin-readme[]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
@@ -1634,6 +1633,7 @@ This script removes the static list of BuildsByBranch that is stored for each bu
 ----
 import hudson.matrix.*
 import hudson.model.*
+import static hudson.Util.fixNull
 
 hudsonInstance = hudson.model.Hudson.instance
 jobNames = hudsonInstance.getJobNames()
@@ -1661,7 +1661,7 @@ for (job in allItems) {
         hudson.plugins.git.Revision r = action.getLastBuiltRevision();
         if (r != null) {
           for (branch in r.getBranches()) {
-            action.buildsByBranchName.put(branch.getName(), action.lastBuild)
+            action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
           }
         }
         build.actions.remove(action)
@@ -1680,7 +1680,7 @@ for (job in allItems) {
             hudson.plugins.git.Revision r = action.getLastBuiltRevision();
             if (r != null) {
               for (branch in r.getBranches()) {
-                action.buildsByBranchName.put(branch.getName(), action.lastBuild)
+                action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
               }
             }
             run.actions.remove(action)

@@ -23,39 +23,34 @@
  */
 package hudson.plugins.git;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-public class ChangelogToBranchOptionsTest {
+class ChangelogToBranchOptionsTest {
 
-    private final ChangelogToBranchOptions options;
-    private final String compareRemote;
-    private final String compareTarget;
-
-    public ChangelogToBranchOptionsTest() {
-        compareRemote = "origin";
-        compareTarget = "feature/new-thing";
-        options = new ChangelogToBranchOptions(compareRemote, compareTarget);
-    }
+    private final String compareRemote = "origin";
+    private final String compareTarget = "feature/new-thing";
+    private final ChangelogToBranchOptions options = new ChangelogToBranchOptions(compareRemote, compareTarget);
 
     @Test
-    public void testGetCompareRemote() {
+    void testGetCompareRemote() {
         assertThat(options.getCompareRemote(), is(compareRemote));
     }
 
     @Test
-    public void testGetCompareTarget() {
+    void testGetCompareTarget() {
         assertThat(options.getCompareTarget(), is(compareTarget));
     }
 
     @Test
-    public void testGetRef() {
+    void testGetRef() {
         assertThat(options.getRef(), is(compareRemote + "/" + compareTarget));
     }
 
     @Test
-    public void testAlternateConstructor() {
+    void testAlternateConstructor() {
         ChangelogToBranchOptions newOptions = new ChangelogToBranchOptions(options);
         assertThat(newOptions.getCompareRemote(), is(options.getCompareRemote()));
         assertThat(newOptions.getCompareTarget(), is(options.getCompareTarget()));
