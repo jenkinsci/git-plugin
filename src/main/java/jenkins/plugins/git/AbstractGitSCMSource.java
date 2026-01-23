@@ -426,23 +426,29 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
     }
 
-    /**
-     * Gets the timestamp for a tag.
-     * <p>
-     * For annotated tags, returns the tag creation time.
-     * For lightweight tags, returns the commit time.
-     *
-     * @param walk the RevWalk to use for parsing
-     * @param objectId the ObjectId of the tag
-     * @return the timestamp in milliseconds
-     * @throws IOException if an I/O error occurs
-     */
     private long getTagTimestamp(RevWalk walk, ObjectId objectId) throws IOException {
         try {
+            // Annotated tag object
             RevTag tag = walk.parseTag(objectId);
-            return tag.getTaggerIdent().getWhen().getTime();
-        } catch (Exception e) {
-            // Lightweight tag, use commit time
+
+            if (tag.getTaggerIdent() != null
+                    && tag.getTaggerIdent().getWhen() != null) {
+                return tag.getTaggerIdent().getWhen().getTime();
+            }
+
+            // No tagger ident (or weird tag) — walk the tag chain to a commit, if any
+            Object target = tag.getObject();
+            for (int i = 0; i < 32 && target instanceof RevTag; i++) {
+                target = ((RevTag) target).getObject();
+            }
+
+            if (target instanceof RevCommit) {
+                return TimeUnit.SECONDS.toMillis(((RevCommit) target).getCommitTime());
+            }
+
+            throw new IOException("Tag does not ultimately reference a commit: " + objectId.name());
+        } catch (org.eclipse.jgit.errors.IncorrectObjectTypeException e) {
+            // Lightweight tag (or direct commit id)
             RevCommit commit = walk.parseCommit(objectId);
             return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
         }
