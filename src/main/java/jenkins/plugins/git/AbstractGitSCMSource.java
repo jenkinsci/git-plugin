@@ -109,9 +109,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.revwalk.*;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -170,7 +168,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     public AbstractGitSCMSource() {
     }
-    
+
     @Deprecated
     public AbstractGitSCMSource(String id) {
         setId(id);
@@ -790,9 +788,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                     count++;
                     final String tagName = StringUtils.removeStart(ref.getKey(), Constants.R_TAGS);
-                    RevCommit commit = walk.parseCommit(ref.getValue());
-                    final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
-
+                    RevObject tag = walk.parseAny(ref.getValue());
+                    long lastModified = tag instanceof RevTag ?
+                            ((RevTag) tag).getTaggerIdent().getWhenAsInstant().toEpochMilli() :
+                            /* For lightweight tags, there will be no RevTag object */
+                            TimeUnit.SECONDS.toMillis(((RevCommit) tag).getCommitTime());
                     if (atLeastMillis >= 0L || atMostMillis >= 0L) {
                         if (atMostMillis >= 0L && atLeastMillis > atMostMillis) {
                             /* Invalid. It's impossible for any tag to satisfy this. */
