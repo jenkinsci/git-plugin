@@ -315,6 +315,9 @@ class AbstractGitSCMSourceTest {
 
         source.setTraits(Collections.singletonList(new TagDiscoveryTrait("1", "0")));
         assertThat(source.fetch(listener), empty());
+
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait("apple", "banana")));
+        assertThat(source.fetch(listener).stream().map(SCMHead::getName).collect(Collectors.toSet()), contains("test-tag"));
     }
 
     @Issue("JENKINS-45953")
