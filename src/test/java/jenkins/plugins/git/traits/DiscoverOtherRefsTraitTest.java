@@ -23,20 +23,20 @@
  */
 package jenkins.plugins.git.traits;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DiscoverOtherRefsTraitTest {
+class DiscoverOtherRefsTraitTest {
 
     @Test
-    public void getFullRefSpec() throws Exception {
+    void getFullRefSpec() throws Exception {
         DiscoverOtherRefsTrait t = new DiscoverOtherRefsTrait("refs/custom/*");
         assertEquals("+refs/custom/*:refs/remotes/@{remote}/custom/*", t.getFullRefSpec());
     }
 
     @Test
-    public void getNameMapping() throws Exception {
+    void getNameMapping() throws Exception {
         DiscoverOtherRefsTrait t = new DiscoverOtherRefsTrait("refs/bobby/*");
         assertEquals("bobby-@{1}", t.getNameMapping());
         t = new DiscoverOtherRefsTrait("refs/bobby/*/merge");

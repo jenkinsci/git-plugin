@@ -1,25 +1,26 @@
 package jenkins.plugins.git;
 
 import hudson.plugins.git.GitSCM;
-import io.jenkins.plugins.casc.misc.RoundTripAbstractTest;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.AbstractRoundTripTest;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class GitSCMJCasCCompatibilityTest extends RoundTripAbstractTest {
+@WithJenkins
+class GitSCMJCasCCompatibilityTest extends AbstractRoundTripTest {
+
     @Override
-    protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
-        GitSCM.DescriptorImpl gitSCM = (GitSCM.DescriptorImpl) restartableJenkinsRule.j.jenkins.getScm(GitSCM.class.getSimpleName());
+    protected void assertConfiguredAsExpected(JenkinsRule rule, String s) {
+        GitSCM.DescriptorImpl gitSCM = (GitSCM.DescriptorImpl) rule.jenkins.getScm(GitSCM.class.getSimpleName());
         assertEquals("user_name", gitSCM.getGlobalConfigName());
         assertEquals("me@mail.com", gitSCM.getGlobalConfigEmail());
-        assertTrue("Allow second fetch setting not honored", gitSCM.isAllowSecondFetch());
-        assertTrue("Show entire commit summary setting not honored", gitSCM.isShowEntireCommitSummaryInChanges());
-        assertTrue("Hide credentials setting not honored", gitSCM.isHideCredentials());
-        assertFalse("Use existing account setting not honored", gitSCM.isUseExistingAccountWithSameEmail());
-        assertTrue("Create account based on email setting not honored", gitSCM.isCreateAccountBasedOnEmail());
-        assertTrue("Add git tag action setting not honored", gitSCM.isAddGitTagAction());
+        assertTrue(gitSCM.isAllowSecondFetch(), "Allow second fetch setting not honored");
+        assertTrue(gitSCM.isShowEntireCommitSummaryInChanges(), "Show entire commit summary setting not honored");
+        assertTrue(gitSCM.isHideCredentials(), "Hide credentials setting not honored");
+        assertFalse(gitSCM.isUseExistingAccountWithSameEmail(), "Use existing account setting not honored");
+        assertTrue(gitSCM.isCreateAccountBasedOnEmail(), "Create account based on email setting not honored");
+        assertTrue(gitSCM.isAddGitTagAction(), "Add git tag action setting not honored");
     }
 
     @Override

@@ -2,6 +2,7 @@ package hudson.plugins.git.extensions.impl;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
@@ -52,6 +53,16 @@ public class MessageExclusion extends GitSCMExtension {
 		}
 
 		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
+		if (build != null && build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.")) {
+			listener.getLogger().println("DEPRECATED: Message exclusion during polling is deprecated for Pipeline jobs. " + "Use the Pipeline SCM trait instead.");
+		}
 	}
 
 	@Extension

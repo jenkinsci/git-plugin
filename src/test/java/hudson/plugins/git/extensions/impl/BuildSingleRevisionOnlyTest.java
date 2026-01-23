@@ -11,20 +11,21 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitStatusTest;
 import hudson.util.RunList;
-import java.io.File;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.After;
 
-public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
+import static hudson.Functions.isWindows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-    @After
-    public void waitForAllJobsToComplete() {
+class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
+
+    @AfterEach
+    void afterEach() {
         /* Windows job cleanup fails to delete build logs in some of these tests.
          * Wait for the jobs to complete before exiting the test so that the
          * build logs will not be active when the cleanup process tries to
@@ -52,7 +53,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testSingleRevision() throws Exception {
+    void testSingleRevision() throws Exception {
         // This is the additional behaviour
         List<BranchSpec> branchSpec = new ArrayList<>();
         branchSpec.add(new BranchSpec("master"));
@@ -80,11 +81,11 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         r.assertBuildStatusSuccess(build);
         boolean result = build.getLog(100).contains(
                 "Scheduling another build to catch up with %s".formatted(project.getName()));
-        Assert.assertFalse("Single revision scheduling did not prevent a build of a different revision", result);
+        assertFalse(result, "Single revision scheduling did not prevent a build of a different revision");
     }
 
     @Test
-    public void testMultiRevision() throws Exception {
+    void testMultiRevision() throws Exception {
         // This is the old and now default behaviour
         List<BranchSpec> branchSpec = new ArrayList<>();
         branchSpec.add(new BranchSpec("master"));
@@ -120,11 +121,4 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         Thread.sleep(500L + random.nextInt(300));
     }
 
-    /**
-     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
-     * remote class loader issue
-     */
-    private boolean isWindows() {
-        return File.pathSeparatorChar == ';';
-    }
 }

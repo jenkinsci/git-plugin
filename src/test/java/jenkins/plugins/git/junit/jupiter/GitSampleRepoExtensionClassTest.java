@@ -1,20 +1,27 @@
 package jenkins.plugins.git.junit.jupiter;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jenkins.plugins.git.GitSampleRepoRule;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @WithGitSampleRepo
 class GitSampleRepoExtensionClassTest {
 
     @Test
     void gitSampleRepoIsInjected(GitSampleRepoRule rule) throws Exception {
-        Assertions.assertNotNull(rule);
+        assertNotNull(rule);
         // somehow testing initialization
         var root = rule.getRoot();
-        Assertions.assertNotNull(root);
+        assertNotNull(root);
         rule.init();
-        Assertions.assertNotNull(rule.head());
+        assertNotNull(rule.head());
+    }
+
+    @Test
+    void multipleGitSampleReposInjected(GitSampleRepoRule rule1, GitSampleRepoRule rule2) throws Exception {
+        gitSampleRepoIsInjected(rule1);
+        gitSampleRepoIsInjected(rule2);
     }
 }

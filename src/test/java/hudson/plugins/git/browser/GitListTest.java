@@ -9,6 +9,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -20,47 +22,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author mirko
  * @author fauxpark
  */
-public class GitListTest {
+class GitListTest {
 
     private static final String GITLIST_URL = "http://gitlist.org/REPO";
     private final GitList gitlist = new GitList(GITLIST_URL);
 
     @Test
-    public void testGetUrl() throws IOException {
-        assertEquals(String.valueOf(gitlist.getUrl()), GITLIST_URL + "/");
+    void testGetUrl() throws IOException {
+        assertEquals(GITLIST_URL + "/", String.valueOf(gitlist.getUrl()));
     }
 
     @Test
-    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
-        assertEquals(String.valueOf(new GitList(GITLIST_URL + "/").getUrl()), GITLIST_URL + "/");
+    void testGetUrlForRepoWithTrailingSlash() throws IOException {
+        assertEquals(GITLIST_URL + "/", String.valueOf(new GitList(GITLIST_URL + "/").getUrl()));
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = gitlist.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITLIST_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(GITLIST_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#1", gitlist.getDiffLink(path1).toString());
         final Path path2 = pathMap.get("src/test/java/hudson/plugins/git/browser/GithubWebTest.java");
         assertEquals(GITLIST_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#2", gitlist.getDiffLink(path2).toString());
         final Path path3 = pathMap.get("src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file");
-        assertNull("Do not return a diff link for added files.", gitlist.getDiffLink(path3));
+        assertNull(gitlist.getDiffLink(path3), "Do not return a diff link for added files.");
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = gitlist.getFileLink(path);
@@ -68,7 +70,7 @@ public class GitListTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = gitlist.getFileLink(path);

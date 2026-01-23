@@ -25,31 +25,27 @@ package hudson.plugins.git;
 
 import hudson.model.Run;
 import hudson.scm.RepositoryBrowser;
+import org.junit.jupiter.api.BeforeEach;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.junit.Test;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GitChangeSetListTest {
+import org.junit.jupiter.api.Test;
 
-    private final GitChangeSetList emptyChangeSetList;
+class GitChangeSetListTest {
+
+    private final GitChangeSetList emptyChangeSetList = new GitChangeSetList(null, null, new ArrayList<>());
     private GitChangeSetList changeSetList;
     private GitChangeSet changeSet;
 
-    public GitChangeSetListTest() {
-        RepositoryBrowser<?> browser = null;
-        Run build = null;
-        emptyChangeSetList = new GitChangeSetList(build, browser, new ArrayList<>());
-    }
-
-    @Before
-    public void createGitChangeSetList() {
+    @BeforeEach
+    void beforeEach() {
         RepositoryBrowser<?> browser = null;
         Run build = null;
         List<GitChangeSet> logs = new ArrayList<>();
@@ -62,17 +58,17 @@ public class GitChangeSetListTest {
     }
 
     @Test
-    public void testIsEmptySet() {
+    void testIsEmptySet() {
         assertFalse(changeSetList.isEmptySet());
     }
 
     @Test
-    public void testIsEmptySetReallyEmpty() {
+    void testIsEmptySetReallyEmpty() {
         assertTrue(emptyChangeSetList.isEmptySet());
     }
 
     @Test
-    public void testIterator() {
+    void testIterator() {
         Iterator<GitChangeSet> iterator = changeSetList.iterator();
         GitChangeSet firstChangeSet = iterator.next();
         assertThat(firstChangeSet, is(changeSet));
@@ -80,25 +76,25 @@ public class GitChangeSetListTest {
     }
 
     @Test
-    public void testIteratorReallyE() {
+    void testIteratorReallyE() {
         Iterator<GitChangeSet> iterator = emptyChangeSetList.iterator();
         assertFalse(iterator.hasNext());
     }
 
     @Test
-    public void testGetLogs() {
+    void testGetLogs() {
         List<GitChangeSet> result = changeSetList.getLogs();
         assertThat(result, contains(changeSet));
     }
 
     @Test
-    public void testGetLogsReallyEmpty() {
+    void testGetLogsReallyEmpty() {
         List<GitChangeSet> result = emptyChangeSetList.getLogs();
         assertThat(result, is(empty()));
     }
 
     @Test
-    public void testGetKind() {
+    void testGetKind() {
         assertThat(changeSetList.getKind(), is("git"));
     }
 }

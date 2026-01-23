@@ -15,22 +15,23 @@ import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
+import org.junit.jupiter.api.AfterEach;
+
 import java.io.File;
 import java.io.PrintWriter;
-import java.net.URISyntaxException;
 import java.util.*;
-import org.eclipse.jgit.transport.URIish;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.kohsuke.stapler.HttpResponses;
 import org.mockito.Mockito;
+
+import static hudson.Functions.isWindows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import static org.junit.Assert.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,8 +49,8 @@ public class GitStatusTest extends AbstractGitProject {
     private String sha1;
     private String notifyCommitApiToken;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         GitStatus.setAllowNotifyCommitParameters(false);
         GitStatus.setSafeParametersForTest(null);
         this.gitStatus = new GitStatus();
@@ -63,14 +64,11 @@ public class GitStatusTest extends AbstractGitProject {
         }
     }
 
-    @After
-    public void resetAllowNotifyCommitParameters() throws Exception {
+    @AfterEach
+    void afterEach() throws Exception {
         GitStatus.setAllowNotifyCommitParameters(false);
         GitStatus.setSafeParametersForTest(null);
-    }
 
-    @After
-    public void waitForAllJobsToComplete() throws Exception {
         // Put JenkinsRule into shutdown state, trying to reduce cleanup exceptions
         r.jenkins.doQuietDown();
         // JenkinsRule cleanup throws exceptions during tearDown.
@@ -105,7 +103,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithNoBranches() throws Exception {
+    void testDoNotifyCommitWithNoBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -121,7 +119,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithNoMatchingUrl() throws Exception {
+    void testDoNotifyCommitWithNoMatchingUrl() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -137,7 +135,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithOneBranch() throws Exception {
+    void testDoNotifyCommitWithOneBranch() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -153,7 +151,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithTwoBranches() throws Exception {
+    void testDoNotifyCommitWithTwoBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger aFeatureTrigger = setupProjectWithTrigger("a", "feature/def", false);
@@ -174,7 +172,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithNoMatchingBranches() throws Exception {
+    void testDoNotifyCommitWithNoMatchingBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -190,7 +188,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithSlashesInBranchNames() throws Exception {
+    void testDoNotifyCommitWithSlashesInBranchNames() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
 
@@ -204,7 +202,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithParametrizedBranch() throws Exception {
+    void testDoNotifyCommitWithParametrizedBranch() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "$BRANCH_TO_BUILD", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
@@ -218,7 +216,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithIgnoredRepository() throws Exception {
+    void testDoNotifyCommitWithIgnoredRepository() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", true);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "", notifyCommitApiToken);
@@ -228,7 +226,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithNoScmTrigger() throws Exception {
+    void testDoNotifyCommitWithNoScmTrigger() throws Exception {
         setupProject("a", "master", null);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "", notifyCommitApiToken);
         // no expectation here, however we shouldn't have a build triggered, and no exception
@@ -237,22 +235,22 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameterAllowed() throws Exception {
+    void testDoNotifyCommitWithTwoBranchesAndAdditionalParameterAllowed() throws Exception {
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(true, null);
     }
 
     @Test
-    public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameter() throws Exception {
+    void testDoNotifyCommitWithTwoBranchesAndAdditionalParameter() throws Exception {
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, null);
     }
 
     @Test
-    public void testDoNotifyCommitWithTwoBranchesAndAdditionalSafeParameter() throws Exception {
+    void testDoNotifyCommitWithTwoBranchesAndAdditionalSafeParameter() throws Exception {
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, "paramKey1");
     }
 
     @Test
-    public void testDoNotifyCommitWithTwoBranchesAndAdditionalUnsafeParameter() throws Exception {
+    void testDoNotifyCommitWithTwoBranchesAndAdditionalUnsafeParameter() throws Exception {
         doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, "does,not,include,param");
     }
 
@@ -291,7 +289,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitBranchWithRegex() throws Exception {
+    void testDoNotifyCommitBranchWithRegex() throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", ":[^/]*/awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
@@ -299,7 +297,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitBranchWithWildcard() throws Exception {
+    void testDoNotifyCommitBranchWithWildcard() throws Exception {
         SCMTrigger trigger = setupProjectWithTrigger("remote", "origin/feature/*", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null, notifyCommitApiToken);
 
@@ -369,7 +367,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommit() throws Exception { /* No parameters */
+    void testDoNotifyCommit() throws Exception { /* No parameters */
         setupNotifyProject();
         this.gitStatus.doNotifyCommit(requestWithNoParameter, repoURL, branch, sha1, notifyCommitApiToken);
         assertEquals("URL: " + repoURL
@@ -378,22 +376,22 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithExtraParameterAllowed() throws Exception {
+    void testDoNotifyCommitWithExtraParameterAllowed() throws Exception {
         doNotifyCommitWithExtraParameterAllowed(true, null);
     }
 
     @Test
-    public void testDoNotifyCommitWithExtraParameter() throws Exception {
+    void testDoNotifyCommitWithExtraParameter() throws Exception {
         doNotifyCommitWithExtraParameterAllowed(false, null);
     }
 
     @Test
-    public void testDoNotifyCommitWithExtraSafeParameter() throws Exception {
+    void testDoNotifyCommitWithExtraSafeParameter() throws Exception {
         doNotifyCommitWithExtraParameterAllowed(false, "something,extra,is,here");
     }
 
     @Test
-    public void testDoNotifyCommitWithExtraUnsafeParameter() throws Exception {
+    void testDoNotifyCommitWithExtraUnsafeParameter() throws Exception {
         doNotifyCommitWithExtraParameterAllowed(false, "something,is,not,here");
     }
 
@@ -423,7 +421,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithNullValueExtraParameter() throws Exception {
+    void testDoNotifyCommitWithNullValueExtraParameter() throws Exception {
         setupNotifyProject();
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(null));
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1, notifyCommitApiToken);
@@ -433,27 +431,27 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitWithDefaultParameterAllowed() throws Exception {
+    void testDoNotifyCommitWithDefaultParameterAllowed() throws Exception {
         doNotifyCommitWithDefaultParameter(true, null);
     }
 
     @Test
-    public void testDoNotifyCommitWithDefaultParameter() throws Exception {
+    void testDoNotifyCommitWithDefaultParameter() throws Exception {
         doNotifyCommitWithDefaultParameter(false, null);
     }
 
     @Test
-    public void testDoNotifyCommitWithDefaultSafeParameter() throws Exception {
+    void testDoNotifyCommitWithDefaultSafeParameter() throws Exception {
         doNotifyCommitWithDefaultParameter(false, "A,B,C,extra");
     }
 
     @Test
-    public void testDoNotifyCommitWithDefaultUnsafeParameterC() throws Exception {
+    void testDoNotifyCommitWithDefaultUnsafeParameterC() throws Exception {
         doNotifyCommitWithDefaultParameter(false, "A,B,extra");
     }
 
     @Test
-    public void testDoNotifyCommitWithDefaultUnsafeParameterExtra() throws Exception {
+    void testDoNotifyCommitWithDefaultUnsafeParameterExtra() throws Exception {
        doNotifyCommitWithDefaultParameter(false, "A,B,C");
     }
 
@@ -517,17 +515,9 @@ public class GitStatusTest extends AbstractGitProject {
         return !jobUrl.contains("ci.jenkins.io"); // Skip some tests on ci.jenkins.io, windows cleanup is unreliable on those machines
     }
 
-    /**
-     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
-     * remote classloader issue
-     */
-    private boolean isWindows() {
-        return File.pathSeparatorChar == ';';
-    }
-
     @Test
     @Issue("JENKINS-46929")
-    public void testDoNotifyCommitTriggeredHeadersLimited() throws Exception {
+    void testDoNotifyCommitTriggeredHeadersLimited() throws Exception {
         SCMTrigger[] projectTriggers = new SCMTrigger[50];
         for (int i = 0; i < projectTriggers.length; i++) {
             projectTriggers[i] = setupProjectWithTrigger("a", "master", false);
@@ -552,7 +542,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     @Issue("SECURITY-2499")
-    public void testDoNotifyCommitWithWrongSha1Content() throws Exception {
+    void testDoNotifyCommitWithWrongSha1Content() throws Exception {
         setupProjectWithTrigger("a", "master", false);
 
         String content = "<img src=onerror=alert(1)>";
@@ -567,7 +557,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     @Issue("SECURITY-284")
-    public void testDoNotifyCommitWithValidSha1AndValidApiToken() throws Exception {
+    void testDoNotifyCommitWithValidSha1AndValidApiToken() throws Exception {
         // when sha1 is provided build is scheduled right away instead of repo polling, so we do not check for trigger
         FreeStyleProject project = setupNotifyProject();
 
@@ -577,12 +567,12 @@ public class GitStatusTest extends AbstractGitProject {
         FreeStyleBuild lastBuild = project.getLastBuild();
 
         assertNotNull(lastBuild);
-        assertEquals(lastBuild.getNumber(), 1);
+        assertEquals(1, lastBuild.getNumber());
     }
 
     @Test
     @Issue("SECURITY-284")
-    public void testDoNotifyCommitWithUnauthenticatedPollingAllowed() throws Exception {
+    void testDoNotifyCommitWithUnauthenticatedPollingAllowed() throws Exception {
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled-for-polling";
         SCMTrigger trigger = setupProjectWithTrigger("a", "master", false);
 
@@ -593,7 +583,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     @Issue("SECURITY-284")
-    public void testDoNotifyCommitWithAllowModeSha1() throws Exception {
+    void testDoNotifyCommitWithAllowModeSha1() throws Exception {
         GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = "disabled";
         // when sha1 is provided build is scheduled right away instead of repo polling, so we do not check for trigger
         FreeStyleProject project = setupNotifyProject();
@@ -604,6 +594,22 @@ public class GitStatusTest extends AbstractGitProject {
         FreeStyleBuild lastBuild = project.getLastBuild();
 
         assertNotNull(lastBuild);
-        assertEquals(lastBuild.getNumber(), 1);
+        assertEquals(1, lastBuild.getNumber());
     }
+
+    @Test
+    public void testDoNotifyCommitWithSshAzureDevopsPath() throws Exception { /* No parameters */
+        this.repoURL = "git@ssh.dev.azure.com:v3/myorg/PROJECT/reponame";
+        FreeStyleProject project = setupNotifyProject();
+        final String differingUrl = "https://myorg@dev.azure.com/myorg/PROJECT/_git/reponame";
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, differingUrl, branch, sha1, notifyCommitApiToken);
+        assertEquals("URL: " + differingUrl
+                + " SHA1: " + sha1
+                + " Branches: " + branch, this.gitStatus.toString());
+
+        r.waitUntilNoActivity();
+        FreeStyleBuild lastBuild = project.getLastBuild();
+        assertNotNull(lastBuild);
+    }
+
 }

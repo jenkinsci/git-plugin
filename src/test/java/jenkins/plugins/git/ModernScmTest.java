@@ -26,23 +26,29 @@ package jenkins.plugins.git;
 
 import hudson.ExtensionList;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class ModernScmTest {
+@WithJenkins
+class ModernScmTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        r = rule;
+    }
 
     @Test
     @Issue("JENKINS-58964")
-    public void gitIsModernScm() {
+    void gitIsModernScm() {
         SCMSourceRetriever.DescriptorImpl descriptor = ExtensionList.lookupSingleton(SCMSourceRetriever.DescriptorImpl.class);
         assertThat(descriptor.getSCMDescriptors(), hasItem(instanceOf(GitSCMSource.DescriptorImpl.class)));
     }

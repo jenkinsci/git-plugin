@@ -11,24 +11,27 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.BuildData;
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
+
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author dalvizu
  */
-public class PreBuildMergeTest extends GitSCMExtensionTest
-{
+class PreBuildMergeTest extends GitSCMExtensionTest {
     private FreeStyleProject project;
 
     private TestGitRepo repo;
 
     private String MASTER_FILE = "commitFileBase";
 
-    public void before() throws Exception {
-        repo = new TestGitRepo("repo", tmp.newFolder(), listener);
+    protected void before() throws Exception {
+        repo = new TestGitRepo("repo", newFolder(tmp, "junit"), listener);
         project = setupBasicProject(repo);
         // make an initial commit to master
         repo.commit(MASTER_FILE, repo.johnDoe, "Initial Commit");
@@ -37,17 +40,17 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
     }
 
     @Test
-    public void testBasicPreMerge() throws Exception {
+    void testBasicPreMerge() throws Exception {
         FreeStyleBuild firstBuild = build(project, Result.SUCCESS);
     }
 
     @Test
-    public void testFailedMerge() throws Exception {
+    void testFailedMerge() throws Exception {
         FreeStyleBuild firstBuild = build(project, Result.SUCCESS);
         assertEquals(GitSCM.class, project.getScm().getClass());
         GitSCM gitSCM = (GitSCM)project.getScm();
         BuildData buildData = gitSCM.getBuildData(firstBuild);
-        assertNotNull("Build data not found", buildData);
+        assertNotNull(buildData, "Build data not found");
         assertEquals(firstBuild.getNumber(), buildData.lastBuild.getBuildNumber());
         Revision firstMarked = buildData.lastBuild.getMarked();
         Revision firstRevision = buildData.lastBuild.getRevision();
@@ -61,9 +64,9 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
         repo.git.checkout().ref("master").execute();
 
         // make a new commit in master branch, this commit should not merge cleanly!
-        assertFalse("SCM polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        assertFalse(project.poll(listener).hasChanges(), "SCM polling should not detect any more changes after build");
         String conflictSha1 = repo.commit(MASTER_FILE, "new content - expect a merge conflict!", repo.johnDoe, repo.johnDoe, "Commit which should fail!");
-        assertTrue("SCM polling should detect changes", project.poll(listener).hasChanges());
+        assertTrue(project.poll(listener).hasChanges(), "SCM polling should detect changes");
 
         FreeStyleBuild secondBuild = build(project, Result.FAILURE);
         assertEquals(secondBuild.getNumber(), gitSCM.getBuildData(secondBuild).lastBuild.getBuildNumber());
@@ -78,7 +81,7 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
     }
 
     @Test
-    public void equalsContract() {
+    void equalsContract() {
         EqualsVerifier.forClass(PreBuildMerge.class)
                 .usingGetClass()
                 .verify();
@@ -88,6 +91,15 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
     protected GitSCMExtension getExtension() {
         return new PreBuildMerge(new UserMergeOptions("origin", "integration", "default",
                 MergeCommand.GitPluginFastForwardMode.FF));
+    }
+
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 
 }
