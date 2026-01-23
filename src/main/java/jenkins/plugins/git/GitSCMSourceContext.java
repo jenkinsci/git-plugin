@@ -96,11 +96,9 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     private String remoteName = AbstractGitSCMSource.DEFAULT_REMOTE_NAME;
 
-    @CheckForNull
-    private long atLeastTagCommitTimeMillis;
+    private long atLeastTagCommitTimeMillis = -1L;
 
-    @CheckForNull
-    private long atMostTagCommitTimeMillis;
+    private long atMostTagCommitTimeMillis = -1L;
 
     /**
      * Constructor.
