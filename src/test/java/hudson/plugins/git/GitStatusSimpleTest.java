@@ -1,49 +1,50 @@
 package hudson.plugins.git;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.eclipse.jgit.transport.URIish;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
 
-public class GitStatusSimpleTest {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class GitStatusSimpleTest {
 
     private GitStatus gitStatus;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void beforeEach() {
         this.gitStatus = new GitStatus();
     }
 
     @Test
-    public void testGetDisplayName() {
+    void testGetDisplayName() {
         assertEquals("Git", this.gitStatus.getDisplayName());
     }
 
     @Test
-    public void testGetIconFileName() {
+    void testGetIconFileName() {
         assertNull(this.gitStatus.getIconFileName());
     }
 
     @Test
-    public void testGetUrlName() {
+    void testGetUrlName() {
         assertEquals("git", this.gitStatus.getUrlName());
     }
 
     @Test
-    public void testAllowNotifyCommitParametersDisabled() {
-        assertFalse("SECURITY-275: ignore arbitrary notifyCommit parameters", GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
+    void testAllowNotifyCommitParametersDisabled() {
+        assertFalse(GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS, "SECURITY-275: ignore arbitrary notifyCommit parameters");
     }
 
     @Test
-    public void testSafeParametersEmpty() {
-        assertEquals("SECURITY-275: Safe notifyCommit parameters", "", GitStatus.SAFE_PARAMETERS);
+    void testSafeParametersEmpty() {
+        assertEquals("", GitStatus.SAFE_PARAMETERS, "SECURITY-275: Safe notifyCommit parameters");
     }
 
     @Test
-    public void testLooselyMatches() throws Exception {
+    void testLooselyMatches() throws Exception {
         String[] equivalentRepoURLs = new String[] {
             "https://example.com/jenkinsci/git-plugin",
             "https://example.com/jenkinsci/git-plugin/",
@@ -75,11 +76,11 @@ public class GitStatusSimpleTest {
 
         for (URIish lhs : uris) {
             assertFalse(
-                    lhs + " matches trailing slashes " + badURLTrailingSlashes,
-                    GitStatus.looselyMatches(lhs, badURLTrailingSlashes));
-            assertFalse(lhs + " matches bad hostname " + badURLHostname, GitStatus.looselyMatches(lhs, badURLHostname));
+                    GitStatus.looselyMatches(lhs, badURLTrailingSlashes),
+                    lhs + " matches trailing slashes " + badURLTrailingSlashes);
+            assertFalse(GitStatus.looselyMatches(lhs, badURLHostname), lhs + " matches bad hostname " + badURLHostname);
             for (URIish rhs : uris) {
-                assertTrue(lhs + " and " + rhs + " didn't match", GitStatus.looselyMatches(lhs, rhs));
+                assertTrue(GitStatus.looselyMatches(lhs, rhs), lhs + " and " + rhs + " didn't match");
             }
         }
     }

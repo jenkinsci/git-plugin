@@ -5,6 +5,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.junit.jupiter.api.Test;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -14,11 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Deprecated
-public class GitLabTest {
+class GitLabTest {
 
     private static final String GITLAB_URL = "https://SERVER/USER/REPO/";
     private final GitLab gitlab29 = new GitLab(GITLAB_URL, "2.9");
@@ -40,7 +42,7 @@ public class GitLabTest {
     private final String fileName = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
 
     @Test
-    public void testGetVersion() {
+    void testGetVersion() {
         assertEquals("2.9", gitlab29.getVersion());
         assertEquals("4.2", gitlab42.getVersion());
         assertEquals("5.0", gitlab50.getVersion());
@@ -54,7 +56,7 @@ public class GitLabTest {
     }
 
     @Test
-    public void testGetVersionDouble() {
+    void testGetVersionDouble() {
         assertEquals(2.9, gitlab29.getVersionDouble(), .001);
         assertEquals(4.2, gitlab42.getVersionDouble(), .001);
         assertEquals(5.0, gitlab50.getVersionDouble(), .001);
@@ -68,7 +70,7 @@ public class GitLabTest {
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws Exception {
+    void testGetChangeSetLinkGitChangeSet() throws Exception {
         final GitChangeSet changeSet = createChangeSet("rawchangelog");
         final String expectedURL = GITLAB_URL + "commit/" + SHA1;
         assertEquals(expectedURL.replace("commit/", "commits/"), gitlab29.getChangeSetLink(changeSet).toString());
@@ -85,7 +87,7 @@ public class GitLabTest {
     }
 
     @Test
-    public void testGetDiffLinkPath() throws Exception {
+    void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get(fileName);
         final String expectedPre30 = GITLAB_URL + "commits/" + SHA1 + "#" + fileName;
@@ -108,7 +110,7 @@ public class GitLabTest {
     }
 
     @Test
-    public void testGetFileLinkPath() throws Exception {
+    void testGetFileLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get(fileName);
         final String expectedURL = GITLAB_URL + "blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/" + fileName;
@@ -128,7 +130,7 @@ public class GitLabTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws Exception {
+    void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final String fileName = "bar";
         final Path path = pathMap.get(fileName);

@@ -2,30 +2,35 @@ package jenkins.plugins.git.traits;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.GitSCMSource;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
 
 import java.util.Collections;
 import java.util.Random;
 
-public class MultibranchProjectTraitsTest {
-    @Rule
-    public RestartableJenkinsRule story = new RestartableJenkinsRule();
-    @Rule
-    public GitSampleRepoRule sharedLibrarySampleRepo = new GitSampleRepoRule();
+@WithGitSampleRepo
+class MultibranchProjectTraitsTest {
+
+    @RegisterExtension
+    private final JenkinsSessionExtension story = new JenkinsSessionExtension();
+
+    private GitSampleRepoRule sharedLibrarySampleRepo;
 
     private Random random = new Random();
 
-    @Before
-    public void setUpTestRepositories() throws Exception {
+    @BeforeEach
+    void beforeEach(GitSampleRepoRule repo) throws Exception {
+        sharedLibrarySampleRepo = repo;
+
         // Initialize our repository and put shared library code in the branch `libraryBranch`
         sharedLibrarySampleRepo.init();
         sharedLibrarySampleRepo.write("vars/book.groovy", "def call() {echo 'Greetings from the library'}");
@@ -38,11 +43,11 @@ public class MultibranchProjectTraitsTest {
      Tests a checkout step in a pipeline using Symbol names instead of $class
      */
     @Test
-    public void basicSharedLibrarySymbolsTest() throws Exception {
+    void basicSharedLibrarySymbolsTest() throws Throwable {
         story.then( r -> {
             GlobalLibraries.get().setLibraries(Collections.singletonList( // TODO: Something more interesting with traits, maybe gitBranchDiscovery
-                    new LibraryConfiguration("thelibrary", new SCMSourceRetriever(new GitSCMSource(sharedLibrarySampleRepo.toString())))));;
-            WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "test-pipeline-job");
+                    new LibraryConfiguration("thelibrary", new SCMSourceRetriever(new GitSCMSource(sharedLibrarySampleRepo.toString())))));
+            WorkflowJob job = r.jenkins.createProject(WorkflowJob.class, "test-pipeline-job");
             job.setDefinition(new CpsFlowDefinition(
                             "library 'thelibrary@libraryBranch'\n"
                             + "node() {\n"
@@ -53,10 +58,10 @@ public class MultibranchProjectTraitsTest {
                             + "  )"
                             + "}"
                     , true));
-            WorkflowRun run = story.j.waitForCompletion(job.scheduleBuild2(0).waitForStart());
-            story.j.waitForCompletion(run);
-            story.j.waitForMessage("Finished: SUCCESS", run);
-            story.j.assertLogContains("Greetings from the library", run);
+            WorkflowRun run = r.waitForCompletion(job.scheduleBuild2(0).waitForStart());
+            r.waitForCompletion(run);
+            r.waitForMessage("Finished: SUCCESS", run);
+            r.assertLogContains("Greetings from the library", run);
         });
     }
 
@@ -64,10 +69,10 @@ public class MultibranchProjectTraitsTest {
      Tests a checkout step in a pipeline using $class for backward compatibility
     */
     @Test
-    public void basicSharedLibraryClassTest() throws Exception {
+    void basicSharedLibraryClassTest() throws Throwable {
         story.then( r -> {
             GlobalLibraries.get().setLibraries(Collections.singletonList(new LibraryConfiguration("thelibrary", new SCMSourceRetriever(new GitSCMSource(sharedLibrarySampleRepo.toString())))));
-            WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "test-pipeline-job");
+            WorkflowJob job = r.jenkins.createProject(WorkflowJob.class, "test-pipeline-job");
             job.setDefinition(new CpsFlowDefinition(
                     "library 'thelibrary@libraryBranch'\n"
                             + "node {\n"
@@ -78,10 +83,10 @@ public class MultibranchProjectTraitsTest {
                             + "    userRemoteConfigs: [[url: $/" + sharedLibrarySampleRepo + "/$]]]\n"
                             + "  )"
                             + "}", true));
-            WorkflowRun run = story.j.waitForCompletion(job.scheduleBuild2(0).waitForStart());
-            story.j.waitForCompletion(run);
-            story.j.waitForMessage("Finished: SUCCESS", run);
-            story.j.assertLogContains("Greetings from the library", run);
+            WorkflowRun run = r.waitForCompletion(job.scheduleBuild2(0).waitForStart());
+            r.waitForCompletion(run);
+            r.waitForMessage("Finished: SUCCESS", run);
+            r.assertLogContains("Greetings from the library", run);
         });
     }
 
@@ -106,6 +111,7 @@ public class MultibranchProjectTraitsTest {
                 "    browser: gogs('https://try.gogs.io/MarkEWaite/git-plugin'),\n", // Should this be gogsGit?
                 "    browser: kiln('https://kiln.example.com/MarkEWaite/git-plugin'),\n",
                 "    browser: teamFoundation('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'),\n",
+                "    browser: teamFoundation('https://dev.azure.com/MarkEWaite/_git/git-plugin'),\n",
                 "    browser: phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/'),\n",
                 "    browser: redmine('https://www.redmine.org/projects/redmine/repository'),\n",
                 "    browser: rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce'),\n",
@@ -136,6 +142,7 @@ public class MultibranchProjectTraitsTest {
                 "    browser: [$class: 'RedmineWeb', repoUrl: 'https://www.redmine.org/projects/redmine/repository'],\n",
                 "    browser: [$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin'],\n",
                 "    browser: [$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'],\n",
+                "    browser: [$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://dev.azure.com/MarkEWaite/_git/git-plugin'],\n",
                 "    browser: [$class: 'RhodeCode', repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce'],\n",
                 "    browser: [$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value'],\n", // Not likely a viewgit site, but reasonable approximation
         };

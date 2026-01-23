@@ -8,7 +8,7 @@ import hudson.views.ListViewColumnDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.triggers.SCMTriggerItem;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**

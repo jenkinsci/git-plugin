@@ -560,7 +560,7 @@ Options include:
 URL or name::
 
   Root URL serving this Azure DevOps repository.
-  For example, `\https://example.visualstudio.com/_git/my-project.`
+  For example, `\https://dev.azure.com/example/_git/my-project`
 
 [bitbucketweb-repository-browser]
 ==== bitbucketweb
@@ -1477,6 +1477,15 @@ For example, they might choose to place the cache directories in `/var/cache/jen
 
 The default git cache directory location can be overridden by setting the property `jenkins.plugins.git.AbstractGitSCMSource.cacheRootDir=/var/cache/jenkins`.
 
+[#ignoreTagDiscoveryTrait]
+=== Ignore tag discovery trait
+
+Multibranch Pipelines that use the Git branch source prior to Git plugin 5.8.0 always fetch tags from the remote repository, whether or not the tag discovery trait is set.
+That bug is fixed in Git plugin 5.8.0 and later.
+
+Administrators that depend on the old (buggy) behavior can set the property `jenkins.plugins.git.GitSCMSource.IGNORE_TAG_DISCOVERY=true`.
+When administrators detect that their multibranch Pipelines depend on that bug, they should add the tag discovery trait to the multibranch Pipeline definition.
+
 [#git-publisher]
 == Git Publisher
 
@@ -1624,6 +1633,7 @@ This script removes the static list of BuildsByBranch that is stored for each bu
 ----
 import hudson.matrix.*
 import hudson.model.*
+import static hudson.Util.fixNull
 
 hudsonInstance = hudson.model.Hudson.instance
 jobNames = hudsonInstance.getJobNames()
@@ -1651,7 +1661,7 @@ for (job in allItems) {
         hudson.plugins.git.Revision r = action.getLastBuiltRevision();
         if (r != null) {
           for (branch in r.getBranches()) {
-            action.buildsByBranchName.put(branch.getName(), action.lastBuild)
+            action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
           }
         }
         build.actions.remove(action)
@@ -1670,7 +1680,7 @@ for (job in allItems) {
             hudson.plugins.git.Revision r = action.getLastBuiltRevision();
             if (r != null) {
               for (branch in r.getBranches()) {
-                action.buildsByBranchName.put(branch.getName(), action.lastBuild)
+                action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
               }
             }
             run.actions.remove(action)

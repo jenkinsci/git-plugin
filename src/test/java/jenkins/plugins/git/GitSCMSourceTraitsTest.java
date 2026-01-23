@@ -37,11 +37,12 @@ import jenkins.plugins.git.traits.WipeWorkspaceTrait;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.hamcrest.Matchers;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
@@ -55,18 +56,17 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class GitSCMSourceTraitsTest {
+@WithJenkins
+class GitSCMSourceTraitsTest {
     /**
      * All tests in this class only use Jenkins for the extensions
      */
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
-    @Rule
-    public TestName currentTestName = new TestName();
+    private String currentTestName;
 
     private GitSCMSource load() {
-        return load(currentTestName.getMethodName());
+        return load(currentTestName);
     }
 
     private GitSCMSource load(String dataSet) {
@@ -74,8 +74,18 @@ public class GitSCMSourceTraitsTest {
                 getClass().getResource(getClass().getSimpleName() + "/" + dataSet + ".xml"));
     }
 
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        r = rule;
+    }
+
+    @BeforeEach
+    void beforeEach(TestInfo info) {
+        currentTestName = info.getTestMethod().orElseThrow().getName();
+    }
+
     @Test
-    public void modern() throws Exception {
+    void modern() throws Exception {
         GitSCMSource instance = load();
         assertThat(instance.getId(), is("5b061c87-da5c-4d69-b9d5-b041d065c945"));
         assertThat(instance.getRemote(), is("git://git.test/example.git"));
@@ -84,22 +94,22 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
-    public void cleancheckout_v1_extension() {
+    void cleancheckout_v1_extension() {
         verifyCleanCheckoutTraits(false);
     }
 
     @Test
-    public void cleancheckout_v1_trait() {
+    void cleancheckout_v1_trait() {
         verifyCleanCheckoutTraits(false);
     }
 
     @Test
-    public void cleancheckout_v2_extension() {
+    void cleancheckout_v2_extension() {
         verifyCleanCheckoutTraits(true);
     }
 
     @Test
-    public void cleancheckout_v2_trait() {
+    void cleancheckout_v2_trait() {
         verifyCleanCheckoutTraits(true);
     }
 
@@ -133,9 +143,10 @@ public class GitSCMSourceTraitsTest {
         );
     }
 
+    // Includes tests of deprecated methods getIncludes, getExcludes, & getRawRefSpecs
     @Test
-    @Deprecated // Includes tests of deprecated methods getIncludes, getExcludes, & getRawRefSpecs
-    public void pimpped_out() throws Exception {
+    @Deprecated
+    void pimpped_out() throws Exception {
         GitSCMSource instance = load();
         assertThat(instance.getId(), is("fd2380f8-d34f-48d5-8006-c34542bc4a89"));
         assertThat(instance.getRemote(), is("git://git.test/example.git"));
@@ -292,13 +303,14 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
-    public void given__modernCode__when__constructor__then__traitsEmpty() throws Exception {
+    void given__modernCode__when__constructor__then__traitsEmpty() throws Exception {
         assertThat(new GitSCMSource("git://git.test/example.git").getTraits(), is(empty()));
     }
 
+    // Testing deprecated GitSCMSource constructor
     @Test
-    @Deprecated // Testing deprecated GitSCMSource constructor
-    public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults1() throws Exception {
+    @Deprecated
+    void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults1() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "*", "", false);
         assertThat(instance.getTraits(), contains(
                 instanceOf(BranchDiscoveryTrait.class)
@@ -310,9 +322,10 @@ public class GitSCMSourceTraitsTest {
         assertThat(instance.getRawRefSpecs(), is("+refs/heads/*:refs/remotes/origin/*"));
     }
 
+    // Testing deprecated GitSCMSource constructor
     @Test
-    @Deprecated // Testing deprecated GitSCMSource constructor
-    public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults2() throws Exception {
+    @Deprecated
+    void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults2() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "*", "", true);
         assertThat(instance.getTraits(), containsInAnyOrder(
                 instanceOf(BranchDiscoveryTrait.class),
@@ -321,9 +334,10 @@ public class GitSCMSourceTraitsTest {
         assertThat(instance.isIgnoreOnPushNotifications(), is(true));
     }
 
+    // Testing deprecated GitSCMSource constructor
     @Test
-    @Deprecated // Testing deprecated GitSCMSource constructor
-    public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults3() throws Exception {
+    @Deprecated
+    void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults3() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "foo/*", "", false);
         assertThat(instance.getTraits(), contains(
                 instanceOf(BranchDiscoveryTrait.class),
@@ -337,9 +351,10 @@ public class GitSCMSourceTraitsTest {
         assertThat(instance.getExcludes(), is(""));
     }
 
+    // Testing deprecated GitSCMSource constructor
     @Test
-    @Deprecated // Testing deprecated GitSCMSource constructor
-    public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults4() throws Exception {
+    @Deprecated
+    void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults4() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "", "foo/*", false);
         assertThat(instance.getTraits(), contains(
                 instanceOf(BranchDiscoveryTrait.class),
@@ -353,9 +368,10 @@ public class GitSCMSourceTraitsTest {
         assertThat(instance.getExcludes(), is("foo/*"));
     }
 
+    // Testing deprecated GitSCMSource constructor
     @Test
-    @Deprecated // Testing deprecated GitSCMSource constructor
-    public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults5() throws Exception {
+    @Deprecated
+    void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults5() throws Exception {
         GitSCMSource instance =
                 new GitSCMSource("id", "git://git.test/example.git", null, "upstream", null, "*", "", false);
         assertThat(instance.getTraits(), contains(
@@ -368,9 +384,10 @@ public class GitSCMSourceTraitsTest {
         assertThat(instance.getRemoteName(), is("upstream"));
     }
 
+    // Testing deprecated GitSCMSource constructor
     @Test
-    @Deprecated // Testing deprecated GitSCMSource constructor
-    public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults6() throws Exception {
+    @Deprecated
+    void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults6() throws Exception {
         GitSCMSource instance =
                 new GitSCMSource("id", "git://git.test/example.git", null, null, "refs/pulls/*:refs/upstream/*", "*",
                         "", false);

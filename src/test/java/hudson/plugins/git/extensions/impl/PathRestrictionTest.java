@@ -8,24 +8,25 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.BuildData;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
 
 // NOTE: isRevExcluded generally returns null instead of false
-@RunWith(Enclosed.class)
-public class PathRestrictionTest {
+class PathRestrictionTest {
 
-    public abstract static class PathRestrictionExtensionTest extends GitSCMExtensionTest {
+    abstract static class PathRestrictionExtensionTest extends GitSCMExtensionTest {
 
         protected FreeStyleProject project;
         protected TestGitRepo repo;
@@ -33,13 +34,23 @@ public class PathRestrictionTest {
 
         @Override
         public void before() throws Exception {
-            repo = new TestGitRepo("repo", tmp.newFolder(), listener);
+            repo = new TestGitRepo("repo", newFolder(tmp, "junit"), listener);
             project = setupBasicProject(repo);
+        }
+
+        private static File newFolder(File root, String... subDirs) throws IOException {
+            String subFolder = String.join("/", subDirs);
+            File result = new File(root, subFolder);
+            if (!result.mkdirs()) {
+                throw new IOException("Couldn't create folders " + root);
+            }
+            return result;
         }
 
     }
 
-    public static class NoRulesTest extends PathRestrictionExtensionTest {
+    @Nested
+    class NoRulesTest extends PathRestrictionExtensionTest {
 
         @Override
         protected GitSCMExtension getExtension() {
@@ -47,13 +58,14 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void test() throws Exception {
+        void test() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("foo/foo.txt", "bar/bar.txt")));
             assertNull(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
     }
 
-    public static class EmptyPathsTest extends PathRestrictionExtensionTest {
+    @Nested
+    class EmptyPathsTest extends PathRestrictionExtensionTest {
 
         @Override
         protected GitSCMExtension getExtension() {
@@ -61,14 +73,15 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void test() throws Exception {
+        void test() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>());
             assertNull(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
     }
 
 
-    public static class BasicExcludeTest extends PathRestrictionExtensionTest {
+    @Nested
+    class BasicExcludeTest extends PathRestrictionExtensionTest {
 
         @Override
         protected GitSCMExtension getExtension() {
@@ -76,19 +89,20 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void testMiss() throws Exception {
+        void testMiss() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Collections.singletonList("foo/foo.txt")));
             assertNull(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
 
         @Test
-        public void testMatch() throws Exception {
+        void testMatch() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Collections.singletonList("bar/bar.txt")));
             assertTrue(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
     }
 
-    public static class BasicIncludeTest extends PathRestrictionExtensionTest {
+    @Nested
+    class BasicIncludeTest extends PathRestrictionExtensionTest {
 
         @Override
         protected GitSCMExtension getExtension() {
@@ -96,20 +110,21 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void testMatch() throws Exception {
+        void testMatch() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Collections.singletonList("foo/foo.txt")));
             assertNull(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
 
         @Test
-        public void testMiss() throws Exception {
+        void testMiss() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Collections.singletonList("bar/bar.txt")));
             assertTrue(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
     }
 
 
-    public static class MultiExcludeTest extends PathRestrictionExtensionTest {
+    @Nested
+    class MultiExcludeTest extends PathRestrictionExtensionTest {
 
         @Override
         protected GitSCMExtension getExtension() {
@@ -117,7 +132,7 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void testAccept() throws Exception {
+        void testAccept() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Collections.singletonList("foo/foo.txt")));
             assertNull(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
             commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("foo/foo.txt", "foo.foo", "README.mdown")));
@@ -129,7 +144,7 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void testReject() throws Exception {
+        void testReject() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("bar/bar.txt", "foo.bax")));
             assertTrue(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
             commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("bar/docs.txt", "bar/more-docs.txt")));
@@ -137,7 +152,8 @@ public class PathRestrictionTest {
         }
     }
 
-    public static class MultiIncludeTest extends PathRestrictionExtensionTest {
+    @Nested
+    class MultiIncludeTest extends PathRestrictionExtensionTest {
 
         @Override
         protected GitSCMExtension getExtension() {
@@ -145,7 +161,7 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void testAccept() throws Exception {
+        void testAccept() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("foo/foo.txt", "something/else")));
             assertNull(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
             commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("foo/foo.txt", "foo.foo", "README.mdown")));
@@ -155,7 +171,7 @@ public class PathRestrictionTest {
         }
 
         @Test
-        public void testReject() throws Exception {
+        void testReject() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<>(Collections.singletonList("bar/bar.txt")));
             assertTrue(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
             commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("bar/bar.txt", "bar.bar", "README.mdown")));

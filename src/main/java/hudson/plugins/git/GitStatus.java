@@ -28,7 +28,7 @@ import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
 import jenkins.util.SystemProperties;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -208,14 +208,28 @@ public class GitStatus implements UnprotectedRootAction {
      * @return true if left-hand side loosely matches right-hand side
      */
     public static boolean looselyMatches(URIish lhs, URIish rhs) {
-        return Objects.equals(lhs.getHost(),rhs.getHost())
+        return looselyMatchHost(lhs, rhs)
             && Objects.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+    }
+
+    /**
+     * Match hosts removing any "ssh." at the start of the subdomain.
+     * Some cloud providers prepend "ssh." in the host for ssh urls - while only allowing to send the https url (without ssh.) to the notify commit endpoint.
+     *
+     * Ignoring the "ssh" subdomain allows keeping loosely matching the url.
+     */
+    private static boolean looselyMatchHost(URIish lhs, URIish rhs) {
+        String lhsHost = StringUtils.removeStart(lhs.getHost(), "ssh.");
+        String rhsHost = StringUtils.removeStart(rhs.getHost(), "ssh.");
+        return Objects.equals(lhsHost, rhsHost);
     }
 
     private static String normalizePath(String path) {
         if (path.startsWith("/"))   path=path.substring(1);
         if (path.endsWith("/"))     path=path.substring(0,path.length()-1);
         if (path.endsWith(".git"))  path=path.substring(0,path.length()-4);
+        if (path.matches("v\\d/.*"))   path=path.substring(3); //remove leading versioning used in azure devops (e.g. v3/...)
+        path = path.replace("/_git/", "/"); //ignore _git meta path in http urls as they are usually not in ssh urls
         return path;
     }
 

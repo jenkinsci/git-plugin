@@ -7,21 +7,23 @@ import java.util.List;
 import java.util.Random;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.Issue;
 
 /**
  * JENKINS-30073 reports that the timestamp returns -1 for the typical timestamp
- * reported by the +%ci format to git log and git whatchanged. This test
+ * reported by the +%ci format to git log. This test
  * duplicates the bug and tests many other date formatting cases.
  * See JENKINS-55693 for more details on joda time replacement.
  *
  * @author Mark Waite
  */
-@RunWith(Parameterized.class)
-public class GitChangeSetTimestampTest {
+@ParameterizedClass(name = "{0}")
+@MethodSource("createSampleChangeSets")
+class GitChangeSetTimestampTest {
 
     private final String normalizedTimestamp;
     private final long millisecondsSinceEpoch;
@@ -34,10 +36,9 @@ public class GitChangeSetTimestampTest {
         changeSet = genChangeSet(timestamp);
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection createSampleChangeSets() {
+    static Collection createSampleChangeSets() {
         Object[][] samples = {
-            /* git whatchanged dates from various time zones, months, & days */
+            /* git log dates from various time zones, months, & days */
             {"2015-10-06 19:29:47 +0300", null, 1444148987000L},
             {"2017-10-23 23:43:29 +0100", null, 1508798609000L},
             {"2017-09-21 17:35:24 -0400", null, 1506029724000L},
@@ -68,13 +69,13 @@ public class GitChangeSetTimestampTest {
     }
 
     @Test
-    public void testChangeSetDate() {
+    void testChangeSetDate() {
         assertThat(changeSet.getDate(), is(normalizedTimestamp));
     }
 
     @Test
     @Issue("JENKINS-30073")
-    public void testChangeSetTimeStamp() {
+    void testChangeSetTimeStamp() {
         assertThat(changeSet.getTimestamp(), is(millisecondsSinceEpoch));
     }
 

@@ -12,17 +12,19 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import org.junit.jupiter.api.BeforeEach;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.Issue;
 import org.mockito.Mockito;
 
-@RunWith(Parameterized.class)
-public class SubmoduleOptionDepthTest {
+@ParameterizedClass(name = "depth: configured={0}, used={1}")
+@MethodSource("depthCombinations")
+class SubmoduleOptionDepthTest {
 
     private GitSCM scm;
     private Run<?, ?> build;
@@ -37,13 +39,12 @@ public class SubmoduleOptionDepthTest {
         this.usedDepth = usedDepth;
     }
 
-    @Parameterized.Parameters(name = "depth: configured={0}, used={1}")
-    public static Object[][] depthCombinations() {
+    static Object[][] depthCombinations() {
         return new Object[][] { { 0, 1 }, { 1, 1 }, { 2, 2 } };
     }
 
-    @Before
-    public void mockDependencies() throws Exception {
+    @BeforeEach
+    void beforeEach() throws Exception {
         scm = mock(GitSCM.class);
         build = mock(Run.class);
         git = mock(GitClient.class);
@@ -57,7 +58,7 @@ public class SubmoduleOptionDepthTest {
 
     @Issue("JENKINS-53050")
     @Test
-    public void submoduleUpdateShouldUseValidShallowDepth() throws Exception {
+    void submoduleUpdateShouldUseValidShallowDepth() throws Exception {
         SubmoduleUpdateCommand submoduleUpdate = mock(SubmoduleUpdateCommand.class, Mockito.RETURNS_SELF);
         when(git.hasGitModules()).thenReturn(true);
         when(git.submoduleUpdate()).thenReturn(submoduleUpdate);

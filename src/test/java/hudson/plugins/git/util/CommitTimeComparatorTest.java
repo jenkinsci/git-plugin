@@ -3,22 +3,22 @@ package hudson.plugins.git.util;
 import hudson.plugins.git.AbstractGitRepository;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class CommitTimeComparatorTest extends AbstractGitRepository {
+class CommitTimeComparatorTest extends AbstractGitRepository {
 
     @Test
-    public void testSort_OrderIsOldToNew() throws Exception {
+    void testSort_OrderIsOldToNew() throws Exception {
         boolean first = true;
         // create repository with three commits
         for (int i=0; i<3; i++) {

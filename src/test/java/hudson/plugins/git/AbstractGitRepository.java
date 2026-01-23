@@ -8,11 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hudson.plugins.git.util.GitUtilsTest;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.Before;
-import org.junit.Rule;
-
-import hudson.EnvVars;
+import org.junit.jupiter.api.BeforeEach;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 
@@ -30,16 +28,17 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  *
  * @author Mark Waite
  */
+@WithGitSampleRepo
 public abstract class AbstractGitRepository {
 
     protected File testGitDir;
     protected GitClient testGitClient;
 
-    @Rule
-    public GitSampleRepoRule repo = new GitSampleRepoRule();
+    protected GitSampleRepoRule repo;
 
-    @Before
-    public void createGitRepository() throws Exception {
+    @BeforeEach
+    protected void beforeEach(GitSampleRepoRule repo) throws Exception {
+        this.repo = repo;
         SystemReader.getInstance().getUserConfig().clear();
         TaskListener listener = StreamTaskListener.fromStderr();
         repo.init();
@@ -77,10 +76,5 @@ public abstract class AbstractGitRepository {
         List<UserRemoteConfig> list = new ArrayList<>();
         list.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), "origin", "", null));
         return list;
-    }
-
-    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
-    private boolean isWindows() {
-        return File.pathSeparatorChar==';';
     }
 }

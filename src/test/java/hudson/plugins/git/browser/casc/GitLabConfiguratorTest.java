@@ -3,48 +3,46 @@ package hudson.plugins.git.browser.casc;
 import hudson.plugins.git.browser.GitLab;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.model.Mapping;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class GitLabConfiguratorTest {
+class GitLabConfiguratorTest {
 
     private final GitLabConfigurator configurator = new GitLabConfigurator();
     private static final ConfigurationContext NULL_CONFIGURATION_CONTEXT = null;
 
     @Test
-    public void testGetName() {
+    void testGetName() {
         assertEquals("gitLab", configurator.getName());
     }
 
     @Test
-    public void testGetTarget() {
-        assertEquals("Wrong target class", configurator.getTarget(), GitLab.class);
+    void testGetTarget() {
+        assertEquals(GitLab.class, configurator.getTarget(), "Wrong target class");
     }
 
     @Test
-    public void testCanConfigure() {
-        assertTrue("Can't configure AdvisorGlobalConfiguration", configurator.canConfigure(GitLab.class));
-        assertFalse("Can configure AdvisorRootConfigurator", configurator.canConfigure(GitLabConfigurator.class));
+    void testCanConfigure() {
+        assertTrue(configurator.canConfigure(GitLab.class), "Can't configure AdvisorGlobalConfiguration");
+        assertFalse(configurator.canConfigure(GitLabConfigurator.class), "Can configure AdvisorRootConfigurator");
     }
 
     @Test
-    public void testGetImplementedAPI() {
-        assertEquals("Wrong implemented API", configurator.getImplementedAPI(), GitLab.class);
+    void testGetImplementedAPI() {
+        assertEquals(GitLab.class, configurator.getImplementedAPI(), "Wrong implemented API");
     }
 
     @Test
-    public void testGetConfigurators() {
+    void testGetConfigurators() {
         assertThat(configurator.getConfigurators(NULL_CONFIGURATION_CONTEXT), contains(configurator));
     }
 
     @Test
     @Deprecated
-    public void testDescribe() throws Exception {
+    void testDescribe() throws Exception {
         final Mapping expectedMapping = new Mapping();
         expectedMapping.put("repoUrl", "http://fake");
         expectedMapping.put("version", "1.1");
@@ -57,7 +55,7 @@ public class GitLabConfiguratorTest {
 
     @Test
     @Deprecated
-    public void testInstance() throws Exception {
+    void testInstance() throws Exception {
         final GitLab expectedConfiguration = new GitLab("http://fake", "2.0");
         final Mapping mapping = new Mapping();
         mapping.put("repoUrl", "http://fake");
@@ -70,7 +68,7 @@ public class GitLabConfiguratorTest {
 
     @Test
     @Deprecated
-    public void testInstanceWithEmptyRepo() throws Exception {
+    void testInstanceWithEmptyRepo() throws Exception {
         final GitLab expectedConfiguration = new GitLab("", "2.0");
         final Mapping mapping = new Mapping();
         mapping.put("repoUrl", "");
@@ -84,7 +82,7 @@ public class GitLabConfiguratorTest {
 
     @Test
     @Deprecated
-    public void testInstanceWithNullRepo() throws Exception {
+    void testInstanceWithNullRepo() throws Exception {
         final GitLab expectedConfiguration = new GitLab(null, "2.0");
         final Mapping mapping = new Mapping();
         mapping.put("version", "2.0");
@@ -97,7 +95,7 @@ public class GitLabConfiguratorTest {
 
     @Test
     @Deprecated
-    public void testInstanceWithEmptyVersion() throws Exception {
+    void testInstanceWithEmptyVersion() throws Exception {
         final GitLab expectedConfiguration = new GitLab("http://fake", "");
         final Mapping mapping = new Mapping();
         mapping.put("repoUrl", "http://fake");
@@ -110,7 +108,7 @@ public class GitLabConfiguratorTest {
 
     @Test
     @Deprecated
-    public void testInstanceWithNullVersion() throws Exception {
+    void testInstanceWithNullVersion() throws Exception {
         // If passing a null, GitLab throws an exception
         final GitLab expectedConfiguration = new GitLab("http://fake", "");
         final Mapping mapping = new Mapping();
@@ -123,7 +121,7 @@ public class GitLabConfiguratorTest {
 
     @Test
     @Deprecated
-    public void testInstanceWithNullMapping() throws Exception {
+    void testInstanceWithNullMapping() throws Exception {
         // A null mapping should create an instance with empty arguments
         final GitLab expectedConfiguration = new GitLab("", "");
         final Mapping mapping = null;
@@ -134,7 +132,7 @@ public class GitLabConfiguratorTest {
 
     @Test
     @Deprecated
-    public void testInstanceWithNaNVersion() throws Exception {
+    void testInstanceWithNaNVersion() throws Exception {
         final Mapping mapping = new Mapping();
         mapping.put("repoUrl", "http://fake");
         mapping.put("version", "NaN");
