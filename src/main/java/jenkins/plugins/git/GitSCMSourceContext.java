@@ -372,8 +372,12 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     }
 
     private long getTagCommitTimeLimitMillisFromDays(String limitDays) {
-        long tagCommitTimeLimit = Long.parseLong(StringUtils.defaultIfBlank(limitDays, "-1"));
-        return tagCommitTimeLimit < 0 ? -1L : TimeUnit.DAYS.toMillis(tagCommitTimeLimit);
+        try {
+            long tagCommitTimeLimit = Long.parseLong(StringUtils.defaultIfBlank(limitDays, "-1"));
+            return tagCommitTimeLimit < 0 ? -1L : TimeUnit.DAYS.toMillis(tagCommitTimeLimit);
+        } catch (NumberFormatException e) {
+            return -1L;
+        }
     }
 
     @SuppressWarnings("unchecked")
