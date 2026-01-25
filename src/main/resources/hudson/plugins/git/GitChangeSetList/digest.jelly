@@ -12,23 +12,7 @@
       ${%No changes.}
     </j:when>
     <j:otherwise>
-      <ol class="jenkins-build-changes">
-        <j:forEach var="cs" items="${it.logs}">
-          <li class="jenkins-build-changes__item">
-            <div class="jenkins-build-changes__item__title">
-              <j:out value="${cs.msgAnnotated}"/>
-            </div>
-            <div class="jenkins-build-changes__item__details">
-              <a href="changes#${cs.id}">${%details}</a>
-              <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
-              <j:if test="${cslink!=null}">
-                <j:text> / </j:text>
-                <a href="${cslink}">${browser.descriptor.displayName}</a>
-              </j:if>
-            </div>
-          </li>
-        </j:forEach>
-      </ol>
+      <st:include page="index.jelly" />
     </j:otherwise>
   </j:choose>
 </j:jelly>

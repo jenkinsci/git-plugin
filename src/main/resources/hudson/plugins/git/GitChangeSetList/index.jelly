@@ -5,47 +5,56 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
   <j:set var="browser" value="${it.browser}"/>
 
-  <table class="jenkins-table sortable">
-    <thead>
-      <th>${%Message}</th>
-      <th width="175px">${%Files}</th>
-      <th width="175px">${%Commit}</th>
-      <th width="175px">${%Author}</th>
-      <th width="175px">${%Date}</th>
-    </thead>
-    <tbody>
-      <j:forEach var="cs" items="${it.logs}">
-        <tr id="${cs.id}">
-          <td>
-            <j:out value="${cs.commentAnnotated}"/>
-          </td>
-          <td>
-            Files
-          </td>
-          <td>
-            <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
-            <j:if test="${cslink != null}">
-              <a href="${cslink}">${cs.id.substring(0, 7)}</a>
-            </j:if>
-            <j:if test="${cslink == null}">
+  <st:adjunct includes="hudson.plugins.git.styles" />
+
+  <div class="protect-the-nest">
+    <j:forEach var="cs" items="${it.logs}">
+      <div class="revolver" id="${cs.id}">
+        <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
+
+        <j:if test="${cslink != null}">
+          <a href="${cslink}" class="revolver__items__item__message">
+            <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
+            <span><j:out value="${cs.commentAnnotated}" /> doos doos doos dos odsod asjdnajdn kajsdnka jdn kajnd kjansdjk nas</span>
+            <div class="revolver__items__item__hash">
+              <span class="jenkins-visually-hidden">(</span>
               ${cs.id.substring(0, 7)}
-            </j:if>
-          </td>
-          <td>
-            <a href="${rootURL}/${cs.author.url}/">
-              ${cs.author.displayName}
-            </a>
-          </td>
+              <span class="jenkins-visually-hidden">)</span>
+            </div>
+          </a>
+        </j:if>
+        <j:if test="${cslink == null}">
+          <div class="revolver__items__item__message">
+            <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
+            <j:out value="${cs.commentAnnotated}"/>
+          </div>
+        </j:if>
+<!--          <div class="revolver__items__item__files">-->
+<!--            <j:forEach var="p" items="${cs.paths}">-->
+<!--              <a href="${browser.getFileLink(p)}">${p.path}</a>-->
+<!--              <j:set var="difflink" value="${browser.getDiffLink(p)}"/>-->
+<!--              <j:if test="${difflink!=null}">-->
+<!--                <st:nbsp/>-->
+<!--                <a href="${difflink}">(${%diff})</a>-->
+<!--              </j:if>-->
+<!--            </j:forEach>-->
+<!--          </div>-->
+        <div class="revolver__items__item__user">
+          <a href="${rootURL}/${cs.author.url}/">
+            <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
+            ${cs.author.displayName}
+          </a>
+
+          committed at
+
           <j:new var="timestamp" className="java.util.Date">
             <j:arg value="${cs.timestamp}" />
           </j:new>
-          <td data="${h.iso8601DateTime(timestamp)}">
-            <time datetime="${h.iso8601DateTime(timestamp)}">
-              <i:formatDate value="${timestamp}" type="both" dateStyle="short" timeStyle="short" />
-            </time>
-          </td>
-        </tr>
-      </j:forEach>
-    </tbody>
-  </table>
+          <time datetime="${h.iso8601DateTime(timestamp)}">
+            <i:formatDate value="${timestamp}" type="time" timeStyle="short" />
+          </time>
+        </div>
+      </div>
+    </j:forEach>
+  </div>
 </j:jelly>
