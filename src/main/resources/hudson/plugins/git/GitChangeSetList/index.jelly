@@ -10,7 +10,6 @@
       <th>${%Message}</th>
       <th width="125px">${%Commit}</th>
       <th width="150px">${%Author}</th>
-      <th width="150px">${%Date}</th>
     </thead>
     <tbody>
       <j:forEach var="cs" items="${it.logs}">
@@ -31,9 +30,6 @@
             <a href="${rootURL}/${cs.author.url}/">
               ${cs.author.displayName}
             </a>
-          </td>
-          <td>
-            ${cs.timestamp}
           </td>
         </tr>
       </j:forEach>

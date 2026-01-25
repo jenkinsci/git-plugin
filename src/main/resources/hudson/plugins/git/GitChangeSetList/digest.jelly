@@ -12,13 +12,13 @@
       ${%No changes.}
     </j:when>
     <j:otherwise>
-      <ol class="app-build-changes">
+      <ol class="jenkins-build-changes">
         <j:forEach var="cs" items="${it.logs}">
-          <li class="app-build-changes__item">
-            <div class="app-build-changes__item__title">
+          <li class="jenkins-build-changes__item">
+            <div class="jenkins-build-changes__item__title">
               <j:out value="${cs.msgAnnotated}"/>
             </div>
-            <div class="app-build-changes__item__details">
+            <div class="jenkins-build-changes__item__details">
               <a href="changes#${cs.id}">${%details}</a>
               <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
               <j:if test="${cslink!=null}">
