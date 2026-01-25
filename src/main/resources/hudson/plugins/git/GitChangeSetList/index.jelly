@@ -13,7 +13,7 @@
         <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
 
         <j:if test="${cslink != null}">
-          <a href="${cslink}" class="revolver__items__item__message">
+          <a href="${cslink}" class="revolver__items__item__message" target="_blank">
             <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
             <span><j:out value="${cs.commentAnnotated}" /></span>
             <div class="revolver__items__item__hash">
@@ -32,7 +32,7 @@
         <j:if test="${!hideFiles and !empty(cs.paths)}">
           <div class="revolver__items__item__files">
             <j:forEach var="p" items="${cs.paths}">
-              <a href="${browser.getFileLink(p)}">
+              <a href="${browser.getFileLink(p)}" target="_blank">
                 <l:icon src="symbol-document-outline plugin-ionicons-api" />
                 ${p.path}
               </a>
