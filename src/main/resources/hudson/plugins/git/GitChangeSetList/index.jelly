@@ -8,14 +8,19 @@
   <table class="jenkins-table sortable">
     <thead>
       <th>${%Message}</th>
-      <th width="125px">${%Commit}</th>
-      <th width="150px">${%Author}</th>
+      <th width="175px">${%Files}</th>
+      <th width="175px">${%Commit}</th>
+      <th width="175px">${%Author}</th>
+      <th width="175px">${%Date}</th>
     </thead>
     <tbody>
       <j:forEach var="cs" items="${it.logs}">
         <tr id="${cs.id}">
           <td>
             <j:out value="${cs.commentAnnotated}"/>
+          </td>
+          <td>
+            Files
           </td>
           <td>
             <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
@@ -30,6 +35,14 @@
             <a href="${rootURL}/${cs.author.url}/">
               ${cs.author.displayName}
             </a>
+          </td>
+          <j:new var="timestamp" className="java.util.Date">
+            <j:arg value="${cs.timestamp}" />
+          </j:new>
+          <td data="${h.iso8601DateTime(timestamp)}">
+            <time datetime="${h.iso8601DateTime(timestamp)}">
+              <i:formatDate value="${timestamp}" type="both" dateStyle="short" timeStyle="short" />
+            </time>
           </td>
         </tr>
       </j:forEach>
