@@ -9,7 +9,7 @@
 
   <div class="protect-the-nest">
     <j:forEach var="cs" items="${it.logs}">
-      <div class="revolver" id="${cs.id}">
+      <div class="revolver ${hideFiles ? 'revolver--compact' : ''}" id="${cs.id}">
         <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
 
         <j:if test="${cslink != null}">
