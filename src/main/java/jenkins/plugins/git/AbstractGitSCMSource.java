@@ -23,7 +23,6 @@
  */
 package jenkins.plugins.git;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -1330,12 +1329,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         if (credentialsId == null) {
             return null;
         }
-        return CredentialsMatchers
-                .firstOrNull(
-                        CredentialsProvider.lookupCredentialsInItem(StandardUsernameCredentials.class, context,
-                                ACL.SYSTEM2, URIRequirementBuilder.fromUri(getRemote()).build()),
-                        CredentialsMatchers.allOf(CredentialsMatchers.withId(credentialsId),
-                                GitClient.CREDENTIALS_MATCHER));
+        var credential = CredentialsProvider.findCredentialByIdInItem(
+                credentialsId,
+                StandardUsernameCredentials.class,
+                context,
+                ACL.SYSTEM2,
+                URIRequirementBuilder.fromUri(getRemote()).build());
+        return credential != null && GitClient.CREDENTIALS_MATCHER.matches(credential) ? credential : null;
     }
 
     /**
