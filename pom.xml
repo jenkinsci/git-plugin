@@ -32,7 +32,7 @@
   </scm>
 
   <properties>
-    <revision>5.8.2</revision>
+    <revision>5.9.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
