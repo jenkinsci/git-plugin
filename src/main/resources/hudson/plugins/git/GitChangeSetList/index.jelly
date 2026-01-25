@@ -15,7 +15,7 @@
         <j:if test="${cslink != null}">
           <a href="${cslink}" class="revolver__items__item__message">
             <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
-            <span><j:out value="${cs.commentAnnotated}" /> doos doos doos dos odsod asjdnajdn kajsdnka jdn kajnd kjansdjk nas</span>
+            <span><j:out value="${cs.commentAnnotated}" /></span>
             <div class="revolver__items__item__hash">
               <span class="jenkins-visually-hidden">(</span>
               ${cs.id.substring(0, 7)}
@@ -45,13 +45,13 @@
             ${cs.author.displayName}
           </a>
 
-          committed at
+          at
 
           <j:new var="timestamp" className="java.util.Date">
             <j:arg value="${cs.timestamp}" />
           </j:new>
           <time datetime="${h.iso8601DateTime(timestamp)}">
-            <i:formatDate value="${timestamp}" type="time" timeStyle="short" />
+            <i:formatDate value="${timestamp}" type="both" timeStyle="short" dateStyle="short" />
           </time>
         </div>
       </div>

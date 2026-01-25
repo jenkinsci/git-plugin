@@ -47,6 +47,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    br {
+      display: none;
+    }
   }
 
   svg {
@@ -96,4 +100,6 @@
 .revolver__items__item__hash {
   font-family: var(--font-family-mono);
   color: var(--text-color-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1lh;
 }
