@@ -57,12 +57,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- TODO until in BOM -->
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials</artifactId>
-        <version>1480.v2246fd131e83</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
