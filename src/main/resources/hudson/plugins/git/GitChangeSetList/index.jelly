@@ -29,16 +29,16 @@
             <j:out value="${cs.commentAnnotated}"/>
           </div>
         </j:if>
-<!--          <div class="revolver__items__item__files">-->
-<!--            <j:forEach var="p" items="${cs.paths}">-->
-<!--              <a href="${browser.getFileLink(p)}">${p.path}</a>-->
-<!--              <j:set var="difflink" value="${browser.getDiffLink(p)}"/>-->
-<!--              <j:if test="${difflink!=null}">-->
-<!--                <st:nbsp/>-->
-<!--                <a href="${difflink}">(${%diff})</a>-->
-<!--              </j:if>-->
-<!--            </j:forEach>-->
-<!--          </div>-->
+        <j:if test="${!hideFiles and !empty(cs.paths)}">
+          <div class="revolver__items__item__files">
+            <j:forEach var="p" items="${cs.paths}">
+              <a href="${browser.getFileLink(p)}">
+                <l:icon src="symbol-document-outline plugin-ionicons-api" />
+                ${p.path}
+              </a>
+            </j:forEach>
+          </div>
+        </j:if>
         <div class="revolver__items__item__user">
           <a href="${rootURL}/${cs.author.url}/">
             <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
