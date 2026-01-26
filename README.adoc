@@ -191,6 +191,7 @@ checkout resolveScm(
     remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
     targets: [env.BRANCH_NAME, 'main', 'master']
 )
+----
 
 In single pipeline which build one specified branch, `resolveScm` can be used for resolve dependency branch(e.g. the same name `task-1234`).
 
