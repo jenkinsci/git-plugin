@@ -51,7 +51,9 @@
             <j:arg value="${cs.timestamp}" />
           </j:new>
           <time datetime="${h.iso8601DateTime(timestamp)}">
-            <i:formatDate value="${timestamp}" type="both" timeStyle="short" dateStyle="short" />
+            <i:formatDate value="${timestamp}" type="time" timeStyle="short" />
+            <st:nbsp />
+            <i:formatDate value="${timestamp}" type="date" dateStyle="short" />
           </time>
         </div>
       </div>
