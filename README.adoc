@@ -136,17 +136,6 @@ checkout scmGit(
     userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
 ----
 
-[source,groovy]
-----
-checkout resolveScm(
-  source: gitSource(
-    credentialsId: 'git-cred',
-    traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
-    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
-    targets: ['main', 'master']
-)
-----
-
 ==== Checkout with a narrow refspec
 
 Checkout from the workspace cleanup plugin source repository using https without credentials, the `master` branch, and with a refspec specific to the master branch.
@@ -185,6 +174,21 @@ deleteDir()
 checkout scmGit(
     branches: [[name: '*/master']],
     userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+----
+
+==== Resolve an SCM from an Git Source and a list of candidate target branch names before checkout
+
+Find first matching branch from repository and checkout on this. You can pass `cloneOption` with shallow flag for speed-up retrieve target branch.
+
+[source,groovy]
+----
+checkout resolveScm(
+  source: gitSource(
+    credentialsId: 'git-cred',
+    traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
+    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
+    targets: ['main', 'master']
+)
 ----
 
 [#credential-binding]
