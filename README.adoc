@@ -178,7 +178,9 @@ checkout scmGit(
 
 ==== Resolve an SCM from an Git Source and a list of candidate target branch names before checkout
 
-Find first matching branch from repository and checkout on this. You can pass `cloneOption` with shallow flag for speed-up retrieve target branch.
+Find first matching branch from repository and checkout on this. You can pass `cloneOption` trait with shallow flag for speed-up retrieve target branch.
+
+In Multi-branch pipeline `resolveScm` used for build all or specified(e.g. wildcard rule) branches. You can use `env.BRANCH_NAME` for get current branch this build.
 
 [source,groovy]
 ----
@@ -187,9 +189,24 @@ checkout resolveScm(
     credentialsId: 'git-cred',
     traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
     remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
-    targets: ['main', 'master']
+    targets: [env.BRANCH_NAME, 'main', 'master']
+)
+
+In single pipeline which build one specified branch, `resolveScm` can be used for resolve dependency branch(e.g. the same name `task-1234`).
+
+[source,groovy]
+----
+checkout resolveScm(
+  source: gitSource(
+    credentialsId: 'git-cred',
+    traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
+    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
+    targets: ['task-1234', 'main', 'master']
 )
 ----
+
+link:https://www.jenkins.io/doc/pipeline/steps/workflow-multibranch/#resolvescm-resolves-an-scm-from-an-scm-source-and-a-list-of-candidate-target-branch-names[Documentation resolveScm]
+link:https://www.jenkins.io/doc/book/pipeline/[Documentation pipeline]
 
 [#credential-binding]
 === Git Credentials Binding
