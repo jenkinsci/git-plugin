@@ -51,6 +51,12 @@
   }
 }
 
+.revolver--compact {
+  .revolver__items__item__hash {
+    opacity: 0.75;
+  }
+}
+
 .revolver__items__item__message {
   display: grid;
   grid-template-columns: auto 1fr auto;
