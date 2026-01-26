@@ -15,7 +15,7 @@
         <j:if test="${cslink != null}">
           <a href="${cslink}" class="revolver__items__item__message" target="_blank">
             <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
-            <span><j:out value="${cs.commentAnnotated}" /></span>
+            <span>${cs.msg}</span>
             <div class="revolver__items__item__hash">
               <span class="jenkins-visually-hidden">(</span>
               ${cs.id.substring(0, 7)}
