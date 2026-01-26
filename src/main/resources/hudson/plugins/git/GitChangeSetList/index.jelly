@@ -7,16 +7,16 @@
 
   <st:adjunct includes="hudson.plugins.git.styles" />
 
-  <div class="protect-the-nest">
+  <div class="git-changeset-container">
     <j:forEach var="cs" items="${it.logs}">
-      <div class="revolver ${hideFiles ? 'revolver--compact' : ''}" id="${cs.id}">
+      <div class="git-changeset ${compact ? 'git-changeset--compact' : ''}" id="${cs.id}">
         <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
 
         <j:if test="${cslink != null}">
-          <a href="${cslink}" class="revolver__items__item__message" target="_blank">
+          <a href="${cslink}" class="git-changeset__items__item__message" target="_blank">
             <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
             <span>${cs.msg}</span>
-            <div class="revolver__items__item__hash">
+            <div class="git-changeset__items__item__hash">
               <span class="jenkins-visually-hidden">(</span>
               ${cs.id.substring(0, 7)}
               <span class="jenkins-visually-hidden">)</span>
@@ -24,13 +24,13 @@
           </a>
         </j:if>
         <j:if test="${cslink == null}">
-          <div class="revolver__items__item__message">
+          <div class="git-changeset__items__item__message">
             <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
             <j:out value="${cs.commentAnnotated}"/>
           </div>
         </j:if>
-        <j:if test="${!hideFiles and !empty(cs.paths)}">
-          <div class="revolver__items__item__files">
+        <j:if test="${!compact and !empty(cs.paths)}">
+          <div class="git-changeset__items__item__files">
             <j:forEach var="p" items="${cs.paths}">
               <a href="${browser.getFileLink(p)}" target="_blank">
                 <l:icon src="symbol-document-outline plugin-ionicons-api" />
@@ -39,7 +39,7 @@
             </j:forEach>
           </div>
         </j:if>
-        <div class="revolver__items__item__user">
+        <div class="git-changeset__items__item__user">
           <a href="${rootURL}/${cs.author.url}/">
             <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
             ${cs.author.displayName}

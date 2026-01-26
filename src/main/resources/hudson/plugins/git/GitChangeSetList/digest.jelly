@@ -12,7 +12,7 @@
       ${%No changes.}
     </j:when>
     <j:otherwise>
-      <j:set var="hideFiles" value="true" />
+      <j:set var="compact" value="true" />
       <st:include page="index.jelly" />
     </j:otherwise>
   </j:choose>

@@ -1,16 +1,18 @@
 .jenkins-card:not(:has(.jenkins-card__title)) {
-  .protect-the-nest {
-    margin-top: 0.875rem;
+  .git-changeset-container {
+    margin-top: var(--vertical-space);
   }
 }
 
-.protect-the-nest {
+.git-changeset-container {
+  --vertical-space: 0.75rem;
+
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--vertical-space);
 }
 
-.revolver {
+.git-changeset {
   --inset-width: 1rem;
 
   position: relative;
@@ -30,10 +32,10 @@
     bottom: 0.125rem;
   }
 
-  &:not(.revolver--compact) {
+  &:not(.git-changeset--compact) {
     --inset-width: 3rem;
     border-bottom: var(--card-border-width) solid var(--card-border-color);
-    padding: 0 1rem 1rem 3rem;
+    padding: 0 1rem var(--vertical-space) 3rem;
     margin: 0 -1rem;
 
     &::after {
@@ -51,13 +53,13 @@
   }
 }
 
-.revolver--compact {
-  .revolver__items__item__hash {
+.git-changeset--compact {
+  .git-changeset__items__item__hash {
     opacity: 0.75;
   }
 }
 
-.revolver__items__item__message {
+.git-changeset__items__item__message {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 1rem;
@@ -88,7 +90,7 @@
   }
 }
 
-.revolver__items__item__files {
+.git-changeset__items__item__files {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -110,7 +112,7 @@
   }
 }
 
-.revolver__items__item__user {
+.git-changeset__items__item__user {
   display: flex;
   align-items: center;
   gap: 0.5ch;
@@ -131,7 +133,7 @@
   }
 }
 
-.revolver__items__item__hash {
+.git-changeset__items__item__hash {
   font-family: var(--font-family-mono);
   color: var(--text-color-secondary);
   font-size: var(--font-size-xs);
