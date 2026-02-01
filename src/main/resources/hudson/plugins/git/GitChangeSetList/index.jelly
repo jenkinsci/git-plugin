@@ -44,9 +44,7 @@
             <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
             ${cs.author.displayName}
           </a>
-
-          at
-
+          ${%at}
           <j:new var="timestamp" className="java.util.Date">
             <j:arg value="${cs.timestamp}" />
           </j:new>

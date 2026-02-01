@@ -94,8 +94,8 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 2ch;
-  font-size: 12px;
+  gap: 1ch 2ch;
+  font-size: var(--font-size-xs);
   color: var(--text-color-secondary);
 
   a {
