@@ -2,11 +2,9 @@ package hudson.plugins.git.util;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.model.AbstractBuild;
-import hudson.model.Action;
-import hudson.model.Api;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 
@@ -438,4 +436,60 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     /* Package protected for easier testing */
     static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
+
+
+
+    /**
+     * Get the repository browser URL for a given remote URL.
+     * Converts SSH URLs to HTTP URLs using the configured Git browser.
+     *
+     * @param remoteUrl the remote repository URL (may be SSH or HTTP)
+     * @return the browser URL if available, otherwise the original remote URL
+     */
+    @Restricted(NoExternalUse.class)
+    public String getRepositoryBrowserUrl(String remoteUrl) {
+        if (remoteUrl == null) {
+            return null;
+        }
+
+        Run<?, ?> run = getOwningRun();
+        if (run == null) {
+            return remoteUrl;
+        }
+
+        // Try to get GitSCM from the project
+        GitSCM gitScm = getGitSCM(run);
+        if (gitScm != null && gitScm.getBrowser() != null) {
+            try {
+                String browserUrl = gitScm.getBrowser().getRepoUrl();
+                if (browserUrl != null && !browserUrl.isEmpty()) {
+                    return browserUrl;
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "Failed to get browser URL for " + remoteUrl, e);
+            }
+        }
+
+        // If no browser configured or error, return original URL
+        return remoteUrl;
+    }
+
+    /**
+     * Get the GitSCM instance from the run.
+     *
+     * @param run the current run
+     * @return GitSCM instance or null if not found
+     */
+    private GitSCM getGitSCM(Run<?, ?> run) {
+        if (run instanceof AbstractBuild) {
+            AbstractBuild<?, ?> build = (AbstractBuild<?, ?>) run;
+            AbstractProject<?, ?> project = build.getProject();
+            if (project != null && project.getScm() instanceof GitSCM) {
+                return (GitSCM) project.getScm();
+            }
+        }
+        return null;
+    }
+
 }
+

@@ -1,29 +1,32 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
-	xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
-	xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+		 xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
+		 xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 	<t:summary icon="symbol-git-logo plugin-git">
-
-	<strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
-	<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
-	<j:if test="${!empty(it.remoteUrls)}">
-		<j:forEach var="remoteUrl" items="${it.remoteUrls}">
-			<j:if test="${remoteUrl.startsWith('http')}">
-				<br/><strong>${%Repository}</strong>: <a href="${remoteUrl}">${remoteUrl}</a>
-			</j:if>
-			<j:if test="${!remoteUrl.startsWith('http')}">
-				<br/><strong>${%Repository}</strong>: ${remoteUrl}
-			</j:if>
-		</j:forEach>
-	</j:if>
-        <ul>
-        <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
-          <j:if test="${branch!=''}">
-            <li>${branch.name}</li>
-          </j:if>
-        </j:forEach>
-        </ul>
-
-
+		<strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
+		<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
+		<j:if test="${!empty(it.remoteUrls)}">
+			<j:forEach var="remoteUrl" items="${it.remoteUrls}">
+				<j:set var="browserUrl" value="${it.getRepositoryBrowserUrl(remoteUrl)}"/>
+				<j:choose>
+					<j:when test="${browserUrl != null and browserUrl.startsWith('http')}">
+						<br/><strong>${%Repository}</strong>: <a href="${browserUrl}">${remoteUrl}</a>
+					</j:when>
+					<j:when test="${remoteUrl.startsWith('http')}">
+						<br/><strong>${%Repository}</strong>: <a href="${remoteUrl}">${remoteUrl}</a>
+					</j:when>
+					<j:otherwise>
+						<br/><strong>${%Repository}</strong>: ${remoteUrl}
+					</j:otherwise>
+				</j:choose>
+			</j:forEach>
+		</j:if>
+		<ul>
+			<j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
+				<j:if test="${branch!=''}">
+					<li>${branch.name}</li>
+				</j:if>
+			</j:forEach>
+		</ul>
 	</t:summary>
 </j:jelly>

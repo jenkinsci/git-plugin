@@ -576,4 +576,47 @@ class BuildDataTest {
         emptyData.remoteUrls = null;
         assertEquals(emptyData.hashCode(), emptyData.hashCode());
     }
+
+
+
+    @Test
+    void testGetRepositoryBrowserUrlWithNullUrl() {
+        String result = data.getRepositoryBrowserUrl(null);
+        assertNull(result, "Null URL should return null");
+    }
+
+    @Test
+    void testGetRepositoryBrowserUrlWithoutOwningRun() {
+        // When there's no owning run, should return the original URL
+        String sshUrl = "git@github.com:jenkinsci/git-plugin.git";
+        String result = data.getRepositoryBrowserUrl(sshUrl);
+        assertThat(result, is(sshUrl));
+    }
+
+    @Test
+    void testGetRepositoryBrowserUrlWithHttpsUrl() {
+        // HTTPS URLs should be returned as-is when no run context
+        String httpsUrl = "https://github.com/jenkinsci/git-plugin.git";
+        String result = data.getRepositoryBrowserUrl(httpsUrl);
+        assertThat(result, is(httpsUrl));
+    }
+
+    @Test
+    void testGetRepositoryBrowserUrlWithSshUrl() {
+        // SSH URLs should be returned as-is when no run context
+        String sshUrl = "git@github.com:jenkinsci/git-plugin.git";
+        String result = data.getRepositoryBrowserUrl(sshUrl);
+        assertThat(result, is(sshUrl));
+    }
+
+    @Test
+    void testGetGitSCMReturnsNullWithoutRun() {
+        // getGitSCM should return null when there's no owning run
+        // This tests the private method indirectly through getRepositoryBrowserUrl
+        String testUrl = "git@github.com:jenkinsci/git-plugin.git";
+        String result = data.getRepositoryBrowserUrl(testUrl);
+        // Should return original URL since there's no SCM to get browser from
+        assertThat(result, is(testUrl));
+    }
+
 }
