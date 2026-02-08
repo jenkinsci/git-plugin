@@ -2,51 +2,59 @@
 <!--
   Displays Git change log.
 -->
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
   <j:set var="browser" value="${it.browser}"/>
 
-  <h2>${%Summary}</h2>
-  <ol>
+  <st:adjunct includes="hudson.plugins.git.styles" />
+
+  <div class="git-changeset-container">
     <j:forEach var="cs" items="${it.logs}">
-      <li><j:out value="${cs.msgAnnotated}"/> (<a href="#${cs.id}">${%details}</a>)</li>
-    </j:forEach>
-  </ol>
-  <table class="pane" style="border:none">
-    <j:forEach var="cs" items="${it.logs}">
-      <tr class="pane">
-        <td colspan="2" class="changeset">
-          <div class="changeset-message" id="${cs.id}">
-            <strong>
-              ${%Commit}
-              <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
-              <j:if test="${cslink!=null}">
-                <a href="${cslink}">${cs.id}</a>
-              </j:if>
-              <j:if test="${cslink==null}">
-                ${cs.id}
-              </j:if>
-              by <a href="${rootURL}/${cs.author.url}/">${cs.author.displayName}</a>
-            </strong>
-            <j:if test="${cs.branch!=null}">
-              <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
-            </j:if>
-            <pre><j:out value="${cs.commentAnnotated}"/></pre>
+      <div class="git-changeset ${compact ? 'git-changeset--compact' : ''}" id="${cs.id}">
+        <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
+
+        <j:if test="${cslink != null}">
+          <a href="${cslink}" class="git-changeset__items__item__message" target="_blank">
+            <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
+            <span>${cs.msg}</span>
+            <div class="git-changeset__items__item__hash">
+              <span class="jenkins-visually-hidden">(</span>
+              ${cs.id.substring(0, 7)}
+              <span class="jenkins-visually-hidden">)</span>
+            </div>
+          </a>
+        </j:if>
+        <j:if test="${cslink == null}">
+          <div class="git-changeset__items__item__message">
+            <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
+            <j:out value="${cs.commentAnnotated}"/>
           </div>
-        </td>
-      </tr>
-      <j:forEach var="p" items="${cs.paths}">
-        <tr>
-          <td width="16"><t:editTypeIcon type="${p.editType}"/></td>
-          <td>
-            <a href="${browser.getFileLink(p)}">${p.path}</a>
-            <j:set var="difflink" value="${browser.getDiffLink(p)}"/>
-            <j:if test="${difflink!=null}">
-              <st:nbsp/>
-              <a href="${difflink}">(${%diff})</a>
-            </j:if>
-          </td>
-        </tr>
-      </j:forEach>
+        </j:if>
+        <j:if test="${!compact and !empty(cs.paths)}">
+          <div class="git-changeset__items__item__files">
+            <j:forEach var="p" items="${cs.paths}">
+              <a href="${browser.getFileLink(p)}" target="_blank">
+                <l:icon src="symbol-document-outline plugin-ionicons-api" />
+                ${p.path}
+              </a>
+            </j:forEach>
+          </div>
+        </j:if>
+        <div class="git-changeset__items__item__user">
+          <a href="${rootURL}/${cs.author.url}/">
+            <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
+            ${cs.author.displayName}
+          </a>
+          ${%at}
+          <j:new var="timestamp" className="java.util.Date">
+            <j:arg value="${cs.timestamp}" />
+          </j:new>
+          <time datetime="${h.iso8601DateTime(timestamp)}">
+            <i:formatDate value="${timestamp}" type="time" timeStyle="short" />
+            <st:nbsp />
+            <i:formatDate value="${timestamp}" type="date" dateStyle="short" />
+          </time>
+        </div>
+      </div>
     </j:forEach>
-  </table>
+  </div>
 </j:jelly>
