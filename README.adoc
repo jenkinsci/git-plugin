@@ -133,7 +133,7 @@ Shallow clone requests a limited number of commits from the tip of the requested
 checkout scmGit(
     branches: [[name: '*/master']],
     extensions: [ cloneOption(shallow: true) ],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 ==== Checkout with a narrow refspec
@@ -147,7 +147,7 @@ checkout scmGit(
     branches: [[name: '*/master']],
     extensions: [ cloneOption(honorRefspec: true) ],
     userRemoteConfigs: [[refspec: '+refs/heads/master:refs/remotes/origin/master',
-        url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+        url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 ==== Checkout and prune stale remote branches
@@ -160,7 +160,7 @@ This removes remote tracking branches and tags from the local workspace if they 
 checkout scmGit(
     branches: [[name: 'master']],
     extensions: [ pruneStaleBranch(), pruneTags(true) ],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 ==== Wipe out repository before checkout
@@ -173,7 +173,7 @@ Ensures a fully fresh workspace.
 deleteDir()
 checkout scmGit(
     branches: [[name: '*/master']],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 [#credential-binding]
@@ -1376,7 +1376,7 @@ checkout([$class: 'GitSCM',
     doGenerateSubmoduleConfigurations: false,
     extensions: [],
     submoduleCfg: [],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])
 ```
 
 Current Pipeline Syntax looks like this:
@@ -1384,7 +1384,7 @@ Current Pipeline Syntax looks like this:
 ```groovy
 checkout scmGit(
     branches: [[name: 'master']],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
 ```
 
 [#environment-variables]
