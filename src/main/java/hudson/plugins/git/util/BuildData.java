@@ -441,46 +441,73 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     /**
      * Get the repository browser URL for a given remote URL.
-     * Converts SSH URLs to HTTP URLs using the configured Git browser.
+     * For HTTP(S) URLs, returns the URL itself (already clickable).
+     * For SSH URLs, attempts to convert using the configured Git browser.
      *
-     * @param remoteUrl the remote repository URL (may be SSH or HTTP)
-     * @return the browser URL if available, otherwise the original remote URL
+     * @param remoteUrl the remote repository URL (may be SSH or HTTP, may be {@code null})
+     * @return the browser URL if available, otherwise the original remote URL; may be {@code null} if {@code remoteUrl} is {@code null}
      */
     @Restricted(NoExternalUse.class)
-    public String getRepositoryBrowserUrl(String remoteUrl) {
-        if (remoteUrl == null) {
+    @CheckForNull
+    public String getRepositoryBrowserUrl(@CheckForNull String remoteUrl) {
+        if (remoteUrl == null || remoteUrl.isEmpty()) {
             return null;
         }
 
-        Run<?, ?> run = getOwningRun();
-        if (run == null) {
+        // If already HTTP(S), it's clickable as-is
+        if (remoteUrl.startsWith("http://") || remoteUrl.startsWith("https://")) {
             return remoteUrl;
         }
 
-        // Try to get GitSCM from the project
-        GitSCM gitScm = getGitSCM(run);
-        if (gitScm != null && gitScm.getBrowser() != null) {
-            try {
-                String browserUrl = gitScm.getBrowser().getRepoUrl();
-                if (browserUrl != null && !browserUrl.isEmpty()) {
-                    return browserUrl;
-                }
-            } catch (Exception e) {
-                LOGGER.log(Level.FINE, "Failed to get browser URL for " + remoteUrl, e);
-            }
+        // For SSH URLs, try to get browser URL
+        Run<?, ?> run = getOwningRun();
+        if (run == null) {
+            return null;
         }
 
-        // If no browser configured or error, return original URL
-        return remoteUrl;
+        GitSCM gitScm = getGitSCM(run);
+        if (gitScm == null || gitScm.getBrowser() == null) {
+            return null;
+        }
+
+        // Check if this remoteUrl is configured in the SCM
+        boolean isConfiguredRemote = gitScm.getUserRemoteConfigs().stream()
+                .anyMatch(config -> config.getUrl() != null &&
+                        (config.getUrl().equals(remoteUrl) ||
+                                normalize(config.getUrl()).equals(normalize(remoteUrl))));
+
+        if (!isConfiguredRemote) {
+            return null;
+        }
+
+        // Return the browser URL
+        try {
+            String browserUrl = gitScm.getBrowser().getRepoUrl();
+            if (browserUrl != null && !browserUrl.isEmpty() &&
+                    (browserUrl.startsWith("http://") || browserUrl.startsWith("https://"))) {
+                return browserUrl;
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Failed to get browser URL for " + remoteUrl, e);
+        }
+
+        return null;
     }
 
     /**
      * Get the GitSCM instance from the run.
+     * Supports both AbstractBuild (Freestyle) and WorkflowRun (Pipeline) jobs.
      *
      * @param run the current run
      * @return GitSCM instance or null if not found
      */
-    private GitSCM getGitSCM(Run<?, ?> run) {
+    @CheckForNull
+    private GitSCM getGitSCM(@CheckForNull Run<?, ?> run) {
+        if (run == null) {
+            return null;
+        }
+
+        // Try AbstractBuild (Freestyle jobs)
         if (run instanceof AbstractBuild) {
             AbstractBuild<?, ?> build = (AbstractBuild<?, ?>) run;
             AbstractProject<?, ?> project = build.getProject();
@@ -488,8 +515,24 @@ public class BuildData implements Action, Serializable, Cloneable {
                 return (GitSCM) project.getScm();
             }
         }
+
+        // Try WorkflowRun (Pipeline jobs)
+        if (run.getParent() != null) {
+            Object parent = run.getParent();
+
+            // Use reflection to check for getSCM() method
+            try {
+                java.lang.reflect.Method getScmMethod = parent.getClass().getMethod("getScm");
+                Object scm = getScmMethod.invoke(parent);
+                if (scm instanceof GitSCM) {
+                    return (GitSCM) scm;
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.FINEST, "Could not get SCM via getSCM() method", e);
+            }
+        }
+
         return null;
     }
 
 }
-

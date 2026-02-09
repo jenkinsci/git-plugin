@@ -9,11 +9,8 @@
 			<j:forEach var="remoteUrl" items="${it.remoteUrls}">
 				<j:set var="browserUrl" value="${it.getRepositoryBrowserUrl(remoteUrl)}"/>
 				<j:choose>
-					<j:when test="${browserUrl != null and browserUrl.startsWith('http')}">
+					<j:when test="${browserUrl != null and !browserUrl.isEmpty()}">
 						<br/><strong>${%Repository}</strong>: <a href="${browserUrl}">${remoteUrl}</a>
-					</j:when>
-					<j:when test="${remoteUrl.startsWith('http')}">
-						<br/><strong>${%Repository}</strong>: <a href="${remoteUrl}">${remoteUrl}</a>
 					</j:when>
 					<j:otherwise>
 						<br/><strong>${%Repository}</strong>: ${remoteUrl}
