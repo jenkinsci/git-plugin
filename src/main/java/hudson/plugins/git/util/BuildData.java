@@ -10,13 +10,9 @@ import hudson.plugins.git.UserRemoteConfig;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -438,7 +434,6 @@ public class BuildData implements Action, Serializable, Cloneable {
     static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
 
 
-
     /**
      * Get the repository browser URL for a given remote URL.
      * For HTTP(S) URLs, returns the URL itself (already clickable).
@@ -471,24 +466,30 @@ public class BuildData implements Action, Serializable, Cloneable {
         }
 
         // Check if this remoteUrl is configured in the SCM
-        boolean isConfiguredRemote = gitScm.getUserRemoteConfigs().stream()
-                .anyMatch(config -> config.getUrl() != null &&
-                        (config.getUrl().equals(remoteUrl) ||
-                                normalize(config.getUrl()).equals(normalize(remoteUrl))));
+        List<UserRemoteConfig> remoteConfigs = gitScm.getUserRemoteConfigs();
+        if (remoteConfigs == null || remoteConfigs.isEmpty()) {
+            return null;
+        }
+
+        boolean isConfiguredRemote = remoteConfigs.stream()
+                .anyMatch(config -> {
+                    String configUrl = config.getUrl();
+                    if (configUrl == null) {
+                        return false;
+                    }
+                    return configUrl.equals(remoteUrl) ||
+                            normalize(configUrl).equals(normalize(remoteUrl));
+                });
 
         if (!isConfiguredRemote) {
             return null;
         }
 
         // Return the browser URL
-        try {
-            String browserUrl = gitScm.getBrowser().getRepoUrl();
-            if (browserUrl != null && !browserUrl.isEmpty() &&
-                    (browserUrl.startsWith("http://") || browserUrl.startsWith("https://"))) {
-                return browserUrl;
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Failed to get browser URL for " + remoteUrl, e);
+        String browserUrl = gitScm.getBrowser().getRepoUrl();
+        if (browserUrl != null && !browserUrl.isEmpty() &&
+                (browserUrl.startsWith("http://") || browserUrl.startsWith("https://"))) {
+            return browserUrl;
         }
 
         return null;
@@ -517,19 +518,24 @@ public class BuildData implements Action, Serializable, Cloneable {
         }
 
         // Try WorkflowRun (Pipeline jobs)
-        if (run.getParent() != null) {
-            Object parent = run.getParent();
+        Object parent = run.getParent();
+        if (parent == null) {
+            return null;
+        }
 
-            // Use reflection to check for getSCM() method
-            try {
-                java.lang.reflect.Method getScmMethod = parent.getClass().getMethod("getScm");
-                Object scm = getScmMethod.invoke(parent);
-                if (scm instanceof GitSCM) {
-                    return (GitSCM) scm;
-                }
-            } catch (Exception e) {
-                LOGGER.log(Level.FINEST, "Could not get SCM via getSCM() method", e);
+        // Use reflection to check for getSCM() method
+        try {
+            java.lang.reflect.Method getScmMethod = parent.getClass().getMethod("getScm");
+            Object scm = getScmMethod.invoke(parent);
+            if (scm instanceof GitSCM) {
+                return (GitSCM) scm;
             }
+        } catch (NoSuchMethodException e) {
+            LOGGER.log(Level.FINEST, "getSCM() method not found", e);
+        } catch (IllegalAccessException  e) {
+            LOGGER.log(Level.FINEST, "Could not invoke getSCM() method", e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
         }
 
         return null;
