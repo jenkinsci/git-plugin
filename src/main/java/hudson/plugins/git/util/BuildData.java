@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -434,14 +435,6 @@ public class BuildData implements Action, Serializable, Cloneable {
     static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
 
 
-    /**
-     * Get the repository browser URL for a given remote URL.
-     * For HTTP(S) URLs, returns the URL itself (already clickable).
-     * For SSH URLs, attempts to convert using the configured Git browser.
-     *
-     * @param remoteUrl the remote repository URL (may be SSH or HTTP, may be {@code null})
-     * @return the browser URL if available, otherwise the original remote URL; may be {@code null} if {@code remoteUrl} is {@code null}
-     */
     @Restricted(NoExternalUse.class)
     @CheckForNull
     public String getRepositoryBrowserUrl(@CheckForNull String remoteUrl) {
@@ -471,22 +464,41 @@ public class BuildData implements Action, Serializable, Cloneable {
             return null;
         }
 
-        boolean isConfiguredRemote = remoteConfigs.stream()
-                .anyMatch(config -> {
-                    String configUrl = config.getUrl();
-                    if (configUrl == null) {
-                        return false;
-                    }
-                    return configUrl.equals(remoteUrl) ||
-                            normalize(configUrl).equals(normalize(remoteUrl));
-                });
+        String normalizedRemoteUrl = normalize(remoteUrl);
+
+        boolean isConfiguredRemote = false;
+        for (UserRemoteConfig config : remoteConfigs) {
+            String configUrl = config.getUrl();
+            if (configUrl == null) {
+                continue;
+            }
+
+            // Direct match
+            if (configUrl.equals(remoteUrl)) {
+                isConfiguredRemote = true;
+                break;
+            }
+
+            // Normalized match (only if both normalize successfully)
+            if (normalizedRemoteUrl != null) {
+                String normalizedConfigUrl = normalize(configUrl);
+                if (normalizedConfigUrl != null && normalizedConfigUrl.equals(normalizedRemoteUrl)) {
+                    isConfiguredRemote = true;
+                    break;
+                }
+            }
+        }
 
         if (!isConfiguredRemote) {
             return null;
         }
 
-        // Return the browser URL
-        String browserUrl = gitScm.getBrowser().getRepoUrl();
+        GitRepositoryBrowser browser = gitScm.getBrowser();
+        if (browser == null) {
+            return null;
+        }
+
+        String browserUrl = browser.getRepoUrl();
         if (browserUrl != null && !browserUrl.isEmpty() &&
                 (browserUrl.startsWith("http://") || browserUrl.startsWith("https://"))) {
             return browserUrl;
@@ -517,11 +529,8 @@ public class BuildData implements Action, Serializable, Cloneable {
             }
         }
 
-        // Try WorkflowRun (Pipeline jobs)
+        // Try WorkflowRun (Pipeline jobs) - parent is always non-null for Run
         Object parent = run.getParent();
-        if (parent == null) {
-            return null;
-        }
 
         // Use reflection to check for getSCM() method
         try {
@@ -532,10 +541,10 @@ public class BuildData implements Action, Serializable, Cloneable {
             }
         } catch (NoSuchMethodException e) {
             LOGGER.log(Level.FINEST, "getSCM() method not found", e);
-        } catch (IllegalAccessException  e) {
+        } catch (IllegalAccessException e) {
             LOGGER.log(Level.FINEST, "Could not invoke getSCM() method", e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
+            LOGGER.log(Level.FINEST, "Error invoking getSCM() method", e);
         }
 
         return null;
