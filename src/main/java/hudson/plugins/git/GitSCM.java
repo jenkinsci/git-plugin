@@ -2007,13 +2007,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData base = getBuildData(build);
         ScmName sn = getExtensions().get(ScmName.class);
         String scmName = sn == null ? null : sn.getName();
-        if (base==null)
-            return new BuildData(scmName, getUserRemoteConfigs());
-        else {
-           BuildData buildData = base.clone();
+        BuildData buildData;
+        if (base==null) {
+            buildData = new BuildData(scmName, getUserRemoteConfigs());
+        } else {
+           buildData = base.clone();
            buildData.setScmName(scmName);
            return buildData;
         }
+        buildData.setBrowser(getBrowser());
+        return buildData;
     }
 
     /**

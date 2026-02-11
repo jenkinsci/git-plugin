@@ -37,6 +37,17 @@ public class GithubWeb extends GitRepositoryBrowser {
     }
 
     /**
+     * Determines the link to the given ref.
+     * @param ref The specific ref to link to
+     * @return null if the browser doesn't have any meaningful URL for a ref
+     */
+    @Override
+    public URL getRefLink(String ref) throws IOException {
+        URL url = getUrl();
+        return new URL(url, url.getPath() + "tree/" + ref);
+    }
+
+    /**
      * Creates a link to the file diff.
      * http://[GitHib URL]/commit/573670a3bb1f3b939e87f1dee3e99b6bfe281fcb#diff-N
      *
