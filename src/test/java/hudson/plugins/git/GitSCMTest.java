@@ -64,6 +64,7 @@ import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.AfterEach;
@@ -2478,6 +2479,41 @@ class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS);
 
         assertFalse(project.poll(listener).hasChanges(), "No changes to git since last build, thus no new build is expected");
+    }
+
+    @Test
+    @Issue("JENKINS-20427")
+    public void testPolling_environmentValueInBranchSpecTriggersBuild() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        // create parameterized project with environment value in branch specification
+        WorkflowJob project = r.jenkins.createProject(WorkflowJob.class, "pipeline-remote-poll-with-param");
+        List<UserRemoteConfig> remotes = new ArrayList<>();
+        remotes.addAll(testRepo.remoteConfigs());
+        GitSCM scm = new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
+                null, null,
+                Collections.emptyList());
+        project.setDefinition(new CpsScmFlowDefinition(scm, "./Jenkinsfile"));
+        project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
+
+        // commit something in order to create an initial base version in git
+        commit(
+            "Jenkinsfile",
+            "node {\n" +
+            "  echo 'Hello world!'\n" +
+            "}",
+            johnDoe,
+            "Add Jenkinsfile"
+        );
+
+        // build the project
+        Run<?,?> run = r.buildAndAssertStatus(Result.SUCCESS, project);
+
+        // commit something in order to check that polling detects the change.
+        commit("toto/commitFile2", johnDoe, "Commit number 2");
+
+        assertTrue("There are changes to git since last build, thus a new build is expected", project.poll(listener).hasChanges());
     }
 
     public void baseTestPolling_parentHead(List<GitSCMExtension> extensions) throws Exception {
