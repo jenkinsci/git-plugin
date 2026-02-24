@@ -325,6 +325,8 @@ class GitSCMTest extends AbstractGitTestCase {
         assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
 //        FreeStyleProject project = setupProject("master", true, false);
         FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
+        assertFalse("scm should not require workspace for polling", project.getScm().requiresWorkspaceForPolling());
+
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
@@ -2622,6 +2624,30 @@ class GitSCMTest extends AbstractGitTestCase {
 		PollingResult pollingResult = scm.poll(project, null, first_build.getWorkspace(), listener, null);
 		assertFalse(pollingResult.hasChanges());
 	}
+
+    @Test
+    public void testPolling_CanDoRemotePollingIfMultipleBranches() throws Exception {
+        assumeTrue("Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded", isTimeAvailable());
+        FreeStyleProject project = createFreeStyleProject();
+        List<BranchSpec> branchSpecs = Arrays.asList(
+                new BranchSpec("*/master"),
+                new BranchSpec("*/stable"));
+        GitSCM scm = new GitSCM(createRemoteRepositories(),
+                                branchSpecs, null, null,
+                                Collections.emptyList());
+        project.setScm(scm);
+        assertFalse("scm should not require workspace for polling", scm.requiresWorkspaceForPolling());
+
+        commit("commitFile1", johnDoe, "Commit number 1");
+        git.branch("stable");
+
+        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
+        r.assertBuildStatus(Result.SUCCESS, first_build);
+
+        first_build.getWorkspace().deleteContents();
+        PollingResult pollingResult = scm.poll(project, null, first_build.getWorkspace(), listener, null);
+        assertFalse(pollingResult.hasChanges());
+    }
 
     @Issue("JENKINS-24467")
     @Test
