@@ -64,6 +64,8 @@ import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.Symbol;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -368,7 +370,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             + "/*" // optional trailing '/'
             ;
 
-    private static final Pattern[] URL_PATTERNS = {
+    public static final Pattern[] URL_PATTERNS = {
         /* URL style - like https://github.com/jenkinsci/git-plugin */
         Pattern.compile(
         "(?:\\w+://)" // protocol (scheme)
@@ -407,18 +409,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         if (webUrls.size() == 1) {
             String url = webUrls.iterator().next();
-            if (url.startsWith("https://bitbucket.org/")) {
-                return new BitbucketWeb(url);
-            }
-            if (url.startsWith("https://gitlab.com/")) {
-                return new GitLab(url);
-            }
-            if (url.startsWith("https://github.com/")) {
-                return new GithubWeb(url);
-            }
-            return null;
+            return guessBrowser(url);
         }
         LOGGER.log(Level.INFO, "Multiple browser guess matches for {0}", remoteRepositories);
+        return null;
+    }
+
+    @Restricted(NoExternalUse.class)
+    public static GitRepositoryBrowser guessBrowser(String url) {
+        if (url.startsWith("https://bitbucket.org/")) {
+            return new BitbucketWeb(url);
+        }
+        if (url.startsWith("https://gitlab.com/")) {
+            return new GitLab(url);
+        }
+        if (url.startsWith("https://github.com/")) {
+            return new GithubWeb(url);
+        }
         return null;
     }
 
