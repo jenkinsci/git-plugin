@@ -1810,15 +1810,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setAddGitTagAction(boolean addGitTagAction) { this.addGitTagAction = addGitTagAction; }
 
-        /**
-         * Old configuration of git executable - exposed so that we can
-         * migrate this setting to GitTool without deprecation warnings.
-         * @return git executable
-         */
-        public String getOldGitExe() {
-            return null;
-        }
-
         public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,
                 String[] repoNames,
                 String[] refs) throws GitException, IOException {
@@ -2168,17 +2159,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
-        Jenkins jenkins = Jenkins.get();
-        DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
-
-        if (desc.getOldGitExe() != null) {
-            String exe = desc.getOldGitExe();
-            String defaultGit = GitTool.getDefaultInstallation().getGitExe();
-            if (exe.equals(defaultGit)) {
-                return;
-            }
-            System.err.println("[WARNING] you're using deprecated gitexe attribute to configure git plugin. Use Git installations");
-        }
     }
 
     @Initializer(before=JOB_LOADED)
