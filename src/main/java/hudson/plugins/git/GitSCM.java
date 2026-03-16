@@ -2157,10 +2157,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return doGenerateSubmoduleConfigurations;
     }
 
-    @Initializer(after=PLUGINS_STARTED)
-    public static void onLoaded() {
-    }
-
     @Initializer(before=JOB_LOADED)
     public static void configureXtream() {
         Run.XSTREAM.registerConverter(new ObjectIdConverter());
