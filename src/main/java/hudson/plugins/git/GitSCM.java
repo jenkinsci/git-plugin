@@ -1810,6 +1810,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setAddGitTagAction(boolean addGitTagAction) { this.addGitTagAction = addGitTagAction; }
 
+        /**
+         * Old configuration of git executable, unused since 2023.
+         * Returns null in all cases.
+         * @deprecated use GitTool
+         * @return null
+         */
+        @Deprecated(since = "5.11.0")
+        public String getOldGitExe() {
+            return null;
+        }
+
         public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,
                 String[] repoNames,
                 String[] refs) throws GitException, IOException {
