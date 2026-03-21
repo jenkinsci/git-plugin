@@ -5,7 +5,11 @@ import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.GitChangeSet;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
@@ -575,5 +579,92 @@ class BuildDataTest {
         assertEquals(emptyData.hashCode(), emptyData.hashCode());
         emptyData.remoteUrls = null;
         assertEquals(emptyData.hashCode(), emptyData.hashCode());
+    }
+
+    @Test
+    void testSshRepositoryLink() throws IOException {
+        BuildData buildData = new BuildData();
+        // Add an SSH remote URL to simulate JENKINS-75285 scenario
+        buildData.addRemoteUrl("git@github.com:user/repo.git");
+
+        // Configure a browser that returns a valid HTTP URL
+        buildData.setBrowser(new StubGitRepositoryBrowser("https://github.com/user/repo/"));
+
+        // Verify getRepositoryUrl returns the HTTP URL despite the SSH remote
+        assertEquals("https://github.com/user/repo/", buildData.getRepositoryUrl());
+    }
+
+    @Test
+    void testCommitUrlSanitization() throws IOException {
+        BuildData buildData = new BuildData();
+        buildData.setBrowser(new StubGitRepositoryBrowser("https://github.com/user/repo/"));
+
+        // Stub returns URL with .git, verify getCommitUrl strips it
+        assertEquals("https://github.com/user/repo/commit/123456", buildData.getCommitUrl("123456"));
+    }
+
+    @Test
+    void testRefUrlNormalization() throws IOException {
+        BuildData buildData = new BuildData();
+        buildData.setBrowser(new StubGitRepositoryBrowser("https://github.com/user/repo/"));
+
+        // Test refs/remotes/origin/main -> main
+        assertEquals("https://github.com/user/repo/tree/main", buildData.getRefUrl("refs/remotes/origin/main"));
+
+        // Test refs/heads/feature -> feature
+        assertEquals("https://github.com/user/repo/tree/feature", buildData.getRefUrl("refs/heads/feature"));
+    }
+
+    /**
+     * Stub implementation of GitRepositoryBrowser for testing purposes.
+     */
+    private static class StubGitRepositoryBrowser extends GitRepositoryBrowser {
+        private static final long serialVersionUID = 1L;
+        private final String baseUrl;
+
+        StubGitRepositoryBrowser(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+
+        @Override
+        public URL getUrl() throws IOException {
+            return new URL(baseUrl);
+        }
+
+        // Standard abstract method implementation
+        @Override
+        public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
+            return new URL(baseUrl.replaceAll("/$", "") + ".git/commit/" + changeSet.getId());
+        }
+
+        // Standard abstract method implementation
+        @Override
+        public URL getDiffLink(GitChangeSet.Path path) throws IOException {
+            return null;
+        }
+
+        // Standard abstract method implementation
+        @Override
+        public URL getFileLink(GitChangeSet.Path path) throws IOException {
+            return null;
+        }
+
+        // Custom method for BuildData (removed @Override to avoid errors if not in base class)
+        public URL getChangeSetLink(String changeSetId) throws IOException {
+            return new URL(baseUrl.replaceAll("/$", "") + ".git/commit/" + changeSetId);
+        }
+
+        // Custom method for BuildData (removed @Override to avoid errors if not in base class)
+        public URL getRefLink(String ref) throws IOException {
+            return new URL(baseUrl.replaceAll("/$", "") + ".git/tree/" + ref);
+        }
+
+        public URL getDiffLink(String path, String changeSetId) throws IOException {
+            return null;
+        }
+
+        public URL getFileLink(String path) throws IOException {
+            return null;
+        }
     }
 }
