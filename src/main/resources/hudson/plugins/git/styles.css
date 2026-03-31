@@ -60,11 +60,9 @@
 }
 
 .git-changeset__items__item__message {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 1rem;
+  display: block;
   color: var(--text-color) !important;
-  margin-left: -2rem;
+  margin-left: -1rem;
   text-decoration: none !important;
 
   span {
