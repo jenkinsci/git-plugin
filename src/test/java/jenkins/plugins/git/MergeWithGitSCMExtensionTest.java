@@ -1,20 +1,29 @@
 package jenkins.plugins.git;
 
+import hudson.FilePath;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
+import hudson.plugins.git.extensions.impl.UserIdentity;
 import hudson.plugins.git.util.BuildData;
-import org.junit.jupiter.api.Test;
-
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -82,6 +91,87 @@ class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
         assertEquals(firstBuild.getNumber(), gitSCM.getBuildData(firstBuild).lastBuild.getBuildNumber());
         assertEquals(firstMarked, gitSCM.getBuildData(firstBuild).lastBuild.getMarked());
         assertEquals(firstRevision, gitSCM.getBuildData(firstBuild).lastBuild.getRevision());
+    }
+
+    @Test
+    void testMergeCommitUsesDefaultIdentity() throws Exception {
+        String integrationHash = makeDivergingBranches();
+        FreeStyleProject p = createMergeProject(integrationHash);
+
+        FreeStyleBuild build = build(p, Result.SUCCESS);
+
+        PersonIdent author = headCommitAuthor(build.getWorkspace());
+        assertEquals("Jenkins", author.getName());
+        assertEquals("nobody@nowhere", author.getEmailAddress());
+    }
+
+    @Test
+    void testMergeCommitUsesGlobalConfigIdentity() throws Exception {
+        GitSCM.DescriptorImpl descriptor = (GitSCM.DescriptorImpl) r.jenkins.getDescriptorByType(GitSCM.DescriptorImpl.class);
+        descriptor.setGlobalConfigName("CI Bot");
+        descriptor.setGlobalConfigEmail("ci@example.com");
+
+        String integrationHash = makeDivergingBranches();
+        FreeStyleProject p = createMergeProject(integrationHash);
+
+        FreeStyleBuild build = build(p, Result.SUCCESS);
+
+        PersonIdent author = headCommitAuthor(build.getWorkspace());
+        assertEquals("CI Bot", author.getName());
+        assertEquals("ci@example.com", author.getEmailAddress());
+    }
+
+    @Test
+    void testMergeCommitUsesUserIdentityExtension() throws Exception {
+        String integrationHash = makeDivergingBranches();
+        FreeStyleProject p = createMergeProject(integrationHash);
+        ((GitSCM) p.getScm()).getExtensions().add(new UserIdentity("Bot User", "bot@example.com"));
+
+        FreeStyleBuild build = build(p, Result.SUCCESS);
+
+        PersonIdent author = headCommitAuthor(build.getWorkspace());
+        assertEquals("Bot User", author.getName());
+        assertEquals("bot@example.com", author.getEmailAddress());
+    }
+
+    /**
+     * Commits a file on integration and a different file on master so the two branches diverge,
+     * enabling a true merge commit (not a fast-forward) when they are later merged.
+     *
+     * @return SHA of the new integration HEAD
+     */
+    private String makeDivergingBranches() throws Exception {
+        repo.git.checkoutBranch("integration", "master");
+        repo.commit("integration-only-file", repo.janeDoe, "Integration branch commit");
+        String integrationHash = repo.git.revParse(Constants.HEAD).name();
+        repo.git.checkout().ref("master").execute();
+        repo.commit("master-only-file", repo.johnDoe, "Master diverging commit");
+        return integrationHash;
+    }
+
+    /**
+     * Creates a project that builds master and merges the integration branch at the given hash.
+     */
+    private FreeStyleProject createMergeProject(String mergeBaseHash) throws Exception {
+        FreeStyleProject p = r.createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                repo.remoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                null, null,
+                Collections.emptyList());
+        scm.getExtensions().add(new MergeWithGitSCMExtension("integration", mergeBaseHash));
+        p.setScm(scm);
+        p.getBuildersList().add(new CaptureEnvironmentBuilder());
+        return p;
+    }
+
+    private PersonIdent headCommitAuthor(FilePath workspace) throws Exception {
+        File workspaceDir = new File(workspace.getRemote());
+        try (Repository gitRepo = new FileRepositoryBuilder().setWorkTree(workspaceDir).build();
+             RevWalk revWalk = new RevWalk(gitRepo)) {
+            RevCommit headCommit = revWalk.parseCommit(gitRepo.resolve(Constants.HEAD));
+            return headCommit.getAuthorIdent();
+        }
     }
 
     @Override
