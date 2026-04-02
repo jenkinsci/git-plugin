@@ -32,6 +32,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.UserIdentity;
 import hudson.plugins.git.util.MergeRecord;
 import java.io.IOException;
 import jenkins.scm.api.SCMSource;
@@ -109,9 +110,16 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
         );
         checkout(scm, build, git, listener, rev);
         try {
-            /* could parse out of JenkinsLocationConfiguration.get().getAdminAddress() but seems overkill */
-            git.setAuthor("Jenkins", "nobody@nowhere");
-            git.setCommitter("Jenkins", "nobody@nowhere");
+            UserIdentity userIdentity = scm.getExtensions().get(UserIdentity.class);
+            if (userIdentity != null) {
+                userIdentity.decorate(scm, git);
+            } else {
+                GitSCM.DescriptorImpl d = scm.getDescriptor();
+                String authorName  = d.getGlobalConfigName()  != null ? d.getGlobalConfigName()  : "Jenkins";
+                String authorEmail = d.getGlobalConfigEmail() != null ? d.getGlobalConfigEmail() : "nobody@nowhere";
+                git.setAuthor(authorName, authorEmail);
+                git.setCommitter(authorName, authorEmail);
+            }
             MergeCommand cmd = git.merge().setRevisionToMerge(baseObjectId);
             for (GitSCMExtension ext : scm.getExtensions()) {
                 // By default we do a regular merge, allowing it to fast-forward.
