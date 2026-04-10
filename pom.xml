@@ -46,6 +46,7 @@
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
+    <ban-deprecated-stapler.skip>true</ban-deprecated-stapler.skip>
   </properties>
 
   <dependencyManagement>
