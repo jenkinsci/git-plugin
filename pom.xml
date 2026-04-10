@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>6.2138.v03274d462c13</version>
+    <version>6.2152.ve00a_731c3ce9</version>
     <relativePath />
   </parent>
 
@@ -46,6 +46,7 @@
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
+    <ban-deprecated-stapler.skip>true</ban-deprecated-stapler.skip>
   </properties>
 
   <dependencyManagement>
