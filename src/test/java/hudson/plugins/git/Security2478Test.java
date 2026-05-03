@@ -41,13 +41,13 @@ class Security2478Test {
     @Test
     void checkoutShouldNotAbortWhenLocalSourceAndRunningOnAgent() throws Exception {
         assertFalse(GitSCM.ALLOW_LOCAL_CHECKOUT, "Non Remote checkout should be disallowed");
-        r.createOnlineSlave();
+        var agent = r.createOnlineSlave();
         sampleRepo.init();
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message=test commit");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "pipeline");
 
-        String script = "node {\n" +
+        String script = "node('" + agent.getNodeName() + "') {\n" +
                 "   checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: '" + sampleRepo.fileUrl() + "', credentialsId: '']]])\n" +
                 "}";
         p.setDefinition(new CpsFlowDefinition(script, true));
@@ -65,7 +65,7 @@ class Security2478Test {
 
         String path = "file://" + workspaceDir + File.separator + "jobName@script" + File.separator + "anyhmachash";
         String escapedPath = path.replace("\\", "\\\\"); // for windows
-        String script = "node {\n" +
+        String script = "node('built-in') {\n" +
                 "   checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[" +
                 "url: '" + escapedPath + "'," +
                 " credentialsId: '']]])\n" +
