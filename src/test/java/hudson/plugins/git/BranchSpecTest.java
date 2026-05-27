@@ -150,6 +150,14 @@ class BranchSpecTest {
     }
 
     @Test
+    public void testMatchesGerritChangeRef() {
+        BranchSpec spec = new BranchSpec("refs/changes/91/45391/1");
+
+        assertTrue(spec.matches("refs/changes/91/45391/1"));
+        assertFalse(spec.matches("refs/heads/refs/changes/91/45391/1"));
+    }
+
+    @Test
     void testUsesJavaPatternDirectlyIfPrefixedWithColon() {
     	BranchSpec m = new BranchSpec(":^(?!(origin/prefix)).*");
     	assertTrue(m.matches("origin"));

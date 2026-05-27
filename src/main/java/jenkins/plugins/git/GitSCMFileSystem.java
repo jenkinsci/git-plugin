@@ -267,6 +267,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         || gscm.getBranches().get(0).getName().matches(
                             "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
                         )
+                        || gscm.getBranches().get(0).getName().matches(
+                            "^((\\Qrefs/changes/\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+                        )
                     );
             // we only support where the branch spec is obvious and not a wildcard
         }
@@ -306,6 +309,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 String prefix = Constants.R_HEADS;
                 if (branchSpecExpandedName.startsWith(Constants.R_TAGS)) {
                     prefix = Constants.R_TAGS;
+                } else if (branchSpecExpandedName.startsWith("refs/changes")) {
+                    prefix = "refs/changes/";
                 }
 
                 String headName;
