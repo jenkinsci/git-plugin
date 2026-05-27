@@ -435,6 +435,29 @@ class GitSCMFileSystemTest {
         assertThat(file.contentAsString(), is("modified"));
     }
 
+    @Test
+    public void testSupportsGerritChangeRef() throws Exception {
+        // Create a dummy GitSCM configured with a Gerrit change refspec
+        GitSCM scm = new GitSCM(
+                GitSCM.createRepoList("https://example.com/repo.git", null),
+                Collections.singletonList(new BranchSpec("refs/changes/91/45391/1")),
+                null, null, Collections.emptyList());
+
+        GitSCMFileSystem.BuilderImpl builder = new GitSCMFileSystem.BuilderImpl();
+        assertTrue(builder.supports(scm), "Builder should support refs/changes/ branch specs");
+    }
+
+    @Test
+    public void testHeadNameResultCalculateGerritChange() {
+        BranchSpec spec = new BranchSpec("refs/changes/91/45391/1");
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result =
+                GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(spec, null, null);
+
+        assertEquals("refs/changes/", result.prefix);
+        assertEquals("91/45391/1", result.headName);
+    }
+
     @Issue("JENKINS-52964")
     @Test
     void filesystem_supports_descriptor() throws Exception {
