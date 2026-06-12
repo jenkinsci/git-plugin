@@ -45,7 +45,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         return url;
     }
 
-    public final URL getUrl() throws IOException {
+    public URL getUrl() throws IOException {
         String u = url;
         StaplerRequest2 req = Stapler.getCurrentRequest2();
         if (req != null) {
@@ -104,6 +104,17 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         if (commitId != null && !commitId.isBlank()) {
             return getChangeSetLink(new CommitChangeSet(commitId));
         }
+        return null;
+    }
+
+    /**
+     * Determines the link to the given ref.
+     *
+     * @param ref The specific ref to link to
+     * @return null if the browser doesn't have any meaningful URL for a ref
+     */
+    @CheckForNull
+    public URL getRefLink(String ref) throws IOException {
         return null;
     }
 
