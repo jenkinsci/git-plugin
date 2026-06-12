@@ -9,7 +9,6 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.Extension;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import hudson.util.ListBoxModel;
@@ -23,6 +22,7 @@ import org.jenkinsci.plugins.credentialsbinding.impl.UnbindableDir;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.variant.OptionalExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -200,7 +200,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
 
     // Mistakenly defined GitUsernamePassword in first release, prefer gitUsernamePassword as symbol
     @Symbol({"gitUsernamePassword", "GitUsernamePassword"})
-    @Extension
+    @OptionalExtension(requirePlugins = "credentials-binding")
     public static final class DescriptorImpl extends BindingDescriptor<StandardUsernamePasswordCredentials> {
 
         @NonNull
