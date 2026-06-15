@@ -23,8 +23,11 @@ class DisableHooks implements RepositoryCallback<Object> {
     public Object invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
         final String VAL = Functions.isWindows() ? DISABLED_WIN : DISABLED_NIX;
         final StoredConfig repoConfig = repo.getConfig();
-        repoConfig.setString("core", null, "hooksPath", VAL);
-        repoConfig.save();
+        // Skip the rewrite, and its config.lock, when hooksPath is already disabled. JENKINS-71349
+        if (!VAL.equals(repoConfig.getString("core", null, "hooksPath"))) {
+            repoConfig.setString("core", null, "hooksPath", VAL);
+            repoConfig.save();
+        }
         return null;
     }
 }
