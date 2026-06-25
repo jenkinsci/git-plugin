@@ -193,9 +193,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
+      <groupId>dev.parsick.testcontainers.gitserver</groupId>
       <artifactId>testcontainers-gitserver</artifactId>
-      <version>0.15.0</version>
+      <version>0.16.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
