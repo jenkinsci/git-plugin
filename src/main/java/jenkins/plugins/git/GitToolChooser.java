@@ -175,7 +175,6 @@ public class GitToolChooser {
     }
 
     /* Protocol patterns to extract hostname and path from typical repository URLs */
-    private static Pattern gitProtocolPattern = Pattern.compile("^git://([^/]+)/(.+?)/*$");
     private static Pattern httpProtocolPattern = Pattern.compile("^https?://([^/]+)/(.+?)/*$");
     private static Pattern sshAltProtocolPattern = Pattern.compile("^[\\w]+@(.+):(.+?)/*$");
     private static Pattern sshProtocolPattern = Pattern.compile("^ssh://[\\w]+@([^/]+)/(.+?)/*$");
@@ -193,7 +192,7 @@ public class GitToolChooser {
         Pattern [] protocolPatterns = {
                 sshAltProtocolPattern,
                 sshProtocolPattern,
-                gitProtocolPattern,
+                httpProtocolPattern,
         };
 
         String matcherReplacement = "https://$1/$2";
@@ -237,14 +236,12 @@ public class GitToolChooser {
         }
 
         Pattern [] protocolPatterns = {
-                gitProtocolPattern,
                 httpProtocolPattern,
                 sshAltProtocolPattern,
                 sshProtocolPattern,
         };
 
         String[] matcherReplacements = {
-                "git://$1/$2",     // git protocol
                 "git@$1:$2",       // ssh protocol alternate URL
                 "https://$1/$2",   // https protocol
                 "ssh://git@$1/$2", // ssh protocol
