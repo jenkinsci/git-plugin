@@ -495,11 +495,11 @@ class GitSCMFileSystemTest {
     public void testHeadNameResultCalculateGerritChange() {
         BranchSpec spec = new BranchSpec("refs/changes/91/45391/1");
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result =
-                GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(spec, null, null);
+        HeadNameResult result =
+                HeadNameResult.calculate(spec, null, null, null, "origin");
 
-        assertEquals("refs/changes/", result.prefix);
-        assertEquals("91/45391/1", result.headName);
+        assertEquals("91/45391/1", result.remoteHeadName);
+        assertTrue(result.refspec.startsWith("+refs/changes/"));
     }
 
     @Issue("JENKINS-52964")
