@@ -2,23 +2,18 @@ package hudson.plugins.git.util;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.model.AbstractBuild;
-import hudson.model.Action;
-import hudson.model.Api;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -438,4 +433,121 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     /* Package protected for easier testing */
     static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
+
+
+    @Restricted(NoExternalUse.class)
+    @CheckForNull
+    public String getRepositoryBrowserUrl(@CheckForNull String remoteUrl) {
+        if (remoteUrl == null || remoteUrl.isEmpty()) {
+            return null;
+        }
+
+        // If already HTTP(S), it's clickable as-is
+        if (remoteUrl.startsWith("http://") || remoteUrl.startsWith("https://")) {
+            return remoteUrl;
+        }
+
+        // For SSH URLs, try to get browser URL
+        Run<?, ?> run = getOwningRun();
+        if (run == null) {
+            return null;
+        }
+
+        GitSCM gitScm = getGitSCM(run);
+        if (gitScm == null || gitScm.getBrowser() == null) {
+            return null;
+        }
+
+        // Check if this remoteUrl is configured in the SCM
+        List<UserRemoteConfig> remoteConfigs = gitScm.getUserRemoteConfigs();
+        if (remoteConfigs == null || remoteConfigs.isEmpty()) {
+            return null;
+        }
+
+        String normalizedRemoteUrl = normalize(remoteUrl);
+
+        boolean isConfiguredRemote = false;
+        for (UserRemoteConfig config : remoteConfigs) {
+            String configUrl = config.getUrl();
+            if (configUrl == null) {
+                continue;
+            }
+
+            // Direct match
+            if (configUrl.equals(remoteUrl)) {
+                isConfiguredRemote = true;
+                break;
+            }
+
+            // Normalized match (only if both normalize successfully)
+            if (normalizedRemoteUrl != null) {
+                String normalizedConfigUrl = normalize(configUrl);
+                if (normalizedConfigUrl != null && normalizedConfigUrl.equals(normalizedRemoteUrl)) {
+                    isConfiguredRemote = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isConfiguredRemote) {
+            return null;
+        }
+
+        GitRepositoryBrowser browser = gitScm.getBrowser();
+        if (browser == null) {
+            return null;
+        }
+
+        String browserUrl = browser.getRepoUrl();
+        if (browserUrl != null && !browserUrl.isEmpty() &&
+                (browserUrl.startsWith("http://") || browserUrl.startsWith("https://"))) {
+            return browserUrl;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the GitSCM instance from the run.
+     * Supports both AbstractBuild (Freestyle) and WorkflowRun (Pipeline) jobs.
+     *
+     * @param run the current run
+     * @return GitSCM instance or null if not found
+     */
+    @CheckForNull
+    private GitSCM getGitSCM(@CheckForNull Run<?, ?> run) {
+        if (run == null) {
+            return null;
+        }
+
+        // Try AbstractBuild (Freestyle jobs)
+        if (run instanceof AbstractBuild) {
+            AbstractBuild<?, ?> build = (AbstractBuild<?, ?>) run;
+            AbstractProject<?, ?> project = build.getProject();
+            if (project != null && project.getScm() instanceof GitSCM) {
+                return (GitSCM) project.getScm();
+            }
+        }
+
+        // Try WorkflowRun (Pipeline jobs) - parent is always non-null for Run
+        Object parent = run.getParent();
+
+        // Use reflection to check for getSCM() method
+        try {
+            java.lang.reflect.Method getScmMethod = parent.getClass().getMethod("getScm");
+            Object scm = getScmMethod.invoke(parent);
+            if (scm instanceof GitSCM) {
+                return (GitSCM) scm;
+            }
+        } catch (NoSuchMethodException e) {
+            LOGGER.log(Level.FINEST, "getSCM() method not found", e);
+        } catch (IllegalAccessException e) {
+            LOGGER.log(Level.FINEST, "Could not invoke getSCM() method", e);
+        } catch (InvocationTargetException e) {
+            LOGGER.log(Level.FINEST, "Error invoking getSCM() method", e);
+        }
+
+        return null;
+    }
+
 }
