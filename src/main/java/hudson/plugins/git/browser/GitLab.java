@@ -6,6 +6,7 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import hudson.Util;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 
@@ -103,7 +104,7 @@ public class GitLab extends GitRepositoryBrowser {
         final GitChangeSet changeSet = path.getChangeSet();
         String filelink;
         if (getVersionDouble() < 8.0) {
-            filelink = "#" + path.getPath();
+            filelink = "#" + Util.rawEncode(path.getPath());
         } else {
             filelink = "#diff-" + getIndexOfPath(path);
         }
@@ -126,11 +127,11 @@ public class GitLab extends GitRepositoryBrowser {
             return getDiffLink(path);
         } else {
             if (getVersionDouble() <= 4.2) {
-                return encodeURL(new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath()));
+                return encodeURL(new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + Util.rawEncode(path.getPath())));
             } else if (getVersionDouble() < 5.1) {
-                return encodeURL(new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath()));
+                return encodeURL(new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + Util.rawEncode(path.getPath())));
             } else {
-                return encodeURL(new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath()));
+                return encodeURL(new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + Util.rawEncode(path.getPath())));
             }
         }
     }
