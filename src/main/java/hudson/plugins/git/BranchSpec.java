@@ -159,6 +159,9 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
             String regexSubstring = expandedName.substring(1, expandedName.length());
             return Pattern.compile(regexSubstring);
         }
+        if (expandedName.startsWith("refs/changes/")) {
+            return Pattern.compile(Pattern.quote(expandedName));
+        }
         if (repositoryName != null) {
             // remove the "refs/.../" stuff from the branch-spec if necessary
             String pattern = cutRefs(expandedName)
