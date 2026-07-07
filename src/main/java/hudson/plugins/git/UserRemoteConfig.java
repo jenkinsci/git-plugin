@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -20,6 +21,7 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.BitbucketOAuthHelper;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
 import org.apache.commons.lang3.StringUtils;
@@ -62,6 +64,20 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         this.credentialsId = fixEmpty(credentialsId);
         if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(this.credentialsId) && StringUtils.startsWith(this.url, "http:")) {
             throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
+        }
+        if (StringUtils.isNotBlank(this.url) && StringUtils.isNotBlank(this.credentialsId)) {
+            Jenkins jenkins = Jenkins.getInstanceOrNull();
+            if (jenkins != null && BitbucketOAuthHelper.isBitbucketCloudRemote(this.url)) {
+                StandardCredentials credential = CredentialsProvider.findCredentialByIdInItem(
+                        this.credentialsId,
+                        StandardCredentials.class,
+                        jenkins,
+                        ACL.SYSTEM2,
+                        GitURIRequirementsBuilder.fromUri(this.url).build());
+                if (credential instanceof StandardUsernamePasswordCredentials usernamePasswordCredentials) {
+                    this.url = BitbucketOAuthHelper.buildOAuthRemoteUrl(this.url, usernamePasswordCredentials);
+                }
+            }
         }
     }
 
