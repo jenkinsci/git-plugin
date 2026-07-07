@@ -43,7 +43,7 @@ public final class BitbucketOAuthHelper {
      */
     @NonNull
     public static String buildOAuthRemoteUrl(@CheckForNull String remote, @CheckForNull StandardUsernamePasswordCredentials credentials) {
-        if (credentials == null || credentials.getPassword() == null) {
+        if (credentials == null) {
             return buildOAuthRemoteUrl(remote, (String) null);
         }
         return buildOAuthRemoteUrl(remote, credentials.getPassword().getPlainText());
