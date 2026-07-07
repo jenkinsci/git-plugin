@@ -14,6 +14,7 @@ class BitbucketOAuthHelperTest {
     void shouldRecognizeBitbucketCloudRemotes() {
         assertThat(BitbucketOAuthHelper.isBitbucketCloudRemote("https://bitbucket.org/team/repo.git"), is(true));
         assertThat(BitbucketOAuthHelper.isBitbucketCloudRemote("ssh://git@bitbucket.org/team/repo.git"), is(true));
+        assertThat(BitbucketOAuthHelper.isBitbucketCloudRemote("git@bitbucket.org:team/repo.git"), is(true));
         assertThat(BitbucketOAuthHelper.isBitbucketCloudRemote("https://github.com/team/repo.git"), is(false));
         assertThat(BitbucketOAuthHelper.isBitbucketCloudRemote(null), is(false));
     }
@@ -30,6 +31,15 @@ class BitbucketOAuthHelperTest {
     void shouldLeaveNonBitbucketRemotesUnchanged() {
         String remote = "https://github.com/team/repo.git";
         assertThat(BitbucketOAuthHelper.buildOAuthRemoteUrl(remote, "example-token"), equalTo(remote));
+    }
+
+    @Test
+    void shouldLeaveNonHttpBitbucketRemotesUnchanged() {
+        String sshRemote = "ssh://git@bitbucket.org/team/repo.git";
+        String scpRemote = "git@bitbucket.org:team/repo.git";
+
+        assertThat(BitbucketOAuthHelper.buildOAuthRemoteUrl(sshRemote, "example-token"), equalTo(sshRemote));
+        assertThat(BitbucketOAuthHelper.buildOAuthRemoteUrl(scpRemote, "example-token"), equalTo(scpRemote));
     }
 
     @Test

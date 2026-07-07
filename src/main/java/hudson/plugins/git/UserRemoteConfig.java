@@ -4,7 +4,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -21,7 +20,6 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.BitbucketOAuthHelper;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
 import org.apache.commons.lang3.StringUtils;
@@ -65,15 +63,6 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(this.credentialsId) && StringUtils.startsWith(this.url, "http:")) {
             throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
         }
-        if (StringUtils.isNotBlank(this.url) && StringUtils.isNotBlank(this.credentialsId)) {
-            Jenkins jenkins = Jenkins.getInstanceOrNull();
-            if (jenkins != null && BitbucketOAuthHelper.isBitbucketCloudRemote(this.url)) {
-                StandardCredentials credential = lookupCredentials(this.credentialsId, this.url);
-                if (credential instanceof StandardUsernamePasswordCredentials usernamePasswordCredentials) {
-                    this.url = BitbucketOAuthHelper.buildOAuthRemoteUrl(this.url, usernamePasswordCredentials);
-                }
-            }
-        }
     }
 
     @Exported
@@ -109,14 +98,14 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
     private final static Pattern SCP_LIKE = Pattern.compile("(.*):(.*)");
 
-    private static StandardCredentials lookupCredentials(@CheckForNull String credentialId, @CheckForNull String uri) {
+    private static StandardCredentials lookupCredentials(@CheckForNull Item item, @CheckForNull String credentialId, @CheckForNull String uri) {
         if (credentialId == null || uri == null) {
             return null;
         }
         return CredentialsProvider.findCredentialByIdInItem(
                 credentialId,
                 StandardCredentials.class,
-                (Item) null,
+                item,
                 ACL.SYSTEM2,
                 GitURIRequirementsBuilder.fromUri(uri).build());
     }
@@ -231,7 +220,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             GitClient git = Git.with(TaskListener.NULL, environment)
                     .using(GitTool.getDefaultInstallation().getGitExe())
                     .getClient();
-            StandardCredentials credential = lookupCredentials(credentialsId, url);
+            StandardCredentials credential = lookupCredentials(item, credentialsId, url);
             git.addDefaultCredentials(credential);
 
             // Should not track credentials use in any checkURL method, rather should track

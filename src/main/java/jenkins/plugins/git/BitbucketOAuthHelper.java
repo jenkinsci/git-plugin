@@ -18,7 +18,8 @@ import java.util.regex.Pattern;
  */
 public final class BitbucketOAuthHelper {
 
-    private static final Pattern BITBUCKET_CLOUD_HOST = Pattern.compile("^(?:https?|ssh)://(?:[^@/]+@)?bitbucket\\.org(?:/|$)");
+    private static final Pattern BITBUCKET_CLOUD_HOST = Pattern.compile(
+            "^(?:(?:https?|ssh)://(?:[^@/]+@)?bitbucket\\.org(?:/|$)|[^@/:]+@bitbucket\\.org:.+)");
 
     private BitbucketOAuthHelper() {
         // Utility class.
@@ -64,7 +65,7 @@ public final class BitbucketOAuthHelper {
             String query = uri.getRawQuery();
             String fragment = uri.getRawFragment();
 
-            if (scheme == null || host == null) {
+            if (scheme == null || host == null || !("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))) {
                 return remote;
             }
 
