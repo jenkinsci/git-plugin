@@ -1,12 +1,12 @@
 package jenkins.plugins.git;
 
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
 
 class BitbucketOAuthHelperTest {
 
@@ -20,32 +20,23 @@ class BitbucketOAuthHelperTest {
     }
 
     @Test
-    void shouldBuildOAuthRemoteUrlsForBitbucketCloud() {
-        String remote = "https://bitbucket.org/team/repo.git";
-        String oauthRemote = BitbucketOAuthHelper.buildOAuthRemoteUrl(remote, "example-token");
+    void shouldProvideTransientOAuthCredentialForBitbucketCloud() throws Exception {
+        StandardUsernameCredentials original = new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, "oauth", "OAuth token", "ignored", "example-token");
 
-        assertThat(oauthRemote, equalTo("https://x-token-auth:example-token@bitbucket.org/team/repo.git"));
+        StandardUsernameCredentials adapted = BitbucketOAuthHelper.credentialsFor(
+                "https://bitbucket.org/team/repo.git", original);
+
+        assertThat(adapted.getUsername(), is("x-token-auth"));
+        assertThat(adapted.getId(), is("oauth"));
+        assertThat(((UsernamePasswordCredentialsImpl) adapted).getPassword().getPlainText(), is("example-token"));
     }
 
     @Test
-    void shouldLeaveNonBitbucketRemotesUnchanged() {
-        String remote = "https://github.com/team/repo.git";
-        assertThat(BitbucketOAuthHelper.buildOAuthRemoteUrl(remote, "example-token"), equalTo(remote));
-    }
+    void shouldLeaveNonBitbucketCredentialsUnchanged() throws Exception {
+        StandardUsernameCredentials original = new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, "oauth", "OAuth token", "ignored", "example-token");
 
-    @Test
-    void shouldLeaveNonHttpBitbucketRemotesUnchanged() {
-        String sshRemote = "ssh://git@bitbucket.org/team/repo.git";
-        String scpRemote = "git@bitbucket.org:team/repo.git";
-
-        assertThat(BitbucketOAuthHelper.buildOAuthRemoteUrl(sshRemote, "example-token"), equalTo(sshRemote));
-        assertThat(BitbucketOAuthHelper.buildOAuthRemoteUrl(scpRemote, "example-token"), equalTo(scpRemote));
-    }
-
-    @Test
-    void shouldMaskTokensForSafeLogging() {
-        String masked = BitbucketOAuthHelper.maskTokenForLogging("https://x-token-auth:example-token@bitbucket.org/team/repo.git");
-        assertThat(masked, equalTo("https://x-token-auth:***@bitbucket.org/team/repo.git"));
-        assertThat(masked, not(nullValue()));
+        assertThat(BitbucketOAuthHelper.credentialsFor("https://github.com/team/repo.git", original), is(original));
     }
 }

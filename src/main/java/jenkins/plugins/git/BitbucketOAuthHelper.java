@@ -1,22 +1,23 @@
 package jenkins.plugins.git;
 
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.regex.Pattern;
 
 /**
  * Helper utilities for Bitbucket OAuth-aware remote handling.
  *
- * <p>The Bitbucket Cloud API accepts an OAuth or app-password token via the
- * x-token-auth scheme. When a build runs against a Bitbucket Cloud repository,
- * the git remote can be rewritten to include that token in a way that keeps the
- * existing git transport behavior intact.</p>
+ * <p>Bitbucket Cloud accepts OAuth access tokens for Git-over-HTTPS with the
+ * {@value #OAUTH_USERNAME} username. The token is supplied to the Git client
+ * as a password credential; it is never added to the configured remote URL.</p>
  */
 public final class BitbucketOAuthHelper {
+
+    static final String OAUTH_USERNAME = "x-token-auth";
 
     private static final Pattern BITBUCKET_CLOUD_HOST = Pattern.compile(
             "^(?:(?:https?|ssh)://(?:[^@/]+@)?bitbucket\\.org(?:/|$)|[^@/:]+@bitbucket\\.org:.+)");
@@ -36,63 +37,25 @@ public final class BitbucketOAuthHelper {
     }
 
     /**
-     * Rewrites a Bitbucket Cloud remote to include an OAuth token in the userinfo
-     * portion of the URL when a token is present.
-     *
-     * <p>This preserves the remote shape for git while avoiding any changes for
-     * non-Bitbucket remotes.</p>
+     * Returns a transient Git transport credential for a Bitbucket Cloud OAuth token.
+     * The configured Git remote remains unchanged.
      */
     @NonNull
-    public static String buildOAuthRemoteUrl(@CheckForNull String remote, @CheckForNull StandardUsernamePasswordCredentials credentials) {
-        if (credentials == null) {
-            return buildOAuthRemoteUrl(remote, (String) null);
+    public static StandardUsernameCredentials credentialsFor(
+            @CheckForNull String remote, @NonNull StandardUsernameCredentials credentials) {
+        if (!isBitbucketCloudRemote(remote) || !(credentials instanceof StandardUsernamePasswordCredentials usernamePassword)) {
+            return credentials;
         }
-        return buildOAuthRemoteUrl(remote, credentials.getPassword().getPlainText());
-    }
-
-    @NonNull
-    public static String buildOAuthRemoteUrl(@CheckForNull String remote, @CheckForNull String token) {
-        if (!isBitbucketCloudRemote(remote) || token == null || token.isBlank()) {
-            return remote == null ? "" : remote;
-        }
-
         try {
-            URI uri = new URI(remote);
-            String scheme = uri.getScheme();
-            String userInfo = "x-token-auth:" + token;
-            String host = uri.getHost();
-            String path = uri.getRawPath();
-            String query = uri.getRawQuery();
-            String fragment = uri.getRawFragment();
-
-            if (scheme == null || host == null || !("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))) {
-                return remote;
-            }
-
-            return new URI(scheme, userInfo, host, uri.getPort(), path, query, fragment).toString();
-        } catch (URISyntaxException e) {
-            return remote;
+            return new UsernamePasswordCredentialsImpl(
+                    usernamePassword.getScope(),
+                    usernamePassword.getId(),
+                    usernamePassword.getDescription(),
+                    OAUTH_USERNAME,
+                    usernamePassword.getPassword().getPlainText());
+        } catch (hudson.model.Descriptor.FormException exception) {
+            throw new IllegalArgumentException("Unable to create Bitbucket OAuth credential", exception);
         }
-    }
-
-    /**
-     * Masks the token portion of a remote URL so that logs do not expose secrets.
-     */
-    @NonNull
-    public static String maskTokenForLogging(@CheckForNull String remote) {
-        if (remote == null || remote.isBlank()) {
-            return "";
-        }
-
-        String sanitized = remote;
-        int atIndex = sanitized.lastIndexOf('@');
-        if (atIndex > -1) {
-            int colonIndex = sanitized.indexOf(':', sanitized.indexOf("//") + 2);
-            if (colonIndex > -1 && colonIndex < atIndex) {
-                sanitized = sanitized.substring(0, colonIndex + 1) + "***" + sanitized.substring(atIndex);
-            }
-        }
-        return sanitized;
     }
 
     /**

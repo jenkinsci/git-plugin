@@ -48,6 +48,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.BitbucketOAuthHelper;
 import jenkins.plugins.git.GitHooksConfiguration;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import jenkins.plugins.git.GitToolChooser;
@@ -921,7 +922,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 String url = getParameterString(uc.getUrl(), environment);
                 StandardUsernameCredentials credentials = lookupScanCredentials(build, url, ucCredentialsId);
                 if (credentials != null) {
-                    c.addCredentials(url, credentials);
+                    c.addCredentials(url, BitbucketOAuthHelper.credentialsFor(url, credentials));
                     if(!isHideCredentials()) {
                         listener.getLogger().printf("using credential %s%n", credentials.getId());
                     }
