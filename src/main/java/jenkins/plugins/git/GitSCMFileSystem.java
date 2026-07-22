@@ -69,6 +69,7 @@ import jenkins.scm.api.SCMSourceDescriptor;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -115,7 +116,17 @@ public class GitSCMFileSystem extends SCMFileSystem {
         cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
         listener = new LogTaskListener(LOGGER, Level.FINER);
         this.client = client;
-        commitId = rev == null ? invoke((Repository repository) -> repository.findRef(head).getObjectId()) : ObjectId.fromString(rev.getHash());
+        if (rev == null) {
+            commitId = invoke((Repository repository) -> {
+                Ref ref = repository.findRef(head);
+                if (ref == null) {
+                    throw new IOException("Expected ref " + head + " was not created by preceding git fetch");
+                }
+                return repository.findRef(head).getObjectId();
+            });
+        } else {
+            commitId = ObjectId.fromString(rev.getHash());
+        }
     }
 
     @Override

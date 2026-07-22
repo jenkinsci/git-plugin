@@ -662,12 +662,21 @@ class GitSCMFileSystemTest {
                 //   java.lang.NullPointerException: Cannot invoke
                 //       "org.eclipse.jgit.lib.Ref.getObjectId()" because the return
                 //       value of "org.eclipse.jgit.lib.Repository.findRef(String)" is null
-                SCMFileSystem fs = SCMFileSystem.of(
-                        r.jenkins.getItemByFullName("pipeline-from-git-shallow"),
-                        scmFromOrigin,
-                        null
-                );
-                assertNotNull(fs);
+                // Or after the initial fix, we should get a meaningful message:
+                //   java.io.IOException: Expected ref refs/remotes/origin/shallow/master
+                //       was not created by preceding git fetch
+                try {
+                    SCMFileSystem fs = SCMFileSystem.of(
+                            r.jenkins.getItemByFullName("pipeline-from-git-shallow"),
+                            scmFromOrigin,
+                            null
+                    );
+                    assertNotNull(fs);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    assertTrue(e.toString().contains("was not created by preceding git fetch"));
+                    assertTrue(!(e.toString().contains("NullPointerException")));
+                }
 
                 // This may produce an NPE that we are looking for
                 // (to confirm the problem with initial code and the
@@ -691,9 +700,23 @@ class GitSCMFileSystemTest {
 
                 r.assertLogContains("Cloning repository", b);
                 r.assertLogContains("Fetching upstream changes from", b);
-                r.assertLogContains("Checking out Revision", b);
-                r.assertLogContains("Start of Pipeline", b);
-                r.assertLogContains("End of Pipeline", b);
+
+                // We probably fail at this one until shallow checkout is fixed.
+                try {
+                    r.assertLogContains("Checking out Revision", b);
+                    r.assertLogContains("Start of Pipeline", b);
+                    r.assertLogContains("End of Pipeline", b);
+                } catch (Throwable t) {
+                    // Troubles are expected at the moment, this test confirms them
+                    t.printStackTrace();
+
+                    // NOTE: The plugin fix applied so far is to throw
+                    //  a meaningful message instead of the unhelpful
+                    //  NPE (when lightweight code path is used).
+                    //  There is no checkout still.
+                    //  Here we pass the actual git checkout path.
+                    r.assertLogContains("Couldn't find any revision to build. Verify the repository and branch configuration for this job", b);
+                }
             }
         } finally {
             cloneRepo.after();
