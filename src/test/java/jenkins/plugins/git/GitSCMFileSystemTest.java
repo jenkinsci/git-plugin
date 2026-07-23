@@ -684,26 +684,21 @@ class GitSCMFileSystemTest {
 
                 // This is the code path used by Pipeline lightweight checkout
                 // with the bare repo used as origin git source for the pipeline.
-                // This is actually the point where the test fails with broken
-                // plugin versions:
+                // This is actually the point where the test failed when the
+                // research for https://github.com/jenkinsci/git-plugin/pull/3988
+                // was started, with broken plugin versions (5.10.1 and older):
                 //   java.lang.NullPointerException: Cannot invoke
                 //       "org.eclipse.jgit.lib.Ref.getObjectId()" because the return
                 //       value of "org.eclipse.jgit.lib.Repository.findRef(String)" is null
-                // Or after the initial fix, we should get a meaningful message:
+                // An intermediate fix reported a meaningful message instead:
                 //   java.io.IOException: Expected ref refs/remotes/origin/shallow/master
                 //       was not created by preceding git fetch
-                try {
-                    SCMFileSystem fs = SCMFileSystem.of(
-                            r.jenkins.getItemByFullName("pipeline-from-git-shallow"),
-                            scmFromOrigin,
-                            null
-                    );
-                    assertNotNull(fs);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    assertTrue(e.toString().contains("was not created by preceding git fetch"));
-                    assertTrue(!(e.toString().contains("NullPointerException")));
-                }
+                // The fix applied here retries the fetch through JGit (which does not
+                // refuse to update refs that would introduce a new shallow root), so
+                // this should now succeed and return a usable filesystem.
+                SCMFileSystem fs =
+                        SCMFileSystem.of(r.jenkins.getItemByFullName("pipeline-from-git-shallow"), scmFromOrigin, null);
+                assertNotNull(fs);
 
                 // This may produce an NPE that we are looking for
                 // (to confirm the problem with initial code and the

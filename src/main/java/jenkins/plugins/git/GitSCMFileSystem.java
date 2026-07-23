@@ -55,6 +55,7 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -106,10 +107,12 @@ public class GitSCMFileSystem extends SCMFileSystem {
      * @param head   identifier for the head commit to be referenced
      * @param rev    the revision.
      * @throws IOException on I/O error
+     * @throws GitRefNotFoundException (extends IOException) if the "head" reference is not found
      * @throws InterruptedException on thread interruption
      */
-    protected GitSCMFileSystem(GitClient client, String remote, final String head, @CheckForNull
-            AbstractGitSCMSource.SCMRevisionImpl rev) throws IOException, InterruptedException {
+    protected GitSCMFileSystem(
+            GitClient client, String remote, final String head, @CheckForNull AbstractGitSCMSource.SCMRevisionImpl rev)
+            throws IOException, InterruptedException {
         super(rev);
         this.remote = remote;
         this.head = head;
@@ -120,12 +123,39 @@ public class GitSCMFileSystem extends SCMFileSystem {
             commitId = invoke((Repository repository) -> {
                 Ref ref = repository.findRef(head);
                 if (ref == null) {
-                    throw new IOException("Expected ref " + head + " was not created by preceding git fetch");
+                    throw new GitRefNotFoundException(head);
                 }
-                return repository.findRef(head).getObjectId();
+                return ref.getObjectId();
             });
         } else {
             commitId = ObjectId.fromString(rev.getHash());
+        }
+    }
+
+    /**
+     * Thrown when the local git cache does not contain the ref expected to
+     * be checked out, even though the preceding {@code git fetch} reported
+     * success. This happens when the remote named ref (branch or tag) is
+     * itself a shallow clone: git tooling receives the requested objects
+     * but silently refuses to create or update the local ref, because doing
+     * so would record a new shallow root (so it logs "shallow roots are not
+     * allowed to be updated").
+     */
+    public static class GitRefNotFoundException extends IOException {
+        private final String ref;
+
+        GitRefNotFoundException(String ref) {
+            super("Expected ref " + ref + " was not created by preceding git fetch");
+            this.ref = ref;
+        }
+
+        /**
+         * The ref that was expected but missing from the local cache.
+         *
+         * @return the ref name
+         */
+        public String getRef() {
+            return ref;
         }
     }
 
@@ -415,12 +445,20 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
                 HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, env);
 
-                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
-                        "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                + headNameResult.headName))).execute();
+                List<RefSpec> refSpecs =
+                        Collections.singletonList(new RefSpec("+" + headNameResult.prefix + headNameResult.headName
+                                + ":" + Constants.R_REMOTES + remoteName + "/" + headNameResult.headName));
+                client.fetch_().prune(true).from(remoteURI, refSpecs).execute();
 
                 listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
+                return buildFileSystem(
+                        client,
+                        remote,
+                        Constants.R_REMOTES + remoteName + "/" + headNameResult.headName,
+                        (AbstractGitSCMSource.SCMRevisionImpl) rev,
+                        remoteURI,
+                        refSpecs,
+                        listener);
             } catch (GitException x) {
                 throw new IOException(x);
             } finally {
@@ -464,14 +502,95 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                client.fetch_().prune(true).from(remoteURI, builder.asRefSpecs()).execute();
+                List<RefSpec> refSpecs = builder.asRefSpecs();
+                client.fetch_().prune(true).from(remoteURI, refSpecs).execute();
                 listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, gitSCMSource.getRemote(), Constants.R_REMOTES+remoteName+"/"+head.getName(),
-                        (AbstractGitSCMSource.SCMRevisionImpl) rev);
+                return buildFileSystem(
+                        client,
+                        gitSCMSource.getRemote(),
+                        Constants.R_REMOTES + remoteName + "/" + head.getName(),
+                        (AbstractGitSCMSource.SCMRevisionImpl) rev,
+                        remoteURI,
+                        refSpecs,
+                        listener);
             } catch (GitException x) {
                 throw new IOException(x);
             } finally {
                 cacheLock.unlock();
+            }
+        }
+
+        /**
+         * Builds a {@link GitSCMFileSystem}, retrying once through JGit's
+         * own fetch implementation if the expected ref is missing from the
+         * cache after the initial command line git fetch.<br/>
+         *
+         * Command line git refuses to create or update a ref when doing
+         * so would require recording a new shallow root, which can happen
+         * when the configured remote is itself a shallow clone (for example,
+         * a minimized offline repository snapshot). The fetch itself reports
+         * success, and the objects are transferred into the new repository
+         * index, but the symbolic ref is left missing and
+         * {@link GitSCMFileSystem}'s constructor throws a
+         * {@link GitRefNotFoundException}.<br/>
+         *
+         * JGit's own fetch implementation does not apply that restriction,
+         * so retrying the same fetch directly through JGit against the cache
+         * repository recovers the missing ref without needing any additional
+         * configuration from the user.<br/>
+         *
+         * TOTHINK: We *might* implement this with `git fetch --update-shallow`
+         * using the CLI tool as well, but that would need extending the
+         * FetchCommand interface and implementations. It may also depend on
+         * the abilities of the particular git tool version installed on a node.
+         * In this plugin we have jGit anyway, and its abilities seem to
+         * suffice for this task, so there is little need to pile complexity
+         * in favor of pedantism. This stance can be revised if needed.<br/>
+         *
+         * @param client the client
+         * @param remote the remote GIT URL
+         * @param ref the ref expected to be checked out, e.g. {@code refs/remotes/origin/master}
+         * @param rev the revision, or {@code null} to resolve {@code ref} from the cache
+         * @param remoteURI the URI passed to the preceding fetch, may be {@code null}
+         * @param refSpecs the ref specs passed to the preceding fetch
+         * @param listener where to log the retry attempt
+         * @return the resulting {@link GitSCMFileSystem}
+         * @throws IOException on I/O error, including when the ref is still missing after the retry
+         * @throws InterruptedException on thread interruption
+         */
+        private static GitSCMFileSystem buildFileSystem(
+                GitClient client,
+                String remote,
+                String ref,
+                @CheckForNull AbstractGitSCMSource.SCMRevisionImpl rev,
+                @CheckForNull URIish remoteURI,
+                List<RefSpec> refSpecs,
+                TaskListener listener)
+                throws IOException, InterruptedException {
+            try {
+                return new GitSCMFileSystem(client, remote, ref, rev);
+            } catch (GitRefNotFoundException refNotFoundException) {
+                listener.getLogger()
+                        .println("Ref " + ref + " missing after fetch, retrying through JGit in case "
+                                + "the remote is a shallow clone or snapshot");
+                try {
+                    client.<Void>withRepository((Repository repository, VirtualChannel channel) -> {
+                        try {
+                            org.eclipse.jgit.api.Git.wrap(repository)
+                                    .fetch()
+                                    .setRemote(remoteURI != null ? remoteURI.toString() : remote)
+                                    .setRefSpecs(refSpecs)
+                                    .call();
+                        } catch (org.eclipse.jgit.api.errors.GitAPIException e) {
+                            throw new IOException(e);
+                        }
+                        return null;
+                    });
+                } catch (IOException fallbackFailure) {
+                    refNotFoundException.addSuppressed(fallbackFailure);
+                    throw refNotFoundException;
+                }
+                return new GitSCMFileSystem(client, remote, ref, rev);
             }
         }
     }
