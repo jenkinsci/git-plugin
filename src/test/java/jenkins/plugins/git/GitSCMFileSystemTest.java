@@ -28,6 +28,7 @@ package jenkins.plugins.git;
 import hudson.EnvVars;
 import hudson.model.Result;
 import hudson.model.TaskListener;
+import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitException;
@@ -513,13 +514,39 @@ class GitSCMFileSystemTest {
          * containers, tailored for a purpose like offline automation.
          */
         File gitDir = new File(".");
-        //GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
 
         sampleRepo.initBare();
-        sampleRepo.git("fetch", "--depth=1", gitDir.getAbsolutePath(), "master");
 
-        // NOTE: Code below is repeatable if multiple branches should be
-        // provided via shallow replicas:
+        // Here we parameterize branchNameOriginal more due to the fact
+        // that in e.g. automated Jenkins CI builds a PR source branch
+        // of git-plugin might be the only named ref checked out in the
+        // build workspace, and so the run-time would not necessarily
+        // know about a "master" to fetch. We can still name the branch
+        // made from a FETCH_HEAD in the sampleRepo replica whatever we
+        // like (e.g. branchName="master" as expected by test cases).
+        String branchNameOriginal = null;
+        try {
+            // Pick any, actually
+            for (Branch b : client.getBranches()) {
+                branchNameOriginal = b.getName();
+                break;
+            }
+        } catch (Exception ignored) {
+            // no-op, fall back to master below
+            ignored.printStackTrace();
+        }
+
+        if (branchNameOriginal == null) {
+            branchNameOriginal = "master";
+        }
+
+        sampleRepo.git("fetch", "--depth=1", gitDir.getAbsolutePath(), branchNameOriginal);
+
+        // NOTE: Code below (after the initial "fetch") is repeatable
+        // if multiple branches should be provided via shallow replicas.
+        // Our tests expect to see a "master" so we name whatever we
+        // did fetch like that.
         String branchName = "master";
 
         // The fetch (if successful) updated the local repository index,
