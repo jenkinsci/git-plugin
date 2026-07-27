@@ -52,10 +52,15 @@ final class BitbucketOAuthTokenClient {
     }
 
     private static CachedToken requestToken(String clientKey, String clientSecret) {
+        return requestToken(HTTP_CLIENT, TOKEN_ENDPOINT, clientKey, clientSecret);
+    }
+
+    static CachedToken requestToken(
+            HttpClient httpClient, URI tokenEndpoint, String clientKey, String clientSecret) {
         String basicCredential = Base64.getEncoder().encodeToString(
                 (clientKey + ":" + clientSecret).getBytes(StandardCharsets.UTF_8));
         String body = "grant_type=" + URLEncoder.encode("client_credentials", StandardCharsets.UTF_8);
-        HttpRequest request = HttpRequest.newBuilder(TOKEN_ENDPOINT)
+        HttpRequest request = HttpRequest.newBuilder(tokenEndpoint)
                 .timeout(REQUEST_TIMEOUT)
                 .header("Authorization", "Basic " + basicCredential)
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -63,7 +68,7 @@ final class BitbucketOAuthTokenClient {
                 .build();
 
         try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new IllegalArgumentException(
                         "Bitbucket OAuth token request failed with HTTP " + response.statusCode());
@@ -95,7 +100,7 @@ final class BitbucketOAuthTokenClient {
         }
     }
 
-    private static final class CachedToken {
+    static final class CachedToken {
         private final String value;
         private final Instant expiresAt;
 
@@ -106,6 +111,14 @@ final class BitbucketOAuthTokenClient {
 
         private boolean isUsable() {
             return Instant.now().plus(EXPIRY_MARGIN).isBefore(expiresAt);
+        }
+
+        String value() {
+            return value;
+        }
+
+        Instant expiresAt() {
+            return expiresAt;
         }
     }
 }

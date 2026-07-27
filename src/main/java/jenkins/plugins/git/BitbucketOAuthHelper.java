@@ -41,8 +41,12 @@ public final class BitbucketOAuthHelper {
     }
 
     /**
-     * Returns a transient Git transport credential for a Bitbucket Cloud OAuth token.
-     * The configured Git remote remains unchanged.
+     * Returns a transient Git transport credential when an HTTPS Bitbucket Cloud
+     * remote is paired with OAuth consumer credentials.
+     *
+     * <p>Other providers, Bitbucket SSH remotes, app passwords, and credentials
+     * that already contain an access token are returned unchanged. The configured
+     * Git remote is never rewritten.</p>
      */
     @NonNull
     public static StandardUsernameCredentials credentialsFor(
@@ -76,6 +80,9 @@ public final class BitbucketOAuthHelper {
     }
 
     private static boolean isOAuthConsumer(StandardUsernamePasswordCredentials credentials) {
+        // Keep this aligned with BitbucketOAuthCredentialMatcher in the
+        // bitbucket-branch-source plugin. It distinguishes consumer key/secret
+        // pairs from user credentials and app passwords.
         String clientKey = credentials.getUsername();
         String clientSecret = credentials.getPassword().getPlainText();
         return clientKey.length() == OAUTH_CLIENT_KEY_LENGTH
