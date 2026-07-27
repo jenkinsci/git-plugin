@@ -20,6 +20,7 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.BitbucketOAuthHelper;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
 import org.apache.commons.lang3.StringUtils;
@@ -221,7 +222,11 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                     .using(GitTool.getDefaultInstallation().getGitExe())
                     .getClient();
             StandardCredentials credential = lookupCredentials(item, credentialsId, url);
-            git.addDefaultCredentials(credential);
+            if (credential instanceof StandardUsernameCredentials usernameCredential) {
+                git.addDefaultCredentials(BitbucketOAuthHelper.credentialsFor(url, usernameCredential));
+            } else {
+                git.addDefaultCredentials(credential);
+            }
 
             // Should not track credentials use in any checkURL method, rather should track
             // credentials use at the point where the credential is used to perform an
