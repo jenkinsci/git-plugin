@@ -59,4 +59,28 @@ class BitbucketOAuthHelperTest {
 
         assertThat(BitbucketOAuthHelper.credentialsFor("https://bitbucket.org/team/repo.git", original), is(original));
     }
+
+    @Test
+    void shouldNotExchangeOAuthConsumerCredentialsForSsh() throws Exception {
+        StandardUsernameCredentials original = new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL,
+                "oauth",
+                "OAuth consumer",
+                "123456789012345678",
+                "12345678901234567890123456789012");
+
+        BitbucketOAuthHelper.OAuthTokenProvider unexpectedProvider =
+                (id, key, secret) -> {
+                    throw new AssertionError("OAuth token provider must not be called for SSH");
+                };
+
+        assertThat(
+                BitbucketOAuthHelper.credentialsFor(
+                        "ssh://git@bitbucket.org/team/repo.git", original, unexpectedProvider),
+                is(original));
+        assertThat(
+                BitbucketOAuthHelper.credentialsFor(
+                        "git@bitbucket.org:team/repo.git", original, unexpectedProvider),
+                is(original));
+    }
 }

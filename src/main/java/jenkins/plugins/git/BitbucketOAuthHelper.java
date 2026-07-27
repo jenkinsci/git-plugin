@@ -23,6 +23,8 @@ public final class BitbucketOAuthHelper {
 
     private static final Pattern BITBUCKET_CLOUD_HOST = Pattern.compile(
             "^(?:(?:https?|ssh)://(?:[^@/]+@)?bitbucket\\.org(?:/|$)|[^@/:]+@bitbucket\\.org:.+)");
+    private static final Pattern BITBUCKET_CLOUD_HTTPS_HOST = Pattern.compile(
+            "^https://(?:[^@/]+@)?bitbucket\\.org(?:/|$)");
 
     private BitbucketOAuthHelper() {
         // Utility class.
@@ -52,7 +54,7 @@ public final class BitbucketOAuthHelper {
             @CheckForNull String remote,
             @NonNull StandardUsernameCredentials credentials,
             @NonNull OAuthTokenProvider tokenProvider) {
-        if (!isBitbucketCloudRemote(remote)
+        if (!isBitbucketCloudHttpsRemote(remote)
                 || !(credentials instanceof StandardUsernamePasswordCredentials usernamePassword)
                 || !isOAuthConsumer(usernamePassword)) {
             return credentials;
@@ -80,6 +82,10 @@ public final class BitbucketOAuthHelper {
                 && clientSecret.length() == OAUTH_CLIENT_SECRET_LENGTH
                 && !clientKey.contains(".")
                 && !clientKey.contains("@");
+    }
+
+    private static boolean isBitbucketCloudHttpsRemote(@CheckForNull String remote) {
+        return remote != null && BITBUCKET_CLOUD_HTTPS_HOST.matcher(remote).find();
     }
 
     @FunctionalInterface
