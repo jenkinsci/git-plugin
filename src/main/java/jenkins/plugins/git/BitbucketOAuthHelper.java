@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
 public final class BitbucketOAuthHelper {
 
     static final String OAUTH_USERNAME = "x-token-auth";
+    private static final int OAUTH_CLIENT_KEY_LENGTH = 18;
+    private static final int OAUTH_CLIENT_SECRET_LENGTH = 32;
 
     private static final Pattern BITBUCKET_CLOUD_HOST = Pattern.compile(
             "^(?:(?:https?|ssh)://(?:[^@/]+@)?bitbucket\\.org(?:/|$)|[^@/:]+@bitbucket\\.org:.+)");
@@ -43,19 +45,46 @@ public final class BitbucketOAuthHelper {
     @NonNull
     public static StandardUsernameCredentials credentialsFor(
             @CheckForNull String remote, @NonNull StandardUsernameCredentials credentials) {
-        if (!isBitbucketCloudRemote(remote) || !(credentials instanceof StandardUsernamePasswordCredentials usernamePassword)) {
+        return credentialsFor(remote, credentials, BitbucketOAuthTokenClient::accessToken);
+    }
+
+    static StandardUsernameCredentials credentialsFor(
+            @CheckForNull String remote,
+            @NonNull StandardUsernameCredentials credentials,
+            @NonNull OAuthTokenProvider tokenProvider) {
+        if (!isBitbucketCloudRemote(remote)
+                || !(credentials instanceof StandardUsernamePasswordCredentials usernamePassword)
+                || !isOAuthConsumer(usernamePassword)) {
             return credentials;
         }
         try {
+            String accessToken = tokenProvider.accessToken(
+                    usernamePassword.getId(),
+                    usernamePassword.getUsername(),
+                    usernamePassword.getPassword().getPlainText());
             return new UsernamePasswordCredentialsImpl(
                     usernamePassword.getScope(),
                     usernamePassword.getId(),
                     usernamePassword.getDescription(),
                     OAUTH_USERNAME,
-                    usernamePassword.getPassword().getPlainText());
+                    accessToken);
         } catch (hudson.model.Descriptor.FormException exception) {
             throw new IllegalArgumentException("Unable to create Bitbucket OAuth credential", exception);
         }
+    }
+
+    private static boolean isOAuthConsumer(StandardUsernamePasswordCredentials credentials) {
+        String clientKey = credentials.getUsername();
+        String clientSecret = credentials.getPassword().getPlainText();
+        return clientKey.length() == OAUTH_CLIENT_KEY_LENGTH
+                && clientSecret.length() == OAUTH_CLIENT_SECRET_LENGTH
+                && !clientKey.contains(".")
+                && !clientKey.contains("@");
+    }
+
+    @FunctionalInterface
+    interface OAuthTokenProvider {
+        String accessToken(String credentialsId, String clientKey, String clientSecret);
     }
 
     /**
