@@ -439,7 +439,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         }
         List<RefSpec> result = new ArrayList<>(refSpecs.size());
         for (String refSpec : refSpecs) {
-            result.add(new RefSpec(refSpec));
+            result.add(new RefSpec(refSpec.trim()));
         }
         return result;
     }
