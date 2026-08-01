@@ -6,6 +6,7 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import hudson.Util;
 import net.sf.json.JSONObject;
 
 import org.jenkinsci.Symbol;
@@ -80,7 +81,7 @@ public class GithubWeb extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
-            final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
+            final String spec = "blob/" + path.getChangeSet().getId() + "/" + Util.rawEncode(path.getPath());
             return encodeURL(buildURL(spec));
         }
     }
