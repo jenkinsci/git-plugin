@@ -20,6 +20,7 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.BitbucketOAuthHelper;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.FIPS140;
 import org.apache.commons.lang3.StringUtils;
@@ -97,6 +98,18 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     }
 
     private final static Pattern SCP_LIKE = Pattern.compile("(.*):(.*)");
+
+    private static StandardCredentials lookupCredentials(@CheckForNull Item item, @CheckForNull String credentialId, @CheckForNull String uri) {
+        if (credentialId == null || uri == null) {
+            return null;
+        }
+        return CredentialsProvider.findCredentialByIdInItem(
+                credentialId,
+                StandardCredentials.class,
+                item,
+                ACL.SYSTEM2,
+                GitURIRequirementsBuilder.fromUri(uri).build());
+    }
 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
@@ -209,7 +222,11 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                     .using(GitTool.getDefaultInstallation().getGitExe())
                     .getClient();
             StandardCredentials credential = lookupCredentials(item, credentialsId, url);
-            git.addDefaultCredentials(credential);
+            if (credential instanceof StandardUsernameCredentials usernameCredential) {
+                git.addDefaultCredentials(BitbucketOAuthHelper.credentialsFor(url, usernameCredential));
+            } else {
+                git.addDefaultCredentials(credential);
+            }
 
             // Should not track credentials use in any checkURL method, rather should track
             // credentials use at the point where the credential is used to perform an
@@ -264,15 +281,6 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             }
 
             return FormValidation.ok();
-        }
-
-        private static StandardCredentials lookupCredentials(@CheckForNull Item project, String credentialId, String uri) {
-            return (credentialId == null) ? null : CredentialsProvider.findCredentialByIdInItem(
-                    credentialId,
-                    StandardCredentials.class,
-                    project,
-                    ACL.SYSTEM2,
-                    GitURIRequirementsBuilder.fromUri(uri).build());
         }
 
         @Override
