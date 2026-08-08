@@ -63,6 +63,36 @@ class GitChangeSetEmptyTest {
     }
 
     @Test
+    void testGetGitAuthorName() {
+        assertNull(changeSet.getGitAuthorName());
+    }
+
+    @Test
+    void testGetGitAuthorEmail() {
+        assertNull(changeSet.getGitAuthorEmail());
+    }
+
+    @Test
+    void testGetGitAuthorDate() {
+        assertNull(changeSet.getGitAuthorDate());
+    }
+
+    @Test
+    void testGetGitCommitterName() {
+        assertNull(changeSet.getGitCommitterName());
+    }
+
+    @Test
+    void testGetGitCommitterEmail() {
+        assertNull(changeSet.getGitCommitterEmail());
+    }
+
+    @Test
+    void testGetGitCommitterDate() {
+        assertNull(changeSet.getGitCommitterDate());
+    }
+
+    @Test
     void testGetMsg() {
         assertNull(changeSet.getMsg());
     }
