@@ -31,8 +31,9 @@ import java.util.stream.Stream;
  */
 public class GitChangeLogParser extends ChangeLogParser {
 
-    private boolean authorOrCommitter;
-    private boolean showEntireCommitSummaryInChanges;
+    private final boolean authorOrCommitter;
+    private final boolean showEntireCommitSummaryInChanges;
+    private final boolean showAuthorAndCommitter;
 
     /**
      * Git client plugin 2.x silently truncated the first line of a commit message when showing the changelog summary in
@@ -62,8 +63,19 @@ public class GitChangeLogParser extends ChangeLogParser {
      * @param authorOrCommitter read author name instead of committer name if true
      */
     public GitChangeLogParser(GitClient git, boolean authorOrCommitter) {
+        this(git, authorOrCommitter, false);
+    }
+
+    /**
+     * @param git the GitClient implementation to be used by the change log parser
+     * @param authorOrCommitter read author name instead of committer name if true
+     * @param showAuthorAndCommitter true when {@link hudson.plugins.git.extensions.impl.ShowAuthorAndCommitterInChangelog} is enabled
+     * @since TODO
+     */
+    public GitChangeLogParser(GitClient git, boolean authorOrCommitter, boolean showAuthorAndCommitter) {
         super();
         this.authorOrCommitter = authorOrCommitter;
+        this.showAuthorAndCommitter = showAuthorAndCommitter;
         /* Retain full commit summary if globally configured to retain full commit summary or if not using command line git.
          * That keeps change summary truncation compatible with git client plugin 2.x and git plugin 3.x for users of
          * command line git.
@@ -85,7 +97,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         throws IOException {
         // Parse the log file into GitChangeSet items - each one is a commit
         try (Stream<String> lineStream = Files.lines(changelogFile.toPath(), StandardCharsets.UTF_8)) {
-            return new GitChangeSetList(build, browser, parse(lineStream.iterator()));
+            return new GitChangeSetList(build, browser, parse(lineStream.iterator()), showAuthorAndCommitter);
         } catch (InvalidPathException e) {
             throw new IOException(e);
         }

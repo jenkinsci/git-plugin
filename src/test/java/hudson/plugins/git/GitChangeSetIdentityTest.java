@@ -4,13 +4,18 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import hudson.plugins.git.extensions.impl.ShowAuthorAndCommitterInChangelog;
 import hudson.scm.ChangeLogSet;
 import net.sf.json.JSONObject;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.htmlunit.Page;
+import org.htmlunit.html.HtmlPage;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -113,6 +118,29 @@ class GitChangeSetIdentityTest extends AbstractGitTestCase {
     }
 
     @Test
+    void testShowAuthorAndCommitterExtensionFlag() throws Exception {
+        // Given a project without ShowAuthorAndCommitterInChangelog
+        FreeStyleProject project = setupSimpleProject("master");
+        GitSCM scm = (GitSCM) project.getScm();
+
+        commit("initial.txt", johnDoe, "Initial commit");
+        build(project, Result.SUCCESS, "initial.txt");
+        testRepo.commit("ext-test.txt", "content", AUTHOR, COMMITTER, "Extension test");
+        FreeStyleBuild build = build(project, Result.SUCCESS, "ext-test.txt");
+
+        // Then isShowAuthorAndCommitter returns false
+        assertFalse(((GitChangeSetList) build.getChangeSet()).isShowAuthorAndCommitter());
+
+        // Given the extension is added
+        scm.getExtensions().add(new ShowAuthorAndCommitterInChangelog());
+        testRepo.commit("ext-test2.txt", "content2", AUTHOR, COMMITTER, "Extension test 2");
+        FreeStyleBuild build2 = build(project, Result.SUCCESS, "ext-test2.txt");
+
+        // Then isShowAuthorAndCommitter returns true
+        assertTrue(((GitChangeSetList) build2.getChangeSet()).isShowAuthorAndCommitter());
+    }
+
+    @Test
     void testGitIdentityFieldsSameAuthorAndCommitter() throws Exception {
         // Given a commit where author and committer are the same person
         FreeStyleProject project = setupSimpleProject("master");
@@ -128,6 +156,95 @@ class GitChangeSetIdentityTest extends AbstractGitTestCase {
         assertEquals(johnDoe.getName(), cs.getGitCommitterName());
         assertEquals(johnDoe.getEmailAddress(), cs.getGitAuthorEmail());
         assertEquals(johnDoe.getEmailAddress(), cs.getGitCommitterEmail());
+    }
+
+    @Test
+    void testChangelogShowsBothIdentitiesWhenExtensionEnabled() throws Exception {
+        // Given ShowAuthorAndCommitterInChangelog is enabled and author differs from committer
+        FreeStyleProject project = setupSimpleProject("master");
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.getExtensions().add(new ShowAuthorAndCommitterInChangelog());
+
+        commit("initial.txt", johnDoe, "Initial commit");
+        build(project, Result.SUCCESS, "initial.txt");
+        testRepo.commit("feature.txt", "content", AUTHOR, COMMITTER, "Feature by author");
+        FreeStyleBuild build = build(project, Result.SUCCESS, "feature.txt");
+
+        // When viewing the changelog
+        HtmlPage page = r.createWebClient().getPage(build, "changes");
+        String pageContent = page.getBody().getTextContent();
+
+        // Then both identities are shown with explicit labels
+        assertThat(pageContent, containsString("Real Author"));
+        assertThat(pageContent, containsString("Bot Committer"));
+        assertThat(pageContent, containsString("authored by"));
+        assertThat(pageContent, containsString("committed by"));
+    }
+
+    @Test
+    void testChangelogShowsSingleIdentityWithoutExtension() throws Exception {
+        // Given no ShowAuthorAndCommitterInChangelog extension
+        FreeStyleProject project = setupSimpleProject("master");
+
+        commit("initial.txt", johnDoe, "Initial commit");
+        build(project, Result.SUCCESS, "initial.txt");
+        testRepo.commit("feature.txt", "content", AUTHOR, COMMITTER, "Feature by author");
+        FreeStyleBuild build = build(project, Result.SUCCESS, "feature.txt");
+
+        // When viewing the changelog
+        HtmlPage page = r.createWebClient().getPage(build, "changes");
+        String pageContent = page.getBody().getTextContent();
+
+        // Then no dual-identity labels are shown
+        assertThat(pageContent, not(containsString("authored by")));
+        assertThat(pageContent, not(containsString("committed by")));
+    }
+
+    @Test
+    void testChangelogDoesNotLabelWhenSameIdentity() throws Exception {
+        // Given ShowAuthorAndCommitterInChangelog is enabled but author and committer are the same
+        FreeStyleProject project = setupSimpleProject("master");
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.getExtensions().add(new ShowAuthorAndCommitterInChangelog());
+
+        commit("initial.txt", johnDoe, "Initial commit");
+        build(project, Result.SUCCESS, "initial.txt");
+        testRepo.commit("same.txt", "content", AUTHOR, AUTHOR, "Same person");
+        FreeStyleBuild build = build(project, Result.SUCCESS, "same.txt");
+
+        // When viewing the changelog
+        HtmlPage page = r.createWebClient().getPage(build, "changes");
+        String pageContent = page.getBody().getTextContent();
+
+        // Then it falls back to single-identity rendering
+        assertThat(pageContent, not(containsString("authored by")));
+        assertThat(pageContent, not(containsString("committed by")));
+    }
+
+    @Test
+    void testShowBothWithAuthorInChangelogExtension() throws Exception {
+        // Given both AuthorInChangelog and ShowAuthorAndCommitterInChangelog are enabled
+        FreeStyleProject project = setupSimpleProject("master");
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.getExtensions().add(new AuthorInChangelog());
+        scm.getExtensions().add(new ShowAuthorAndCommitterInChangelog());
+
+        commit("initial.txt", johnDoe, "Initial commit");
+        build(project, Result.SUCCESS, "initial.txt");
+        testRepo.commit("both.txt", "content", AUTHOR, COMMITTER, "Both extensions");
+        FreeStyleBuild build = build(project, Result.SUCCESS, "both.txt");
+
+        // Then AuthorInChangelog still controls getAuthorName, and both raw getters work
+        GitChangeSet cs = (GitChangeSet) build.getChangeSet().getItems()[0];
+        assertEquals("Real Author", cs.getAuthorName());
+        assertEquals("Real Author", cs.getGitAuthorName());
+        assertEquals("Bot Committer", cs.getGitCommitterName());
+
+        // And the changelog shows both identities
+        HtmlPage page = r.createWebClient().getPage(build, "changes");
+        String pageContent = page.getBody().getTextContent();
+        assertThat(pageContent, containsString("Real Author"));
+        assertThat(pageContent, containsString("Bot Committer"));
     }
 
     @Test

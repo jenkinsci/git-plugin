@@ -7,6 +7,8 @@
 
   <st:adjunct includes="hudson.plugins.git.styles" />
 
+  <j:set var="showBoth" value="${it.showAuthorAndCommitter}" />
+
   <div class="git-changeset-container">
     <j:forEach var="cs" items="${it.logs}">
       <div class="git-changeset ${compact ? 'git-changeset--compact' : ''}" id="${cs.id}">
@@ -40,10 +42,25 @@
           </div>
         </j:if>
         <div class="git-changeset__items__item__user">
-          <a href="${rootURL}/${cs.author.url}/">
-            <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
-            ${cs.author.displayName}
-          </a>
+          <j:choose>
+            <j:when test="${showBoth and !compact and cs.gitAuthorName != null and cs.gitCommitterName != null and cs.gitAuthorName ne cs.gitCommitterName}">
+              <a href="${rootURL}/${cs.author.url}/">
+                <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
+                <span class="jenkins-visually-hidden">${cs.author.displayName}</span>
+              </a>
+              <span class="git-changeset__items__item__identities">
+                <span>${%authored_by(cs.gitAuthorName)}</span>
+                <span aria-hidden="true">&#xB7;</span>
+                <span>${%committed_by(cs.gitCommitterName)}</span>
+              </span>
+            </j:when>
+            <j:otherwise>
+              <a href="${rootURL}/${cs.author.url}/">
+                <l:icon src="${h.getUserAvatar(cs.author, '64x64')}" class="jenkins-avatar" />
+                ${cs.author.displayName}
+              </a>
+            </j:otherwise>
+          </j:choose>
           ${%at}
           <j:new var="timestamp" className="java.util.Date">
             <j:arg value="${cs.timestamp}" />
