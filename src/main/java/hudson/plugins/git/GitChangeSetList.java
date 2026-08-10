@@ -15,11 +15,17 @@ import java.util.List;
  */
 public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
     private final List<GitChangeSet> changeSets;
+    private final boolean showAuthorAndCommitter;
 
     /*package*/ GitChangeSetList(Run build, RepositoryBrowser<?> browser, List<GitChangeSet> logs) {
+        this(build, browser, logs, false);
+    }
+
+    /*package*/ GitChangeSetList(Run build, RepositoryBrowser<?> browser, List<GitChangeSet> logs, boolean showAuthorAndCommitter) {
         super(build, browser);
         Collections.reverse(logs);  // put new things first
         this.changeSets = Collections.unmodifiableList(logs);
+        this.showAuthorAndCommitter = showAuthorAndCommitter;
         for (GitChangeSet log : logs)
             log.setParent(this);
     }
@@ -41,4 +47,14 @@ public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
         return "git";
     }
 
+    /**
+     * Returns true when {@link hudson.plugins.git.extensions.impl.ShowAuthorAndCommitterInChangelog}
+     * was enabled on the {@link GitSCM} that produced this changelog.
+     *
+     * @return true if both author and committer should be displayed
+     * @since TODO
+     */
+    public boolean isShowAuthorAndCommitter() {
+        return showAuthorAndCommitter;
+    }
 }
