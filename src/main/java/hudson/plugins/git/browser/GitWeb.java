@@ -7,6 +7,7 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
+import hudson.Util;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -62,7 +63,7 @@ public class GitWeb extends GitRepositoryBrowser {
         }
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        String spec = param(url).add("a=blobdiff").add("f=" + path.getPath()).add("fp=" + path.getPath())
+        String spec = param(url).add("a=blobdiff").add("f=" + Util.rawEncode(path.getPath())).add("fp=" + Util.rawEncode(path.getPath()))
             .add("h=" + path.getSrc()).add("hp=" + path.getDst())
             .add("hb=" + changeSet.getId()).add("hpb=" + changeSet.getParentCommit()).toString();
         return new URL(url, url.getPath()+spec);
@@ -79,7 +80,7 @@ public class GitWeb extends GitRepositoryBrowser {
     public URL getFileLink(Path path) throws IOException {
         URL url = getUrl();
         String h = (path.getDst() != null) ? path.getDst() : path.getSrc();
-        String spec = param(url).add("a=blob").add("f=" + path.getPath())
+        String spec = param(url).add("a=blob").add("f=" + Util.rawEncode(path.getPath()))
             .add("h=" + h).add("hb=" + path.getChangeSet().getId()).toString();
         return encodeURL(new URL(url, url.getPath()+spec));
     }

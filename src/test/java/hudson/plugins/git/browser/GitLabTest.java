@@ -40,6 +40,8 @@ class GitLabTest {
 
     private final String SHA1 = "396fc230a3db05c427737aa5c2eb7856ba72b05d";
     private final String fileName = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
+    private final String encodedFileNameFragment = "src%2Fmain%2Fjava%2Fhudson%2Fplugins%2Fgit%2Fbrowser%2FGithubWeb.java";
+    private final String encodedFileNamePath = "src%252Fmain%252Fjava%252Fhudson%252Fplugins%252Fgit%252Fbrowser%252FGithubWeb.java";
 
     @Test
     void testGetVersion() {
@@ -90,8 +92,8 @@ class GitLabTest {
     void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get(fileName);
-        final String expectedPre30 = GITLAB_URL + "commits/" + SHA1 + "#" + fileName;
-        final String expectedPre80 = GITLAB_URL + "commit/" + SHA1 + "#" + fileName;
+        final String expectedPre30 = GITLAB_URL + "commits/" + SHA1 + "#" + encodedFileNameFragment;
+        final String expectedPre80 = GITLAB_URL + "commit/" + SHA1 + "#" + encodedFileNameFragment;
         final String expectedURL = GITLAB_URL + "commit/" + SHA1 + "#" + "diff-0";
         final String expectedDefault = expectedURL;
         assertEquals(expectedPre30, gitlabNegative.getDiffLink(modified1).toString());
@@ -113,9 +115,9 @@ class GitLabTest {
     void testGetFileLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get(fileName);
-        final String expectedURL = GITLAB_URL + "blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/" + fileName;
+        final String expectedURL = GITLAB_URL + "blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/" + encodedFileNamePath;
         final String expectedV29 = expectedURL.replace("blob/", "tree/");
-        final String expectedV50 = GITLAB_URL + "396fc230a3db05c427737aa5c2eb7856ba72b05d/tree/" + fileName;
+        final String expectedV50 = GITLAB_URL + "396fc230a3db05c427737aa5c2eb7856ba72b05d/tree/" + encodedFileNamePath;
         assertEquals(expectedV29, gitlabNegative.getFileLink(path).toString());
         assertEquals(expectedV29, gitlab29.getFileLink(path).toString());
         assertEquals(expectedV29, gitlab42.getFileLink(path).toString());
