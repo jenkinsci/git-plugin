@@ -94,6 +94,14 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     @NonNull
     private String remoteName = AbstractGitSCMSource.DEFAULT_REMOTE_NAME;
+    /**
+     * Perform shallow clone
+     */
+    private boolean shallow;
+    /**
+     * Shallow clone depth
+     */
+    private Integer depth;
 
     /**
      * Constructor.
@@ -190,6 +198,25 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public final String remoteName() {
         return remoteName;
+    }
+
+    /**
+     * Returns {@code true} if a limited number of commits will be retrieved when cloning with a GitSCMSource.
+     * A GitSCMSource is most commonly used when defining a multibranch Pipeline.
+     *
+     * @return {@code true} if a limited number of commits will be retrieved
+     */
+    public final boolean wantShallow() {
+        return shallow;
+    }
+
+    /**
+     * Returns shallow clone depth
+     *
+     * @return shallow clone depth
+     */
+    public final Integer depth() {
+        return depth;
     }
 
     /**
@@ -356,6 +383,34 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
             ));
         }
         return result;
+    }
+
+    /**
+     * Limit the number of commits that will be retrieved when the multibranch Pipeline is cloned.
+     * When shallow clone is enabled, a single commit will be retrieved instead of retrieving all commits.
+     * If more commits are needed, set the depth to a larger value.
+     *
+     * @param shallow {@code true} to perform shallow clone
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public final C shallow(boolean shallow) {
+        this.shallow = shallow;
+        return (C) this;
+    }
+
+    /**
+     * Configures shallow clone depth
+     *
+     * @param depth upper limit to the number of commits included in the repository clone
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public final C depth(Integer depth) {
+        this.depth = depth;
+        return (C) this;
     }
 
     /**
