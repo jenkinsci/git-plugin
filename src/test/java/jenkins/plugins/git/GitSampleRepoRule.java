@@ -35,12 +35,21 @@ import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.impl.mock.AbstractSampleDVCSRepoRule;
+import jenkins.scm.impl.mock.AbstractSampleRepoRule;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.junit.jupiter.api.Assumptions;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Manages a sample Git repository.
@@ -69,6 +78,60 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         run("git", cmds);
     }
 
+    /** The commonly used {@link #git} command calls {@link #run} which
+     *  "returns" {@code void}.<br/>
+     *
+     *  Here we pick up code from {@link AbstractSampleDVCSRepoRule#run}
+     *  and further {@link AbstractSampleRepoRule#run} (both from SCM plugin)
+     *  to return the {@code stdout} of this git command. This output is not
+     *  chomped in any way, so you may want to split it into an array of lines,
+     *  using {@code String.split("\\R")} or {@code output.lines().toList()}
+     *  for example (including a removal of {@code \n} ending the single line).<br/>
+     *
+     *  Based on the {@code probing} argument, we "assume" or "assert" that
+     *  the command did succeed (returned exit code 0).<br/>
+     */
+    public String gitOutput(boolean probing, String... cmds) throws Exception {
+        List<String> args = new ArrayList<>();
+        args.add("git");
+        args.addAll(Arrays.asList(cmds));
+
+        try {
+            // Collect tool output into our BAOS object;
+            // use it to retrieve the output of the command for
+            // calling code as well as print into the original log.
+            ByteArrayOutputStream baosStdout = new ByteArrayOutputStream();
+
+            // Run-time log goes here:
+            TaskListener listenerStdout = StreamTaskListener.fromStdout();
+
+            int r = new Launcher.LocalLauncher(listenerStdout).launch()
+                    .cmds(args.toArray(new String[0]))
+                    .pwd(sampleRepo)
+                    .stdout(baosStdout)
+                    .join();
+
+            // Report a copy of the resulting output:
+            listenerStdout.getLogger().println(baosStdout.toString(StandardCharsets.UTF_8));
+
+            String message = Arrays.toString(cmds) + " failed with error code";
+            if (probing) {
+                Assumptions.assumeTrue(r == 0, message);
+            } else {
+                assertThat(message, r, is(0));
+            }
+
+            return baosStdout.toString(StandardCharsets.UTF_8);
+        } catch (Exception x) {
+            if (probing) {
+                Assumptions.abort(Arrays.toString(cmds) + " failed with exception (required tooling not installed?)\n" + x);
+                return null;
+            } else {
+                throw x;
+            }
+        }
+    }
+
     private static void checkGlobalConfig() throws Exception {
         if (initialized) return;
         initialized = true;
@@ -95,6 +158,27 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         git("config", "commit.gpgsign", "false");
         git("config", "tag.gpgSign", "false");
         git("commit", "--message=init");
+    }
+
+    /** Similar to {@link #init}, but prepares a bare git repository
+     *  without any commits or branches, just marks that the default
+     *  branch (if/when one appears) would be "master".
+     */
+    public void initBare() throws Exception {
+        run(true, tmp.getRoot(), "git", "version");
+        checkGlobalConfig();
+        git("init", "--bare", "-b", "master", "--template=", "."); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
+        if (gitVersionAtLeast(2, 30)) {
+            // Force branch name to master even if system default is not master
+            // Fails on git 2.25 and earlier (Ubuntu 20.04, etc.)
+            // Works on git 2.30 and later
+            git("branch", "-m", "master");
+        }
+        git("config", "user.name", "Git SampleRepoRule");
+        git("config", "user.email", "gits@mplereporule");
+        git("config", "init.defaultbranch", "master");
+        git("config", "commit.gpgsign", "false");
+        git("config", "tag.gpgSign", "false");
     }
 
     public final boolean mkdirs(String rel) throws IOException {
