@@ -21,7 +21,10 @@ class UnsetHooks implements RepositoryCallback<Object> {
     public Object invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
         final StoredConfig repoConfig = repo.getConfig();
         final String val = repoConfig.getString("core", null, "hooksPath");
-        if (val != null && !val.isEmpty() && !DisableHooks.DISABLED_NIX.equals(val) && !DisableHooks.DISABLED_WIN.equals(val)) {
+        if (val == null) {
+            return null; // nothing to unset; avoid a redundant config.lock write. JENKINS-71349
+        }
+        if (!val.isEmpty() && !DisableHooks.DISABLED_NIX.equals(val) && !DisableHooks.DISABLED_WIN.equals(val)) {
             LOGGER.warning(() -> "core.hooksPath explicitly set to %s and will be left intact on %s.".formatted(val, repo.getDirectory()));
         } else {
             repoConfig.unset("core", null, "hooksPath");
