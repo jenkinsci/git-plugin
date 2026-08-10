@@ -1,0 +1,16 @@
+<div>
+    Maximum age of tags (in days) to <strong>include</strong> when discovering tags.
+    Tags older than this value are ignored.
+    Tag age is calculated from the tag creation / commit timestamp to the time the
+    scan runs.
+    Leave this field blank to <strong>not</strong> filter out tags based on a maximum age
+    (no upper age bound).
+    Examples:
+    <ul>
+        <li><code>7</code> – ignore tags older than 7 days (only tags from the last 7 days are used).</li>
+        <li><code>30</code> – ignore tags older than 30 days (only tags from the last 30 days are used).</li>
+    </ul>
+    When used together with <em>Ignore tags newer than</em> (<code>atLeastDays</code>),
+    this value should be greater than or equal to the <em>newer than</em> value so that the
+    age range is consistent.
+</div>
