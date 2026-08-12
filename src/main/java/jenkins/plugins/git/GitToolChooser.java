@@ -269,8 +269,23 @@ public class GitToolChooser {
             addSuffixVariants(remoteURL, alternatives);
         }
 
+        alternatives.removeIf(GitToolChooser::isObsoleteGitHubGitProtocol);
+
         LOGGER.log(Level.FINE, "Cache repo alternative URLs: {0}", alternatives);
         return alternatives;
+    }
+
+    /** GitHub disabled unauthenticated git://; other providers may still use it. */
+    private static boolean isObsoleteGitHubGitProtocol(@NonNull String url) {
+        if (!url.startsWith("git://")) {
+            return false;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(url);
+            return "github.com".equalsIgnoreCase(uri.getHost());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     /** Cache the estimated repository size for variants of repository URL */
