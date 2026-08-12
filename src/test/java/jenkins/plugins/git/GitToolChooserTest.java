@@ -333,7 +333,7 @@ class GitToolChooserTest {
         String githubRemote = "https://github.com/MarkEWaite/simple-java-maven-app.git";
         GitToolChooser sizeEstimator = new GitToolChooser(githubRemote, null, null, tool, null, TaskListener.NULL, true);
         Set<String> alternatives = sizeEstimator.remoteAlternatives(githubRemote);
-assertThat("Remote: " + githubRemote, alternatives, everyItem(not(anyOf(startsWith("git://github.com/"), startsWith("git://github.com:")))));
+        assertThat("Remote: " + githubRemote, alternatives, everyItem(not(anyOf(startsWith("git://github.com/"), startsWith("git://github.com:")))));
     }
 
     /* Test conversion of any remote alternative of git repo URLs to a standard URL */

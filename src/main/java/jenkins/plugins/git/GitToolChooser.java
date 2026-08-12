@@ -277,7 +277,15 @@ public class GitToolChooser {
 
     /** GitHub disabled unauthenticated git://; other providers may still use it. */
     private static boolean isObsoleteGitHubGitProtocol(@NonNull String url) {
-        return url.startsWith("git://github.com/");
+        if (!url.startsWith("git://")) {
+            return false;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(url);
+            return "github.com".equalsIgnoreCase(uri.getHost());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     /** Cache the estimated repository size for variants of repository URL */
