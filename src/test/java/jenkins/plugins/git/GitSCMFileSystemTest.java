@@ -502,6 +502,84 @@ class GitSCMFileSystemTest {
         assertTrue(result.refspec.startsWith("+refs/changes/"));
     }
 
+    @Test
+    public void testSupportsLogicalOr() {
+        GitSCM scm = new GitSCM(
+                GitSCM.createRepoList("https://example.com/repo.git", null),
+                Collections.singletonList(new BranchSpec("refs/changes/91/45391/1 || */master")),
+                null, null, Collections.emptyList());
+
+        GitSCMFileSystem.BuilderImpl builder = new GitSCMFileSystem.BuilderImpl();
+        assertTrue(builder.supports(scm), "Builder should support logical OR branch specs");
+    }
+
+    @Test
+    public void testSupportsLogicalAndRejected() {
+        GitSCM scm = new GitSCM(
+                GitSCM.createRepoList("https://example.com/repo.git", null),
+                Collections.singletonList(new BranchSpec("*/master && */dev")),
+                null, null, Collections.emptyList());
+
+        GitSCMFileSystem.BuilderImpl builder = new GitSCMFileSystem.BuilderImpl();
+        assertFalse(builder.supports(scm), "Builder should not support logical AND branch specs");
+    }
+
+    @Test
+    public void testSupportsWildcardOperandRejected() {
+        GitSCM scm = new GitSCM(
+                GitSCM.createRepoList("https://example.com/repo.git", null),
+                Collections.singletonList(new BranchSpec("* || */master")),
+                null, null, Collections.emptyList());
+
+        GitSCMFileSystem.BuilderImpl builder = new GitSCMFileSystem.BuilderImpl();
+        assertFalse(builder.supports(scm), "Builder should not support a bare wildcard operand");
+    }
+
+    @Test
+    public void create_SCMFileSystem_with_fallback() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "dev-content");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.write("file", "feature-content");
+        sampleRepo.git("commit", "--all", "--message=feature");
+
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(),
+                new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null),
+                        Collections.singletonList(new BranchSpec("refs/changes/nonexistent/1/1 || */dev")),
+                        null, null, Collections.emptyList()));
+        assertThat(fs, notNullValue());
+        assertEquals("dev-content", getRootFileContent(fs));
+    }
+
+    @Test
+    public void create_SCMFileSystem_with_fallback_first_wins() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "dev-content");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.write("file", "feature-content");
+        sampleRepo.git("commit", "--all", "--message=feature");
+
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(),
+                new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null),
+                        Collections.singletonList(new BranchSpec("*/feature || */dev")),
+                        null, null, Collections.emptyList()));
+        assertThat(fs, notNullValue());
+        assertEquals("feature-content", getRootFileContent(fs));
+    }
+
+    private String getRootFileContent(SCMFileSystem fs) throws IOException, InterruptedException {
+        for (SCMFile child : fs.getRoot().children()) {
+            if (child.getName().equals("file")) {
+                return child.contentAsString();
+            }
+        }
+        return null;
+    }
+
     @Issue("JENKINS-52964")
     @Test
     void filesystem_supports_descriptor() throws Exception {
