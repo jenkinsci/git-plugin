@@ -67,8 +67,13 @@
            fetched is used, so it acts as a fallback.<br/>
            <code>&amp;&amp;</code> means <em>and</em>: the branch must match both specifications.
            <code>&amp;&amp;</code> binds tighter than <code>||</code>.<br/>
-           E.g. <code>${GERRIT_REF_SPEC} || */master</code> (use the Gerrit change if present, otherwise
-           <code>master</code>), or <code>origin/* &amp;&amp; :^(?!origin/wip).*</code>.
+           Examples:<br/>
+           <ul>
+             <li><code>${GERRIT_REF_SPEC} || */master</code> — use the Gerrit change when its ref is present,
+                 otherwise fall back to <code>master</code>.</li>
+             <li><code>origin/* &amp;&amp; :^(?!origin/wip).*</code> — all <code>origin</code> branches except
+                 <code>origin/wip</code>.</li>
+           </ul>
       </li>
       <li> <strong><code>&lt;Wildcards&gt;</code></strong><br/>
            The syntax is of the form: <code>REPOSITORYNAME/BRANCH</code>.
