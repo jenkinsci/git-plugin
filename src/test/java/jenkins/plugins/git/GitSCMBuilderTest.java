@@ -399,6 +399,19 @@ class GitSCMBuilderTest {
     }
 
     @Test
+    void withRefSpecLeadingAndTrailingWhitespace() throws Exception {
+        instance.withRefSpec(" +refs/heads/master:refs/remotes/@{remote}/master ");
+        GitSCM scm = instance.build();
+        assertThat(scm.getUserRemoteConfigs(), contains(allOf(
+                instanceOf(UserRemoteConfig.class),
+                hasProperty("url", is("http://git.test/repo.git")),
+                hasProperty("name", is("origin")),
+                hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master")),
+                hasProperty("credentialsId", is(nullValue())))
+        ));
+    }
+
+    @Test
     void withRefSpecs() throws Exception {
         instance.withRefSpecs(Collections.singletonList("+refs/heads/master:refs/remotes/@{remote}/master"));
         assertThat(instance.refSpecs(), contains("+refs/heads/master:refs/remotes/@{remote}/master"));
