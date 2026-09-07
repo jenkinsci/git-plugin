@@ -304,16 +304,38 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return NULL_HASH.equals(hash) ? null : hash;
     }
 
+    /**
+     * Returns the committer date by default, or the author date when
+     * {@link hudson.plugins.git.extensions.impl.AuthorInChangelog} is enabled.
+     *
+     * @see #getGitAuthorDate()
+     * @see #getGitCommitterDate()
+     */
     @Exported
     public String getDate() {
         return authorOrCommitter ? authorTime : committerTime;
     }
 
+    /**
+     * Returns the committer email by default, or the author email when
+     * {@link hudson.plugins.git.extensions.impl.AuthorInChangelog} is enabled.
+     *
+     * @see #getGitAuthorEmail()
+     * @see #getGitCommitterEmail()
+     */
     @Exported
     public String getAuthorEmail() {
         return authorOrCommitter ? authorEmail : committerEmail;
     }
 
+    /**
+     * Returns the committer date by default, or the author date when
+     * {@link hudson.plugins.git.extensions.impl.AuthorInChangelog} is enabled.
+     *
+     * @see #getDate()
+     * @see #getGitAuthorDate()
+     * @see #getGitCommitterDate()
+     */
     @Override
     public long getTimestamp() {
         String date = getDate();
@@ -571,18 +593,23 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return (DescriptorImpl) Jenkins.get().getDescriptor(GitSCM.class);
     }
 
+    /**
+     * Returns the committer by default, or the author when
+     * {@link hudson.plugins.git.extensions.impl.AuthorInChangelog} is enabled.
+     *
+     * @see #getGitAuthorName()
+     * @see #getGitCommitterName()
+     */
     @Override
     @Exported
     public User getAuthor() {
         String csAuthor;
         String csAuthorEmail;
 
-        // If true, use the author field from git log rather than the committer.
         if (authorOrCommitter) {
             csAuthor = this.author;
             csAuthorEmail = this.authorEmail;
-        }
-        else {
+        } else {
             csAuthor = this.committer;
             csAuthorEmail = this.committerEmail;
         }
@@ -591,16 +618,104 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     /**
-     * Gets the author name for this changeset - note that this is mainly here
-     * so that we can test authorOrCommitter without needing a fully instantiated
-     * Jenkins (which is needed for User.get in getAuthor()).
+     * Returns the committer name by default, or the author name when
+     * {@link hudson.plugins.git.extensions.impl.AuthorInChangelog} is enabled.
      *
-     * @return author name
+     * <p>Exists for testing without a fully instantiated Jenkins
+     * (which {@link User#get} in {@link #getAuthor()} requires).
+     *
+     * @see #getGitAuthorName()
+     * @see #getGitCommitterName()
      */
     public String getAuthorName() {
-        // If true, use the author field from git log rather than the committer.
         String csAuthor = authorOrCommitter ? author : committer;
         return csAuthor;
+    }
+
+    /**
+     * Returns the Git author name.
+     *
+     * @return the author name, or null if not parsed
+     * @since TODO
+     * @see #getGitCommitterName()
+     * @see #getAuthor()
+     */
+    @Exported
+    @CheckForNull
+    public String getGitAuthorName() {
+        return author;
+    }
+
+    /**
+     * Returns the Git author email.
+     *
+     * @return the author email, or null if not parsed
+     * @since TODO
+     * @see #getGitCommitterEmail()
+     * @see #getAuthorEmail()
+     */
+    @Exported
+    @CheckForNull
+    public String getGitAuthorEmail() {
+        return authorEmail;
+    }
+
+    /**
+     * Returns the Git author date.
+     *
+     * @return the author date in ISO 8601 format (e.g. {@code 2023-04-15T14:23:01+0200}),
+     *         or null if not parsed
+     * @since TODO
+     * @see #getGitCommitterDate()
+     * @see #getDate()
+     */
+    @Exported
+    @CheckForNull
+    public String getGitAuthorDate() {
+        return authorTime;
+    }
+
+    /**
+     * Returns the Git committer name.
+     *
+     * @return the committer name, or null if not parsed
+     * @since TODO
+     * @see #getGitAuthorName()
+     * @see #getAuthor()
+     */
+    @Exported
+    @CheckForNull
+    public String getGitCommitterName() {
+        return committer;
+    }
+
+    /**
+     * Returns the Git committer email.
+     *
+     * @return the committer email, or null if not parsed
+     * @since TODO
+     * @see #getGitAuthorEmail()
+     * @see #getAuthorEmail()
+     */
+    @Exported
+    @CheckForNull
+    public String getGitCommitterEmail() {
+        return committerEmail;
+    }
+
+    /**
+     * Returns the Git committer date.
+     *
+     * @return the committer date in ISO 8601 format (e.g. {@code 2023-04-15T14:23:01+0200}),
+     *         or null if not parsed
+     * @since TODO
+     * @see #getGitAuthorDate()
+     * @see #getDate()
+     */
+    @Exported
+    @CheckForNull
+    public String getGitCommitterDate() {
+        return committerTime;
     }
 
     @Override

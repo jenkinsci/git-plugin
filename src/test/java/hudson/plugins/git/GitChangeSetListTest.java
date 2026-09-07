@@ -97,4 +97,15 @@ class GitChangeSetListTest {
     void testGetKind() {
         assertThat(changeSetList.getKind(), is("git"));
     }
+
+    @Test
+    void testIsShowAuthorAndCommitterDefaultsFalse() {
+        assertFalse(emptyChangeSetList.isShowAuthorAndCommitter());
+    }
+
+    @Test
+    void testIsShowAuthorAndCommitterTrueWhenSet() {
+        GitChangeSetList list = new GitChangeSetList(null, null, new ArrayList<>(), true);
+        assertTrue(list.isShowAuthorAndCommitter());
+    }
 }

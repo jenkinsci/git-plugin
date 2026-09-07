@@ -1132,6 +1132,61 @@ image:images/git-use-commit-author-in-changelog.png[Use commit author in changel
 The default behavior is to use the Git commit's "Committer" value in build changesets.
 If this option is selected, the git commit's "Author" value is used instead.
 
+In Git, the author is the person who originally wrote the code.
+The committer is the account that applied the commit to the repository.
+They are the same for a regular commit, but diverge when commits are replayed or rewritten by a merge operation.
+
+.Author and committer values by merge operation
+|===
+| Operation | Author | Committer
+
+| Regular `git commit`
+| Developer
+| Developer (same)
+
+| GitHub "Create a merge commit"
+| Developer
+| `noreply@github.com`
+
+| GitHub "Squash and merge"
+| GitHub user who clicked merge
+| `noreply@github.com`
+
+| GitHub "Rebase and merge"
+| Developer
+| GitHub user who clicked merge
+
+| `git merge --no-ff` by a service account
+| Developer
+| Service account
+
+| `git merge --squash` by a service account
+| Service account
+| Service account
+
+| `git rebase` by a service account
+| Developer
+| Service account
+|===
+
+[NOTE]
+====
+For squash merges the original author information is collapsed into a single commit at the Git level.
+The original developer identity is not recoverable from a squash commit regardless of this setting.
+====
+
+This option affects all consumers of link:https://javadoc.jenkins.io/hudson/scm/ChangeLogSet.Entry.html[`ChangeLogSet.Entry#getAuthor()`] in the job, such as notifications and build changelog display.
+
+Plugin authors that need to read a specific identity regardless of per-job configuration can use the flag-independent methods on `GitChangeSet`: `getGitAuthorName()`, `getGitAuthorEmail()`, `getGitCommitterName()`, and `getGitCommitterEmail()`.
+
+[#show-author-and-committer-in-changelog]
+==== Show both author and committer in changelog
+
+image:images/git-show-author-and-committer-in-changelog.png[Show both author and committer in changelog]
+
+When author and committer differ, this option displays both identities in the build changelog UI with explicit labels.
+It does not change the value returned by `getAuthor()` and has no effect on notifications or other consumers of that method.
+
 [#tagging-extensions]
 === Tagging Extensions
 

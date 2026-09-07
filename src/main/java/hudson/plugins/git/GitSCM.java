@@ -105,6 +105,7 @@ import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.Util;
 import hudson.plugins.git.extensions.impl.ScmName;
+import hudson.plugins.git.extensions.impl.ShowAuthorAndCommitterInChangelog;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -1640,13 +1641,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public ChangeLogParser createChangeLogParser() {
+        boolean authorOrCommitter = getExtensions().get(AuthorInChangelog.class) != null;
+        boolean showAuthorAndCommitter = getExtensions().get(ShowAuthorAndCommitterInChangelog.class) != null;
         try {
             GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(gitTool).getClient();
-            return new GitChangeLogParser(gitClient, getExtensions().get(AuthorInChangelog.class) != null);
+            return new GitChangeLogParser(gitClient, authorOrCommitter, showAuthorAndCommitter);
         } catch (IOException | InterruptedException e) {
             LOGGER.log(Level.WARNING, "Git client using '" + gitTool + "' changelog parser failed, using deprecated changelog parser", e);
         }
-        return new GitChangeLogParser(null, getExtensions().get(AuthorInChangelog.class) != null);
+        return new GitChangeLogParser(null, authorOrCommitter, showAuthorAndCommitter);
     }
 
     @Extension

@@ -139,3 +139,11 @@
   font-size: var(--font-size-xs);
   line-height: 1lh;
 }
+
+.git-changeset__items__item__identities {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5ch;
+  font-size: var(--font-size-xs);
+  color: var(--text-color-secondary);
+}
