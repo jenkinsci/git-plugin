@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -84,7 +86,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
      * @return true if ref matches configured pattern
      */
     public boolean matches(String ref, EnvVars env) {
-        return getPattern(env).matcher(ref).matches();
+        return asPredicate(atom -> refPredicate(env, atom)).test(ref);
     }
 
     /**
@@ -97,9 +99,45 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         if (branchName == null) {
             return false;
         }
-        Pattern pattern = getPattern(new EnvVars(), repositoryName);
         String branchWithoutRefs = cutRefs(branchName);
-        return pattern.matcher(branchWithoutRefs).matches() || pattern.matcher(join(repositoryName, branchWithoutRefs)).matches();
+        String joined = join(repositoryName, branchWithoutRefs);
+        return asPredicate(atom -> repositoryBranchPredicate(repositoryName, atom, branchWithoutRefs, joined))
+                .test(branchName);
+    }
+
+    /**
+     * Combines the individual branch specs of this spec's name into a single predicate, evaluating
+     * a logical expression with {@code ||} (OR) and {@code &&} (AND). {@code &&} binds tighter than
+     * {@code ||}. The supplied function compiles a single spec (atom) into a predicate.
+     */
+    private <T> Predicate<T> asPredicate(Function<String, Predicate<T>> atomPredicate) {
+        Predicate<T> expression = t -> false;
+        for (String orTerm : name.split("\\|\\|")) {
+            if (orTerm.trim().isEmpty()) {
+                continue;
+            }
+            Predicate<T> conjunction = t -> true;
+            for (String atom : orTerm.split("&&")) {
+                String trimmedAtom = atom.trim();
+                if (trimmedAtom.isEmpty()) {
+                    continue;
+                }
+                conjunction = conjunction.and(atomPredicate.apply(trimmedAtom));
+            }
+            expression = expression.or(conjunction);
+        }
+        return expression;
+    }
+
+    private Predicate<String> refPredicate(EnvVars env, String atom) {
+        Pattern pattern = getPattern(env, null, atom);
+        return ref -> pattern.matcher(ref).matches();
+    }
+
+    private Predicate<String> repositoryBranchPredicate(String repositoryName, String atom,
+                                                        String branchWithoutRefs, String joined) {
+        Pattern pattern = getPattern(new EnvVars(), repositoryName, atom);
+        return ref -> pattern.matcher(branchWithoutRefs).matches() || pattern.matcher(joined).matches();
     }
 
     /**
@@ -140,24 +178,26 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         return items;
     }
 
-    private String getExpandedName(EnvVars env) {
-        String expandedName = env.expand(name);
-        if (expandedName.length() == 0) {
-            return "**";
-        }
-        return expandedName;
-    }
-
     private Pattern getPattern(EnvVars env) {
-        return getPattern(env, null);
+        return getPattern(env, null, name);
     }
 
     private Pattern getPattern(EnvVars env, String repositoryName) {
-        String expandedName = getExpandedName(env);
+        return getPattern(env, repositoryName, name);
+    }
+
+    private Pattern getPattern(EnvVars env, String repositoryName, String specName) {
+        String expandedName = env.expand(specName);
+        if (expandedName.length() == 0) {
+            expandedName = "**";
+        }
         // use regex syntax directly if name starts with colon
         if (expandedName.startsWith(":") && expandedName.length() > 1) {
             String regexSubstring = expandedName.substring(1, expandedName.length());
             return Pattern.compile(regexSubstring);
+        }
+        if (expandedName.startsWith("refs/changes/")) {
+            return Pattern.compile(Pattern.quote(expandedName));
         }
         if (repositoryName != null) {
             // remove the "refs/.../" stuff from the branch-spec if necessary

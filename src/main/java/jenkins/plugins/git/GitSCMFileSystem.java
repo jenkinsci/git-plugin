@@ -60,6 +60,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -261,15 +264,40 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     && gscm.getUserRemoteConfigs().size() == 1
                     && gscm.getBranches().size() == 1
                     && !gscm.getBranches().get(0).getName().equals("*") // JENKINS-57587
-                    && (
-                        gscm.getBranches().get(0).getName().matches(
-                            "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
-                        )
-                        || gscm.getBranches().get(0).getName().matches(
-                            "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
-                        )
-                    );
+                    && isSupportedBranchSpec(gscm.getBranches().get(0).getName());
             // we only support where the branch spec is obvious and not a wildcard
+        }
+
+        /**
+         * Tests whether a branch spec can be handled by the lightweight checkout. A logical OR
+         * chain of obvious single refs is supported (used as an ordered fallback); a logical AND
+         * is not, because it selects a set of refs rather than the single ref to fetch.
+         */
+        static boolean isSupportedBranchSpec(@NonNull String branchSpecName) {
+            if (branchSpecName.contains("&&")) {
+                return false;
+            }
+            for (String operand : branchSpecName.split("\\|\\|")) {
+                if (operand.trim().isEmpty()) {
+                    continue;
+                }
+                if (!isSupportedSingleRefSpec(operand.trim())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static boolean isSupportedSingleRefSpec(@NonNull String name) {
+            if (name.equals("*") || name.equals("**")) {
+                // wildcard selecting every branch, not a single ref
+                return false;
+            }
+            return name.matches("^(\\Q" + Constants.R_HEADS + "\\E.*)$")
+                    || name.matches("^(\\Q" + Constants.R_TAGS + "\\E.*)$")
+                    || name.matches("^(\\Qrefs/changes/\\E.*)$")
+                    || name.matches("^[^/]+$")
+                    || name.matches("^\\*/[^/*]+(/[^/*]+)*$");
         }
 
         @Override
@@ -292,40 +320,82 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         static class HeadNameResult {
-            final String headName;
-            final String prefix;
+            final String remoteHeadName;
+            final String refspec;
+            final SCMRevision rev;
 
-            private HeadNameResult(String headName, String prefix) {
-                this.headName = headName;
-                this.prefix = prefix;
+            private HeadNameResult(String remoteHeadName, String refspec, SCMRevision rev) {
+                this.remoteHeadName = remoteHeadName;
+                this.refspec = refspec;
+                this.rev = rev;
             }
 
             static HeadNameResult calculate(@NonNull BranchSpec branchSpec,
                                             @CheckForNull SCMRevision rev,
-                                            @CheckForNull EnvVars env) {
+                                            @CheckForNull String refSpec,
+                                            @CheckForNull EnvVars env,
+                                            @CheckForNull String remoteName) {
+
                 String branchSpecExpandedName = branchSpec.getName();
                 if (env != null) {
                     branchSpecExpandedName = env.expand(branchSpecExpandedName);
                 }
+                String refspecExpandedName = refSpec;
+                if (env != null && refspecExpandedName != null) {
+                    refspecExpandedName = env.expand(refspecExpandedName);
+                }
 
+                // default to a branch (refs/heads)
                 String prefix = Constants.R_HEADS;
+                // check for a tag
                 if (branchSpecExpandedName.startsWith(Constants.R_TAGS)) {
                     prefix = Constants.R_TAGS;
-                }
-
-                String headName;
-                if (rev != null && env != null) {
-                    headName = env.expand(rev.getHead().getName());
+                } else if (branchSpecExpandedName.startsWith("refs/changes")) {
+                    prefix = "refs/changes/";
                 } else {
-                    if (branchSpecExpandedName.startsWith(prefix)) {
-                        headName = branchSpecExpandedName.substring(prefix.length());
-                    } else if (branchSpecExpandedName.startsWith("*/")) {
-                        headName = branchSpecExpandedName.substring(2);
+                    // check for FETCH_HEAD
+                    if (branchSpecExpandedName.equals(Constants.FETCH_HEAD) && refspecExpandedName != null &&
+                            !refspecExpandedName.equals("")) {
+                        prefix = null;
                     } else {
-                        headName = branchSpecExpandedName;
+                        // check for commit-id
+                        final String regex = "^[a-fA-F0-9]{40}$";
+                        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                        final Matcher matcher = pattern.matcher(branchSpecExpandedName);
+
+                        if (matcher.find()) {
+                            // commit-id
+                            prefix = null;
+                            rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead(branchSpecExpandedName), branchSpecExpandedName);
+                        }
                     }
                 }
-                return new HeadNameResult(headName, prefix);
+
+                String calculatedHeadName = branchSpecExpandedName;
+                if (rev != null && env != null) {
+                    calculatedHeadName = env.expand(rev.getHead().getName());
+                } else {
+                    if (prefix != null && branchSpecExpandedName.startsWith(prefix)) {
+                        calculatedHeadName = branchSpecExpandedName.substring(prefix.length());
+                    } else if (branchSpecExpandedName.startsWith("*/")) {
+                        calculatedHeadName = branchSpecExpandedName.substring(2);
+                    }
+                }
+
+                if (refspecExpandedName == null || refspecExpandedName.equals("")) {
+                    if (prefix.equals(Constants.R_TAGS)) {
+                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":"  + prefix + calculatedHeadName;
+                    } else {
+                        refspecExpandedName = "+" + prefix + calculatedHeadName + ":" + Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
+                    }
+                }
+
+                String remoteHead = calculatedHeadName;
+                if (prefix != null && prefix.equals(Constants.R_HEADS)) {
+                    remoteHead = Constants.R_REMOTES + remoteName + "/" + calculatedHeadName;
+                }
+
+                return new HeadNameResult(remoteHead, refspecExpandedName, rev);
             }
         }
 
@@ -402,19 +472,63 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
 
-                HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, env);
+                HeadNameResult headNameResult = null;
+                String resolvedHead = null;
+                GitException lastFailure = null;
+                for (String operand : branchSpec.getName().split("\\|\\|")) {
+                    if (operand.trim().isEmpty()) {
+                        continue;
+                    }
+                    HeadNameResult candidate = HeadNameResult.calculate(new BranchSpec(operand.trim()), rev, config.getRefspec(), env, remoteName);
+                    try {
+                        client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(candidate.refspec))).execute();
+                    } catch (GitException x) {
+                        lastFailure = x;
+                        listener.getLogger().println("Fetch of '" + operand.trim() + "' failed, trying next alternative");
+                        continue;
+                    }
+                    boolean ready = candidate.rev != null;
+                    String candidateHead;
+                    if (candidate.rev != null) {
+                        candidateHead = ((AbstractGitSCMSource.SCMRevisionImpl) candidate.rev).getHash();
+                    } else {
+                        candidateHead = refspecDestination(candidate.refspec);
+                        ready = refExists(client, candidateHead);
+                    }
+                    if (ready) {
+                        headNameResult = candidate;
+                        resolvedHead = candidateHead;
+                        break;
+                    }
+                    listener.getLogger().println("Ref '" + candidateHead + "' not found for '" + operand.trim() + "', trying next alternative");
+                }
 
-                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
-                        "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                + headNameResult.headName))).execute();
+                if (headNameResult == null) {
+                    throw new IOException("Unable to fetch any of the branch specifications: " + branchSpec.getName(), lastFailure);
+                }
 
-                listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
-            } catch (GitException x) {
-                throw new IOException(x);
+                listener.getLogger().println("Done with " + remoteName + " using " + resolvedHead + ".");
+                return new GitSCMFileSystem(client, remote, resolvedHead, (AbstractGitSCMSource.SCMRevisionImpl) headNameResult.rev);
             } finally {
                 cacheLock.unlock();
             }
+        }
+
+        /**
+         * Resolves the local destination ref written by a fetch refspec. For a refspec without an
+         * explicit destination (e.g. {@code refs/changes/1/2/3}) the fetch writes to FETCH_HEAD.
+         */
+        private static String refspecDestination(@NonNull String refspec) {
+            String spec = refspec;
+            if (spec.startsWith("+")) {
+                spec = spec.substring(1);
+            }
+            int colon = spec.lastIndexOf(':');
+            return colon >= 0 ? spec.substring(colon + 1) : Constants.FETCH_HEAD;
+        }
+
+        private static boolean refExists(GitClient client, String ref) throws IOException, InterruptedException {
+            return client.withRepository((repository, channel) -> repository.findRef(ref) != null);
         }
 
         @Override
