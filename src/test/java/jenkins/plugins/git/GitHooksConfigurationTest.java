@@ -26,6 +26,8 @@ package jenkins.plugins.git;
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Random;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -202,5 +204,75 @@ class GitHooksConfigurationTest {
         /* Check configured value from repository */
         String hooksPath = getCoreHooksPath();
         assertThat(hooksPath, is(NULL_HOOKS_PATH));
+    }
+
+    private File createConfigLock() throws Exception {
+        return client.withRepository((repo, channel) -> {
+            File lock = new File(repo.getDirectory(), "config.lock");
+            Files.deleteIfExists(lock.toPath());
+            assertTrue(lock.createNewFile());
+            return lock;
+        });
+    }
+
+    // JENKINS-71349: re-disabling an already-disabled repo must not save(). A planted stale
+    // config.lock would otherwise make save() throw LockFailedException.
+    @Test
+    void testConfigureDisabledIsNoOpWhenAlreadyDisabled() throws Exception {
+        GitHooksConfiguration.configure(client, false);
+        assertThat(getCoreHooksPath(), is(NULL_HOOKS_PATH));
+
+        File configLock = createConfigLock();
+        try {
+            GitHooksConfiguration.configure(client, false);
+            assertThat(getCoreHooksPath(), is(NULL_HOOKS_PATH));
+            assertTrue(configLock.exists(), "DisableHooks must not touch an unrelated stale lock");
+        } finally {
+            Files.deleteIfExists(configLock.toPath());
+        }
+    }
+
+    // The guard must skip only the disabled sentinel, never a different value (SECURITY-2754).
+    @Test
+    void testConfigureDisabledOverwritesNonDisabledValue() throws Exception {
+        setCoreHooksPath(ALTERNATE_HOOKS_PATH);
+        assertThat(getCoreHooksPath(), is(ALTERNATE_HOOKS_PATH));
+
+        GitHooksConfiguration.configure(client, false);
+
+        assertThat(getCoreHooksPath(), is(NULL_HOOKS_PATH));
+    }
+
+    @Test
+    void testConfigureDisabledRepeatedlyIsNoOp() throws Exception {
+        GitHooksConfiguration.configure(client, false);
+        assertThat(getCoreHooksPath(), is(NULL_HOOKS_PATH));
+
+        File configLock = createConfigLock();
+        try {
+            for (int i = 0; i < 5; i++) {
+                GitHooksConfiguration.configure(client, false);
+            }
+            assertThat(getCoreHooksPath(), is(NULL_HOOKS_PATH));
+            assertTrue(configLock.exists(), "repeated disable must not touch the stale lock");
+        } finally {
+            Files.deleteIfExists(configLock.toPath());
+        }
+    }
+
+    // JENKINS-71349, allow-hooks path: UnsetHooks must not save() when hooksPath is already absent.
+    @Test
+    void testConfigureAllowedIsNoOpWhenHooksPathAbsent() throws Exception {
+        GitHooksConfiguration.configure(client, true);
+        assertThat(getCoreHooksPath(), is(nullValue()));
+
+        File configLock = createConfigLock();
+        try {
+            GitHooksConfiguration.configure(client, true);
+            assertThat(getCoreHooksPath(), is(nullValue()));
+            assertTrue(configLock.exists(), "UnsetHooks must not touch the stale lock when hooksPath is absent");
+        } finally {
+            Files.deleteIfExists(configLock.toPath());
+        }
     }
 }
