@@ -5,6 +5,7 @@ import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import hudson.Util;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -55,7 +56,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     private URL getDiffLinkRegardlessOfEditType(GitChangeSet.Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
         final String pathAsString = path.getPath();
-        return new URL(getChangeSetLink(changeSet), "#chg-" + pathAsString);
+        return new URL(getChangeSetLink(changeSet), "#chg-" + Util.rawEncode(pathAsString));
     }
 
     /**
@@ -69,7 +70,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
         final String pathAsString = path.getPath();
         URL url = getUrl();
-        return encodeURL(new URL(url, url.getPath() + "history/" + pathAsString));
+        return encodeURL(new URL(url, url.getPath() + "history/" + Util.rawEncode(pathAsString)));
     }
 
     @Extension
