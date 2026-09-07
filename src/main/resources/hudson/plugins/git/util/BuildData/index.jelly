@@ -5,35 +5,38 @@
 		<j:if test="${build!=null}">
 			<st:include page="sidepanel" it="${build}" optional="true"/>
 		</j:if>
-	<l:main-panel>
-	<h1>${%Git Build Data}</h1>
+		<l:main-panel>
+			<h1>${%Git Build Data}</h1>
 
-	<strong>${%Revision}</strong>: ${it.lastBuild.SHA1.name()}
-	<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
-	<j:if test="${!empty(it.remoteUrls)}">
-		<j:forEach var="remoteUrl" items="${it.remoteUrls}">
-			<j:if test="${remoteUrl.startsWith('http')}">
-				<br/><strong>${%Repository}</strong>: <a href="${remoteUrl}">${remoteUrl}</a>
+			<strong>${%Revision}</strong>: ${it.lastBuild.SHA1.name()}
+			<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
+			<j:if test="${!empty(it.remoteUrls)}">
+				<j:forEach var="remoteUrl" items="${it.remoteUrls}">
+					<j:set var="browserUrl" value="${it.getRepositoryBrowserUrl(remoteUrl)}"/>
+					<j:choose>
+						<j:when test="${browserUrl != null and !browserUrl.isEmpty()}">
+							<br/><strong>${%Repository}</strong>: <a href="${browserUrl}">${remoteUrl}</a>
+						</j:when>
+						<j:otherwise>
+							<br/><strong>${%Repository}</strong>: ${remoteUrl}
+						</j:otherwise>
+					</j:choose>
+				</j:forEach>
 			</j:if>
-			<j:if test="${!remoteUrl.startsWith('http')}">
-				<br/><strong>${%Repository}</strong>: ${remoteUrl}
-			</j:if>
-		</j:forEach>
-	</j:if>
-	<ul>
-	<j:forEach var="branch" items="${it.lastBuild.revision.branches}">
-	<li>${branch.name}</li>
-	</j:forEach>
-	</ul>
+			<ul>
+				<j:forEach var="branch" items="${it.lastBuild.revision.branches}">
+					<li>${branch.name}</li>
+				</j:forEach>
+			</ul>
 
-	<h2>${%Built Branches}</h2>
-	<ul>
+			<h2>${%Built Branches}</h2>
+			<ul>
 
-	<j:forEach var="branch" items="${it.buildsByBranchName.keySet()}">
-	<li><j:choose><j:when test="${branch}==''}">(unnamed)</j:when><j:otherwise>${branch}</j:otherwise></j:choose>: ${it.buildsByBranchName.get(branch).toString()}</li>
-	</j:forEach>
-	</ul>
+				<j:forEach var="branch" items="${it.buildsByBranchName.keySet()}">
+					<li><j:choose><j:when test="${branch}==''}">(unnamed)</j:when><j:otherwise>${branch}</j:otherwise></j:choose>: ${it.buildsByBranchName.get(branch).toString()}</li>
+				</j:forEach>
+			</ul>
 
-	</l:main-panel>
-  	</l:layout>
+		</l:main-panel>
+	</l:layout>
 </j:jelly>
