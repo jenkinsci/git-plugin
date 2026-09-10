@@ -196,8 +196,9 @@ checkout resolveScm(
   source: gitSource(
     credentialsId: 'git-cred',
     traits: [gitBranchDiscovery()]
-    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
-    targets: [env.BRANCH_NAME, 'main'] // [params.branchName, 'main'] if you pass branch name from build parameters
+    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'
+  ),
+  targets: [env.BRANCH_NAME, 'main'] // [params.branchName, 'main'] if you pass branch name from build parameters
 )
 ----
 In this example we try find branch with name `env.BRANCH_NAME`/`params.branchName` in `ws-cleanup-plugin` repository if it non exists fallback to `main` branch and then clone it.
@@ -213,8 +214,9 @@ checkout resolveScm(
   source: gitSource(
     credentialsId: 'git-cred',
     traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
-    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'),
-    targets: [env.BRANCH_NAME, 'main'] // [params.branchName, 'main'] if you pass branch name from build parameters
+    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'
+  ),
+  targets: [env.BRANCH_NAME, 'main'] // [params.branchName, 'main'] if you pass branch name from build parameters
 )
 ----
 
