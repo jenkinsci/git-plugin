@@ -185,16 +185,15 @@ checkout scmGit(
 
 When you have a pipeline that checks out other sibling repositories, you may want to check out the matching branch from that sibling repository (assuming it exists) but fall back to the main branch if there is no matching branch.
 
-For it you can use `resolveScm`. [Documentation](https://www.jenkins.io/doc/pipeline/steps/workflow-multibranch/#resolvescm-resolves-an-scm-from-an-scm-source-and-a-list-of-candidate-target-branch-names)
+For it you can use link:https://www.jenkins.io/doc/pipeline/steps/workflow-multibranch/#resolvescm-resolves-an-scm-from-an-scm-source-and-a-list-of-candidate-target-branch-names[resolveScm].
 
-You can pass `cloneOption` trait with shallow flag for speed-up retrieve target branch.
-Just add in `traits` param these code:
+You can pass `cloneOption` trait with shallow flag for speed-up retrieve target branch. Just add in `traits` param these code:
 [source,groovy]
 ----
 cloneOption(cloneOption(depth: 1, shallow: true))
 ----
 
-In link:https://www.jenkins.io/doc/pipeline/steps/workflow-multibranch/[Multi-branch pipeline] `resolveScm` used for build all or specified(e.g. wildcard rule) branches. You can use `env.BRANCH_NAME` for get current branch this build.
+In link:https://www.jenkins.io/doc/pipeline/steps/workflow-multibranch/[multi-branch pipeline] `resolveScm` used for build all or specified(e.g. wildcard rule) branches. You can use `env.BRANCH_NAME` for get current branch this build.
 
 [source,groovy]
 ----
