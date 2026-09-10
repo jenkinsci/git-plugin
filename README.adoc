@@ -19,7 +19,7 @@ toc::[]
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:https://github.com/jenkinsci/git-plugin/blob/git-4.7.2/CHANGELOG.adoc[change log].
 
-=== Pipelines and SCM
+== Pipelines and SCM
 
 The git plugin supports both simple, standalone pipelines and more complex multibranch pipeline workflows.
 
