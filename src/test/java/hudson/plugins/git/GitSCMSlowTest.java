@@ -334,8 +334,11 @@ class GitSCMSlowTest extends AbstractGitTestCase {
         @Override
         public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
             GitClient gitClient = super.decorate(scm, git);
-            gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
-            gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+            if (gitClient.hasGitRepo()) {
+                // Do not attempt to disable GPG signing unless we're in a repository
+                gitClient.config(GitClient.ConfigLevel.LOCAL, "commit.gpgsign", "false");
+                gitClient.config(GitClient.ConfigLevel.LOCAL, "tag.gpgSign", "false");
+            }
             return gitClient;
         }
     }

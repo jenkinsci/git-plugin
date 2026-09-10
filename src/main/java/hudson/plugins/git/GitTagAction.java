@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -232,6 +233,8 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
 
     @Override
+    @SuppressFBWarnings(value="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY",
+                        justification="Part of the public API")
     public Permission getPermission() {
         return GitSCM.TAG;
     }

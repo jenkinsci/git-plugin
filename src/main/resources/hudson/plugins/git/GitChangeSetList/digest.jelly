@@ -12,21 +12,8 @@
       ${%No changes.}
     </j:when>
     <j:otherwise>
-      ${%Changes}
-      <ol>
-        <j:forEach var="cs" items="${it.logs}">
-          <li>
-            <j:out value="${cs.msgAnnotated}"/>
-            (<a href="changes#${cs.id}">${%details}</a>
-            <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
-            <j:if test="${cslink!=null}">
-              <j:text> / </j:text>
-              <a href="${cslink}">${browser.descriptor.displayName}</a>
-            </j:if>
-            <j:text>)</j:text>
-          </li>
-        </j:forEach>
-      </ol>
+      <j:set var="compact" value="true" />
+      <st:include page="index.jelly" />
     </j:otherwise>
   </j:choose>
 </j:jelly>

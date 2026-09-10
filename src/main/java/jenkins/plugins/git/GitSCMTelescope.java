@@ -25,7 +25,6 @@
 
 package jenkins.plugins.git;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
@@ -189,16 +188,17 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                     StandardCredentials credentials;
                     String credentialsId = config.getCredentialsId();
                     if (credentialsId != null) {
-                        List<StandardUsernameCredentials> urlCredentials = CredentialsProvider
-                                .lookupCredentialsInItem(StandardUsernameCredentials.class, owner,
-                                        owner instanceof Queue.Task t
-                                                ? Tasks.getAuthenticationOf2(t)
-                                                : ACL.SYSTEM2, URIRequirementBuilder.fromUri(remote).build());
-                        credentials = CredentialsMatchers.firstOrNull(
-                                urlCredentials,
-                                CredentialsMatchers
-                                        .allOf(CredentialsMatchers.withId(credentialsId), GitClient.CREDENTIALS_MATCHER)
-                        );
+                        var credential = CredentialsProvider.findCredentialByIdInItem(
+                                credentialsId,
+                                StandardUsernameCredentials.class,
+                                owner,
+                                owner instanceof Queue.Task t
+                                        ? Tasks.getAuthenticationOf2(t)
+                                        : ACL.SYSTEM2,
+                                URIRequirementBuilder.fromUri(remote).build());
+                        credentials = credential != null && GitClient.CREDENTIALS_MATCHER.matches(credential)
+                                ? credential
+                                : null;
                     } else {
                         credentials = null;
                     }

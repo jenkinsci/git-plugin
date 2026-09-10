@@ -24,6 +24,7 @@
 package jenkins.plugins.git.traits;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.plugins.git.GitSCMSource;
@@ -73,6 +74,8 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      * {@inheritDoc}
      */
     @Override
+    @SuppressFBWarnings(value="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY",
+                        justification="Part of the public API")
     public boolean includeCategory(@NonNull SCMHeadCategory category) {
         return category.isUncategorized();
     }

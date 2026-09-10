@@ -596,4 +596,20 @@ public class GitStatusTest extends AbstractGitProject {
         assertNotNull(lastBuild);
         assertEquals(1, lastBuild.getNumber());
     }
+
+    @Test
+    public void testDoNotifyCommitWithSshAzureDevopsPath() throws Exception { /* No parameters */
+        this.repoURL = "git@ssh.dev.azure.com:v3/myorg/PROJECT/reponame";
+        FreeStyleProject project = setupNotifyProject();
+        final String differingUrl = "https://myorg@dev.azure.com/myorg/PROJECT/_git/reponame";
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, differingUrl, branch, sha1, notifyCommitApiToken);
+        assertEquals("URL: " + differingUrl
+                + " SHA1: " + sha1
+                + " Branches: " + branch, this.gitStatus.toString());
+
+        r.waitUntilNoActivity();
+        FreeStyleBuild lastBuild = project.getLastBuild();
+        assertNotNull(lastBuild);
+    }
+
 }

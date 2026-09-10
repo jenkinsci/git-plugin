@@ -208,14 +208,28 @@ public class GitStatus implements UnprotectedRootAction {
      * @return true if left-hand side loosely matches right-hand side
      */
     public static boolean looselyMatches(URIish lhs, URIish rhs) {
-        return Objects.equals(lhs.getHost(),rhs.getHost())
+        return looselyMatchHost(lhs, rhs)
             && Objects.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+    }
+
+    /**
+     * Match hosts removing any "ssh." at the start of the subdomain.
+     * Some cloud providers prepend "ssh." in the host for ssh urls - while only allowing to send the https url (without ssh.) to the notify commit endpoint.
+     *
+     * Ignoring the "ssh" subdomain allows keeping loosely matching the url.
+     */
+    private static boolean looselyMatchHost(URIish lhs, URIish rhs) {
+        String lhsHost = StringUtils.removeStart(lhs.getHost(), "ssh.");
+        String rhsHost = StringUtils.removeStart(rhs.getHost(), "ssh.");
+        return Objects.equals(lhsHost, rhsHost);
     }
 
     private static String normalizePath(String path) {
         if (path.startsWith("/"))   path=path.substring(1);
         if (path.endsWith("/"))     path=path.substring(0,path.length()-1);
         if (path.endsWith(".git"))  path=path.substring(0,path.length()-4);
+        if (path.matches("v\\d/.*"))   path=path.substring(3); //remove leading versioning used in azure devops (e.g. v3/...)
+        path = path.replace("/_git/", "/"); //ignore _git meta path in http urls as they are usually not in ssh urls
         return path;
     }
 
@@ -346,6 +360,7 @@ public class GitStatus implements UnprotectedRootAction {
          */
         @Override
         public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
+            long startMs = System.currentTimeMillis();
             sha1 = cleanupSha1(sha1);
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.log(Level.FINE, "Received notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3}",
@@ -383,14 +398,30 @@ public class GitStatus implements UnprotectedRootAction {
                                     branchMatches = false;
                             URIish matchedURL = null;
                             for (URIish remoteURL : repository.getURIs()) {
+                                if (LOGGER.isLoggable(Level.FINEST)) {
+                                    LOGGER.log(Level.FINEST, "Comparing notified uri {0} against repository uri {1} in project {2}", new Object[]{uri, remoteURL, project.getFullDisplayName()});
+                                }
                                 if (looselyMatches(uri, remoteURL)) {
+                                    if (LOGGER.isLoggable(Level.FINER)) {
+                                        LOGGER.log(Level.FINER, "Repository uri {0} matches notified uri {1} in project {2}", new Object[]{remoteURL, uri, project.getFullDisplayName()});
+                                    }
                                     repositoryMatches = true;
                                     matchedURL = remoteURL;
                                     break;
                                 }
                             }
 
-                            if (!repositoryMatches || git.getExtensions().get(IgnoreNotifyCommit.class)!=null) {
+                            if (!repositoryMatches) {
+                                if (LOGGER.isLoggable(Level.FINER)) {
+                                    LOGGER.log(Level.FINER, "No matching repository uri for notified uri {0} in project {1}", new Object[]{uri, project.getFullDisplayName()});
+                                }
+                                continue;
+                            }
+
+                            if (git.getExtensions().get(IgnoreNotifyCommit.class)!=null) {
+                                if (LOGGER.isLoggable(Level.FINER)) {
+                                    LOGGER.log(Level.FINER, "Ignoring notified uri {0} match in project {1} due to ignore notify commit setting", new Object[]{uri, project.getFullDisplayName()});
+                                }
                                 continue;
                             }
 
@@ -408,6 +439,9 @@ public class GitStatus implements UnprotectedRootAction {
                                 branchFound = true;
                             } else {
                                 OUT: for (BranchSpec branchSpec : git.getBranches()) {
+                                    if (LOGGER.isLoggable(Level.FINEST)) {
+                                        LOGGER.log(Level.FINEST, "Comparing modified branches {0} against branch {1} in project {2}", new Object[]{Arrays.toString(branches), branchSpec.getName(), project.getFullDisplayName()});
+                                    }
                                     if (branchSpec.getName().contains("$")) {
                                         // If the branchspec is parametrized, always run the polling
                                         if (LOGGER.isLoggable(Level.FINE)) {
@@ -428,7 +462,12 @@ public class GitStatus implements UnprotectedRootAction {
                                     }
                                 }
                             }
-                            if (!branchFound) continue;
+                            if (!branchFound) {
+                                if (LOGGER.isLoggable(Level.FINER)) {
+                                    LOGGER.log(Level.FINER, "No matching branch spec for modified branches {0} in project {1}", new Object[]{Arrays.toString(branches), project.getFullDisplayName()});
+                                }
+                                continue;
+                            }
                             urlFound = true;
                             if (!(project instanceof ParameterizedJobMixIn.ParameterizedJob<?,?> job && job.isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
@@ -485,6 +524,12 @@ public class GitStatus implements UnprotectedRootAction {
                 }
 
                 lastStaticBuildParameters = allBuildParameters;
+
+                if (LOGGER.isLoggable(Level.FINER)) {
+                    LOGGER.log(Level.FINER, "Processed notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3} in {4} ms",
+                            new Object[]{StringUtils.defaultIfBlank(origin, "?"), uri, sha1, Arrays.toString(branches), System.currentTimeMillis() - startMs});
+                }
+
                 return result;
             }
         }

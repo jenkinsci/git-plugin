@@ -251,11 +251,11 @@ public abstract class AbstractGitTestCase {
 
     protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
-        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists(), expectedNewlyCommittedFile + " file not found in workspace");
-        }
         if(expectedResult != null) {
             r.assertBuildStatus(expectedResult, build);
+        }
+        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
+            assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists(), expectedNewlyCommittedFile + " file not found in workspace");
         }
         return build;
     }

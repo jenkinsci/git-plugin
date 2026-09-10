@@ -4,12 +4,14 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -31,6 +33,16 @@ public class RelativeTargetDirectory extends GitSCMExtension {
 
     public String getRelativeTargetDir() {
         return relativeTargetDir;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
+        if (build != null && build.getClass().getName().startsWith("org.jenkinsci.plugins.workflow.job.")) {
+            listener.getLogger().println("DEPRECATED: Relative target directory is deprecated for Pipeline jobs. " + "Use the 'dir' step instead.");
+        }
     }
 
     @Override

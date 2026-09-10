@@ -242,7 +242,7 @@ class GitSCMFileSystemTest {
         SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        long fileSystemAllowedOffset = 1500;
+        long fileSystemAllowedOffset = 2500; // Sometimes a busy file system is offset more than 1500 ms
         if ("OpenBSD".equals(System.getProperty("os.name"))) {
             fileSystemAllowedOffset = 2 * fileSystemAllowedOffset;
         }

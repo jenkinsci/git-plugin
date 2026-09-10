@@ -133,7 +133,7 @@ Shallow clone requests a limited number of commits from the tip of the requested
 checkout scmGit(
     branches: [[name: '*/master']],
     extensions: [ cloneOption(shallow: true) ],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 ==== Checkout with a narrow refspec
@@ -147,7 +147,7 @@ checkout scmGit(
     branches: [[name: '*/master']],
     extensions: [ cloneOption(honorRefspec: true) ],
     userRemoteConfigs: [[refspec: '+refs/heads/master:refs/remotes/origin/master',
-        url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+        url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 ==== Checkout and prune stale remote branches
@@ -160,7 +160,7 @@ This removes remote tracking branches and tags from the local workspace if they 
 checkout scmGit(
     branches: [[name: 'master']],
     extensions: [ pruneStaleBranch(), pruneTags(true) ],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 ==== Wipe out repository before checkout
@@ -173,7 +173,7 @@ Ensures a fully fresh workspace.
 deleteDir()
 checkout scmGit(
     branches: [[name: '*/master']],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
 ----
 
 ==== Resolve an SCM from an Git Source and a list of candidate target branch names before checkout
@@ -793,7 +793,7 @@ URL::
 
 image:images/git-repository-browser-rhodecode.png[RhodeCode Repository Browser]
 
-Repository browser for git repositories hosted by link:https://thodecode.com/[RhodeCode].
+Repository browser for git repositories hosted by link:https://rhodecode.com/[RhodeCode].
 Options include:
 
 [[rhodecode-url]]
@@ -1407,7 +1407,7 @@ checkout([$class: 'GitSCM',
     doGenerateSubmoduleConfigurations: false,
     extensions: [],
     submoduleCfg: [],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])
 ```
 
 Current Pipeline Syntax looks like this:
@@ -1415,7 +1415,7 @@ Current Pipeline Syntax looks like this:
 ```groovy
 checkout scmGit(
     branches: [[name: 'master']],
-    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']])
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
 ```
 
 [#environment-variables]
@@ -1664,6 +1664,7 @@ This script removes the static list of BuildsByBranch that is stored for each bu
 ----
 import hudson.matrix.*
 import hudson.model.*
+import static hudson.Util.fixNull
 
 hudsonInstance = hudson.model.Hudson.instance
 jobNames = hudsonInstance.getJobNames()
@@ -1691,7 +1692,7 @@ for (job in allItems) {
         hudson.plugins.git.Revision r = action.getLastBuiltRevision();
         if (r != null) {
           for (branch in r.getBranches()) {
-            action.buildsByBranchName.put(branch.getName(), action.lastBuild)
+            action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
           }
         }
         build.actions.remove(action)
@@ -1710,7 +1711,7 @@ for (job in allItems) {
             hudson.plugins.git.Revision r = action.getLastBuiltRevision();
             if (r != null) {
               for (branch in r.getBranches()) {
-                action.buildsByBranchName.put(branch.getName(), action.lastBuild)
+                action.buildsByBranchName.put(fixNull((String) branch.getName()), action.lastBuild)
               }
             }
             run.actions.remove(action)

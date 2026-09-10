@@ -9,10 +9,10 @@ import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import com.github.sparsick.testcontainers.gitserver.GitServerVersions;
-import com.github.sparsick.testcontainers.gitserver.http.GitHttpServerContainer;
-import com.github.sparsick.testcontainers.gitserver.plain.GitServerContainer;
-import com.github.sparsick.testcontainers.gitserver.plain.SshIdentity;
+import dev.parsick.testcontainers.gitserver.GitServerVersions;
+import dev.parsick.testcontainers.gitserver.http.GitHttpServerContainer;
+import dev.parsick.testcontainers.gitserver.plain.GitServerContainer;
+import dev.parsick.testcontainers.gitserver.plain.SshIdentity;
 import hudson.ExtensionList;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -41,7 +41,7 @@ import org.testcontainers.containers.BindMode;
 class FIPSModeUrlCheckTest {
 
     @RegisterExtension
-    private final RealJenkinsExtension extension = new RealJenkinsExtension().omitPlugins("eddsa-api", "trilead-api", "git-tag-message")
+    private final RealJenkinsExtension extension = new RealJenkinsExtension().omitPlugins("eddsa-api", "trilead-api")
             .javaOptions("-Djenkins.security.FIPS140.COMPLIANCE=true");
 
     @TempDir

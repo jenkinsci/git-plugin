@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class FIPSModeSCMSourceTest {
 
     @RegisterExtension
-    private final RealJenkinsExtension extension = new RealJenkinsExtension().omitPlugins("eddsa-api", "trilead-api", "git-tag-message")
+    private final RealJenkinsExtension extension = new RealJenkinsExtension().omitPlugins("eddsa-api", "trilead-api")
             .javaOptions("-Djenkins.security.FIPS140.COMPLIANCE=true")
             .withLogger(AbstractGitSCMSource.class, Level.SEVERE);
 

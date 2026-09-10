@@ -25,13 +25,13 @@
 
 package jenkins.plugins.git;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Item;
@@ -278,11 +278,15 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
+        @SuppressFBWarnings(value="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY",
+                            justification="Part of the public API")
         public boolean supportsDescriptor(SCMDescriptor descriptor) {
             return descriptor instanceof GitSCM.DescriptorImpl;
         }
 
         @Override
+        @SuppressFBWarnings(value="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY",
+                            justification="Part of the public API")
         public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
             return AbstractGitSCMSource.class.isAssignableFrom(descriptor.clazz);
         }
@@ -369,20 +373,17 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 GitClient client = git.getClient();
                 String credentialsId = config.getCredentialsId();
                 if (credentialsId != null) {
-                    StandardCredentials credential = CredentialsMatchers.firstOrNull(
-                            CredentialsProvider.lookupCredentialsInItem(
-                                StandardUsernameCredentials.class,
-                                owner,
-                                ACL.SYSTEM2,
-                                URIRequirementBuilder.fromUri(remote).build()
-                            ),
-                            CredentialsMatchers.allOf(
-                                CredentialsMatchers.withId(credentialsId),
-                                GitClient.CREDENTIALS_MATCHER
-                            )
-                        );
-                    client.addDefaultCredentials(credential);
-                    CredentialsProvider.track(owner, credential);
+                    var credential = CredentialsProvider.findCredentialByIdInItem(
+                            credentialsId,
+                            StandardUsernameCredentials.class,
+                            owner,
+                            ACL.SYSTEM2,
+                            URIRequirementBuilder.fromUri(remote).build());
+                    StandardCredentials matchedCredential = credential != null && GitClient.CREDENTIALS_MATCHER.matches(credential)
+                            ? credential
+                            : null;
+                    client.addDefaultCredentials(matchedCredential);
+                    CredentialsProvider.track(owner, matchedCredential);
                 }
 
                 if (!client.hasGitRepo(false)) {
