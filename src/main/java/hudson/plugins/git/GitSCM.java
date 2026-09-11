@@ -959,7 +959,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     URIRequirementBuilder.fromUri(url).build());
             if (c != null && GitClient.CREDENTIALS_MATCHER.matches(c)) {
                 for (var contextualizer : ExtensionList.lookup(Contextualizer.class)) {
-                    var contextualized = contextualizer.forUrl(c, url);
+                    var contextualized = contextualizer.forContext(c, build, url);
                     if (contextualized != null) {
                         return contextualized;
                     }
@@ -972,7 +972,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     public interface Contextualizer extends ExtensionPoint {
-        @CheckForNull StandardUsernameCredentials forUrl(@NonNull StandardUsernameCredentials credentials, @NonNull String url);
+        @CheckForNull StandardUsernameCredentials forContext(@NonNull StandardUsernameCredentials credentials, @NonNull Run<?, ?> build, @NonNull String url);
     }
 
     @NonNull
