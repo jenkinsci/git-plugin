@@ -39,6 +39,8 @@
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <!-- https://github.com/jenkinsci/jenkins-test-harness/pull/1195 -->
+    <jenkins-test-harness.version>2588.v92b_e0c3d2ea_1</jenkins-test-harness.version>
     <no-test-jar>false</no-test-jar>
     <!-- Do not run extra reporting for pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
