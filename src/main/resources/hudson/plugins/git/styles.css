@@ -67,13 +67,13 @@
   margin-left: -2rem;
   text-decoration: none !important;
 
-  span {
+  & > span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  svg {
+  & > svg {
     width: 1rem;
     height: 1lh;
     color: var(--text-color-secondary);
@@ -84,10 +84,16 @@
   }
 
   &:hover {
-    span {
+    & > span {
       text-decoration: underline !important;
     }
   }
+}
+
+.git-changeset__items__item__message__comment {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .git-changeset__items__item__files {

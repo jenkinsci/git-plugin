@@ -26,7 +26,7 @@
         <j:if test="${cslink == null}">
           <div class="git-changeset__items__item__message">
             <l:icon src="symbol-git-commit-outline plugin-ionicons-api" />
-            <j:out value="${cs.commentAnnotated}"/>
+            <div class="git-changeset__items__item__message__comment"><j:out value="${cs.commentAnnotated}"/></div>
           </div>
         </j:if>
         <j:if test="${!compact and !empty(cs.paths)}">
