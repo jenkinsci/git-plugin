@@ -31,6 +31,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Item;
@@ -277,11 +278,15 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
+        @SuppressFBWarnings(value="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY",
+                            justification="Part of the public API")
         public boolean supportsDescriptor(SCMDescriptor descriptor) {
             return descriptor instanceof GitSCM.DescriptorImpl;
         }
 
         @Override
+        @SuppressFBWarnings(value="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY",
+                            justification="Part of the public API")
         public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
             return AbstractGitSCMSource.class.isAssignableFrom(descriptor.clazz);
         }

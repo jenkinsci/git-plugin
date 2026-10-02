@@ -762,7 +762,7 @@ URL::
 
 image:images/git-repository-browser-rhodecode.png[RhodeCode Repository Browser]
 
-Repository browser for git repositories hosted by link:https://thodecode.com/[RhodeCode].
+Repository browser for git repositories hosted by link:https://rhodecode.com/[RhodeCode].
 Options include:
 
 [[rhodecode-url]]

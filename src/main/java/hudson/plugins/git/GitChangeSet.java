@@ -16,6 +16,7 @@ import org.springframework.security.core.AuthenticationException;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -346,6 +347,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     @Override
+    @SuppressFBWarnings(value="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY",
+                        justification="Part of the public API")
     public void setParent(ChangeLogSet parent) {
         super.setParent(parent);
     }
