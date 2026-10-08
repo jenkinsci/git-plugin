@@ -608,4 +608,33 @@ class GitSCMBuilderTest {
         ));
     }
 
+    @Test
+    void withAdditionalRemoteRefSpecLeadingAndTrailingWhitespace() throws Exception {
+        // A single whitespace-padded refspec would be masked by UserRemoteConfig's own
+        // outer-string trim (the padding sits at the joined string's boundary either way),
+        // so use a second refspec to keep the padding in the middle of the joined string,
+        // where only a fix inside AdditionalRemote.asRefSpecs() itself can remove it.
+        instance.withAdditionalRemote("upstream", "http://git.test/upstream.git",
+                "+refs/heads/master:refs/remotes/@{remote}/master",
+                " +refs/heads/develop:refs/remotes/@{remote}/develop ");
+        GitSCM scm = instance.build();
+        assertThat(scm.getUserRemoteConfigs(), containsInAnyOrder(
+                allOf(
+                        instanceOf(UserRemoteConfig.class),
+                        hasProperty("url", is("http://git.test/repo.git")),
+                        hasProperty("name", is("origin")),
+                        hasProperty("refspec", is("+refs/heads/*:refs/remotes/origin/*")),
+                        hasProperty("credentialsId", is(nullValue()))
+                ),
+                allOf(
+                        instanceOf(UserRemoteConfig.class),
+                        hasProperty("url", is("http://git.test/upstream.git")),
+                        hasProperty("name", is("upstream")),
+                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/upstream/master "
+                                + "+refs/heads/develop:refs/remotes/upstream/develop")),
+                        hasProperty("credentialsId", is(nullValue()))
+                )
+        ));
+    }
+
 }
