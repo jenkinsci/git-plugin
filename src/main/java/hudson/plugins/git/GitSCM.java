@@ -12,6 +12,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.init.Initializer;
@@ -48,6 +49,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitCredentialContextualizer;
 import jenkins.plugins.git.GitHooksConfiguration;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import jenkins.plugins.git.GitToolChooser;
@@ -955,7 +957,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     StandardUsernameCredentials.class,
                     build,
                     URIRequirementBuilder.fromUri(url).build());
-            return c != null && GitClient.CREDENTIALS_MATCHER.matches(c) ? c : null;
+            if (c != null && GitClient.CREDENTIALS_MATCHER.matches(c)) {
+                if (url != null) {
+                    for (var contextualizer : ExtensionList.lookup(GitCredentialContextualizer.class)) {
+                        var contextualized = contextualizer.contextualize(c, build, url);
+                        if (contextualized != null) {
+                            return contextualized;
+                        }
+                    }
+                }
+                return c;
+            } else {
+                return null;
+            }
         }
     }
 
