@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,6 +26,20 @@ import org.mockito.Mockito;
 
 // NOTE: isRevExcluded generally returns null instead of false
 class PathRestrictionTest {
+
+    @Test
+    void normalizedRegionsAreNullWhenBlank() {
+        PathRestriction restriction = new PathRestriction(null, " \n ");
+        assertNull(restriction.getIncludedRegionsNormalized());
+        assertNull(restriction.getExcludedRegionsNormalized());
+    }
+
+    @Test
+    void normalizedRegionsAreSplitOnLineBreaks() {
+        PathRestriction restriction = new PathRestriction("foo.*\r\nqux.*", "bar.*\n\n.*bax");
+        assertArrayEquals(new String[] {"foo.*", "qux.*"}, restriction.getIncludedRegionsNormalized());
+        assertArrayEquals(new String[] {"bar.*", ".*bax"}, restriction.getExcludedRegionsNormalized());
+    }
 
     abstract static class PathRestrictionExtensionTest extends GitSCMExtensionTest {
 

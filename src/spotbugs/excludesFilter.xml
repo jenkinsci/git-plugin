@@ -69,9 +69,4 @@
     - If it is not a false positive, fix the bug, then remove the
       exclusion from this section.
    -->
-  <Match>
-    <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS" />
-    <Class name="hudson.plugins.git.extensions.impl.PathRestriction" />
-    <Method name="normalize" />
-  </Match>
 </FindBugsFilter>
