@@ -1,6 +1,7 @@
 package hudson.plugins.git.extensions.impl;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
@@ -58,6 +59,7 @@ public class PathRestriction extends GitSCMExtension {
         return normalize(includedRegions);
     }
 
+    @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "Public getters return null when no regions are configured; GitSCMBackwardCompatibility exposes the same contract")
     private String[] normalize(String s) {
         if (s == null || s.isBlank()) {
             return null;
