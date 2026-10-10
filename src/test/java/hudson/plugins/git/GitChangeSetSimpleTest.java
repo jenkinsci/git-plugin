@@ -128,6 +128,26 @@ class GitChangeSetSimpleTest {
     }
 
     @Test
+    void testGetGitAuthorNameAlwaysReturnsAuthor() {
+        assertEquals(GitChangeSetUtil.AUTHOR_NAME, changeSet.getGitAuthorName());
+    }
+
+    @Test
+    void testGetGitAuthorEmailAlwaysReturnsAuthor() {
+        assertEquals(GitChangeSetUtil.AUTHOR_EMAIL, changeSet.getGitAuthorEmail());
+    }
+
+    @Test
+    void testGetGitCommitterNameAlwaysReturnsCommitter() {
+        assertEquals(GitChangeSetUtil.COMMITTER_NAME, changeSet.getGitCommitterName());
+    }
+
+    @Test
+    void testGetGitCommitterEmailAlwaysReturnsCommitter() {
+        assertEquals(GitChangeSetUtil.COMMITTER_EMAIL, changeSet.getGitCommitterEmail());
+    }
+
+    @Test
     void testGetDate() {
         assertEquals(useAuthorName ? GitChangeSetUtil.AUTHOR_DATE_FORMATTED : GitChangeSetUtil.COMMITTER_DATE_FORMATTED, changeSet.getDate());
     }
