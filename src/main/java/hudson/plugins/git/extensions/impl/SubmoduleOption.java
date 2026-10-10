@@ -1,6 +1,9 @@
 package hudson.plugins.git.extensions.impl;
 
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.model.Computer;
+import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
@@ -9,6 +12,8 @@ import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.GitUtils;
+import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -179,11 +184,21 @@ public class SubmoduleOption extends GitSCMExtension {
                 // This ensures we don't miss changes to submodule paths and allows
                 // seamless use of bare and non-bare superproject repositories.
                 git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
+                
+                Node node = GitUtils.workspaceToNode(git.getWorkTree());
+                EnvVars env = build.getEnvironment(listener);
+                Computer comp = node.toComputer();
+                if (comp != null) {
+                    env.putAll(comp.getEnvironment());
+                }
+                for (NodeProperty nodeProperty: node.getNodeProperties()) {
+                    nodeProperty.buildEnvVars(env, listener);
+                }
                 SubmoduleUpdateCommand cmd = git.submoduleUpdate()
                         .recursive(recursiveSubmodules)
                         .remoteTracking(trackingSubmodules)
                         .parentCredentials(parentCredentials)
-                        .ref(build.getEnvironment(listener).expand(reference))
+                        .ref(env.expand(reference))
                         .timeout(timeout)
                         .shallow(shallow);
                 if (shallow) {
