@@ -229,6 +229,11 @@ class AbstractGitSCMSourceWantTagsTest {
                 }
 
                 @Override
+                public FetchCommand filter(String filterSpec) {
+                    return this;
+                }
+
+                @Override
                 public void execute() throws GitException, InterruptedException {
                     fetchCommand.execute();
                 }
