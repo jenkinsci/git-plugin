@@ -19,7 +19,12 @@ toc::[]
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:https://github.com/jenkinsci/git-plugin/blob/git-4.7.2/CHANGELOG.adoc[change log].
 
-== Pipelines
+== Pipelines and SCM
+
+The git plugin supports both simple, standalone pipelines and more complex multibranch pipeline workflows.
+
+* A single pipeline is a straightforward Jenkins job configured to check out a repository and execute a sequence of build steps. It typically involves a single SCM checkout, and all necessary information about the repository (such as branch, commit, or URL) is obtained during the checkout step.
+* A multibranch pipeline project automates the management of multiple branches within a repository. Jenkins automatically discovers branches, creates individual jobs for each, and triggers builds based on branch-specific configurations. This setup allows for scalable, branch-specific workflows, and each branch has its own SCM checkout context.
 
 The link:https://www.jenkins.io/doc/pipeline/steps/params/scmgit/[`scmGit` parameter] of the git plugin is used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step] to checkout git repositories into Pipeline workspaces.
 The link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] guides the user to select checkout options.
@@ -174,6 +179,45 @@ deleteDir()
 checkout scmGit(
     branches: [[name: '*/master']],
     userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin.git']])
+----
+
+==== Using resolveScm in pipelines
+
+When you have a pipeline that checks out other sibling repositories, you may want to check out the matching branch from that sibling repository (assuming it exists) but fall back to the main branch if there is no matching branch.
+
+For it you can use link:https://www.jenkins.io/doc/pipeline/steps/workflow-multibranch/#resolvescm-resolves-an-scm-from-an-scm-source-and-a-list-of-candidate-target-branch-names[resolveScm].
+
+In link:https://www.jenkins.io/doc/pipeline/steps/workflow-multibranch/[multi-branch pipeline] `resolveScm` used for build all or specified(e.g. wildcard rule) branches. You can use `env.BRANCH_NAME` for get current branch this build.
+In single link:https://www.jenkins.io/doc/book/pipeline/[pipeline] which build one specified branch(e.g. from parameters `params.branchName`)
+
+[source,groovy]
+----
+checkout resolveScm(
+  source: gitSource(
+    credentialsId: 'git-cred',
+    traits: [gitBranchDiscovery()]
+    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'
+  ),
+  targets: [env.BRANCH_NAME, 'main'] // [params.branchName, 'main'] if you pass branch name from build parameters
+)
+----
+In this example we try find branch with name `env.BRANCH_NAME`/`params.branchName` in `ws-cleanup-plugin` repository if it non exists fallback to `main` branch and then clone it.
+
+You can pass `cloneOption` trait with shallow flag for speed-up retrieve target branch. Just add in `traits` param these code:
+[source,groovy]
+----
+cloneOption(cloneOption(depth: 1, shallow: true))
+----
+[source,groovy]
+----
+checkout resolveScm(
+  source: gitSource(
+    credentialsId: 'git-cred',
+    traits: [cloneOption(cloneOption(depth: 1, shallow: true)), gitBranchDiscovery()]
+    remote: 'https://github.com/jenkinsci/ws-cleanup-plugin'
+  ),
+  targets: [env.BRANCH_NAME, 'main'] // [params.branchName, 'main'] if you pass branch name from build parameters
+)
 ----
 
 [#credential-binding]
