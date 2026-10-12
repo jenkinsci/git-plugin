@@ -382,7 +382,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     }
                 }
 
-                if (refspecExpandedName == null || refspecExpandedName.equals("")) {
+                if (prefix != null && (refspecExpandedName == null || refspecExpandedName.equals(""))) {
                     if (prefix.equals(Constants.R_TAGS)) {
                         refspecExpandedName = "+" + prefix + calculatedHeadName + ":"  + prefix + calculatedHeadName;
                     } else {
