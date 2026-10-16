@@ -201,7 +201,7 @@ class GitChangeSetTest {
         final String existingUserId = "An existing user";
         final String existingUserFullName = "Some FullName";
         final String email = "jcommitter@nospam.com";
-        final boolean createAccountBasedOnEmail = true;
+        final boolean createAccountBasedOnEmail = random.nextBoolean();
         final boolean useExistingAccountBasedOnEmail = true;
 
         assertNull(User.get(email, false));
