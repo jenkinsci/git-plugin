@@ -12,6 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UserRemoteConfigRefSpecTest {
 
+    @Issue("JENKINS-70303")
+    @Test
+    void constructorTrimsLeadingAndTrailingWhitespaceFromRefspec() {
+        UserRemoteConfig config = new UserRemoteConfig(
+                "git://git.example.com/repository-that-does-not-exist",
+                "origin",
+                " +refs/heads/master:refs/remotes/origin/master ",
+                null);
+        assertEquals("+refs/heads/master:refs/remotes/origin/master", config.getRefspec());
+    }
+
     @Issue("JENKINS-57660")
     @Test
     void testdoCheckRefspecSuccessWithoutWildcards(){

@@ -58,7 +58,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     public UserRemoteConfig(String url, String name, String refspec, @CheckForNull String credentialsId) {
         this.url = fixEmptyAndTrim(url);
         this.name = fixEmpty(name);
-        this.refspec = fixEmpty(refspec);
+        this.refspec = fixEmptyAndTrim(refspec);
         this.credentialsId = fixEmpty(credentialsId);
         if (FIPS140.useCompliantAlgorithms() && StringUtils.isNotEmpty(this.credentialsId) && StringUtils.startsWith(this.url, "http:")) {
             throw new IllegalArgumentException(Messages.git_fips_url_notsecured());
