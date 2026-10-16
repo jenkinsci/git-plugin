@@ -643,7 +643,7 @@ image:images/git-repository-browser-gitiles.png[Gitiles Repository Browser]
 Repository browser for git repositories hosted by link:https://gerrit.googlesource.com/gitiles/[Gitiles].
 Options include:
 
-[[githubweb-url]]
+[[gitiles-url]]
 gitiles root url::
 
   Root URL serving this Gitiles repository.
