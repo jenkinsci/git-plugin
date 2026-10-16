@@ -25,6 +25,9 @@ class GitWebTest {
     private static final String GITWEB_URL = "https://SERVER/gitweb?repo.git";
     private final GitWeb gitwebWeb = new GitWeb(GITWEB_URL);
 
+    private final String encodedFileNameQuery = "src%2Fmain%2Fjava%2Fhudson%2Fplugins%2Fgit%2Fbrowser%2FGithubWeb.java";
+    private final String encodedFileNameQueryDouble = "src%252Fmain%252Fjava%252Fhudson%252Fplugins%252Fgit%252Fbrowser%252FGithubWeb.java";
+
     @Test
     void testGetUrl() throws IOException {
         assertEquals(GITWEB_URL, String.valueOf(gitwebWeb.getUrl()));
@@ -40,7 +43,7 @@ class GitWebTest {
     void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(GITWEB_URL + "&a=blobdiff&f=src/main/java/hudson/plugins/git/browser/GithubWeb.java&fp=src/main/java/hudson/plugins/git/browser/GithubWeb.java&h=3f28ad75f5ecd5e0ea9659362e2eef18951bd451&hp=2e0756cd853dccac638486d6aab0e74bc2ef4041&hb=396fc230a3db05c427737aa5c2eb7856ba72b05d&hpb=f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff", gitwebWeb.getDiffLink(modified1).toString());
+ assertEquals(GITWEB_URL + "&a=blobdiff&f=" + encodedFileNameQuery + "&fp=" + encodedFileNameQuery + "&h=3f28ad75f5ecd5e0ea9659362e2eef18951bd451&hp=2e0756cd853dccac638486d6aab0e74bc2ef4041&hb=396fc230a3db05c427737aa5c2eb7856ba72b05d&hpb=f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff", gitwebWeb.getDiffLink(modified1).toString());
     }
 
     @Test
@@ -48,7 +51,7 @@ class GitWebTest {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = gitwebWeb.getFileLink(path);
-        assertEquals(GITWEB_URL  + "&a=blob&f=src/main/java/hudson/plugins/git/browser/GithubWeb.java&h=2e0756cd853dccac638486d6aab0e74bc2ef4041&hb=396fc230a3db05c427737aa5c2eb7856ba72b05d", String.valueOf(fileLink));
+        assertEquals(GITWEB_URL + "&a=blob&f=" + encodedFileNameQueryDouble + "&h=2e0756cd853dccac638486d6aab0e74bc2ef4041&hb=396fc230a3db05c427737aa5c2eb7856ba72b05d", String.valueOf(fileLink));
     }
 
     @Test
