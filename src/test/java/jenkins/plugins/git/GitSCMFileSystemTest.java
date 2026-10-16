@@ -26,7 +26,9 @@
 package jenkins.plugins.git;
 
 import hudson.EnvVars;
+import hudson.model.Result;
 import hudson.model.TaskListener;
+import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitException;
@@ -34,9 +36,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import hudson.plugins.git.UserRemoteConfig;
 import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
@@ -49,6 +53,10 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -489,5 +497,371 @@ class GitSCMFileSystemTest {
         GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null);
         assertEquals("master-f", result1.headName);
         assertEquals(Constants.R_HEADS, result1.prefix);
+    }
+
+    /** Helper for test(s) below. Populates {@link #sampleRepo} with
+     *  a bare git repository which has a "shallow/master" branch
+     *  and a forged "master" branch, both with a git snapshot history
+     *  one commit deep. They differ in metadata (one is shallow,
+     *  another is complete as far as the git index is concerned).
+     *  No remote repository is registered as an "origin" of this one.
+     */
+    void prepare_bare_shallow_origin() throws Exception {
+        /* Populate a bare repository into sampleRepo with a shallow
+         * fetch from an existing repo. Unlike `git clone --depth...`
+         * this routine can be repeated to provide a snapshot of
+         * multiple git branches or tags into e.g. generated Jenkins
+         * containers, tailored for a purpose like offline automation.
+         */
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+
+        sampleRepo.initBare();
+
+        // Here we parameterize branchNameOriginal more due to the fact
+        // that in e.g. automated Jenkins CI builds a PR source branch
+        // of git-plugin might be the only named ref checked out in the
+        // build workspace, and so the run-time would not necessarily
+        // know about a "master" to fetch. We can still name the branch
+        // made from a FETCH_HEAD in the sampleRepo replica whatever we
+        // like (e.g. branchName="master" as expected by test cases).
+        String branchNameOriginal = null;
+        try {
+            // Pick any, actually
+            for (Branch b : client.getBranches()) {
+                branchNameOriginal = b.getName();
+                break;
+            }
+        } catch (Exception ignored) {
+            // no-op, fall back to master below
+            ignored.printStackTrace();
+        }
+
+        if (branchNameOriginal == null) {
+            branchNameOriginal = "master";
+        }
+
+        sampleRepo.git("fetch", "--depth=1", gitDir.getAbsolutePath(), branchNameOriginal);
+
+        // NOTE: Code below (after the initial "fetch") is repeatable
+        // if multiple branches should be provided via shallow replicas.
+        // Our tests expect to see a "master" so we name whatever we
+        // did fetch like that.
+        String branchName = "master";
+
+        // The fetch (if successful) updated the local repository index,
+        // but did not record any symbolic references like branch names.
+        // Stash that commit as a branch on the side, and forge another
+        // branch with the original name (but necessarily different hash)
+        // which is completely responsible for its own history per metadata.
+        sampleRepo.git("branch", "shallow/" + branchName, "FETCH_HEAD");
+
+        // Original hash (refers to shallow metadata):
+        String hashOriginal = sampleRepo.gitOutput(false,
+                "rev-parse", "shallow/" + branchName);
+        if (hashOriginal != null)
+            hashOriginal = hashOriginal.lines().toList().get(0);
+        assertNotNull(hashOriginal);
+        assertNotEquals("", hashOriginal);
+
+        // Same content as if it is the one and only commit to know about
+        // in the git data tree:
+        String hashTreeContent = sampleRepo.gitOutput(false,
+                "rev-parse", "shallow/" + branchName + "^{tree}");
+        if (hashTreeContent != null)
+            hashTreeContent = hashTreeContent.lines().toList().get(0);
+        assertNotNull(hashTreeContent);
+        assertNotEquals("", hashTreeContent);
+
+        // Use that tree content to create a new commit:
+        String hashNewTip = sampleRepo.gitOutput(false,
+                "commit-tree", hashTreeContent,
+                "-m", "Shallow snapshot of " + branchName + " at " + hashOriginal);
+        if (hashNewTip != null)
+            hashNewTip = hashNewTip.lines().toList().get(0);
+        assertNotNull(hashNewTip);
+        assertNotEquals("", hashNewTip);
+
+        // Now there is a symbolic name for "master" pointing to
+        // a commit in the index. Note that by construct of the
+        // offline source repo, there is no "origin" and so no
+        // symbolic "refs/heads/origin/master", for example.
+        // This is to not be confused with clones in Jenkins git
+        // cache or in ultimate jobs, which could refer to this
+        // bare repo as their "origin".
+        sampleRepo.git("update-ref", "refs/heads/" + branchName, hashNewTip);
+    }
+
+    /** By default, git has a problem cloning from a shallow repository
+     *  as it does not know how to handle the history responsibly.
+     *  There are flags to let it trust the shallow origin "as is",
+     *  but the plugin currently does not seem to use that feature.<br/>
+     *
+     *  As a result, repos cloned from this bare repo will be
+     *  semi-instantiated with present index files but absent
+     *  symbolic references.<br/>
+     *
+     *  The test is to verify that the plugin can handle such repos
+     *  with a reasonable error rather than an NPE somewhere in its
+     *  call stack (bug present in git-5.10.1).<br/>
+     */
+    @Test
+    void handle_bare_shallow_local_origin() throws Throwable {
+        GitSampleRepoRule cloneRepo = new GitSampleRepoRule();
+        cloneRepo.before();
+
+        try {
+            prepare_bare_shallow_origin();
+
+            // See if we can clone the incomplete history
+            cloneRepo.git("clone",
+                    "-b", "shallow/master",
+                    sampleRepo.getRoot().toString(),
+                    cloneRepo.getRoot().toString());
+
+            cloneRepo.git("remote", "-v");
+            cloneRepo.git("branch", "-a");
+
+            String gitLog = cloneRepo.gitOutput(false, "log", "--oneline");
+            assertNotNull(gitLog);
+            assertNotEquals(0, gitLog.length());
+            assertEquals(1, gitLog.lines().toList().size());
+
+            // Do something like what "Pipeline from SCM" does;
+            // with git-5.10.1 this already fails (because git
+            // did not create symbolic ref for the branch name):
+            GitSCM scmFromOrigin = new GitSCM(
+                    List.of(new UserRemoteConfig(
+                            sampleRepo.getRoot().toString(),
+                            null,
+                            null,
+                            null
+                    )),
+                    List.of(new BranchSpec("refs/heads/shallow/master")),
+                    false,
+                    Collections.emptyList(),
+                    null,
+                    null,
+                    Collections.emptyList()
+            );
+            assertNotNull(scmFromOrigin);
+
+            List<BranchSpec> branches = scmFromOrigin.getBranches();
+            assertNotNull(branches);
+            assertNotEquals(0, branches.size());
+            branches.forEach(b -> {
+                assertNotNull(b.getName());
+            });
+
+            GitSCM scmFromClone = new GitSCM(
+                    List.of(new UserRemoteConfig(
+                            cloneRepo.getRoot().toString(),
+                            null,
+                            null,
+                            null
+                    )),
+                    List.of(new BranchSpec("refs/heads/shallow/master")),
+                    false,
+                    Collections.emptyList(),
+                    null,
+                    null,
+                    Collections.emptyList()
+            );
+            assertNotNull(scmFromClone);
+
+            branches = scmFromClone.getBranches();
+            assertNotNull(branches);
+            assertNotEquals(0, branches.size());
+            branches.forEach(b -> {
+                assertNotNull(b.getName());
+            });
+
+            if (r != null) {
+                WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "pipeline-from-git-shallow");
+                // This repo is used as test subject and has *some* Jenkinsfile;
+                // we don't plan to fully run that job, but it must pass git checkout
+                p.setDefinition(new CpsScmFlowDefinition(scmFromOrigin, "Jenkinsfile"));
+
+                // This is the code path used by Pipeline lightweight checkout
+                // with the bare repo used as origin git source for the pipeline.
+                // This is actually the point where the test failed when the
+                // research for https://github.com/jenkinsci/git-plugin/pull/3988
+                // was started, with broken plugin versions (5.10.1 and older):
+                //   java.lang.NullPointerException: Cannot invoke
+                //       "org.eclipse.jgit.lib.Ref.getObjectId()" because the return
+                //       value of "org.eclipse.jgit.lib.Repository.findRef(String)" is null
+                // An intermediate fix reported a meaningful message instead:
+                //   java.io.IOException: Expected ref refs/remotes/origin/shallow/master
+                //       was not created by preceding git fetch
+                // The fix applied here retries the fetch through JGit (which does not
+                // refuse to update refs that would introduce a new shallow root), so
+                // this should now succeed and return a usable filesystem.
+                SCMFileSystem fs =
+                        SCMFileSystem.of(r.jenkins.getItemByFullName("pipeline-from-git-shallow"), scmFromOrigin, null);
+                assertNotNull(fs);
+
+                // This may produce an NPE that we are looking for
+                // (to confirm the problem with initial code and the
+                // lack of one after the fix) in the job context,
+                // assuming we have miraculously survived till now.
+                WorkflowRun b = null;
+                Result res = null;
+                try {
+                    b = p.scheduleBuild2(0).waitForStart();
+                    r.waitForCompletion(b);
+                    res = b.getResult();
+                } catch (Throwable t) {
+                    // We do not care at this point that the job failed,
+                    // as it may be due to the shallow clone or lack of
+                    // the buildPlugin() step defined by Jenkins CI farm.
+                    t.printStackTrace();
+                }
+
+                assertNotNull(res);
+                r.assertLogNotContains("java.lang.NullPointerException: ", b);
+
+                r.assertLogContains("Cloning repository", b);
+                r.assertLogContains("Fetching upstream changes from", b);
+
+                // We probably fail at this one until shallow checkout is fixed.
+                try {
+                    r.assertLogContains("Checking out Revision", b);
+                    r.assertLogContains("Start of Pipeline", b);
+                    r.assertLogContains("End of Pipeline", b);
+                } catch (Throwable t) {
+                    // Troubles are expected at the moment, this test confirms them
+                    t.printStackTrace();
+
+                    // NOTE: The plugin fix applied so far is to throw
+                    //  a meaningful message instead of the unhelpful
+                    //  NPE (when lightweight code path is used).
+                    //  There is no checkout still.
+                    //  Here we pass the actual git checkout path.
+                    r.assertLogContains("Couldn't find any revision to build. Verify the repository and branch configuration for this job", b);
+                }
+            }
+        } finally {
+            cloneRepo.after();
+        }
+    }
+
+    /** This test is to verify that unlike the setup crafted in
+     *  {@link #handle_bare_shallow_local_origin}, the equivalent
+     *  branch name with a complete history (albeit also a single
+     *  commit deep) just works as far as git tooling and this
+     *  plugin are concerned.
+     */
+    @Test
+    void handle_bare_complete_local_origin() throws Throwable {
+        GitSampleRepoRule cloneRepo = new GitSampleRepoRule();
+        cloneRepo.before();
+
+        try {
+            prepare_bare_shallow_origin();
+
+            // Make sure we can clone the complete history
+            cloneRepo.git("clone",
+                    "-b", "master",
+                    sampleRepo.getRoot().toString(),
+                    cloneRepo.getRoot().toString());
+
+            cloneRepo.git("remote", "-v");
+            cloneRepo.git("branch", "-a");
+
+            String gitLog = cloneRepo.gitOutput(false, "log", "--oneline");
+            assertNotNull(gitLog);
+            assertNotEquals(0, gitLog.length());
+            assertEquals(1, gitLog.lines().toList().size());
+
+            // Do something like what "Pipeline from SCM" does;
+            // with git-5.10.1 this already fails (because git
+            // did not create symbolic ref for the branch name):
+            GitSCM scmFromOrigin = new GitSCM(
+                    List.of(new UserRemoteConfig(
+                            sampleRepo.getRoot().toString(),
+                            null,
+                            null,
+                            null
+                    )),
+                    List.of(new BranchSpec("refs/heads/master")),
+                    false,
+                    Collections.emptyList(),
+                    null,
+                    null,
+                    Collections.emptyList()
+            );
+            assertNotNull(scmFromOrigin);
+
+            List<BranchSpec> branches = scmFromOrigin.getBranches();
+            assertNotNull(branches);
+            assertNotEquals(0, branches.size());
+            branches.forEach(b -> {
+                assertNotNull(b.getName());
+            });
+
+            GitSCM scmFromClone = new GitSCM(
+                    List.of(new UserRemoteConfig(
+                            cloneRepo.getRoot().toString(),
+                            null,
+                            null,
+                            null
+                    )),
+                    List.of(new BranchSpec("refs/heads/master")),
+                    false,
+                    Collections.emptyList(),
+                    null,
+                    null,
+                    Collections.emptyList()
+            );
+            assertNotNull(scmFromClone);
+
+            branches = scmFromClone.getBranches();
+            assertNotNull(branches);
+            assertNotEquals(0, branches.size());
+            branches.forEach(b -> {
+                assertNotNull(b.getName());
+            });
+
+            if (r != null) {
+                WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "pipeline-from-git-complete");
+                // This repo is used as test subject and has *some* Jenkinsfile;
+                // we don't plan to fully run that job, but it must pass git checkout
+                p.setDefinition(new CpsScmFlowDefinition(scmFromOrigin, "Jenkinsfile"));
+
+                // This is the code path used by Pipeline lightweight checkout
+                // with the bare repo used as origin git source for the pipeline
+                SCMFileSystem fs = SCMFileSystem.of(
+                        r.jenkins.getItemByFullName("pipeline-from-git-complete"),
+                        scmFromOrigin,
+                        null
+                );
+                assertNotNull(fs);
+
+                // We do not anticipate grave problems with this build
+                WorkflowRun b = null;
+                Result res = null;
+                try {
+                    b = p.scheduleBuild2(0).waitForStart();
+                    r.waitForCompletion(b);
+                    res = b.getResult();
+                } catch (Throwable t) {
+                    // We do not care at this point that the job failed,
+                    // as it may be due to lack of the buildPlugin() step
+                    // defined by Jenkins CI farm.
+                    t.printStackTrace();
+                }
+
+                assertNotNull(res);
+                r.assertLogNotContains("java.lang.NullPointerException: ", b);
+
+                r.assertLogContains("Cloning repository", b);
+                r.assertLogContains("Fetching upstream changes from", b);
+                r.assertLogContains("Checking out Revision", b);
+                r.assertLogContains("Start of Pipeline", b);
+                r.assertLogContains("End of Pipeline", b);
+            }
+        } finally {
+            cloneRepo.after();
+        }
     }
 }
