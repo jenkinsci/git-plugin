@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -81,14 +82,69 @@ public class GitChangeLogParser extends ChangeLogParser {
         return parse(changelog.iterator());
     }
 
-    @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
+    @Override
+    public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
         throws IOException {
-        // Parse the log file into GitChangeSet items - each one is a commit
+        // Parse commits first to get their SHAs
+        List<GitChangeSet> parsedCommits;
         try (Stream<String> lineStream = Files.lines(changelogFile.toPath(), StandardCharsets.UTF_8)) {
-            return new GitChangeSetList(build, browser, parse(lineStream.iterator()));
+            parsedCommits = parse(lineStream.iterator());
         } catch (InvalidPathException e) {
             throw new IOException(e);
         }
+        
+        // Extract repository information from BuildData actions on the Run
+        String scmName = null;
+        Set<String> remoteUrls = new HashSet<>();
+        
+        // Try to match this changelog to the correct BuildData by comparing commit SHAs
+        if (build != null) {
+            List<hudson.plugins.git.util.BuildData> buildDataList = build.getActions(hudson.plugins.git.util.BuildData.class);
+            if (!buildDataList.isEmpty()) {
+            hudson.plugins.git.util.BuildData matchedBuildData = null;
+            
+            // If we have parsed commits, try to match them to BuildData by checking if ANY commit
+            // in the changelog matches the BuildData's last built revision
+            if (!parsedCommits.isEmpty()) {
+                for (hudson.plugins.git.util.BuildData bd : buildDataList) {
+                    if (bd.getLastBuiltRevision() != null) {
+                        String buildDataSha = bd.getLastBuiltRevision().getSha1String();
+                        
+                        // Check if any commit in this changelog matches this BuildData's revision
+                        for (GitChangeSet commit : parsedCommits) {
+                            String commitSha = commit.getId();
+                            // Match if either SHA starts with the other (handles short vs full SHAs)
+                            if (commitSha.equals(buildDataSha) || 
+                                commitSha.startsWith(buildDataSha.substring(0, Math.min(7, buildDataSha.length()))) ||
+                                buildDataSha.startsWith(commitSha.substring(0, Math.min(7, commitSha.length())))) {
+                                matchedBuildData = bd;
+                                break;
+                            }
+                        }
+                        if (matchedBuildData != null) {
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // If no match found by SHA, use the first available BuildData
+            // In practice, SHA matching should work for most cases
+            if (matchedBuildData == null && !buildDataList.isEmpty()) {
+                // Default to the first BuildData if no SHA match found
+                matchedBuildData = buildDataList.get(0);
+            }
+            
+            if (matchedBuildData != null) {
+                scmName = matchedBuildData.getScmName();
+                if (matchedBuildData.getRemoteUrls() != null) {
+                    remoteUrls.addAll(matchedBuildData.getRemoteUrls());
+                }
+            }
+        }
+        }
+        
+        return new GitChangeSetList(build, browser, parsedCommits, scmName, remoteUrls);
     }
 
     private List<GitChangeSet> parse(Iterator<String> changelog) {

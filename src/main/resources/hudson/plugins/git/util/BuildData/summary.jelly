@@ -24,6 +24,43 @@
         </j:forEach>
         </ul>
 
-
+	<!-- Display changes for this repository -->
+	<j:set var="owningRun" value="${it.owningRun}"/>
+	<j:if test="${owningRun != null}">
+		<st:adjunct includes="hudson.plugins.git.styles"/>
+		<j:forEach var="changeSet" items="${owningRun.changeSets}">
+			<!-- Match this BuildData to its corresponding GitChangeSetList by comparing repository URLs or scmName -->
+			<j:set var="isMatchingChangeSet" value="${false}"/>
+			
+			<!-- Check if this changeSet belongs to this BuildData -->
+			<j:if test="${changeSet.class.name == 'hudson.plugins.git.GitChangeSetList'}">
+				<!-- Match by remote URLs -->
+				<j:if test="${!empty(it.remoteUrls) and !empty(changeSet.remoteUrls)}">
+					<j:forEach var="thisUrl" items="${it.remoteUrls}">
+						<j:forEach var="changeSetUrl" items="${changeSet.remoteUrls}">
+							<j:if test="${thisUrl == changeSetUrl}">
+								<j:set var="isMatchingChangeSet" value="${true}"/>
+							</j:if>
+						</j:forEach>
+					</j:forEach>
+				</j:if>
+				
+				<!-- Also match by SCM name if available -->
+				<j:if test="${!empty(it.scmName) and it.scmName == changeSet.scmName}">
+					<j:set var="isMatchingChangeSet" value="${true}"/>
+				</j:if>
+			</j:if>
+			
+			<!-- Render the matching changeSet -->
+			<j:if test="${isMatchingChangeSet}">
+			<div class="git-repository-changes">
+				<j:scope>
+					<j:set var="compact" value="${true}"/>
+					<st:include it="${changeSet}" page="index.jelly"/>
+				</j:scope>
+			</div>
+		</j:if>
+		</j:forEach>
+	</j:if>
 	</t:summary>
 </j:jelly>
