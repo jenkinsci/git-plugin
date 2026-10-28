@@ -6,7 +6,10 @@ import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.views.ListViewColumnDescriptor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.triggers.SCMTriggerItem;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -18,6 +21,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class GitBranchSpecifierColumn extends ListViewColumn {
 
+    private static final Logger LOGGER = Logger.getLogger(GitBranchSpecifierColumn.class.getName());
+
     @DataBoundConstructor
     public GitBranchSpecifierColumn() { }
 
@@ -25,7 +30,15 @@ public class GitBranchSpecifierColumn extends ListViewColumn {
         List<String> branchSpec = new ArrayList<>();
         SCMTriggerItem s = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(item);
         if(s != null) {
-            for(SCM scm : s.getSCMs()) {
+            Collection<? extends SCM> scms;
+            try {
+                scms = s.getSCMs();
+            } catch (RuntimeException e) {
+                // e.g. its SCM plugin was uninstalled; do not break rendering of the whole view
+                LOGGER.log(Level.FINE, e, () -> "Unable to read the SCMs of " + item.getFullName());
+                return branchSpec;
+            }
+            for(SCM scm : scms) {
                 if (scm instanceof GitSCM gitScm) {
                     for(BranchSpec spec : gitScm.getBranches()) {
                         branchSpec.add(spec.getName());

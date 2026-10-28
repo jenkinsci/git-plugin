@@ -24,7 +24,9 @@
 package hudson.plugins.git;
 
 import hudson.model.Item;
+import jenkins.triggers.SCMTriggerItem;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.Issue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,9 @@ import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 /**
  * @author Mark Waite
@@ -41,6 +46,17 @@ class GitBranchSpecifierColumnTest {
     @Test
     void testGetBranchSpecifierNull() {
         Item item = null;
+        GitBranchSpecifierColumn branchSpecifierColumn = new GitBranchSpecifierColumn();
+        List<String> result = branchSpecifierColumn.getBranchSpecifier(item);
+        assertThat(result, is(emptyCollectionOf(String.class)));
+    }
+
+    @Test
+    @Issue("https://github.com/jenkinsci/git-plugin/issues/3940")
+    void testGetBranchSpecifierUnreadableSCM() {
+        // e.g. a Pipeline job whose SCM plugin was uninstalled
+        Item item = mock(Item.class, withSettings().extraInterfaces(SCMTriggerItem.class));
+        when(((SCMTriggerItem) item).getSCMs()).thenThrow(new NullPointerException("unreadable SCM"));
         GitBranchSpecifierColumn branchSpecifierColumn = new GitBranchSpecifierColumn();
         List<String> result = branchSpecifierColumn.getBranchSpecifier(item);
         assertThat(result, is(emptyCollectionOf(String.class)));

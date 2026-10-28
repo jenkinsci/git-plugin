@@ -7,6 +7,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
 import hudson.model.View;
@@ -15,6 +16,8 @@ import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.jupiter.api.AfterEach;
 
 import java.io.File;
@@ -610,6 +613,21 @@ public class GitStatusTest extends AbstractGitProject {
         r.waitUntilNoActivity();
         FreeStyleBuild lastBuild = project.getLastBuild();
         assertNotNull(lastBuild);
+    }
+
+    @Test
+    @Issue("https://github.com/jenkinsci/git-plugin/issues/3940")
+    void testDoNotifyCommitSkipsJobWithUnreadableSCM() throws Exception {
+        // A Pipeline job whose SCM class could not be loaded, e.g. after its plugin was uninstalled
+        WorkflowJob unreadable = r.createProject(WorkflowJob.class, "a-unreadable-scm");
+        unreadable.setDefinition(new CpsScmFlowDefinition(null, "Jenkinsfile"));
+        // WorkflowJob.getSCMs() only reaches the null SCM once the job has a completed build
+        r.buildAndAssertStatus(Result.FAILURE, unreadable);
+        SCMTrigger trigger = setupProjectWithTrigger("a", "master", false);
+
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, notifyCommitApiToken);
+
+        Mockito.verify(trigger).run();
     }
 
 }
