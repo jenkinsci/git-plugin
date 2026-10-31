@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.RepositoryBrowser;
+import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -97,43 +98,8 @@ public class GitChangeLogParser extends ChangeLogParser {
         String scmName = null;
         Set<String> remoteUrls = new HashSet<>();
         
-        // Try to match this changelog to the correct BuildData by comparing commit SHAs
         if (build != null) {
-            List<hudson.plugins.git.util.BuildData> buildDataList = build.getActions(hudson.plugins.git.util.BuildData.class);
-            if (!buildDataList.isEmpty()) {
-            hudson.plugins.git.util.BuildData matchedBuildData = null;
-            
-            // If we have parsed commits, try to match them to BuildData by checking if ANY commit
-            // in the changelog matches the BuildData's last built revision
-            if (!parsedCommits.isEmpty()) {
-                for (hudson.plugins.git.util.BuildData bd : buildDataList) {
-                    if (bd.getLastBuiltRevision() != null) {
-                        String buildDataSha = bd.getLastBuiltRevision().getSha1String();
-                        
-                        // Check if any commit in this changelog matches this BuildData's revision
-                        for (GitChangeSet commit : parsedCommits) {
-                            String commitSha = commit.getId();
-                            // Match if either SHA starts with the other (handles short vs full SHAs)
-                            if (commitSha.equals(buildDataSha) || 
-                                commitSha.startsWith(buildDataSha.substring(0, Math.min(7, buildDataSha.length()))) ||
-                                buildDataSha.startsWith(commitSha.substring(0, Math.min(7, commitSha.length())))) {
-                                matchedBuildData = bd;
-                                break;
-                            }
-                        }
-                        if (matchedBuildData != null) {
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            // If no match found by SHA, use the first available BuildData
-            // In practice, SHA matching should work for most cases
-            if (matchedBuildData == null && !buildDataList.isEmpty()) {
-                // Default to the first BuildData if no SHA match found
-                matchedBuildData = buildDataList.get(0);
-            }
+            BuildData matchedBuildData = findMatchingBuildData(build, parsedCommits);
             
             if (matchedBuildData != null) {
                 scmName = matchedBuildData.getScmName();
@@ -142,9 +108,60 @@ public class GitChangeLogParser extends ChangeLogParser {
                 }
             }
         }
-        }
         
         return new GitChangeSetList(build, browser, parsedCommits, scmName, remoteUrls);
+    }
+
+    /**
+     * Finds the BuildData that matches the parsed commits by comparing commit hashes.
+     * In multi-repository builds, this makes sure changelog is associated with the correct repo.
+     *
+     * @param build The build containing BuildData actions
+     * @param parsedCommits The commits parsed from the changelog
+     * @return The matching BuildData, or the first available BuildData if no SHA match is found, or null if no BuildData exists
+     */
+    private BuildData findMatchingBuildData(Run build, List<GitChangeSet> parsedCommits) {
+        List<BuildData> buildDataList = build.getActions(BuildData.class);
+        if (buildDataList.isEmpty()) {
+            return null;
+        }
+        
+        // Try to match by comparing commit SHAs with BuildData's last built revision
+        if (!parsedCommits.isEmpty()) {
+            for (BuildData buildData : buildDataList) {
+                if (buildData.getLastBuiltRevision() != null) {
+                    String buildDataSha = buildData.getLastBuiltRevision().getSha1String();
+                    
+                    for (GitChangeSet commit : parsedCommits) {
+                        if (shaMatches(commit.getId(), buildDataSha)) {
+                            return buildData;
+                        }
+                    }
+                }
+            }
+        }  
+        // Fall back to first BuildData if no SHA match found
+        return buildDataList.get(0);
+    }
+
+    /**
+     * Checks if two SHAs match, handling both full and short SHA formats.
+     * Git uses 40-character full SHAs but often displays 7-character short SHAs.
+     * @param sha1 First SHA
+     * @param sha2 Second SHA
+     * @return true if the SHAs match (either exact match or one starts with the other)
+     */
+    private boolean shaMatches(String sha1, String sha2) {
+        if (sha1 == null || sha2 == null) {
+            return false;
+        }
+        
+        if (sha1.equals(sha2)) {
+            return true;
+        }
+        
+        // Handle short vs full SHA: one may be a prefix of the other
+        return sha1.startsWith(sha2) || sha2.startsWith(sha1);
     }
 
     private List<GitChangeSet> parse(Iterator<String> changelog) {

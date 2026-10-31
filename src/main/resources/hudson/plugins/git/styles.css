@@ -13,12 +13,16 @@
 }
 
 .git-repository-header {
-  background-color: var(--light-grey, #f5f5f5);
-  padding: 0.625rem;
-  margin-bottom: 0.9375rem;
-  border-left: 4px solid var(--green, #4caf50);
-  font-size: 0.875rem;
-  line-height: 1.5;
+  display: block;
+  font-weight: 400;
+  font-size: inherit;
+  color: var(--text-color);
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .git-changeset {
@@ -64,12 +68,19 @@
 
 .git-changeset--compact {
   .git-changeset__items__item__message {
-    grid-template-columns: 1rem minmax(0, auto) auto;
+    grid-template-columns: 1rem minmax(0, 1fr) auto;
     justify-content: start;
+    
+    & > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .git-changeset__items__item__hash {
     opacity: 0.75;
+    white-space: nowrap;
   }
 
   .git-changeset__items__item__user > svg {
