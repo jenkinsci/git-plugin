@@ -9,6 +9,10 @@ import org.jenkinsci.plugins.gitclient.JGitAPIImpl;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,6 +66,70 @@ class GitChangeLogParserTest {
         assertNotNull(first);
         assertEquals("123abc456def", first.getId());
         assertThat(first.getMsg(), is(expectedMessage));
+        assertTrue(log.delete(), "Temp file delete failed for " + log);
+    }
+
+    /* Test SHA matching handles full and short SHAs */
+    @Test
+    void testShaMatching() throws Exception {
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).using("Default").in(new File(".")).getClient();
+        GitChangeLogParser parser = new GitChangeLogParser(gitClient, true);
+        Method shaMatches = GitChangeLogParser.class.getDeclaredMethod("shaMatches", String.class, String.class);
+        shaMatches.setAccessible(true);
+
+        String fullSha = "abc123def456789012345678901234567890abcd";
+        String shortSha = "abc123d";
+        String differentSha = "999xyz123456789012345678901234567890abcd";
+
+        assertTrue((Boolean) shaMatches.invoke(parser, fullSha, fullSha));
+        assertTrue((Boolean) shaMatches.invoke(parser, shortSha, fullSha));
+        assertTrue((Boolean) shaMatches.invoke(parser, fullSha, shortSha));
+        assertFalse((Boolean) shaMatches.invoke(parser, fullSha, differentSha));
+        assertFalse((Boolean) shaMatches.invoke(parser, null, fullSha));
+        assertFalse((Boolean) shaMatches.invoke(parser, fullSha, null));
+    }
+
+    /* Test GitChangeSetList stores repository information */
+    @Test
+    void testChangeSetListWithRepositoryInfo() throws Exception {
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).using("Default").in(new File(".")).getClient();
+        GitChangeLogParser parser = new GitChangeLogParser(gitClient, true);
+        File log = File.createTempFile("junit", null, tmpFolder);
+        try (FileWriter writer = new FileWriter(log)) {
+            writer.write("commit abc123def456\n");
+            writer.write("    Test commit\n");
+        }
+
+        Set<String> remoteUrls = new HashSet<>();
+        remoteUrls.add("https://github.com/jenkinsci/git-plugin.git");
+        
+        GitChangeSetList changeSetList = parser.parse(null, null, log);
+        List<GitChangeSet> logs = changeSetList.getLogs();
+        GitChangeSetList list = new GitChangeSetList(null, null, logs, "origin", remoteUrls);
+
+        assertEquals("origin", list.getScmName());
+        assertEquals(1, list.getRemoteUrls().size());
+        assertTrue(list.getRemoteUrls().contains("https://github.com/jenkinsci/git-plugin.git"));
+        assertTrue(log.delete(), "Temp file delete failed for " + log);
+    }
+
+    /* Test GitChangeSetList handles null repository information */
+    @Test
+    void testChangeSetListWithNullRepositoryInfo() throws Exception {
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).using("Default").in(new File(".")).getClient();
+        GitChangeLogParser parser = new GitChangeLogParser(gitClient, true);
+        File log = File.createTempFile("junit", null, tmpFolder);
+        try (FileWriter writer = new FileWriter(log)) {
+            writer.write("commit abc123def456\n");
+            writer.write("    Test commit\n");
+        }
+
+        GitChangeSetList changeSetList = parser.parse(null, null, log);
+        List<GitChangeSet> logs = changeSetList.getLogs();
+        GitChangeSetList list = new GitChangeSetList(null, null, logs, null, null);
+
+        assertNull(list.getScmName());
+        assertNull(list.getRemoteUrls());
         assertTrue(log.delete(), "Temp file delete failed for " + log);
     }
 }
