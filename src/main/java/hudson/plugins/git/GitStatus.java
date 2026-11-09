@@ -386,7 +386,15 @@ public class GitStatus implements UnprotectedRootAction {
                     if (scmTriggerItem == null) {
                         continue;
                     }
-                    SCMS: for (SCM scm : scmTriggerItem.getSCMs()) {
+                    Collection<? extends SCM> scms;
+                    try {
+                        scms = scmTriggerItem.getSCMs();
+                    } catch (RuntimeException e) {
+                        // One unreadable job (e.g. its SCM plugin was uninstalled) must not block notifications for all others
+                        LOGGER.log(Level.WARNING, e, () -> "Unable to read the SCMs of " + project.getFullName() + ", skipping it for notifyCommit");
+                        continue;
+                    }
+                    SCMS: for (SCM scm : scms) {
                         if (!(scm instanceof GitSCM)) {
                             continue;
                         }
