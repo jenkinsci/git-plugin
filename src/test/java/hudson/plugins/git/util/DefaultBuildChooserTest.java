@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.jvnet.hudson.test.Issue;
+import org.mockito.Mockito;
 
 /**
  * @author Arnout Engelen
@@ -158,6 +159,25 @@ class DefaultBuildChooserTest extends AbstractGitRepository {
             buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, null, null);
 
         assertThat(candidateRevisions, hasSize(1));
+    }
+
+    @Test
+    void testPreferRemoteBranchOverUnbuiltLocalBranch() throws Exception {
+        // Preferring revisions that were not built yet must not override remote-over-local precedence
+        String branchName = "feature/42";
+        String localRef = "refs/heads/" + branchName;
+        String remoteRef = "refs/remotes/origin/" + branchName;
+        createRefsWithPredefinedOrderInHashSet(localRef, remoteRef);
+        DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.hasBeenBuilt(testGitClient.revParse(remoteRef))).thenReturn(true);
+
+        Collection<Revision> candidateRevisions =
+            buildChooser.getCandidateRevisions(false, branchName, testGitClient, null, buildData, null);
+
+        assertThat(candidateRevisions, hasSize(2));
+        Branch firstCandidateBranch = candidateRevisions.iterator().next().getBranches().iterator().next();
+        assertThat(firstCandidateBranch.getName(), is(remoteRef));
     }
 
     private void createRefsWithPredefinedOrderInHashSet(String ref1, String ref2) throws Exception {
