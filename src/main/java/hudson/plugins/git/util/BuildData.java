@@ -9,9 +9,12 @@ import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 
+import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,7 +81,14 @@ public class BuildData implements Action, Serializable, Cloneable {
     public Set<String> remoteUrls = new HashSet<>();
 
     /**
-     * Allow disambiguation of the action url when multiple {@link BuildData} actions present.
+     * The Git console browser (if any) used to link to the repository.
+     */
+    @CheckForNull
+    public GitRepositoryBrowser browser;
+
+    /**
+     * Allow disambiguation of the action url when multiple {@link BuildData}
+     * actions present.
      */
     @CheckForNull
     private Integer index;
@@ -288,6 +298,65 @@ public class BuildData implements Action, Serializable, Cloneable {
         remoteUrls.add(remoteUrl);
     }
 
+    public void setBrowser(GitRepositoryBrowser browser) {
+        this.browser = browser;
+    }
+
+    public GitRepositoryBrowser getBrowser() {
+        return browser;
+    }
+
+    public String getCommitUrl(String commitId) {
+        if (browser == null || commitId == null) {
+            return null;
+        }
+        try {
+            URL url = browser.getChangeSetLink(commitId);
+            if (url == null) {
+                return null;
+            }
+            return url.toExternalForm().replace(".git/commit/", "/commit/");
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public String getRefUrl(String ref) {
+        if (browser == null || ref == null) {
+            return null;
+        }
+        // Normalization
+        if (ref.startsWith("refs/remotes/")) {
+            String[] parts = ref.split("/", 4);
+            if (parts.length == 4) {
+                ref = parts[3];
+            }
+        } else if (ref.startsWith("refs/heads/")) {
+            ref = ref.substring(11);
+        }
+        try {
+            URL url = browser.getRefLink(ref);
+            if (url == null) {
+                return null;
+            }
+            return url.toExternalForm().replace(".git/tree/", "/tree/");
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public String getRepositoryUrl() {
+        if (browser == null) {
+            return null;
+        }
+        try {
+            URL url = browser.getUrl();
+            return url == null ? null : url.toExternalForm();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     @Exported
     public  Set<String> getRemoteUrls() {
         return remoteUrls;
@@ -428,12 +497,13 @@ public class BuildData implements Action, Serializable, Cloneable {
 
         return Objects.equals(remoteUrls, that.remoteUrls)
                 && Objects.equals(buildsByBranchName, that.buildsByBranchName)
-                && Objects.equals(lastBuild, that.lastBuild);
+                && Objects.equals(lastBuild, that.lastBuild)
+                && Objects.equals(browser, that.browser);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(remoteUrls, buildsByBranchName, lastBuild);
+        return Objects.hash(remoteUrls, buildsByBranchName, lastBuild, browser);
     }
 
     /* Package protected for easier testing */
