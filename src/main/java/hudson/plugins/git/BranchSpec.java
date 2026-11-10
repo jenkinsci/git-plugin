@@ -178,14 +178,6 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         return items;
     }
 
-    private Pattern getPattern(EnvVars env) {
-        return getPattern(env, null, name);
-    }
-
-    private Pattern getPattern(EnvVars env, String repositoryName) {
-        return getPattern(env, repositoryName, name);
-    }
-
     private Pattern getPattern(EnvVars env, String repositoryName, String specName) {
         String expandedName = env.expand(specName);
         if (expandedName.length() == 0) {

@@ -507,7 +507,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     throw new IOException("Unable to fetch any of the branch specifications: " + branchSpec.getName(), lastFailure);
                 }
 
-                listener.getLogger().println("Done with " + remoteName + " using " + resolvedHead + ".");
+                listener.getLogger().println("Done with " + remoteName + " using " + headNameResult.remoteHeadName + ".");
                 return new GitSCMFileSystem(client, remote, resolvedHead, (AbstractGitSCMSource.SCMRevisionImpl) headNameResult.rev);
             } finally {
                 cacheLock.unlock();
