@@ -169,7 +169,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     public AbstractGitSCMSource() {
     }
-    
+
     @Deprecated
     public AbstractGitSCMSource(String id) {
         setId(id);
@@ -634,7 +634,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                         discoverBranches(repository, walk, request, remoteReferences);
                     }
                     if (context.wantTags()) {
-                        discoverTags(repository, walk, request, remoteReferences);
+                        discoverTags(repository, walk, request, remoteReferences,
+                                context.getAtLeastTagCommitTimeMillis(),
+                                context.getAtMostTagCommitTimeMillis());
                     }
                     if (context.wantOtherRefs()) {
                         discoverOtherRefs(repository, walk, request, remoteReferences,
@@ -774,7 +776,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
             private void discoverTags(final Repository repository,
                                           final RevWalk walk, GitSCMSourceRequest request,
-                                          Map<String, ObjectId> remoteReferences)
+                                          Map<String, ObjectId> remoteReferences,
+                                          long atLeastMillis,
+                                          long atMostMillis)
                     throws IOException, InterruptedException {
                 listener.getLogger().println("Checking tags...");
                 walk.setRetainBody(false);
@@ -787,6 +791,27 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     final String tagName = StringUtils.removeStart(ref.getKey(), Constants.R_TAGS);
                     RevCommit commit = walk.parseCommit(ref.getValue());
                     final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+
+                    if (atLeastMillis >= 0L || atMostMillis >= 0L) {
+                        if (atMostMillis >= 0L && atLeastMillis > atMostMillis) {
+                            /* Invalid. It's impossible for any tag to satisfy this. */
+                            listener.getLogger().format("  Skipping tag %s: invalid age range (min > max)%n", tagName);
+                            continue;
+                        }
+                        long tagAgeMillis = System.currentTimeMillis() - lastModified;
+                        long tagAgeDays = TimeUnit.MILLISECONDS.toDays(tagAgeMillis);
+                        if (atMostMillis >= 0L && tagAgeMillis > atMostMillis) {
+                            listener.getLogger().format("  Skipping tag %s: too old (%d days, max %d days)%n",
+                                    tagName, tagAgeDays, TimeUnit.MILLISECONDS.toDays(atMostMillis));
+                            continue;
+                        }
+                        if (atLeastMillis >= 0L && tagAgeMillis < atLeastMillis) {
+                            listener.getLogger().format("  Skipping tag %s: too new (%d days, min %d days)%n",
+                                    tagName, tagAgeDays, TimeUnit.MILLISECONDS.toDays(atLeastMillis));
+                            continue;
+                        }
+                    }
+
                     if (request.process(new GitTagSCMHead(tagName, lastModified),
                             new SCMSourceRequest.IntermediateLambda<ObjectId>() {
                                 @Nullable
