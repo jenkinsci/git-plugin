@@ -82,8 +82,6 @@
   </Match>
   <Match>
     <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CLONE" />
-    <Or>
-      <Class name="hudson.plugins.git.util.BuildData" />
-    </Or>
+    <Class name="hudson.plugins.git.util.BuildData" />
   </Match>
 </FindBugsFilter>
