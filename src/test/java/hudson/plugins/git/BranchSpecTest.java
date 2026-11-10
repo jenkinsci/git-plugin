@@ -150,6 +150,50 @@ class BranchSpecTest {
     }
 
     @Test
+    public void testMatchesGerritChangeRef() {
+        BranchSpec spec = new BranchSpec("refs/changes/91/45391/1");
+
+        assertTrue(spec.matches("refs/changes/91/45391/1"));
+        assertFalse(spec.matches("refs/heads/refs/changes/91/45391/1"));
+    }
+
+    @Test
+    void testMatchesLogicalOr() {
+        BranchSpec spec = new BranchSpec("master || develop");
+
+        assertTrue(spec.matches("refs/heads/master"));
+        assertTrue(spec.matches("refs/heads/develop"));
+        assertFalse(spec.matches("refs/heads/feature"));
+    }
+
+    @Test
+    void testMatchesLogicalAnd() {
+        BranchSpec spec = new BranchSpec("origin/* && :^(?!origin/wip).*");
+
+        assertTrue(spec.matches("origin/feature"));
+        assertFalse(spec.matches("origin/wip"));
+    }
+
+    @Test
+    void testMatchesLogicalPrecedence() {
+        // `&&` binds tighter than `||`: `master || develop && master` is `master || (develop && master)`
+        BranchSpec spec = new BranchSpec("master || develop && master");
+
+        assertTrue(spec.matches("refs/heads/master"));
+        assertFalse(spec.matches("refs/heads/develop"));
+    }
+
+    @Test
+    void testMatchesLogicalWithEnv() {
+        BranchSpec spec = new BranchSpec("${BRANCH} || master");
+        EnvVars env = createEnvMap("BRANCH", "develop");
+
+        assertTrue(spec.matches("refs/heads/develop", env));
+        assertTrue(spec.matches("refs/heads/master", env));
+        assertFalse(spec.matches("refs/heads/feature", env));
+    }
+
+    @Test
     void testUsesJavaPatternDirectlyIfPrefixedWithColon() {
     	BranchSpec m = new BranchSpec(":^(?!(origin/prefix)).*");
     	assertTrue(m.matches("origin"));
