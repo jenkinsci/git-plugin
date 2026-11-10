@@ -69,4 +69,19 @@
     - If it is not a false positive, fix the bug, then remove the
       exclusion from this section.
    -->
+  <Match>
+    <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR" />
+    <Or>
+      <Class name="hudson.plugins.git.BranchSpec" />
+      <Class name="hudson.plugins.git.browser.GitLab" />
+      <Class name="jenkins.plugins.git.GitSCMFileSystem" />
+      <Class name="jenkins.plugins.git.GitSCMSource" />
+      <Class name="jenkins.plugins.git.GitToolChooser" />
+      <Class name="jenkins.plugins.git.traits.DiscoverOtherRefsTrait" />
+    </Or>
+  </Match>
+  <Match>
+    <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CLONE" />
+    <Class name="hudson.plugins.git.util.BuildData" />
+  </Match>
 </FindBugsFilter>
