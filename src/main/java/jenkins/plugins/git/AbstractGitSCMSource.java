@@ -439,7 +439,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             telescope.validate(remote, credentials);
             return telescope.getRevision(remote, credentials, head);
         }
-        //TODO write test using GitRefSCMHead
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws GitException, IOException, InterruptedException {
@@ -459,8 +458,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                           }
                                       }
                                   } else if (head instanceof GitRefSCMHead mHead) {
+                                      // the ref is fetched to its local name, so map it through the refspecs
+                                      String localRef = mHead.getRef();
+                                      for (RefSpec refSpec : (List<RefSpec>) context.asRefSpecs()) {
+                                          if (refSpec.matchSource(localRef)) {
+                                              localRef = refSpec.expandFromSource(localRef).getDestination();
+                                              break;
+                                          }
+                                      }
                                       try {
-                                          ObjectId objectId = client.revParse(mHead.getRef());
+                                          ObjectId objectId = client.revParse(localRef);
                                           return new GitRefSCMRevision(mHead, objectId.name());
                                       } catch (GitException e) {
                                           // ref could not be found

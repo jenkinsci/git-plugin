@@ -42,6 +42,7 @@ import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.plugins.git.traits.PruneStaleBranchTrait;
+import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 
 import jenkins.scm.api.SCMHead;
@@ -789,6 +790,80 @@ class AbstractGitSCMSourceTest {
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt("pr/1", run, source, listener));
+    }
+
+    @Test
+    void retrieveGitRefSCMHead() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // dev
+        String v2 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/foo", v2);
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/foo")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        GitRefSCMHead head = new GitRefSCMHead("foo", "refs/custom/foo");
+        SCMRevision rev = source.fetch(head, listener);
+        assertThat(rev, instanceOf(GitRefSCMRevision.class));
+        assertEquals(head, rev.getHead());
+        assertEquals(v2, ((GitRefSCMRevision) rev).getHash());
+    }
+
+    @Test
+    void retrieveGitRefSCMHead_missingRef() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        assertNull(source.fetch(new GitRefSCMHead("missing", "refs/custom/missing"), listener));
+    }
+
+    @Test
+    void retrieveGitRefSCMHead_sameLocalName() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/foo", v1);
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Collections.singletonList(new RefSpecsSCMSourceTrait("+refs/custom/*:refs/custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        SCMRevision rev = source.fetch(new GitRefSCMHead("foo", "refs/custom/foo"), listener);
+        assertThat(rev, instanceOf(GitRefSCMRevision.class));
+        assertEquals(v1, ((GitRefSCMRevision) rev).getHash());
+    }
+
+    @Test
+    void retrieveGitRefSCMHead_noMatchingRefSpec() throws Exception {
+        assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1"); // master
+        String master = sampleRepo.head();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // no refspec has refs/remotes/origin/master as its source, so it is resolved as is
+        SCMRevision rev = source.fetch(new GitRefSCMHead("master", "refs/remotes/origin/master"), listener);
+        assertThat(rev, instanceOf(GitRefSCMRevision.class));
+        assertEquals(master, ((GitRefSCMRevision) rev).getHash());
     }
 
     private int wsCount;
