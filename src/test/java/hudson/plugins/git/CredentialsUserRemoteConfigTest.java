@@ -114,6 +114,7 @@ class CredentialsUserRemoteConfigTest {
             // Inverse build chooser will find nothing to build and fails the test
             // "[$class: 'BuildChooserSetting', buildChooser: [$class: 'InverseBuildChooser']]",
             "[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']]]",
+            "[$class: 'PartialCloneFilter', filterSpec: 'blob:none'",
             "[$class: 'AuthorInChangelog']",
             "[$class: 'BuildChooserSetting', buildChooser: [$class: 'DefaultBuildChooser']]",
             "[$class: 'BuildSingleRevisionOnly']",
@@ -160,6 +161,7 @@ class CredentialsUserRemoteConfigTest {
             "pruneTags(false)",
             "pruneTags(true)",
             "sparseCheckout(sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']])",
+            "partialCloneFilter('blob:none')",
             "submodule(disableSubmodules: true)",
             "submodule(depth: 1, shallow: true)",
             "submodule(parentCredentials: true, recursiveSubmodules: true, threads: 13)",
