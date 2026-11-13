@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.RepositoryBrowser;
+import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -19,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -81,14 +83,86 @@ public class GitChangeLogParser extends ChangeLogParser {
         return parse(changelog.iterator());
     }
 
-    @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
+    @Override
+    public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
         throws IOException {
-        // Parse the log file into GitChangeSet items - each one is a commit
+        // Parse commits first to get their SHAs
+        List<GitChangeSet> parsedCommits;
         try (Stream<String> lineStream = Files.lines(changelogFile.toPath(), StandardCharsets.UTF_8)) {
-            return new GitChangeSetList(build, browser, parse(lineStream.iterator()));
+            parsedCommits = parse(lineStream.iterator());
         } catch (InvalidPathException e) {
             throw new IOException(e);
         }
+        
+        // Extract repository information from BuildData actions on the Run
+        String scmName = null;
+        Set<String> remoteUrls = new HashSet<>();
+        
+        if (build != null) {
+            BuildData matchedBuildData = findMatchingBuildData(build, parsedCommits);
+            
+            if (matchedBuildData != null) {
+                scmName = matchedBuildData.getScmName();
+                if (matchedBuildData.getRemoteUrls() != null) {
+                    remoteUrls.addAll(matchedBuildData.getRemoteUrls());
+                }
+            }
+        }
+        
+        return new GitChangeSetList(build, browser, parsedCommits, scmName, remoteUrls);
+    }
+
+    /**
+     * Finds the BuildData that matches the parsed commits by comparing commit hashes.
+     * In multi-repository builds, this makes sure changelog is associated with the correct repo.
+     *
+     * @param build The build containing BuildData actions
+     * @param parsedCommits The commits parsed from the changelog
+     * @return The matching BuildData, or the first available BuildData if no SHA match is found, or null if no BuildData exists
+     */
+    private BuildData findMatchingBuildData(Run build, List<GitChangeSet> parsedCommits) {
+        List<BuildData> buildDataList = build.getActions(BuildData.class);
+        if (buildDataList.isEmpty()) {
+            return null;
+        }
+        
+        // Try to match by comparing commit SHAs with BuildData's last built revision
+        if (!parsedCommits.isEmpty()) {
+            for (BuildData buildData : buildDataList) {
+                var lastBuiltRevision = buildData.getLastBuiltRevision();
+                if (lastBuiltRevision != null) {
+                    String buildDataSha = lastBuiltRevision.getSha1String();
+                    
+                    for (GitChangeSet commit : parsedCommits) {
+                        if (shaMatches(commit.getId(), buildDataSha)) {
+                            return buildData;
+                        }
+                    }
+                }
+            }
+        }  
+        // Fall back to first BuildData if no SHA match found
+        return buildDataList.get(0);
+    }
+
+    /**
+     * Checks if two SHAs match, handling both full and short SHA formats.
+     * Git uses 40-character full SHAs but often displays 7-character short SHAs.
+     * @param sha1 First SHA
+     * @param sha2 Second SHA
+     * @return true if the SHAs match (either exact match or one starts with the other)
+     */
+    private boolean shaMatches(String sha1, String sha2) {
+        if (sha1 == null || sha2 == null) {
+            return false;
+        }
+        
+        if (sha1.equals(sha2)) {
+            return true;
+        }
+        
+        // Handle short vs full SHA: one may be a prefix of the other
+        return sha1.startsWith(sha2) || sha2.startsWith(sha1);
     }
 
     private List<GitChangeSet> parse(Iterator<String> changelog) {

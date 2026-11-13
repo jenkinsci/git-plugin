@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
@@ -40,7 +41,7 @@ import org.junit.jupiter.api.Test;
 
 class GitChangeSetListTest {
 
-    private final GitChangeSetList emptyChangeSetList = new GitChangeSetList(null, null, new ArrayList<>());
+    private final GitChangeSetList emptyChangeSetList = new GitChangeSetList(null, null, new ArrayList<>(),null, null);
     private GitChangeSetList changeSetList;
     private GitChangeSet changeSet;
 
@@ -50,10 +51,12 @@ class GitChangeSetListTest {
         Run build = null;
         List<GitChangeSet> logs = new ArrayList<>();
         List<String> changeSetText = new ArrayList<>();
+        String scmName = null;
+        Set<String> remoteUrls = null;
         changeSet = new GitChangeSet(changeSetText, true);
         assertTrue(logs.add(changeSet));
         assertThat(changeSet.getParent(), is(nullValue()));
-        changeSetList = new GitChangeSetList(build, browser, logs);
+        changeSetList = new GitChangeSetList(build, browser, logs, scmName, remoteUrls);
         assertThat(changeSet.getParent(), is(changeSetList));
     }
 

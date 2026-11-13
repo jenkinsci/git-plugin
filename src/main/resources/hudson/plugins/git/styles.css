@@ -12,6 +12,19 @@
   gap: var(--vertical-space);
 }
 
+.git-repository-header {
+  display: block;
+  font-weight: 400;
+  font-size: inherit;
+  color: var(--text-color);
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .git-changeset {
   --inset-width: 1rem;
 
@@ -54,8 +67,26 @@
 }
 
 .git-changeset--compact {
+  .git-changeset__items__item__message {
+    grid-template-columns: 1rem minmax(0, 1fr) auto;
+    justify-content: start;
+    
+    & > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
   .git-changeset__items__item__hash {
     opacity: 0.75;
+    white-space: nowrap;
+  }
+
+  .git-changeset__items__item__user > svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
   }
 }
 
@@ -144,4 +175,8 @@
   color: var(--text-color-secondary);
   font-size: var(--font-size-xs);
   line-height: 1lh;
+}
+
+.git-repository-changes {
+  margin-top: 1rem;
 }
