@@ -129,8 +129,9 @@ public class GitChangeLogParser extends ChangeLogParser {
         // Try to match by comparing commit SHAs with BuildData's last built revision
         if (!parsedCommits.isEmpty()) {
             for (BuildData buildData : buildDataList) {
-                if (buildData.getLastBuiltRevision() != null) {
-                    String buildDataSha = buildData.getLastBuiltRevision().getSha1String();
+                var lastBuiltRevision = buildData.getLastBuiltRevision();
+                if (lastBuiltRevision != null) {
+                    String buildDataSha = lastBuiltRevision.getSha1String();
                     
                     for (GitChangeSet commit : parsedCommits) {
                         if (shaMatches(commit.getId(), buildDataSha)) {
