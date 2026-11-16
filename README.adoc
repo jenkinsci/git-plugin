@@ -50,6 +50,32 @@ image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 The examples below were created with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator].
 Create your own checkout commands with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] configured for your needs.
 
+==== Understanding userRemoteConfigs
+
+The `userRemoteConfigs` argument defines the Git repositories used by the checkout. It accepts a list of remote configuration maps. Each map can contain the following options:
+
+* `url`: The URL or local path of the Git repository.
+* `credentialsId`: The ID of the Jenkins credentials used to access the repository. This can be omitted for repositories that do not require authentication.
+* `name`: The name assigned to the remote. It defaults to `origin`.
+* `refspec`: Specifies which references are fetched from the remote and how they are mapped to local references.
+
+For more details about these options, see the <<using-repositories,Repositories>> section.
+
+For example, the following Pipeline configures all four options:
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: '*/main']],
+    userRemoteConfigs: [[
+        url: 'https://github.com/example/repository.git',
+        credentialsId: 'github-credentials',
+        name: 'upstream',
+        refspec: '+refs/heads/main:refs/remotes/upstream/main'
+    ]]
+)
+----
+
 ==== Checkout with defaults
 
 Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
