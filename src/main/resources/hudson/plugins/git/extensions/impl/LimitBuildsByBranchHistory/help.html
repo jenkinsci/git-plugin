@@ -1,0 +1,20 @@
+<div>
+  Every build records which commit was last built on each branch, and copies that history from the previous build.
+  When a job builds many different branches over time, for example one merge request branch per build through a parameterized branch specifier,
+  the history grows with every branch ever built and makes build records large and slow to load
+  (<a href="https://issues.jenkins.io/browse/JENKINS-19022">JENKINS-19022</a>).
+  <p>
+  This option keeps only the entries for branches that match the branch specifiers of the current build, plus the branches of the current build.
+  It is intended for jobs that build one branch, or a fixed set of branches, per build.
+  <p>
+  What changes:
+  <ul>
+    <li>With a parameterized branch specifier such as <code>*/${BRANCH}</code>, the history of other branches is dropped.
+      Polling compares against the default parameter value, so after each build of another branch the next poll schedules a build of the default branch.
+      The changelog, <code>GIT_PREVIOUS_COMMIT</code> and <code>GIT_PREVIOUS_SUCCESSFUL_COMMIT</code> of a branch start fresh when it is built again after other branches.</li>
+    <li>With a wildcard specifier such as <code>**</code> or <code>*/feature-*</code> every built branch keeps matching, so the history still grows.
+      This option does not help those jobs.</li>
+    <li>Only the default and ancestry build choosing strategies are affected; the history is kept unchanged for other strategies.</li>
+    <li>The option applies to the checkout it is configured on. When the same repository is checked out more than once in a build, enable it on each of those checkouts.</li>
+  </ul>
+</div>
