@@ -23,6 +23,7 @@
  */
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
@@ -52,11 +53,20 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @since 3.6.0
  */
 public class TagDiscoveryTrait extends SCMSourceTrait {
+    private final String atLeastDays;
+    private final String atMostDays;
+
     /**
      * Constructor for stapler.
      */
     @DataBoundConstructor
+    public TagDiscoveryTrait(@CheckForNull String atLeastDays, @CheckForNull String atMostDays) {
+        this.atLeastDays = atLeastDays;
+        this.atMostDays = atMostDays;
+    }
+
     public TagDiscoveryTrait() {
+        this(null, null);
     }
 
     /**
@@ -67,6 +77,8 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
         GitSCMSourceContext<?,?> ctx = (GitSCMSourceContext<?, ?>) context;
         ctx.wantTags(true);
         ctx.withAuthority(new TagSCMHeadAuthority());
+        ctx.withAtLeastTagCommitTimeDays(atLeastDays)
+                .withAtMostTagCommitTimeDays(atMostDays);
     }
 
     /**
@@ -77,6 +89,14 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
                         justification="Part of the public API")
     public boolean includeCategory(@NonNull SCMHeadCategory category) {
         return category instanceof TagSCMHeadCategory;
+    }
+
+    public String getAtLeastDays() {
+        return atLeastDays;
+    }
+
+    public String getAtMostDays() {
+        return atMostDays;
     }
 
     /**
