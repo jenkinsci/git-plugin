@@ -10,6 +10,9 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.MockedStatic;
 import org.springframework.security.authentication.DisabledException;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
+
+import javax.naming.NamingException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Random;
@@ -192,6 +195,46 @@ class GitChangeSetTest {
             );
         }
 	}
+
+    @Test
+    void testFindOrCreateUserHandlesUncheckedExecutionException() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = false;
+        final boolean useExistingAccountBasedOnEmail = true;
+        final String csAuthor = "ldap_error_user";
+        final String csAuthorEmail = "ldap_error_user@example.com";
+
+        NamingException namingException = new NamingException("LDAP communication failure");
+        UncheckedExecutionException uncheckedException = new UncheckedExecutionException(namingException);
+
+        try (MockedStatic<User> user = mockStatic(User.class)) {
+            user.when(() -> User.get("ldap_error_user", false, Collections.emptyMap()))
+                .thenThrow(uncheckedException);
+
+            User actual = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+            assertEquals(User.getUnknown(), actual);
+        }
+    }
+
+    @Test
+    void testFindOrCreateUserHandlesUncheckedExecutionExceptionCreateAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = true;
+        final boolean useExistingAccountBasedOnEmail = false;
+        final String csAuthor = "ldap_error_author";
+        final String csAuthorEmail = "ldap_error@example.com";
+
+        NamingException namingException = new NamingException("LDAP communication failure");
+        UncheckedExecutionException uncheckedException = new UncheckedExecutionException(namingException);
+
+        try (MockedStatic<User> user = mockStatic(User.class)) {
+            user.when(() -> User.get("ldap_error@example.com", false, Collections.emptyMap()))
+                .thenThrow(uncheckedException);
+
+            User actual = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+            assertEquals(User.getUnknown(), actual);
+        }
+    }
 
     // Test deprecated User.get()
     @Test

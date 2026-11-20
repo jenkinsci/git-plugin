@@ -423,6 +423,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             if (e.getCause() instanceof AuthenticationException) {
                 throw (AuthenticationException) e.getCause();
             } else {
+                LOGGER.fine(() -> "Failed to look up user '" + idOrFullName + "' via commit info: " + e.getCause().getMessage());
+                LOGGER.log(Level.FINEST, "Full stack trace for user lookup failure of '" + idOrFullName + "'", e);
                 throw e;
             }
         }
@@ -452,6 +454,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 user = getUser(csAuthorEmail, false);
             } catch (AuthenticationException authException) {
                 return User.getUnknown();
+            } catch (Exception e) {
+                LOGGER.fine(() -> "Failed to look up user '" + csAuthorEmail + "' via commit info: " + e.getMessage());
+                LOGGER.log(Level.FINEST, "Full stack trace for user lookup failure of '" + csAuthorEmail + "'", e);
+                return User.getUnknown();
             }
 
             if (user == null) {
@@ -480,6 +486,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                     return User.getUnknown();
                 } catch (IOException e) {
                     // add logging statement?
+                } catch (Exception e) {
+                    LOGGER.fine(() -> "Failed to look up user '" + csAuthorEmail + "' via commit info: " + e.getMessage());
+                    LOGGER.log(Level.FINEST, "Full stack trace for user lookup failure of '" + csAuthorEmail + "'", e);
+                    return User.getUnknown();
                 }
             }
         } else {
@@ -490,6 +500,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             try {
                 user = getUser(csAuthor, false);
             } catch (AuthenticationException authException) {
+                return User.getUnknown();
+            } catch (Exception e) {
+                LOGGER.fine(() -> "Failed to look up user '" + csAuthor + "' via commit info: " + e.getMessage());
+                LOGGER.log(Level.FINEST, "Full stack trace for user lookup failure of '" + csAuthor + "'", e);
                 return User.getUnknown();
             }
 
@@ -505,6 +519,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         user = getUser(emailParts[0], true);
                     } catch (AuthenticationException authException) {
                         // JENKINS-67491 - do not fail due to an authentication exception
+                        return User.getUnknown();
+                    } catch (Exception e) {
+                        LOGGER.fine(() -> "Failed to look up user '" + emailParts[0] + "' via commit info: " + e.getMessage());
+                        LOGGER.log(Level.FINEST, "Full stack trace for user lookup failure of '" + emailParts[0] + "'", e);
                         return User.getUnknown();
                     }
                 } else {
