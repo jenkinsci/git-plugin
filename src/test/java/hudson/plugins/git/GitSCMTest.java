@@ -69,7 +69,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -95,7 +94,9 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import org.jvnet.hudson.test.Issue;
@@ -1844,7 +1845,6 @@ class GitSCMTest extends AbstractGitTestCase {
                 m.getMessage().contains("[poll] Working Directory does not exist")));
     }
 
-    @Disabled("consistently fails, needs more analysis")
     @Test
     void testFetchFromMultipleRepositories() throws Exception {
         assumeTrue(isTimeAvailable(), "Test class max time " + MAX_SECONDS_FOR_THESE_TESTS + " exceeded");
@@ -1863,7 +1863,11 @@ class GitSCMTest extends AbstractGitTestCase {
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commit1 = commit(commitFile1, johnDoe, "Commit number 1");
+        // the second repository is a fork that shares history with the first one
+        secondTestRepo.git.fetch_().from(new URIish(testRepo.gitDir.getAbsolutePath()),
+                Collections.singletonList(new RefSpec("+refs/heads/master:refs/remotes/first/master"))).execute();
+        secondTestRepo.git.checkout().ref(commit1).branch("master").execute();
         build(project, Result.SUCCESS, commitFile1);
 
         /* Diagnostic help - for later use */
