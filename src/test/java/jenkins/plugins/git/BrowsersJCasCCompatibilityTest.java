@@ -200,8 +200,7 @@ class BrowsersJCasCCompatibilityTest extends AbstractRoundTripTest {
                 // gitlab
                 allOf(
                         instanceOf(GitLab.class),
-                        // TODO This property fails in CI but succeeds in local. Meanwhile, it's tested in GitLabConfiguratorTest
-                        // hasProperty("version", equalTo(1.0)),
+                        hasProperty("version", equalTo("1.0")),
                         hasProperty("repoUrl", equalTo("http://gitlab.com"))
                 ),
                 // gitlist
