@@ -4,6 +4,7 @@ import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Item;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
@@ -618,16 +619,22 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     @Issue("https://github.com/jenkinsci/git-plugin/issues/3940")
     void testDoNotifyCommitSkipsJobWithUnreadableSCM() throws Exception {
+        // Two healthy jobs for the notified repository (named test0 and test1 by JenkinsRule)
+        SCMTrigger firstTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger secondTrigger = setupProjectWithTrigger("a", "master", false);
         // A Pipeline job whose SCM class could not be loaded, e.g. after its plugin was uninstalled
-        WorkflowJob unreadable = r.createProject(WorkflowJob.class, "a-unreadable-scm");
+        WorkflowJob unreadable = r.createProject(WorkflowJob.class, "test0-unreadable-scm");
         unreadable.setDefinition(new CpsScmFlowDefinition(null, "Jenkinsfile"));
         // WorkflowJob.getSCMs() only reaches the null SCM once the job has a completed build
         r.buildAndAssertStatus(Result.FAILURE, unreadable);
-        SCMTrigger trigger = setupProjectWithTrigger("a", "master", false);
+        // The unreadable job is visited between the two healthy ones, so stopping after it would skip one of them
+        List<String> visitOrder = r.jenkins.getAllItems().stream().map(Item::getFullName).toList();
+        assertEquals(List.of("test0", "test0-unreadable-scm", "test1"), visitOrder);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, notifyCommitApiToken);
 
-        Mockito.verify(trigger).run();
+        Mockito.verify(firstTrigger).run();
+        Mockito.verify(secondTrigger).run();
     }
 
 }
