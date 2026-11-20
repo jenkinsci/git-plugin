@@ -103,6 +103,36 @@ class GitChangeSetEuroTest {
     }
 
     @Test
+    void testGetGitAuthorName() {
+        assertEquals(authorName, changeSet.getGitAuthorName());
+    }
+
+    @Test
+    void testGetGitCommitterName() {
+        assertEquals(committerName, changeSet.getGitCommitterName());
+    }
+
+    @Test
+    void testGetGitAuthorEmail() {
+        assertEquals("mister.ahlander@ericsson.com", changeSet.getGitAuthorEmail());
+    }
+
+    @Test
+    void testGetGitCommitterEmail() {
+        assertEquals("mister.ahlander@ericsson.com", changeSet.getGitCommitterEmail());
+    }
+
+    @Test
+    void testGetGitAuthorDate() {
+        assertEquals("2013-03-21T15:16:44+0100", changeSet.getGitAuthorDate());
+    }
+
+    @Test
+    void testGetGitCommitterDate() {
+        assertEquals("2013-03-25T08:18:59-0400", changeSet.getGitCommitterDate());
+    }
+
+    @Test
     void testGetMsg() {
         assertEquals(msg, changeSet.getMsg());
     }
