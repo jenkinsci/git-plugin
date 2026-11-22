@@ -4,26 +4,48 @@
 	xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 	<t:summary icon="symbol-git-logo plugin-git">
 
-	<strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
+    <j:set var="browser" value="${it.browser}"/>
+    <j:set var="revisionLink" value="${it.getCommitUrl(it.lastBuiltRevision.sha1.name())}"/>
+    <j:choose>
+        <j:when test="${revisionLink!=null}">
+            <strong>${%Revision}</strong>: <a href="${revisionLink}">${it.lastBuiltRevision.sha1.name()}</a>
+        </j:when>
+        <j:otherwise>
+            <strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
+        </j:otherwise>
+    </j:choose>
+
 	<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
 	<j:if test="${!empty(it.remoteUrls)}">
 		<j:forEach var="remoteUrl" items="${it.remoteUrls}">
-			<j:if test="${remoteUrl.startsWith('http')}">
-				<br/><strong>${%Repository}</strong>: <a href="${remoteUrl}">${remoteUrl}</a>
-			</j:if>
-			<j:if test="${!remoteUrl.startsWith('http')}">
-				<br/><strong>${%Repository}</strong>: ${remoteUrl}
-			</j:if>
+            <j:set var="repoLink" value="${it.repositoryUrl}"/>
+            <j:choose>
+                <j:when test="${repoLink!=null}">
+                    <br/><strong>${%Repository}</strong>: <a href="${repoLink}">${remoteUrl}</a>
+                </j:when>
+                <j:when test="${remoteUrl.startsWith('http')}">
+                    <br/><strong>${%Repository}</strong>: <a href="${remoteUrl}">${remoteUrl}</a>
+                </j:when>
+                <j:otherwise>
+                    <br/><strong>${%Repository}</strong>: ${remoteUrl}
+                </j:otherwise>
+            </j:choose>
 		</j:forEach>
 	</j:if>
         <ul>
         <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
           <j:if test="${branch!=''}">
-            <li>${branch.name}</li>
+            <j:set var="branchLink" value="${it.getRefUrl(branch.name)}"/>
+                <j:choose>
+                    <j:when test="${branchLink!=null}">
+                        <li><a href="${branchLink}">${branch.name}</a></li>
+                    </j:when>
+                    <j:otherwise>
+                        <li>${branch.name}</li>
+                    </j:otherwise>
+                </j:choose>
           </j:if>
         </j:forEach>
         </ul>
-
-
 	</t:summary>
 </j:jelly>
