@@ -52,6 +52,46 @@ class GitChangeSetBasicTest {
     }
 
     @Test
+    void testGetGitAuthorName() {
+        assertEquals(GitChangeSetUtil.AUTHOR_NAME, genChangeSet(true, false).getGitAuthorName());
+        assertEquals(GitChangeSetUtil.AUTHOR_NAME, genChangeSet(false, false).getGitAuthorName());
+        assertEquals(GitChangeSetUtil.AUTHOR_NAME, genChangeSet(true, true).getGitAuthorName());
+        assertEquals(GitChangeSetUtil.AUTHOR_NAME, genChangeSet(false, true).getGitAuthorName());
+    }
+
+    @Test
+    void testGetGitAuthorEmail() {
+        assertEquals(GitChangeSetUtil.AUTHOR_EMAIL, genChangeSet(true, false).getGitAuthorEmail());
+        assertEquals(GitChangeSetUtil.AUTHOR_EMAIL, genChangeSet(false, false).getGitAuthorEmail());
+    }
+
+    @Test
+    void testGetGitAuthorDate() {
+        assertEquals(GitChangeSetUtil.AUTHOR_DATE_FORMATTED, genChangeSet(true, false).getGitAuthorDate());
+        assertEquals(GitChangeSetUtil.AUTHOR_DATE_FORMATTED, genChangeSet(false, false).getGitAuthorDate());
+    }
+
+    @Test
+    void testGetGitCommitterName() {
+        assertEquals(GitChangeSetUtil.COMMITTER_NAME, genChangeSet(true, false).getGitCommitterName());
+        assertEquals(GitChangeSetUtil.COMMITTER_NAME, genChangeSet(false, false).getGitCommitterName());
+        assertEquals(GitChangeSetUtil.COMMITTER_NAME, genChangeSet(true, true).getGitCommitterName());
+        assertEquals(GitChangeSetUtil.COMMITTER_NAME, genChangeSet(false, true).getGitCommitterName());
+    }
+
+    @Test
+    void testGetGitCommitterEmail() {
+        assertEquals(GitChangeSetUtil.COMMITTER_EMAIL, genChangeSet(true, false).getGitCommitterEmail());
+        assertEquals(GitChangeSetUtil.COMMITTER_EMAIL, genChangeSet(false, false).getGitCommitterEmail());
+    }
+
+    @Test
+    void testGetGitCommitterDate() {
+        assertEquals(GitChangeSetUtil.COMMITTER_DATE_FORMATTED, genChangeSet(true, false).getGitCommitterDate());
+        assertEquals(GitChangeSetUtil.COMMITTER_DATE_FORMATTED, genChangeSet(false, false).getGitCommitterDate());
+    }
+
+    @Test
     void testGetDate() {
         assertEquals("1970-01-15T06:56:08-0600", genChangeSet(true, false).getDate());
     }
