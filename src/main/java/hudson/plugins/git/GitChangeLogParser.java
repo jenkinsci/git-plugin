@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -94,31 +96,43 @@ public class GitChangeLogParser extends ChangeLogParser {
     private List<GitChangeSet> parse(Iterator<String> changelog) {
         Set<GitChangeSet> r = new LinkedHashSet<>();
         List<String> lines = null;
+        int ignoredLines = 0;
         while (changelog.hasNext()) {
             String line = changelog.next();
             if (line.startsWith("commit ")) {
                 if (lines != null) {
-                    r.add(parseCommit(lines, authorOrCommitter));
+                    r.add(parseCommit(lines, ignoredLines, authorOrCommitter));
                 }
                 lines = new ArrayList<>();
+                ignoredLines = 0;
             }
 
-            if (lines != null && lines.size()<THRESHOLD)
-                lines.add(line);    // TODO: if we ignored some lines, tell the user so.
+            if (lines != null) {
+                if (lines.size()<THRESHOLD)
+                    lines.add(line);
+                else
+                    ignoredLines++;
+            }
         }
 
         if (lines != null) {
-            r.add(parseCommit(lines, authorOrCommitter));
+            r.add(parseCommit(lines, ignoredLines, authorOrCommitter));
         }
         return new ArrayList<>(r);
     }
 
-    private GitChangeSet parseCommit(List<String> lines, boolean authorOrCommitter) {
-        return new GitChangeSet(lines, authorOrCommitter, showEntireCommitSummaryInChanges);
+    private GitChangeSet parseCommit(List<String> lines, int ignoredLines, boolean authorOrCommitter) {
+        GitChangeSet changeSet = new GitChangeSet(lines, authorOrCommitter, showEntireCommitSummaryInChanges);
+        if (ignoredLines > 0) {
+            LOGGER.log(Level.WARNING, "Ignored {0} lines of changelog for commit {1}", new Object[] {String.valueOf(ignoredLines), changeSet.getId()});
+        }
+        return changeSet;
     }
 
     /**
      * To control the memory overhead of a large change, we ignore beyond certain number of lines.
      */
     private static int THRESHOLD = 1000;
+
+    private static final Logger LOGGER = Logger.getLogger(GitChangeLogParser.class.getName());
 }

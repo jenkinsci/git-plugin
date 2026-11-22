@@ -9,12 +9,17 @@ import org.jenkinsci.plugins.gitclient.JGitAPIImpl;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.logging.Level;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.jvnet.hudson.test.LogRecorder;
 
 /**
  * Unit tests of {@link GitChangeLogParser}
@@ -43,6 +48,50 @@ class GitChangeLogParserTest {
         assertThat(gitClient, instanceOf(JGitAPIImpl.class));
         /* JENKINS-29977 notes that JGit impl retains full summary message - confirm default behavior retained */
         generateDuplicateChanges(gitClient, firstMessage);
+    }
+
+    /* Test that lines beyond the per-commit threshold are reported in the log. */
+    @Test
+    void testIgnoredLinesLogged() throws Exception {
+        GitChangeLogParser parser = new GitChangeLogParser(null, true);
+        List<String> changelog = new ArrayList<>();
+        changelog.add("commit 123abc456def");
+        for (int i = 0; i < 1004; i++) {
+            changelog.add("    line " + i);
+        }
+        try (LogRecorder recorder = new LogRecorder().record(GitChangeLogParser.class, Level.WARNING).capture(10)) {
+            parser.parse(changelog);
+            assertThat(recorder.getMessages(), contains("Ignored 5 lines of changelog for commit 123abc456def"));
+        }
+    }
+
+    /* Test that a large ignored count is logged without a thousands separator. */
+    @Test
+    void testIgnoredLinesCountNotGrouped() throws Exception {
+        GitChangeLogParser parser = new GitChangeLogParser(null, true);
+        List<String> changelog = new ArrayList<>();
+        changelog.add("commit 123abc456def");
+        for (int i = 0; i < 2499; i++) {
+            changelog.add("    line " + i);
+        }
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US); // US formatting would write 1500 as "1,500"
+        try (LogRecorder recorder = new LogRecorder().record(GitChangeLogParser.class, Level.WARNING).capture(10)) {
+            parser.parse(changelog);
+            assertThat(recorder.getMessages(), contains("Ignored 1500 lines of changelog for commit 123abc456def"));
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
+
+    /* Test that a commit within the threshold logs nothing. */
+    @Test
+    void testNoIgnoredLinesNotLogged() throws Exception {
+        GitChangeLogParser parser = new GitChangeLogParser(null, true);
+        try (LogRecorder recorder = new LogRecorder().record(GitChangeLogParser.class, Level.ALL).capture(10)) {
+            parser.parse(List.of("commit 123abc456def", "    short message"));
+            assertThat(recorder.getMessages(), is(empty()));
+        }
     }
 
     private void generateDuplicateChanges(GitClient gitClient, String expectedMessage) throws Exception {
