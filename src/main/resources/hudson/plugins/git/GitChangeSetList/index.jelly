@@ -1,11 +1,39 @@
 <?jelly escape-by-default='true'?>
 <!--
-  Displays Git change log.
+  Displays Git change log, grouped by repository when multiple repos are present.
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
   <j:set var="browser" value="${it.browser}"/>
 
   <st:adjunct includes="hudson.plugins.git.styles" />
+
+  <!-- Check if this is a multi-repository build -->
+  <j:set var="owningRun" value="${it.run}"/>
+  <j:set var="isMultiRepo" value="false"/>
+  <j:if test="${owningRun != null}">
+    <j:set var="gitChangeSetsCount" value="0"/>
+    <j:forEach var="cs" items="${owningRun.changeSets}">
+      <j:if test="${cs.kind == 'git'}">
+        <j:set var="gitChangeSetsCount" value="${gitChangeSetsCount + 1}"/>
+      </j:if>
+    </j:forEach>
+    <j:if test="${gitChangeSetsCount > 1}">
+      <j:set var="isMultiRepo" value="true"/>
+    </j:if>
+  </j:if>
+
+  <!-- Display repository header if multi-repo -->
+  <j:if test="${isMultiRepo and !empty(it.remoteUrls)}">
+    <j:forEach var="url" items="${it.remoteUrls}" varStatus="status">
+      <j:if test="${status.first}">
+        <j:set var="repoName" value="${url.substring(url.lastIndexOf('/') + 1)}"/>
+        <j:if test="${repoName.endsWith('.git')}">
+          <j:set var="repoName" value="${repoName.substring(0, repoName.length() - 4)}"/>
+        </j:if>
+        <a href="${url}" class="git-repository-header" target="_blank">${repoName}</a>
+      </j:if>
+    </j:forEach>
+  </j:if>
 
   <div class="git-changeset-container">
     <j:forEach var="cs" items="${it.logs}">
