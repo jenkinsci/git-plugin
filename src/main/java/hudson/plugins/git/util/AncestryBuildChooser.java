@@ -53,10 +53,10 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 GitClient git, final TaskListener listener, BuildData data, BuildChooserContext context)
                 throws GitException, IOException, InterruptedException {
         
-        final Collection<Revision> candidates = super.getCandidateRevisions(isPollCall, branchSpec, git, listener, data, context);
-        
+        final Collection<Revision> candidates = getCandidateRevisionsInRemoteOrder(isPollCall, branchSpec, git, listener, data, context);
+
         // filter candidates based on branch age and ancestry
-        return git.withRepository((Repository repository, VirtualChannel channel) -> {
+        final List<Revision> eligibleCandidates = git.withRepository((Repository repository, VirtualChannel channel) -> {
             try (RevWalk walk = new RevWalk(repository)) {
 
                 RevCommit ancestor = null;
@@ -103,6 +103,9 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 return filteredCandidates;
             }
         });
+
+        // only after filtering, so that an eligible revision that was built is not replaced by an ineligible one
+        return preferNotBuilt(isPollCall, branchSpec, eligibleCandidates, listener, data);
     }
     
     private static class CommitAgeFilter implements Predicate<RevCommit> {

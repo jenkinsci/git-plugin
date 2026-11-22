@@ -4,9 +4,11 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.AbstractGitRepository;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -237,5 +239,30 @@ class AncestryBuildChooserTest extends AbstractGitRepository {
         assertEquals(2, candidateSha1s.size());
         assertTrue(candidateSha1s.contains(tenDaysAgoCommit));
         assertTrue(candidateSha1s.contains(twentyDaysAgoCommit));
+    }
+
+    @Test
+    void testUnbuiltButTooOldHeadDoesNotHideBuiltEligibleHead() throws Exception {
+        // "master" matches a head on each of two remotes
+        testGitClient.checkout().ref(fiveDaysAgoCommit).execute();
+        testGitClient.ref("refs/remotes/origin/master");
+        testGitClient.checkout().ref(twentyDaysAgoCommit).execute();
+        testGitClient.ref("refs/remotes/second/master");
+        GitSCM gitSCM = new GitSCM(
+                List.of(new UserRemoteConfig("https://example.com/origin.git", "origin", null, null),
+                        new UserRemoteConfig("https://example.com/second.git", "second", null, null)),
+                List.of(new BranchSpec("master")), null, null, List.of());
+        gitSCM.getExtensions().add(new BuildChooserSetting(new AncestryBuildChooser(10, null)));
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.hasBeenBuilt(testGitClient.revParse(fiveDaysAgoCommit))).thenReturn(true);
+        BuildChooserContext context = Mockito.mock(BuildChooserContext.class);
+        Mockito.when(context.getEnvironment()).thenReturn(new EnvVars());
+
+        Collection<Revision> candidateRevisions = gitSCM.getBuildChooser().getCandidateRevisions(
+                false, "master", testGitClient, TaskListener.NULL, buildData, context);
+
+        // the unbuilt head on "second" is older than 10 days, so the built head on "origin" must remain
+        assertEquals(List.of(fiveDaysAgoCommit),
+                candidateRevisions.stream().map(Revision::getSha1String).collect(Collectors.toList()));
     }
 }
