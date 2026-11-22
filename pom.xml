@@ -229,4 +229,30 @@
     </pluginRepository>
   </pluginRepositories>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <environmentVariables>
+            <GIT_CONFIG_COUNT>4</GIT_CONFIG_COUNT>
+            <!-- Disable git automatic maintenance of test repositories on recent git versions -->
+            <GIT_CONFIG_KEY_0>maintenance.auto</GIT_CONFIG_KEY_0>
+            <GIT_CONFIG_VALUE_0>false</GIT_CONFIG_VALUE_0>
+            <!-- Disable git automatic maintenance of test repositories on old git versions -->
+            <GIT_CONFIG_KEY_1>gc.auto</GIT_CONFIG_KEY_1>
+            <GIT_CONFIG_VALUE_1>0</GIT_CONFIG_VALUE_1>
+            <!-- Disable commit signing -->
+            <GIT_CONFIG_KEY_2>commit.gpgsign</GIT_CONFIG_KEY_2>
+            <GIT_CONFIG_VALUE_2>false</GIT_CONFIG_VALUE_2>
+            <!-- Disable tag signing -->
+            <GIT_CONFIG_KEY_3>tag.gpgsign</GIT_CONFIG_KEY_3>
+            <GIT_CONFIG_VALUE_3>false</GIT_CONFIG_VALUE_3>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
