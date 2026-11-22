@@ -284,7 +284,8 @@ public class DefaultBuildChooser extends BuildChooser {
      * @return true if branchSpec requires advanced matching
      */
     boolean isAdvancedSpec(String branchSpec) {
-        // null or wildcards or regexp
-        return (branchSpec == null || branchSpec.contains("*") || branchSpec.startsWith(":"));
+        // null or wildcards or regexp or logical expression
+        return (branchSpec == null || branchSpec.contains("*") || branchSpec.startsWith(":")
+                || branchSpec.contains("||") || branchSpec.contains("&&"));
     }
 }

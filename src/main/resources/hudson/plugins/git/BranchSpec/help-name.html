@@ -47,6 +47,10 @@
            Tracks/checks out the specified tag.<br/>
            E.g. <code>refs/tags/git-2.3.0</code>
       </li>
+      <li> <strong><code>refs/changes/&lt;gerritChange&gt;</code></strong><br/>
+           Tracks/checks out the specified gerrit change.<br/>
+           E.g. <code>refs/changes/91/45391/1</code>
+      </li>
       <li> <strong><code>&lt;commitId&gt;</code></strong><br/>
            Checks out the specified commit.<br/>
            E.g. <code>5062ac843f2b947733e6a3b105977056821bd352</code>, <code>5062ac84</code>, ...
@@ -55,6 +59,21 @@
            It is also possible to use environment variables. In this case the variables are evaluated and the
            result is used as described above.<br/>
            E.g. <code>${TREEISH}</code>, <code>refs/tags/${TAGNAME}</code>, ...
+      </li>
+      <li> <strong><code>&lt;specA&gt; || &lt;specB&gt;</code> / <code>&lt;specA&gt; &amp;&amp; &lt;specB&gt;</code></strong><br/>
+           Branch specifications can be combined into a logical expression.<br/>
+           <code>||</code> means <em>or</em>: the branch matches either specification. In a lightweight checkout
+           (e.g. loading a Jenkinsfile) the specifications are tried left-to-right and the first one that can be
+           fetched is used, so it acts as a fallback.<br/>
+           <code>&amp;&amp;</code> means <em>and</em>: the branch must match both specifications.
+           <code>&amp;&amp;</code> binds tighter than <code>||</code>.<br/>
+           Examples:<br/>
+           <ul>
+             <li><code>${GERRIT_REF_SPEC} || */master</code> — use the Gerrit change when its ref is present,
+                 otherwise fall back to <code>master</code>.</li>
+             <li><code>origin/* &amp;&amp; :^(?!origin/wip).*</code> — all <code>origin</code> branches except
+                 <code>origin/wip</code>.</li>
+           </ul>
       </li>
       <li> <strong><code>&lt;Wildcards&gt;</code></strong><br/>
            The syntax is of the form: <code>REPOSITORYNAME/BRANCH</code>.
