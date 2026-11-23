@@ -423,8 +423,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             if (e.getCause() instanceof AuthenticationException) {
                 throw (AuthenticationException) e.getCause();
             } else {
-                LOGGER.fine(() -> "Failed to look up user '" + idOrFullName + "' via commit info: " + e.getCause().getMessage());
-                LOGGER.log(Level.FINEST, "Full stack trace for user lookup failure of '" + idOrFullName + "'", e);
                 throw e;
             }
         }
