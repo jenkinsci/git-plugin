@@ -193,7 +193,7 @@ class GitChangeSetTest {
             );
             user.verify(
                 User::getUnknown,
-                times(2)
+                times(1)
             );
         }
 	}
