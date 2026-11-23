@@ -178,12 +178,14 @@ class GitChangeSetTest {
         final String csAuthor = "disabled_user";
 		final String csAuthorEmail = "disabled_user@example.com";
 
+        User unknown = User.getUnknown();
         try (MockedStatic<User> user = mockStatic(User.class)) {
+            user.when(User::getUnknown).thenReturn(unknown);
             user.when(() -> User.get("disabled_user", createAccountBasedOnEmail, Collections.emptyMap()))
                 .thenThrow(new DisabledException("The user \"disabled_user\" is administratively disabled"));
 
             User actual = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
-            assertEquals(User.getUnknown(), actual);
+            assertSame(unknown, actual);
 
             user.verify(
                 () -> User.get("disabled_user", createAccountBasedOnEmail, Collections.emptyMap()),
@@ -207,12 +209,14 @@ class GitChangeSetTest {
         NamingException namingException = new NamingException("LDAP communication failure");
         UncheckedExecutionException uncheckedException = new UncheckedExecutionException(namingException);
 
+        User unknown = User.getUnknown();
         try (MockedStatic<User> user = mockStatic(User.class)) {
+            user.when(User::getUnknown).thenReturn(unknown);
             user.when(() -> User.get("ldap_error_user", false, Collections.emptyMap()))
                 .thenThrow(uncheckedException);
 
             User actual = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
-            assertEquals(User.getUnknown(), actual);
+            assertSame(unknown, actual);
         }
     }
 
@@ -227,12 +231,14 @@ class GitChangeSetTest {
         NamingException namingException = new NamingException("LDAP communication failure");
         UncheckedExecutionException uncheckedException = new UncheckedExecutionException(namingException);
 
+        User unknown = User.getUnknown();
         try (MockedStatic<User> user = mockStatic(User.class)) {
+            user.when(User::getUnknown).thenReturn(unknown);
             user.when(() -> User.get("ldap_error@example.com", false, Collections.emptyMap()))
                 .thenThrow(uncheckedException);
 
             User actual = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
-            assertEquals(User.getUnknown(), actual);
+            assertSame(unknown, actual);
         }
     }
 
