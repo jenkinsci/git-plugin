@@ -928,6 +928,30 @@ image:images/git-prune-stale-remote-tracking-branches.png[Prune stale remote tra
 Removes remote tracking branches from the local workspace if they no longer exist on the remote.
 See `link:https://git-scm.com/docs/git-remote#Documentation/git-remote.txt-empruneem[git remote prune]` and `link:https://git-scm.com/docs/git-fetch#_pruning[git fetch --prune]` for more details.
 
+[#limit-builds-by-branch-history]
+==== Keep build history only for branches matching the branch specifier
+
+image:images/git-limit-builds-by-branch-history.png[Keep build history only for branches matching the branch specifier]
+
+Every build records which commit was last built on each branch, and copies that history from the previous build.
+A job that builds a different branch on each build, for example the branch of each merge request through a parameterized branch specifier, accumulates an entry for every branch it ever built (link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]).
+This option keeps only the entries for branches that match the branch specifiers of the current build, so the build record stays small.
+
+[source,groovy]
+----
+checkout scmGit(
+    branches: [[name: "*/${params.BRANCH}"]],
+    extensions: [ limitBuildsByBranchHistory() ],
+    userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']])
+----
+
+With a parameterized branch specifier the history of other branches is dropped.
+Polling compares against the default parameter value, so after each build of another branch the next poll schedules a build of the default branch, and the changelog, `GIT_PREVIOUS_COMMIT` and `GIT_PREVIOUS_SUCCESSFUL_COMMIT` of a branch start fresh when it is built again after other branches.
+With a wildcard branch specifier (`**`, `*/feature-*`) every built branch keeps matching, so the option does not reduce the history.
+Only the default and ancestry build choosing strategies are affected.
+The option applies to the checkout it is configured on; when the same repository is checked out more than once in a build, enable it on each of those checkouts.
+Existing build records are not changed; the <<remove-git-plugin-buildsbybranch-builddata-script,script below>> cleans those.
+
 [#prune-stale-tags]
 ==== Prune stale tags
 
@@ -1642,6 +1666,7 @@ Report issues and enhancements in the link:https://www.jenkins.io/participate/re
 
 Refer to link:CONTRIBUTING.adoc#contributing-to-the-git-plugin[contributing to the plugin] for contribution guidelines.
 
+[#remove-git-plugin-buildsbybranch-builddata-script]
 == Remove Git Plugin BuildsByBranch BuildData Script
 
 The git plugin has an issue (link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]) that sometimes causes excessive memory use and disc use in the build history of a job.
@@ -1649,6 +1674,9 @@ The problem occurs because in some cases the git plugin copies the git build dat
 The issue can be especially challenging when a job retains a very large number of historical builds or when a job builds a wide range of commits during its history.
 
 Multiple attempts to resolve the core issue without breaking compatibility have been unsuccessful.
+
+Jobs that build one branch per build can prevent the growth with the <<limit-builds-by-branch-history,keep build history only for branches matching the branch specifier>> option (`limitBuildsByBranchHistory()`).
+
 A workaround is provided below that will remove the git build data from the build records.
 The workaround is a system groovy script that needs to be run from the Jenkins Administrator's Script Console (as in \https://jenkins.example.com/script ).
 Administrator permission is required to run system groovy scripts.

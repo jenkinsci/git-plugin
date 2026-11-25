@@ -29,6 +29,7 @@ import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.FirstBuildChangelog;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.LimitBuildsByBranchHistory;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -1312,6 +1313,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
+        LimitBuildsByBranchHistory limitHistory = getExtensions().get(LimitBuildsByBranchHistory.class);
+        if (limitHistory != null) {
+            limitHistory.prune(this, buildData, environment, listener);
+        }
         GitClient git = createClient(listener, environment, build, workspace);
 
         if (launcher instanceof Launcher.DecoratedLauncher) {
