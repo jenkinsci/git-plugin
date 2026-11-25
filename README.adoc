@@ -931,6 +931,8 @@ See `link:https://git-scm.com/docs/git-remote#Documentation/git-remote.txt-empru
 [#limit-builds-by-branch-history]
 ==== Keep build history only for branches matching the branch specifier
 
+image:images/git-limit-builds-by-branch-history.png[Keep build history only for branches matching the branch specifier]
+
 Every build records which commit was last built on each branch, and copies that history from the previous build.
 A job that builds a different branch on each build, for example the branch of each merge request through a parameterized branch specifier, accumulates an entry for every branch it ever built (link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]).
 This option keeps only the entries for branches that match the branch specifiers of the current build, so the build record stays small.
